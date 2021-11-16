@@ -1,0 +1,15 @@
+{
+	"save_fig": true,
+	"output_dir": "",
+	"logscale": "Y",
+	"xlim": [5,15],
+	"ylim": [1e0,1e12],
+	"figsize": [1.5,1.5],
+	"statistics": "runs",
+	"filename_type": ["pdf"],
+	"convert_to_time_unit": "h",
+	"no_legend": false,
+	"legend.bbox_to_anchor": [1.0, 1.0],
+	"no_title": true,
+	"no_grid": true
+}

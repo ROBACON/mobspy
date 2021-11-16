@@ -1,0 +1,14 @@
+cycler
+kiwisolver
+matplotlib
+numpy
+pyparsing
+python-dateutil
+python-libsbml
+scipy
+six
+pandas
+joblib
+tqdm
+mpldatacursor
+copasi-basico

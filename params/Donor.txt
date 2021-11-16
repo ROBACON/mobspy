@@ -1,0 +1,66 @@
+PARAM_NAME	VALUE	DTYPE	#COMMENTS
+
+# GENERAL
+model				Donor				str
+solver				copasi				str
+duration			60*16				eval	#(1000, amount of time to simulate) 1320 for 1st plate reader data, 795 for 2nd
+debug				True				bool
+verbose				True				bool
+
+species_min			-1				float	#(-1 to ignore)
+max_solver_failures		1				int
+
+# COPASI
+simulation_method		deterministic			str	#(deterministic, 'Stochastic','stochastic','DirectMethod','TauLeap' see README.)
+# -- STOCHASTIC
+repetitions			3				int	#(5)
+confidence			.80				float	#(confidence for confidence intervals)
+hull_CI				True				bool	#(use min/max as hulls)
+skewed_CI			True				bool	#(use a skew-adjusted T-test for confidence intervals)
+stats_stepsize			15				int
+# -- DETAILS
+cps_dir				cps/				str
+relative_tolerance		1e-8				str	#(1e-8, decrease for slower, but more accurate simulations)
+absolute_tolerance		1e-10				str	#(1e-10, decrease for slower, but more accurate simulations)
+max_internal_steps		2e8				int	 #(2e9, for stochastic, see copasi manual)
+max_internal_step_size		0				float	#(for stochastic, see copasi manual, 0 means no limit)
+
+# OUTPUT
+output_dir			Default			str
+output_file			Default			str
+plot				True				bool
+save_data			True				bool
+sim_stepsize			15				float	#(how often to plot, # datapoints = duration/stepsize) (stoch 1e-2)
+print_stepsize			15				float
+plot_json			params/Donor-plot		str	#(for plotting, to ignore use None)
+
+# EPA MODEL: INIT CONCENTRATIONS
+# -----------------------------------------------------------------------------------------
+init_phages			0							int
+init_ecoli			1							int	#(10: sender from growth experiment)(for flask use 1)
+init_glucose			3e6							eval	#(3e7: sender from growth experiment)(for flask use 3e6)
+init_amino_acid			8e9							eval	# (3e8: sender from growth experiment)(for flask use 3e9)
+# init_antibiotics#ADonor		0							int	#(0)
+init_antibiotics_ADonor		0							int	#(0)
+# -----------------------------------------------------------------------------------------
+
+# -- E. COLI
+death_rate			1e-4			float	#(1e-4)
+dup_rate			1/40			eval	#(1/35: sender from growth experiment)(for flask use 1/40)
+amino_acid_penalty_factor	0.6			float	#(0.2: sender from growth experiment)(for flask use 0.60)
+
+# --- M13
+sec_rate_AA			850/60			eval	#(for flask and assumed also for well: 850/60 with cfu to pfu factor 7.7, 100/60 with cfu to pfu factor 1.0)
+sec_rate_G			0/60			eval	
+P_decay_rate			0.074/(24*60)		eval	#(0 works also, decay rate M13 = 0.074/(24*60)) [from DOI: 10.1371/journal.pbio.0040193, Table 1]
+
+# --- antibiotics
+# antibiotic_uptake_rate#ADonor			0.1*1/1e8	eval	#(0.1 * 1/1e8)
+# antibiotic_death_on_duplication_prob#ADonor	0.1		float	#(0.1)
+antibiotic_uptake_rate_ADonor			0.1*1/1e8	eval	#(0.1 * 1/1e8)
+antibiotic_death_on_duplication_prob_ADonor	0.1		float	#(0.1)
+antibiotic_death_rate				1*1e-4	eval	#(1 * 1e-4)
+
+antibiotic_birth_penalty_factor			1.0		float	#(1.0)
+antibiotic_resistant_birth_penalty_factor	1.0		float	#(1.0)
+

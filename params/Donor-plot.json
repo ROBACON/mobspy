@@ -1,0 +1,76 @@
+{
+	"default": {
+		"save_fig": true,
+		"output_dir": "",
+		"logscale": "Y",
+		"xlim": [5,15],
+		"ylim": [1e0,1e12],
+		"figsize": [1.5,1.5],
+		"statistics": "runs",
+		"filename_type": ["pdf"],
+		"convert_to_time_unit": "h",
+		"no_legend": false,
+		"legend.bbox_to_anchor": [1.0, 1.0],
+		"no_title": true,
+		"no_grid": true
+	},
+	"plots": {
+		"Secretion": {
+			"ON": true,
+			"write_data_into": "Secretion.json",
+			"xlabel": "time (h)",
+			"ylabel": "concentration ($\\mathrm{ml}^{-1}$)",
+			"species": ["P", "OD"],
+			"external_data": [ 
+				{  "file":"./fittings/secretion_rate/secretion_pfuvonverted_MG1655_factor_cubic.csv",
+				   "species": ["phage_pfu_1", "phage_pfu_2", "phage_pfu_3"] },
+				{  "file":"./fittings/secretion_rate/secretion_pfuvonverted_MG1655_factor_cubic.csv",
+				   "species": ["Ecoli_1", "Ecoli_2", "Ecoli_3"] },
+				{  "file":"./fittings/secretion_rate/secretion_MG1655_factor_cubic.csv",
+				    "species": ["phage_cfu_1", "phage_cfu_2", "phage_cfu_3"] }
+                        ],
+           		"styles": { "default": { "plot_type": "line",
+				                 "color": "red",
+				                 "linestyle": "-",
+				                 "dotsize": 2 },
+           			    "OD": { "name": "sender (sim.)",
+           			            "linestyle": "-" },
+				    "P": { "name": "$\\phi$ (sim.)"
+					   },
+				    "Ecoli_1": { "name": "sender (exp.)",
+				    	         "plot_type": "scatter",
+				    	         "marker": "o"},
+				    "Ecoli_2": { "name": "__nolegend__",
+				    	         "plot_type": "scatter",
+				    	         "marker": "*"},
+				    "Ecoli_3": { "name": "__nolegend__",
+				    	         "plot_type": "scatter",
+				    	         "marker": "^"},
+				    "phage_pfu_1": { "name": "$\\phi$ (exp.)",
+				    	             "plot_type": "scatter",
+				    	             "marker": "o"
+					             },
+				    "phage_pfu_2": { "name": "__nolegend__",
+				    	             "plot_type": "scatter",
+				    	             "marker": "*"
+					              },
+				    "phage_pfu_3": { "name": "__nolegend__",
+				    	             "plot_type": "scatter",
+				    	             "marker": "^"
+					             },
+				    "phage_cfu_1": { "name": "CFU",
+				    	             "plot_type": "scatter",
+				    	             "marker": "o",
+					             "color": "black" },
+				    "phage_cfu_2": { "name": "__nolegend__",
+				    	             "plot_type": "scatter",
+				    	             "marker": "*",
+					             "color": "black" },
+				    "phage_cfu_3": { "name": "__nolegend__",
+				    	             "plot_type": "scatter",
+				    	             "marker": "^",
+					             "color": "black" }
+			}
+		}
+	}
+} 
