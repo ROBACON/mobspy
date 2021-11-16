@@ -1,0 +1,6 @@
+INFO:root:Starting log process
+INFO:root:Starting simulation with param file: /home/strfabs/PycharmProjects/BacSim/params/AB_2CD.txt
+INFO:root:Running simulation in parallel
+WARNING:root:Since the simulation is deterministic only one repetition will be executed
+INFO:root:Creating desired output directory: /home/strfabs/PycharmProjects/BacSim/output/AB_2CD/1-10-19_16-19-45...
+INFO:root:Simulation is Over
