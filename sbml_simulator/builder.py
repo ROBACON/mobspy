@@ -10,10 +10,7 @@
 
 
 from sbml_simulator.SBMLWriter import create_model
-import libsbml as sbml, codecs
-
-import importlib
-import pkgutil
+import libsbml as sbml
 
 
 def build(species, parameters, reactions, events={}):

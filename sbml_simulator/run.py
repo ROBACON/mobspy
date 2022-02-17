@@ -1,8 +1,5 @@
 import basico
-import os
-from sbml_simulator import util
 from joblib import Parallel, delayed
-from copy import deepcopy
 import simulation_logging.log_scripts as simlog
 
 
