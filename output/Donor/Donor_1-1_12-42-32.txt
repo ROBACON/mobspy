@@ -1,9 +1,0 @@
-INFO:root:Starting log process
-INFO:root:Starting simulation with param file: /home/strfabs/PycharmProjects/BacSim/params/Donor.txt
-INFO:root:Running simulation in parallel
-WARNING:root:Since the simulation is deterministic only one repetition will be executed
-INFO:root:Creating desired output directory: /home/strfabs/PycharmProjects/BacSim/output/Donor...
-INFO:root:Using file extension(s): ['pdf']
-INFO:root:Writing data as requested by write_data_into. Dumping into: Secretion.json
-INFO:root:Figure saved at: Secretion.pdf
-INFO:root:Simulation is Over
