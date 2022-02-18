@@ -15,11 +15,11 @@ if __name__ == '__main__':
     Default_RR[Infection.not_infected + Virus >> Infection.infected [infection]]
     Bacteria = Age*Infection
     Bacteria(100), Virus(300)
-    my_simulation = Simulation(Bacteria | Virus)
-    my_simulation.parameters['simulation_method'] = 'stochastic'
-    my_simulation.parameters['plot_data'] = False
-    my_simulation.run()
-    my_simulation.plot_stochastic()
+    my_simulation = Simulation(Bacteria | Virus).compile()
+    # my_simulation.parameters['simulation_method'] = 'stochastic'
+    # my_simulation.parameters['plot_data'] = False
+    # my_simulation.run()
+    # my_simulation.plot_stochastic()
     exit()
 
 

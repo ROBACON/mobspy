@@ -6,7 +6,7 @@ def error(message):
 
 
 def debug(message=''):
-    # print(message)
+    print(message)
     pass
 
 

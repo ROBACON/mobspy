@@ -28,7 +28,6 @@ class Simulation:
 
         self.model = model
         self.names = names
-        self.plot_call_flag = False
 
         if not isinstance(model, Species) and not isinstance(model, ParallelSpecies):
             simlog.error('Model must be formed by Species objects')
