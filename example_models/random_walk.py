@@ -10,4 +10,5 @@ A(300) + B(200) >> C [0.1]
 MySim = Simulation(A | B | C)
 MySim.plot_data = False
 MySim.save_data = False
+MySim.run()
 

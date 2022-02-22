@@ -175,4 +175,4 @@ class __RR_Default_Base(__Operator_Base):
         return products
 
 
-Default_RR = __RR_Default_Base()
+Default = __RR_Default_Base()
