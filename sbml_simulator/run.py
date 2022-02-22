@@ -40,6 +40,7 @@ def job_execution(sbml_str, params, jobs):
     # OTHERWISE PARALLELISM DOES NOT WORK - COPASI OVERWRITES THE OUTPUT
     def __single_run(packed):
         sbml_str, i = packed
+
         basico.model_io.load_model_from_string(sbml_str)
         data = __run_time_course(params['duration'], params, i)
 

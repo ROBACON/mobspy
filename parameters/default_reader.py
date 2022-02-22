@@ -22,7 +22,7 @@ def get_default_parameters():
         "output_dir": "outputs/",
         "output_file": None,
         "save_data": True,
-        "plot": True
+        "plot_data": True
 
     }
     return default_parameters

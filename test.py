@@ -4,6 +4,12 @@ import os
 
 if __name__ == '__main__':
 
+    A, B, C = BaseSpecies(3)
+    A(300) + B(200) >> C [0.1]
+    Simulation(A | B | C).run()
+    exit()
+
+
     def infection(r1):
         if r1.old:
             return 0.02
