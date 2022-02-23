@@ -12,6 +12,9 @@ import json
 import os
 import inspect
 
+# TODO Add plotting with queries
+# TODO Add call for characteristics Mesh(species_string)
+
 
 class Simulation:
 
