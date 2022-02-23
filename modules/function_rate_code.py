@@ -54,7 +54,7 @@ class Specific_Species_Operator(Bool_Override):
         self._stocked_characteristics.add(characteristic)
 
 
-class IsInstance(Bool_Override):
+class IsReference(Bool_Override):
     """
         Check if a specific species references another.
         Example:
@@ -85,8 +85,11 @@ class IsInstance(Bool_Override):
         if not self._operator:
             if len(self._concatenate_sso_object) > 1:
                 simlog.error('IsInstance is only used for single species')
+
             if self.contains_reference(self._concatenate_sso_object[0], self._reference):
                 return True
+            else:
+                return False
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list

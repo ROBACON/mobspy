@@ -22,7 +22,7 @@ Donor = Death*New
 Phage = Death*New
 Donor(100)
 
-Donor + Resource >> 2*Donor [lambda _,resource: 0.1 if IsInstance(resource,AA) else 0.1]
+Donor + Resource >> 2*Donor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
 Donor + Resource >> Donor + Resource + Phage [0.1]
 
 # Receptor and infection
@@ -30,7 +30,7 @@ Age.young >> Age.old [0.1]
 Receptor = Death*Age
 Receptor.not_infected + Phage >> Receptor.early_infection [lambda receptor: 0.2 if receptor.old else 0.1]
 Receptor.early_infection >> Receptor.late_infection [0.1]
-Receptor + Resource >> Receptor.young + Receptor [lambda _,resource: 0.1 if IsInstance(resource,AA) else 0.1]
+Receptor + Resource >> Receptor.young + Receptor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
 
 Simulation(Donor | Receptor | Phage | AA | Glu).compile()
 Simulation.simulation_method = 'stochastic'

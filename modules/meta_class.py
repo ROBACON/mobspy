@@ -3,6 +3,7 @@ import modules.meta_class_utils as mcu
 from modules.order_operators import *
 from modules.function_rate_code import *
 import modules.reaction_construction_nb as rc
+import modules.function_rate_code as frc
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -281,12 +282,15 @@ class Reacting_Species:
         return reaction
 
     def __call__(self, quantity):
-        if len(self.list_of_reactants) != 1:
-            simlog.error('Assignment used incorrectly')
+        if type(quantity) == int or type(quantity) == float:
+            if len(self.list_of_reactants) != 1:
+                simlog.error('Assignment used incorrectly')
 
-        species_object = self.list_of_reactants[0]['object']
-        characteristics = self.list_of_reactants[0]['characteristics']
-        species_object.add_quantities(characteristics, quantity)
+            species_object = self.list_of_reactants[0]['object']
+            characteristics = self.list_of_reactants[0]['characteristics']
+            species_object.add_quantities(characteristics, quantity)
+        else:
+            simlog.error('Reactant_species does not support this type of call')
         return self
 
     def __getattr__(self, characteristic):
@@ -440,7 +444,14 @@ class Species:
 
     # Adding counts to species
     def __call__(self, quantity):
-        self.add_quantities('std$', quantity)
+        # It's called quantity because of the original design
+        if type(quantity) == int or type(quantity) == float:
+            self.add_quantities('std$', quantity)
+        elif isinstance(quantity, frc.Specific_Species_Operator):
+            for cha in str(quantity).split('_dot_'):
+                if cha in self._characteristics:
+                    return cha
+            simlog.error(f'{self._name} contains no characteristics in {quantity}')
         return self
 
     def add_quantities(self, characteristics, quantity):

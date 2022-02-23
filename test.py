@@ -4,6 +4,14 @@ import os
 
 if __name__ == '__main__':
 
+    Age, Color = BaseSpecies(2)
+    Age.young, Age.old
+    Color.red, Color.blue, Color.yellow
+    Ecoli = Age * Color
+    Test = frc.Specific_Species_Operator('Ecoli_dot_young_dot_red', Ecoli)
+    print(Age(Test))
+    exit()
+
     A, B, C = BaseSpecies(3)
     A(300) + B(200) >> C [0.1]
     Simulation(A | B | C).run()
@@ -18,7 +26,7 @@ if __name__ == '__main__':
 
     Age, Infection, Virus = BaseSpecies(3)
     Age.young >> Age.old [0.5]
-    Default_RR[Infection.not_infected + Virus >> Infection.infected [infection]]
+    Default[Infection.not_infected + Virus >> Infection.infected [infection]]
     Bacteria = Age*Infection
     Bacteria(100), Virus(300)
     my_simulation = Simulation(Bacteria | Virus).compile()
