@@ -29,4 +29,6 @@ will be performed in one step, to reach it before starting to collect output.
 
 - max_steps(int) : the maximum number of internal steps the integrator is allowed to used
 
+- output_event (bool) : if true, output will be collected at the time a discrete event occurs.
+
 

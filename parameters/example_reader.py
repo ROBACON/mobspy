@@ -18,6 +18,7 @@ def get_example_parameters():
         "__comment_3": "OUTPUT",
 
         "output_dir": "outputs/",
+        "output_event": False,
         "output_file": None,
         "save_data": False,
         "plot_data": True

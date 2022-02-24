@@ -140,6 +140,7 @@ class Compiler:
                                                                           cls.ref_characteristics_to_object,
                                                                           type_of_model)
 
+
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
             for j, r2 in enumerate(reactions_for_sbml):
@@ -449,6 +450,11 @@ class Species:
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_'):
+                if cha in self._characteristics:
+                    return cha
+            simlog.error(f'{self._name} contains no characteristics in {quantity}')
+        elif type(quantity) == str:
+            for cha in str(quantity).split('.'):
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')

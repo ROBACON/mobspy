@@ -70,7 +70,8 @@ def __run_time_course(duration, params, index):
     kargs = {'method': params["simulation_method"].lower(),
              'start_time': params["start_time"],
              'r_tol': params["r_tol"],
-             'a_tol': params["a_tol"]}
+             'a_tol': params["a_tol"],
+             'output_event': params['output_event']}
 
     if 'seeds' in params:
         kargs['use_seed'] = True
