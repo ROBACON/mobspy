@@ -13,7 +13,6 @@ import os
 import inspect
 
 # TODO Add plotting with queries
-# TODO Add call for characteristics Mesh(species_string)
 
 
 class Simulation:
@@ -61,7 +60,6 @@ class Simulation:
         self.all_species_not_mapped = {}
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
-
 
     def run(self):
         """

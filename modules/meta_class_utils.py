@@ -103,22 +103,6 @@ def extract_characteristics(spe):
     return lists_of_characteristics
 
 
-def add_negative_complement_to_characteristics(species):
-    '''
-    :param species: all the species involved in the simulation
-
-        Here we check if any of the species has a unique characteristic assigned to it
-        We assign a negative to refer to the state without that characteristic
-        We do so by adding not$ to it
-        We check later for repeated characteristics
-        This is defined to be able to reference all object states later
-    '''
-    for spe in species:
-        if len(spe.get_characteristics()) == 1:
-            cha = list(spe.get_characteristics())[0]
-            spe.add_characteristic('not$' + cha)
-
-
 def create_orthogonal_vector_structure(species):
     '''
     :param species: All species used in the model

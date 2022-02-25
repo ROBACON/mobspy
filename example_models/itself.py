@@ -8,7 +8,6 @@ from mobspy import *
 #TODO fix one characteristic error
 
 A, S = BaseSpecies(2)
-A.not_hi
 A.hi(1000) >> A.hi + S[0.1]
 Sim = Simulation(A | S)
 Sim.simulation_method = 'stochastic'
