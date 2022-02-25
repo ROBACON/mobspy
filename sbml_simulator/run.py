@@ -3,7 +3,7 @@ from joblib import Parallel, delayed
 import simulation_logging.log_scripts as simlog
 
 
-def simulate(sbml_str, params, mappings, species_for_sbml):
+def simulate(sbml_str, params, mappings, species_not_mapped):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
@@ -29,7 +29,7 @@ def simulate(sbml_str, params, mappings, species_for_sbml):
 
     # TODO: If cluster compatibility is added I suggest here
     data = job_execution(sbml_str, params, jobs)
-    data = remap_species(data, mappings, params, species_for_sbml)
+    data = remap_species(data, mappings, params, species_not_mapped)
 
     simlog.debug("Simulation is Over")
     return {'data': data, 'params': params, 'mappings': mappings}
@@ -117,7 +117,7 @@ def merge(params, data):
     return merged_data
 
 
-def remap_species(data, mapping, params, species_for_sbml):
+def remap_species(data, mapping, params, species_not_mapped):
     """
     Takes the simulated species (data) and add ones defined by
     mapping (mapping).
@@ -143,17 +143,20 @@ def remap_species(data, mapping, params, species_for_sbml):
             if type(the_mapping) is list:
 
                 for run in range(params["repetitions"]):
-                    species = the_mapping
-                    mapped_data[group]['runs'].append([sum([data[species[i]]['runs'][run][t]
-                                                            for i in range(len(species))]) for t in T])
+                    this_run = []
+                    for t in T:
+                        mapping_sum = 0
+                        for spe in the_mapping:
+                            try:
+                                mapping_sum = mapping_sum + data[spe]['runs'][run][t]
+                            except KeyError:
+                                mapping_sum = mapping_sum + species_not_mapped[spe]
+                        this_run.append(mapping_sum)
+                    mapped_data[group]['runs'].append(this_run)
+
         except IndexError:
             simlog.error(f'run: remap_species: error when remapping "{the_mapping}".' +
                          'Possible fix: All runs must have the same time')
-
-        except KeyError:
-            simlog.warning(f'Copasi removed species {group}')
-            for run in range(params["repetitions"]):
-                mapped_data[group]['runs'].append([sum([species_for_sbml[spe] for spe in the_mapping]) for _ in T])
 
         except TypeError:
             simlog.warning(f'Copasi removes A >> A species from reaction calculations and does not provide an output')

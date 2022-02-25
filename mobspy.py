@@ -58,6 +58,11 @@ class Simulation:
                                                                                   "simulation_method"],
                                                                               verbose=verbose)
 
+        self.all_species_not_mapped = {}
+        for key in self._species_for_sbml:
+            self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
+
+
     def run(self):
         """
             Just calls the simulator part of the codes for running
@@ -76,7 +81,7 @@ class Simulation:
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
 
-        self.results = sbml_simulator.run.simulate(self.sbml_string, self.parameters, self._mappings_for_sbml,  self._species_for_sbml)
+        self.results = sbml_simulator.run.simulate(self.sbml_string, self.parameters, self.mappings,  self.all_species_not_mapped)
         self._pack_data(self.results['data'])
 
         if self.parameters['save_data']:

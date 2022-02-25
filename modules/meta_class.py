@@ -74,9 +74,6 @@ class Compiler:
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
 
-        # Perform checks
-        mcu.add_negative_complement_to_characteristics(list_of_species_objects)
-
         # Construct structures necessary for reactions
         cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(list_of_species_objects)
 
