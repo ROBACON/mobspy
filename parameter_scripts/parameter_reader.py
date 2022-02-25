@@ -67,7 +67,14 @@ def __check_stochastic_repetitions_seeds(params):
             simlog.error('Parameter seeds must be a list')
 
 
+def __check_ode_repetitions(params):
+
+    if params["simulation_method"].lower() == 'deterministic':
+        params["repetitions"] = 1
+
+
 def parameter_process(params, mappings, params_for_sbml):
     __set_standard_duration(params, params_for_sbml)
     __name_output_file(params, mappings)
     __check_stochastic_repetitions_seeds(params)
+    __check_ode_repetitions(params)

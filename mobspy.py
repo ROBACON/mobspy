@@ -76,7 +76,7 @@ class Simulation:
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
 
-        self.results = sbml_simulator.run.simulate(self.sbml_string, self.parameters, self._mappings_for_sbml)
+        self.results = sbml_simulator.run.simulate(self.sbml_string, self.parameters, self._mappings_for_sbml,  self._species_for_sbml)
         self._pack_data(self.results['data'])
 
         if self.parameters['save_data']:

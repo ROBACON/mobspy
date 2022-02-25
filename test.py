@@ -4,6 +4,7 @@ import os
 
 if __name__ == '__main__':
 
+
     Age, Color = BaseSpecies(2)
     Age.young, Age.old
     Color.red, Color.blue, Color.yellow
