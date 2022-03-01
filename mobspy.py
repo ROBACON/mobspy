@@ -13,6 +13,7 @@ import os
 import inspect
 
 # TODO Add plotting with queries
+# TODO Change IsReference to is_a
 
 
 class Simulation:

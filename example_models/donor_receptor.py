@@ -8,7 +8,7 @@ from mobspy import *
 # TODO fix _dot_ for errors
 
 # Variable declaration
-Resource, Death, Age = BaseSpecies(3)
+Resource, Mortal, Infectible = BaseSpecies(3)
 
 # Resource Definition
 AA = Resource*New
@@ -17,18 +17,18 @@ AA(100)
 Glu(100)
 
 # Donor and Phage Creation
-Death >> Zero [0.1]
-Donor = Death*New
-Phage = Death*New
+Mortal >> Zero [0.1]
+Donor = Mortal*New
+Phage = Mortal*New
 Donor(100)
 
 Donor + Resource >> 2*Donor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
 Donor + Resource >> Donor + Resource + Phage [0.1]
 
 # Receptor and infection
-Age.young >> Age.old [0.1]
-Receptor = Death*Age
-Receptor.not_infected + Phage >> Receptor.early_infection [lambda receptor: 0.2 if receptor.old else 0.1]
+Infectible.low_inf >> Infectible.high_inf [0.1]
+Receptor = Mortal*Infectible
+Receptor.not_infected + Phage >> Receptor.early_infection [lambda receptor: 0.2 if receptor.high_inf else 0.1]
 Receptor.early_infection >> Receptor.late_infection [0.1]
 Receptor + Resource >> Receptor.young + Receptor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
 

@@ -58,7 +58,11 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     simlog.error('Illegal reaction, there is a product with multiple '
                                     'characteristics from the same Species referenced \n'
-                                    'Please divide the reaction accordingly')
+                                    'Please divide the reaction accordingly \n'
+                                 f'Error in {ref_characteristics_to_object[cha]} both {cha} and '
+                                 f'{check_for_duplicates[ref_characteristics_to_object[cha]]}'
+                                 f' referenced at the same time \n'
+                                 f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
                 except KeyError:
                     check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 
@@ -71,8 +75,12 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     simlog.error('Illegal reaction, there is a product with multiple '
-                                    'characteristics from the same Species referenced \n'
-                                    'Please divide the reaction accordingly')
+                                 'characteristics from the same Species referenced \n'
+                                 'Please divide the reaction accordingly \n'
+                                 f'Error in {ref_characteristics_to_object[cha]} both {cha} and '
+                                 f'{check_for_duplicates[ref_characteristics_to_object[cha]]}'
+                                 f' referenced at the same time \n'
+                                 f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
                 except KeyError:
                     check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 

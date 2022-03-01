@@ -13,7 +13,7 @@ class Bool_Override:
         if self.species_string == '$Null':
             return False
 
-        species_string_split = self.species_string.split('&')
+        species_string_split = self.species_string.split('_dot_')
         if all(char in species_string_split for char in self._stocked_characteristics):
             to_return_boolean = True
         else:

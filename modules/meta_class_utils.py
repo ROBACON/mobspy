@@ -35,7 +35,9 @@ def check_orthogonality_between_references(references):
                 continue
 
             if len(reference1.get_characteristics().intersection(reference2.get_characteristics())) != 0:
-                simlog.error('A characteristic must be unique between different base properties')
+                simlog.error(f'A characteristic must be unique for species construction'
+                             f'Repetition in: {reference1}, {reference2}'
+                             f'Characteristics: {reference1.get_characteristics()}, {reference2.get_characteristics()}')
 
 
 def complete_characteristics_with_first_values(spe_object, characteristics, characteristics_to_object):
@@ -127,7 +129,9 @@ def create_orthogonal_vector_structure(species):
                 elif ref_characteristics_to_object[cha] == prop:
                     pass
                 else:
-                    simlog.error('Characteristics must be unique for modeling properties')
+                    simlog.error(f'A characteristic must be unique for each species \n'
+                                f'Repetition in: {spe}, {ref_characteristics_to_object[cha] } \n'
+                                f'Characteristics: {spe.get_characteristics()}, {ref_characteristics_to_object[cha].get_characteristics()} \n')
 
     return ref_characteristics_to_object
 

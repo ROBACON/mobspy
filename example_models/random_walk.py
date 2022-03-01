@@ -7,9 +7,10 @@ sys.path.append(os.path.abspath(abs_path))
 from mobspy import *
 
 # TODO Better print data
+# TODO rewrite with f
 
 Mesh = BaseSpecies(1)
-n = 5
+n = 10
 for i in range(n):
     for j in range(n):
         coordinate = 'p_' + str(i) + '_' + str(j)
@@ -27,7 +28,7 @@ Bacteria = Mesh*New
 Phage = Mesh*New
 Bacteria.not_infected + Phage >> Bacteria.infected [lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0]
 Bacteria.p_0_0(1)
-Phage.p_2_2(1)
+Phage.p_9_9(1)
 
 MySim = Simulation(Bacteria | Phage)
 MySim.simulation_method = 'stochastic'
