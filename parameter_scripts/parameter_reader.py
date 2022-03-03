@@ -25,16 +25,8 @@ def read_json(json_file_name):
     return json_data
 
 
-def __set_standard_duration(params, params_for_sbml):
-
-    # Check division
-    if params['duration'] is None:
-        min_rate = np.inf
-        for p in params_for_sbml:
-            rate = params_for_sbml[p][0]
-            if rate < min_rate:
-                min_rate = rate
-        params['duration'] = 3/(min_rate*60)
+def __set_standard_duration(params):
+    params['duration'] = 60
 
 
 def __name_output_file(params, mappings):
@@ -74,7 +66,7 @@ def __check_ode_repetitions(params):
 
 
 def parameter_process(params, mappings, params_for_sbml):
-    __set_standard_duration(params, params_for_sbml)
+    __set_standard_duration(params)
     __name_output_file(params, mappings)
     __check_stochastic_repetitions_seeds(params)
     __check_ode_repetitions(params)

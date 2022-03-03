@@ -14,6 +14,9 @@ import inspect
 
 # TODO Add plotting with queries
 # TODO Change IsReference to is_a
+# TODO Added Promoter not DNA Promoter ERROR
+# TODO Better print random walk data
+# TODO fix _dot_ for errors 
 
 
 class Simulation:

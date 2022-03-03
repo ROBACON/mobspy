@@ -21,7 +21,27 @@ class Compiler:
     reactions_set = set()
     species_string_dict = {}
     ref_characteristics_to_object = {}
+    sbml_species_for_query = {}
     last_rate = None
+    
+    @classmethod
+    def query_str(cls, species, characteristics):
+        result = '('
+
+        for species_string in cls.sbml_species_for_query:
+            species_string_split = species_string.split('_dot_')
+            species_name = species_string_split[0]
+            species_string_split = species_string_split[1:]
+
+            if species.get_name() == species_name:
+                if all(char in species_string_split for char in characteristics):
+                    result += species_string + '+'
+
+        if result == '(':
+            return ''
+        else:
+            result = result[:-1] + ')'
+            return result
 
     @classmethod
     def override_get_item(cls, object_to_return, item):
@@ -47,6 +67,10 @@ class Compiler:
 
     @classmethod
     def compile(cls, species_to_simulate, volume_ml, names=None, type_of_model='deterministic', verbose=True):
+        # Set in model condition
+        Reacting_Species.in_model = True
+        Species.in_model = True
+        
         # Define dictionaries to return to avoid compatibility problems
 
         # TODO no events for now
@@ -101,6 +125,7 @@ class Compiler:
         for spe_object in list_of_species_objects:
             for species_string in cls.species_string_dict[spe_object]:
                 species_for_sbml[species_string] = 0
+        cls.sbml_species_for_query = species_for_sbml
 
         # BaseSpecies the mappings for sbml
         for spe_object in list_of_species_objects:
@@ -136,7 +161,6 @@ class Compiler:
                                                                           cls.species_string_dict,
                                                                           cls.ref_characteristics_to_object,
                                                                           type_of_model)
-
 
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
@@ -177,7 +201,10 @@ class Compiler:
             simlog.debug('Reactions')
             for reaction in reactions_for_sbml:
                 simlog.debug(reaction + ',' + str(reactions_for_sbml[reaction]).replace('_dot_', '.'))
-
+        
+        # Compilation finish, in model not needed anymore:
+        Reacting_Species.in_model = False
+        Species.in_model = False
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml
 
 
@@ -244,7 +271,21 @@ class Reacting_Species:
         It contains the species object reference, the characteristics involved in the reaction and finally the stoichiometry
         It adds up by appending elements to a list
     """
-    def c(self, item):
+    # String querying inside the model
+    in_model = False
+
+    def __str__(self):
+
+        if not self.in_model:
+            return self.list_of_reactants
+        else:
+            if len(self.list_of_reactants) == 1:
+                return Compiler.query_str(self.list_of_reactants[0]['object'], self.list_of_reactants[0]['characteristics'])
+            else:
+                simlog.error('Query not accepted. Only one species to str at a time')
+    
+    # Labels and value function implementation
+    def v(self, item):
         return self.__getattr__(item)
 
     def label(self, label):
@@ -311,7 +352,6 @@ class ParallelSpecies:
         It is basically a list of species
         Species become this using the | operator
     """
-
     def __init__(self, list_of_species):
         self.list_of_species = list_of_species
 
@@ -338,18 +378,24 @@ class Species:
         Objects store all the basic information necessary to create an SBML file and construct a model
         So we construct the species through reactions and __getattr__ to form a model
     """
+    # String querying inside the model
+    in_model = False
+
+    def __str__(self):
+        if not self.in_model:
+            return self._name
+        else:
+            return Compiler.query_str(self, set())
+
     # Def c to get the value
-    def c(self, item):
+    def v(self, item):
         return self.__getattr__(item)
 
     # Def labels
     def label(self, label):
         return Reacting_Species(self, set(), label=label)
 
-    # Get data from species for debugging Compilers
-    def __str__(self):
-        return self._name
-
+    # Get data from species for debugging Compiler
     def show_reactions(self):
         simlog.debug(str(self) + '_dot_')
         for reference in self._references:
@@ -576,7 +622,12 @@ __S0.name('S0')
 __S1.name('S1')
 
 Zero = __S0
-New = __S1
+
+
+def New(species, n=1):
+    for i in range(n):
+        yield species*__S1
+
 
 if __name__ == '__main__':
     pass

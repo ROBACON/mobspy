@@ -6,9 +6,6 @@ sys.path.append(os.path.abspath(abs_path))
 
 from mobspy import *
 
-# TODO Better print data
-# TODO rewrite with f
-
 Mesh = BaseSpecies(1)
 n = 10
 for i in range(n):
@@ -16,13 +13,13 @@ for i in range(n):
         coordinate = 'p_' + str(i) + '_' + str(j)
 
         if i + 1 < n:
-            Mesh.c(coordinate) >> Mesh.c('p_' + str(i + 1) + '_' + str(j)) [0.1]
+            Mesh.c(coordinate) >> Mesh.c(f'p_{i+1}_{j}') [0.1]
         if i - 1 > -1:
-            Mesh.c(coordinate) >> Mesh.c('p_' + str(i - 1) + '_' + str(j)) [0.1]
+            Mesh.c(coordinate) >> Mesh.c(f'p_{i-1}_{j}') [0.1]
         if j - 1 > -1:
-            Mesh.c(coordinate) >> Mesh.c('p_' + str(i) + '_' + str(j - 1)) [0.1]
+            Mesh.c(coordinate) >> Mesh.c(f'p_{i}_{j-1}') [0.1]
         if j + 1 < n:
-            Mesh.c(coordinate) >> Mesh.c('p_' + str(i) + '_' + str(j + 1)) [0.1]
+            Mesh.c(coordinate) >> Mesh.c(f'p_{i}_{j+1}') [0.1]
 
 Bacteria = Mesh*New
 Phage = Mesh*New

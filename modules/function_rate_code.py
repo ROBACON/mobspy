@@ -48,7 +48,7 @@ class Specific_Species_Operator(Bool_Override):
         return self
 
     def __str__(self):
-        return self.species_string
+        return str(self)
 
     def add(self, characteristic):
         self._stocked_characteristics.add(characteristic)
@@ -113,7 +113,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float:
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                     reaction_rate_function, parameters_for_sbml, type_of_model)
+                                                     reaction_rate_function, type_of_model)
 
     elif callable(reaction_rate_function):
         arguments = prepare_arguments_for_callable(combination_of_reactant_species,
@@ -122,20 +122,17 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                         rate, parameters_for_sbml, type_of_model)
+                                                         rate, type_of_model)
         elif type(rate) == str:
             return rate
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
-                         + str(reactant_string_list))
+                         + reactant_string_list)
         else:
             simlog.error('The function return a non-valid value')
-
-    elif type(reaction_rate_function) == str:
-        return reaction_rate_function
     elif reaction_rate_function is None:
         simlog.error('There is a reaction rate missing for the following reactants: \n'
-                     + str(reactant_string_list))
+                     + reactant_string_list)
     else:
         simlog.debug(type(reaction_rate_function))
         simlog.error('The rate type is not supported')
@@ -143,7 +140,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     return reaction_rate_string
 
 
-def basic_kinetics_string(reactants, reaction_rate, parameters_for_sbml, type_of_model):
+def basic_kinetics_string(reactants, reaction_rate, type_of_model):
     """
         Just assign basic kinetics string based on the received reactans and rate
         parameters_for_sbml is for the construction of the model later
@@ -162,10 +159,7 @@ def basic_kinetics_string(reactants, reaction_rate, parameters_for_sbml, type_of
             kinetics_string += deterministic_string(name, number)
         kinetics_string += ' * '
 
-    rate_str = 'rate_' + str(len(parameters_for_sbml))
-    parameters_for_sbml[rate_str] = reaction_rate
-
-    kinetics_string += rate_str
+    kinetics_string += str(reaction_rate)
 
     return kinetics_string
 

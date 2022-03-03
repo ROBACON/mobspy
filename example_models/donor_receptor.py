@@ -5,21 +5,18 @@ sys.path.append(os.path.abspath(abs_path))
 
 from mobspy import *
 
-# TODO fix _dot_ for errors
 
 # Variable declaration
 Resource, Mortal, Infectible = BaseSpecies(3)
 
 # Resource Definition
-AA = Resource*New
-Glu = Resource*New
+AA, Glu = New(Resource, 2)
 AA(100)
 Glu(100)
 
 # Donor and Phage Creation
 Mortal >> Zero [0.1]
-Donor = Mortal*New
-Phage = Mortal*New
+Donor, Phage = New(Mortal, 2)
 Donor(100)
 
 Donor + Resource >> 2*Donor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
@@ -33,4 +30,3 @@ Receptor.early_infection >> Receptor.late_infection [0.1]
 Receptor + Resource >> Receptor.young + Receptor [lambda _,resource: 0.2 if IsReference(resource,AA) else 0.1]
 
 Simulation(Donor | Receptor | Phage | AA | Glu).compile()
-Simulation.simulation_method = 'stochastic'
