@@ -176,3 +176,7 @@ class __RR_Default_Base(__Operator_Base):
 
 
 Default = __RR_Default_Base()
+
+
+class Reversible:
+    pass

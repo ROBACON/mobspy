@@ -11,4 +11,4 @@ Chemical, Promoter, Protein = BaseSpecies(3)
 Chemical + Promoter.inactive >> Promoter.active [2]
 Promoter.active >> Chemical + Promoter.inactive [1]
 Zero >> Protein [lambda : f'3*{Promoter.inactive}/{Promoter}']
-Protein >> Zero [0.1]
+Protein >> Zero [1]

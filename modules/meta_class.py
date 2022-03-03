@@ -625,8 +625,11 @@ Zero = __S0
 
 
 def New(species, n=1):
-    for i in range(n):
-        yield species*__S1
+    to_return = [species*__S1 for _ in range(n)]
+    if n == 1:
+        return to_return[0]
+    else:
+        return tuple(to_return)
 
 
 if __name__ == '__main__':
