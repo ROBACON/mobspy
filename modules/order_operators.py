@@ -1,5 +1,7 @@
 from copy import deepcopy
-import modules.meta_class_utils as mc
+import modules.meta_class_utils as mcu
+import modules.meta_class as mc
+import simulation_logging.log_scripts as simlog
 
 
 class __Operator_Base:
@@ -54,7 +56,7 @@ class __Operator_Base:
                                                     ref_characteristics_to_object):
         to_return = []
 
-        characteristics_to_find = mc.complete_characteristics_with_first_values(species, characteristics,
+        characteristics_to_find = mcu.complete_characteristics_with_first_values(species, characteristics,
                                                                                 ref_characteristics_to_object)
 
         characteristics_to_find.remove(species.get_name())
@@ -178,5 +180,35 @@ class __RR_Default_Base(__Operator_Base):
 Default = __RR_Default_Base()
 
 
-class Reversible:
-    pass
+class __Set_Reversible_Rate:
+    def __getitem__(self, both_rates):
+        if len(both_rates) != 2:
+            simlog.error('The reversible reaction must receive 2 rates')
+
+        self.reaction_direct.rate = both_rates[0]
+        self.reaction_reverse.rate = both_rates[1]
+
+    def __init__(self):
+        self.reaction_direct = None
+        self.reaction_reverse = None
+
+    def set_reactions(self, reaction_direct, reaction_reverse):
+        self.reaction_direct = reaction_direct
+        self.reaction_reverse = reaction_reverse
+
+
+# Reversible reaction operator
+class __Reversible_Base:
+
+    def __getitem__(self, reaction):
+        # The reactions are added by the constructor
+        reaction_direct = reaction
+        reaction_reverse = mc.Reactions(reaction_direct.products, reaction_direct.reactants)
+        self.rate_setter.set_reactions(reaction_direct, reaction_reverse)
+        return self.rate_setter
+
+    def __init__(self, rate_setter):
+        self.rate_setter = rate_setter
+
+
+Rev = __Reversible_Base(__Set_Reversible_Rate())
