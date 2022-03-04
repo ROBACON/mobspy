@@ -169,11 +169,13 @@ class Simulation:
 
     # Plotting encapsulation
     def extract_plot_essentials(self, *species):
+
         if not species:
             species_strings = list(self.mappings.keys())
+        else:
+            species_strings = []
 
         for spe in species:
-            species_strings = []
             if isinstance(spe, Species):
                 species_strings.append(spe.get_name())
             elif type(spe) == str:
