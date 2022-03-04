@@ -65,6 +65,12 @@ class Simulation:
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
 
+    def generate_sbml(self):
+        self.sbml_string = sbml_builder.build(self._species_for_sbml,
+                                              self._parameters_for_sbml,
+                                              self._reactions_for_sbml)
+        return self.sbml_string
+
     def run(self):
         """
             Just calls the simulator part of the codes for running

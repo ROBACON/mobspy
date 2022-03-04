@@ -23,10 +23,18 @@ class Compiler:
     ref_characteristics_to_object = {}
     sbml_species_for_query = {}
     last_rate = None
-    
+
+    extra_species_list = []
+
+    @classmethod
+    def get_extra_species_list(cls):
+        to_return = deepcopy(cls.extra_species_list)
+        cls.extra_species_list = []
+        return to_return
+
     @classmethod
     def query_str(cls, species, characteristics):
-        result = '('
+        result = '( '
 
         for species_string in cls.sbml_species_for_query:
             species_string_split = species_string.split('_dot_')
@@ -35,12 +43,15 @@ class Compiler:
 
             if species.get_name() == species_name:
                 if all(char in species_string_split for char in characteristics):
-                    result += species_string + '+'
+                    result += species_string + ' + '
+                    cls.extra_species_list.append(species_string)
 
-        if result == '(':
-            return ''
+        if result == '( ':
+            simlog.error('Query did not return anything \n'
+                         'Is ' + species.get_name() + ' on the simulation? \n'
+                         ' ')
         else:
-            result = result[:-1] + ')'
+            result = result[:-3] + ' )'
             return result
 
     @classmethod

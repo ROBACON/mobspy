@@ -1,6 +1,7 @@
 import modules.meta_class as mc
 import modules.reaction_construction_nb as rc
 import simulation_logging.log_scripts as simlog
+import modules.meta_class as mc
 
 
 class Bool_Override:
@@ -93,7 +94,7 @@ class IsReference(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, parameters_for_sbml, type_of_model):
+                          , reaction_rate_function, type_of_model):
     '''
         The order of the reactants appears in species_string_dict appears equality
         to the order they appear on the reaction
@@ -110,7 +111,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         returns: the reaction kinetics as a string for SBML
     '''
-
+    extra_species = []
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float:
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
@@ -124,7 +125,8 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                          rate, type_of_model)
         elif type(rate) == str:
-            return rate
+            reaction_rate_string = rate
+            extra_species = mc.Compiler.get_extra_species_list()
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
                          + reactant_string_list)
@@ -137,7 +139,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         simlog.debug(type(reaction_rate_function))
         simlog.error('The rate type is not supported')
 
-    return reaction_rate_string
+    return reaction_rate_string, extra_species
 
 
 def basic_kinetics_string(reactants, reaction_rate, type_of_model):

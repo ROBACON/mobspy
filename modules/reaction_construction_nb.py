@@ -269,11 +269,18 @@ def create_all_reactions(reactions, species_string_dict,
                                                                                  ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
-                    rate_string = fr.extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                                                           , reaction.rate, parameters_for_sbml, type_of_model)
+                    rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species, reactant_string_list
+                                                           , reaction.rate, type_of_model)
+
+                    for species in extra_species:
+                        if species not in reactant_string_list:
+                            simlog.error(f'The \'{species}\' string not in reaction with \'{reactant_string_list}\' \n'
+                                         f'Rates can only depend on their reactants, add the reactant if possible')
 
                     reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
-                        construct_single_reaction_for_sbml(reactant_string_list, product_string_list, rate_string)
+                        construct_single_reaction_for_sbml(reactant_string_list,
+                                                           product_string_list,
+                                                           rate_string)
 
     return reactions_for_sbml, parameters_for_sbml
 
