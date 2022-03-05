@@ -506,6 +506,7 @@ class Species:
     # Adding counts to species
     def __call__(self, quantity):
         # It's called quantity because of the original design
+        self.in_model = False
         if type(quantity) == int or type(quantity) == float:
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
@@ -518,6 +519,7 @@ class Species:
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')
+        self.in_model = True
         return self
 
     def add_quantities(self, characteristics, quantity):

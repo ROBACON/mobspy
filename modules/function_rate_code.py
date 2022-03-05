@@ -49,7 +49,7 @@ class Specific_Species_Operator(Bool_Override):
         return self
 
     def __str__(self):
-        return str(self)
+        return self.species_string
 
     def add(self, characteristic):
         self._stocked_characteristics.add(characteristic)

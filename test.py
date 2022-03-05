@@ -9,11 +9,7 @@ if __name__ == '__main__':
     A = New(Yo)
     A.b(20) >> B[5]
     A.c(20) >> C[5]
-    MySim = Simulation(A | B | C)
-    MySim.save_data = False
-    MySim.plot_data = False
-    MySim.run()
-    MySim.plot_deterministic(A, A.c)
+    MySim = Simulation(A | B | C).compile()
     exit()
 
     A, B, C, D = BaseSpecies(4)
