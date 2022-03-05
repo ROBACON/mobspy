@@ -64,7 +64,11 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                                  f' referenced at the same time \n'
                                  f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
                 except KeyError:
-                    check_for_duplicates[ref_characteristics_to_object[cha]] = cha
+                    try:
+                        check_for_duplicates[ref_characteristics_to_object[cha]] = cha
+                    except KeyError:
+                        simlog.error('The characteristic\'s object was not found in the species supplied to the simulator \n'
+                                     'Perhaps a species is missing ?')
 
         for product in reaction.products:
 

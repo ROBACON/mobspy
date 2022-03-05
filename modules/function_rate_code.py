@@ -51,46 +51,17 @@ class Specific_Species_Operator(Bool_Override):
     def __str__(self):
         return self.species_string
 
-    def add(self, characteristic):
-        self._stocked_characteristics.add(characteristic)
-
-
-class IsReference(Bool_Override):
-    """
-        Check if a specific species references another.
-        Example:
-            Something = Age*Live
-            IsInstance(Something, Age) = TRUE
-            IsInstance(Something, Live) = TRUE
-            IsInstance(Something, What) = FALSE
-        It does this by overriding the Boolean method after an object has been constructed
-    """
-
-    @staticmethod
-    def contains_reference(sso, reference):
-
-        if reference in sso._species_object.get_references():
-            return True
-        else:
-            return False
-
-    def __init__(self, sso, reference):
-        self._operator = None
-        self._reference = reference
-        if isinstance(sso, Specific_Species_Operator):
-            self._concatenate_sso_object = [sso]
-        else:
-            simlog.error('Specific_Species_Operator')
-
-    def __bool__(self):
-        if not self._operator:
-            if len(self._concatenate_sso_object) > 1:
-                simlog.error('IsInstance is only used for single species')
-
-            if self.contains_reference(self._concatenate_sso_object[0], self._reference):
+    def is_a(self, reference):
+        if not self._stocked_characteristics:
+            if reference in self._species_object.get_references():
                 return True
             else:
                 return False
+        else:
+            simlog.error('Concatenation of is_a and dot operator still not supported. Please use them separately')
+
+    def add(self, characteristic):
+        self._stocked_characteristics.add(characteristic)
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
@@ -129,12 +100,12 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
             extra_species = mc.Compiler.get_extra_species_list()
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
-                         + reactant_string_list)
+                         + str(reactant_string_list))
         else:
             simlog.error('The function return a non-valid value')
     elif reaction_rate_function is None:
         simlog.error('There is a reaction rate missing for the following reactants: \n'
-                     + reactant_string_list)
+                     + str(reactant_string_list))
     else:
         simlog.debug(type(reaction_rate_function))
         simlog.error('The rate type is not supported')

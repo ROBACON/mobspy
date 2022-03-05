@@ -19,8 +19,7 @@ import inspect
     Order for characteristics in vector structure (?)
 """
 
-# TODO Added Promoter not DNA Promoter ERROR
-# TODO Change IsReference to is_a
+# TODO Think about special rate definitions - Potential big change?
 # TODO Better print random walk data
 # TODO fix _dot_ for errors 
 
