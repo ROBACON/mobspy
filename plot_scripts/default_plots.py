@@ -3,6 +3,7 @@ from copy import deepcopy
 import plot_scripts.hierarchical_plot as hp
 import json
 import simulation_logging.log_scripts as simlog
+import plot_scripts.query_plot_data as qpd
 
 
 def read_plot_json(plot_json_filename):
@@ -23,6 +24,8 @@ def read_plot_json(plot_json_filename):
 
 
 def stochastic_plot(species, data, plot_params):
+    species, data = qpd.query_plot_data(species, data)
+
     data_to_plot = deepcopy(data)
     new_plot_params = deepcopy(plot_params)
 
@@ -63,6 +66,8 @@ def stochastic_plot(species, data, plot_params):
 
 
 def deterministic_plot(species, data, plot_params):
+    species, data = qpd.query_plot_data(species, data)
+
     new_plot_params = deepcopy(plot_params)
     new_plot_params['xlabel'] = 'Time'
     new_plot_params['ylabel'] = 'Concentration'

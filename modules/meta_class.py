@@ -42,7 +42,7 @@ class Compiler:
             species_string_split = species_string_split[1:]
 
             if species.get_name() == species_name:
-                if all(char in species_string_split for char in characteristics):
+                if all([char in species_string_split for char in characteristics]):
                     result += species_string + ' + '
                     cls.extra_species_list.append(species_string)
 
@@ -288,7 +288,13 @@ class Reacting_Species:
     def __str__(self):
 
         if not self.in_model:
-            return self.list_of_reactants
+            if len(self.list_of_reactants) == 1:
+                to_return = str(self.list_of_reactants[0]['object'])
+                for cha in self.list_of_reactants[0]['characteristics']:
+                    to_return += '.' + cha
+                return to_return
+            else:
+                return self.list_of_reactants
         else:
             if len(self.list_of_reactants) == 1:
                 return Compiler.query_str(self.list_of_reactants[0]['object'], self.list_of_reactants[0]['characteristics'])

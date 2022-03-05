@@ -34,7 +34,7 @@ def copy_reaction(reaction):
         species = product['object']
         stoichiometry = product['stoichiometry']
         products.append({'object': species, 'characteristics': characteristics,
-                        'stoichiometry': stoichiometry})
+                         'stoichiometry': stoichiometry})
 
     reaction_copy = mc.Reactions(reactants, products)
     reaction_copy.set_rate(reaction.rate)
@@ -57,8 +57,8 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     simlog.error('Illegal reaction, there is a product with multiple '
-                                    'characteristics from the same Species referenced \n'
-                                    'Please divide the reaction accordingly \n'
+                                 'characteristics from the same Species referenced \n'
+                                 'Please divide the reaction accordingly \n'
                                  f'Error in {ref_characteristics_to_object[cha]} both {cha} and '
                                  f'{check_for_duplicates[ref_characteristics_to_object[cha]]}'
                                  f' referenced at the same time \n'
@@ -134,7 +134,7 @@ def construct_product_structure(reaction):
     product_list = []
     for product in reaction.products:
         for _ in range(product['stoichiometry']):
-            product_list.append({'species': product['object'], 'label':product['label'],
+            product_list.append({'species': product['object'], 'label': product['label'],
                                  'characteristics': product['characteristics']})
 
     return product_list
@@ -190,8 +190,7 @@ def extract_species_strings(species, characteristics, species_string_dict):
 
     for species_string in species_strings_to_filter:
         species_string_split = species_string.split('_dot_')
-
-        if all(char in species_string_split for char in characteristics):
+        if all([char in species_string_split for char in characteristics]):
             species_strings_list.append(species_string)
 
     return species_strings_list
@@ -223,8 +222,8 @@ def get_involved_species(reaction, species_string_dict):
 
         if not flag_absent_reactant:
             simlog.error(f'Species {reactant["object"]} was not found in model \n'
-                            f'For reaction {reaction} \n'
-                            f'Please add the species or remove the reaction')
+                         f'For reaction {reaction} \n'
+                         f'Please add the species or remove the reaction')
 
         reactant_species_combination_list.append(species_for_reactant)
 
@@ -269,8 +268,9 @@ def create_all_reactions(reactions, species_string_dict,
                                                                                  ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
-                    rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                                                           , reaction.rate, type_of_model)
+                    rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species,
+                                                                          reactant_string_list
+                                                                          , reaction.rate, type_of_model)
 
                     for species in extra_species:
                         if species not in reactant_string_list:

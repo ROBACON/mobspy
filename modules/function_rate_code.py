@@ -15,7 +15,7 @@ class Bool_Override:
             return False
 
         species_string_split = self.species_string.split('_dot_')
-        if all(char in species_string_split for char in self._stocked_characteristics):
+        if all([char in species_string_split for char in self._stocked_characteristics]):
             to_return_boolean = True
         else:
             to_return_boolean = False

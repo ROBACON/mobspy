@@ -12,6 +12,13 @@ import json
 import os
 import inspect
 
+"""
+    Potential future optimizations: query all() in modules 
+    global_scripts directory
+    _dot_ and . in modules
+    Order for characteristics in vector structure (?)
+"""
+
 # TODO Add plotting with queries
 # TODO Change IsReference to is_a
 # TODO Added Promoter not DNA Promoter ERROR
@@ -177,7 +184,9 @@ class Simulation:
 
         for spe in species:
             if isinstance(spe, Species):
-                species_strings.append(spe.get_name())
+                species_strings.append(str(spe))
+            elif isinstance(spe, Reacting_Species):
+                species_strings.append(str(spe))
             elif type(spe) == str:
                 species_strings.append(spe)
             else:
