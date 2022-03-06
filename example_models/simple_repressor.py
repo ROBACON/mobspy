@@ -6,9 +6,19 @@ sys.path.append(os.path.abspath(abs_path))
 
 from mobspy import *
 
+# Model definition
 Chemical, Promoter, Protein = BaseSpecies(3)
 
-Chemical + Promoter.inactive >> Promoter.active [2]
-Promoter.active >> Chemical + Promoter.inactive [1]
-Zero >> Protein [lambda : f'3*{Promoter.inactive}/{Promoter}']
-Protein >> Zero [1]
+Rev[Chemical + Promoter.inactive >> Promoter.active][2, 1]
+rate = lambda pa, pi: f'{pi}/({pa} + {pi})'
+Promoter.active + Promoter.inactive >> Promoter.active + Promoter.inactive + Protein [rate]
+Protein >> Zero [0.1]
+Promoter(100), Chemical(100)
+
+# Simulation
+MySim = Simulation(Chemical | Promoter | Protein)
+MySim.save_data = False
+MySim.plot_data = False
+MySim.duration = 100
+MySim.run()
+MySim.plot_deterministic(Protein)
