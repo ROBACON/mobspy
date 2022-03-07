@@ -10,15 +10,14 @@ from mobspy import *
 Chemical, Promoter, Protein = BaseSpecies(3)
 
 Rev[Chemical + Promoter.inactive >> Promoter.active][2, 1]
-rate = lambda pa, pi: f'{pi}/({pa} + {pi})'
-Promoter.active + Promoter.inactive >> Promoter.active + Promoter.inactive + Protein [rate]
+Promoter >> Promoter + Protein [lambda promoter: 1 if promoter.inactive else 0]
 Protein >> Zero [0.1]
-Promoter(100), Chemical(100)
+Promoter.inactive(100), Chemical(1000)
 
 # Simulation
 MySim = Simulation(Chemical | Promoter | Protein)
 MySim.save_data = False
 MySim.plot_data = False
-MySim.duration = 100
+MySim.duration = 200
 MySim.run()
 MySim.plot_deterministic(Protein)
