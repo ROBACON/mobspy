@@ -322,6 +322,13 @@ class Reacting_Species:
             self.list_of_reactants = [{'object': object_reference, 'characteristics': characteristics,
                                        'stoichiometry': stoichiometry, 'label': label}]
 
+    def __rmul__(self, stoichiometry):
+        if type(stoichiometry) == int:
+            self.list_of_reactants[0]['stoichiometry'] = stoichiometry
+        else:
+            simlog.error('Stoichiometry can only be an int')
+        return self
+
     def __add__(self, other):
         if isinstance(other, Species):
             other = Reacting_Species(other, set(), label=Species.label)

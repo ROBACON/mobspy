@@ -20,12 +20,6 @@ for che, pro in zip(list_of_chemicals, list_of_promoters):
     Rev[ DNAPromoter.inactive.v(pro) + Chemical.v(che) >> DNAPromoter.active.v(pro)][1, 1]
 Chemical >> Zero [1]
 
-# TODO Ask about this
-# list_of_chemicals = ['TetR', 'Lcl', 'Lacl']
-# list_of_promoters = ['PTetR', 'PLcl', 'PLacl']
-# for che, pro in zip(list_of_chemicals, list_of_promoters):
-#   DNAPromoter.v(pro) >> DNAPromoter.v(pro) + Chemical.v(che) [lambda promoter: 1 if promoter.inactive else 0]
-
 repressed = ['TetR', 'Lcl', 'Lacl']
 repressors = ['Lacl' ,'TetR', 'Lcl']
 hill = lambda che: f'10/(1 + ({che})^3)'
