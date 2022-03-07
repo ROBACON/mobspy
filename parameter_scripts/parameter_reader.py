@@ -26,7 +26,8 @@ def read_json(json_file_name):
 
 
 def __set_standard_duration(params):
-    params['duration'] = 60
+    if 'duration' not in params:
+        params['duration'] = 60
 
 
 def __name_output_file(params, mappings):
