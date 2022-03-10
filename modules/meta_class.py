@@ -302,7 +302,7 @@ class Reacting_Species:
                 simlog.error('Query not accepted. Only one species to str at a time')
     
     # Labels and value function implementation
-    def v(self, item):
+    def c(self, item):
         return self.__getattr__(item)
 
     def label(self, label):
@@ -412,7 +412,7 @@ class Species:
             return Compiler.query_str(self, set())
 
     # Def c to get the value
-    def v(self, item):
+    def c(self, item):
         return self.__getattr__(item)
 
     # Def labels

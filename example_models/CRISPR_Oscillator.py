@@ -19,8 +19,8 @@ from mobspy import *
 Promoter, dCas, CasBinding = BaseSpecies(3)
 Promoter.active, Promoter.inactive, CasBinding.no_cas, CasBinding.cas
 
-DNAPromoter = New(Promoter, 1)
-gRNA = New(CasBinding, 1)
+DNAPromoter = New(Promoter)
+gRNA = New(CasBinding)
 
 gRNAs_list = ['g1', 'g2', 'g3']
 Promoters_list = ['P1', 'P2', 'P3']
@@ -31,12 +31,12 @@ gRNA.no_cas >> Zero [0.0069]
 Promoter.active >> 2*Promoter.active [0.000383]
 Promoter >> Zero [0.000383]
 for prom, grna in zip(Promoters_list,gRNAs_list):
-    DNAPromoter.v(prom) >> gRNA.no_cas.v(grna) + DNAPromoter.v(prom)[lambda dna: 5/60 if dna.active else 0]
+    DNAPromoter.c(prom) >> gRNA.no_cas.c(grna) + DNAPromoter.c(prom)[lambda dna: 5/60 if dna.active else 0]
     
 gRNA_rep_List = ['g3','g1','g2']
 for prom, grna in zip(Promoters_list,gRNA_rep_List):
-    DNAPromoter.active.v(prom) + gRNA.cas.v(grna) >> DNAPromoter.inactive.v(prom) [0.012*6.022e-1]
-    DNAPromoter.inactive.v(prom) >> 2*DNAPromoter.active.v(prom) + gRNA.cas.v(grna) [0.000383]
+    DNAPromoter.active.c(prom) + gRNA.cas.c(grna) >> DNAPromoter.inactive.c(prom) [0.012*6.022e-1]
+    DNAPromoter.inactive.c(prom) >> 2*DNAPromoter.active.c(prom) + gRNA.cas.c(grna) [0.000383]
     
 Rev[ Zero >> dCas ] [1/60, 0.000383]
 
