@@ -78,9 +78,9 @@ def __run_time_course(duration, params, index):
         kargs['use_seed'] = True
         kargs['seed'] = params['seeds'][index]
 
-    if 'stepsize' in params:
+    if 'step_size' in params:
         kargs['automatic'] = False
-        kargs['stepsize'] = params['stepsize']
+        kargs['step_number'] = int(params['duration']/params['step_size'])
 
     return basico.run_time_course(duration, **kargs)
 

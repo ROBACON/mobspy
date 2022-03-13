@@ -73,7 +73,8 @@ class Compiler:
                          'Please set ( names == globals() ) in the MobsPy constructor for automatic naming')
 
         for name, key in names.items():
-            if isinstance(key, Species):
+            # If the symbol '$' is in there, the species has not yet been named
+            if isinstance(key, Species) and '$' in key.get_name():
                 key.name(name)
 
     @classmethod
@@ -559,7 +560,7 @@ class Species:
             Instead we combine the sets of references. Every processes references itself
         """
         Compiler.entity_counter += 1
-        name = 'E' + str(Compiler.entity_counter)
+        name = 'N$' + str(Compiler.entity_counter)
         new_entity = Species(name)
         new_entity.set_references(mcu.combine_references(self, other))
         new_entity.add_reference(new_entity)
@@ -628,7 +629,7 @@ def BaseSpecies(number_of_properties=1):
     to_return = []
     for i in range(number_of_properties):
         Compiler.entity_counter += 1
-        name = 'P' + str(Compiler.entity_counter)
+        name = 'N$' + str(Compiler.entity_counter)
         to_return.append(Species(name))
 
     if number_of_properties == 1:
@@ -651,11 +652,19 @@ Zero = __S0
 
 
 def New(species, n=1):
-    to_return = [species*__S1 for _ in range(n)]
-    if n == 1:
-        return to_return[0]
+    if type(n) == int:
+        to_return = [species*__S1 for _ in range(n)]
+        if n == 1:
+            return to_return[0]
+        else:
+            return tuple(to_return)
+    elif type(n) == str:
+        to_return = species*__S1
+        to_return.name(n)
+        return to_return
     else:
-        return tuple(to_return)
+        simlog.error('New only supports numbers for creating multiple species \n '
+                     ' or exclusively string for single species name')
 
 
 if __name__ == '__main__':

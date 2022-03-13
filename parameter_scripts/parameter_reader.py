@@ -25,10 +25,6 @@ def read_json(json_file_name):
     return json_data
 
 
-def __set_standard_duration(params):
-    if 'duration' not in params:
-        params['duration'] = 60
-
 
 def __name_output_file(params, mappings):
 
@@ -66,8 +62,7 @@ def __check_ode_repetitions(params):
         params["repetitions"] = 1
 
 
-def parameter_process(params, mappings, params_for_sbml):
-    __set_standard_duration(params)
+def parameter_process(params, mappings):
     __name_output_file(params, mappings)
     __check_stochastic_repetitions_seeds(params)
     __check_ode_repetitions(params)

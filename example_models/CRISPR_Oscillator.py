@@ -48,9 +48,9 @@ MySim = Simulation( gRNA | DNAPromoter | dCas )
 MySim.save_data = False
 MySim.plot_data = False
 MySim.duration = 8e5
-
+MySim.output_event = True
+MySim.step_size = 100
 
 MySim.run()
-#MySim.plot.logscale = ['Y']
 MySim.plot_deterministic(gRNA.g1, gRNA.g2, gRNA.g3)
 

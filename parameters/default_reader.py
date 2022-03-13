@@ -13,7 +13,7 @@ def get_default_parameters():
 
         "simulation_method": "deterministic",
         "start_time": 0,
-        "duration": None,
+        "duration": 60,
         "r_tol": 1e-8,
         "a_tol": 1e-10,
 

@@ -7,8 +7,8 @@ if __name__ == '__main__':
     Yo, B, C =  BaseSpecies(3)
     Yo.burning, Yo.for_you
     A = New(Yo)
-    A.b(20) >> B[5]
-    A.c(20) >> C[5]
+    A.to_b(20) >> B[5]
+    A.to_c(20) >> C[5]
     MySim = Simulation(A | B | C).compile()
     exit()
 

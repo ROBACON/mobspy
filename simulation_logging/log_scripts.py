@@ -1,3 +1,4 @@
+from copy import deepcopy
 
 
 def error(message):
@@ -6,12 +7,15 @@ def error(message):
 
 
 def debug(message=''):
-    print(message)
+    message_copy = deepcopy(message)
+    print(message_copy.replace('_dot_', '.'))
     pass
 
 
 def warning(message):
-    print('\033[91m' + 'WARNING: ' + message + '\033[0m')
+    message_copy = deepcopy(message)
+    message.replace('_dot_', '.')
+    print('\033[91m' + 'WARNING: ' + message_copy + '\033[0m')
 
 
 if __name__ == '__main__':

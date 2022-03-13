@@ -13,7 +13,7 @@ def get_example_parameters():
         "r_tol": 1e-8,
         "a_tol": 1e-10,
         "seeds": [1, 2, 3],
-        "stepsize": 1,
+        "step_size": 1,
 
         "__comment_3": "OUTPUT",
 

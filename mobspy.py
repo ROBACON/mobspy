@@ -19,10 +19,10 @@ import inspect
     Order for characteristics in vector structure (?)
 """
 
-# TODO Fix standard duration
-# TODO Think about special rate definitions - Potential big change?
+# TODO Fix name problem
+# TODO Fix parameters
+# TODO Fix local/global name problem
 # TODO Better print random walk data
-# TODO fix _dot_ for errors 
 
 
 class Simulation:
@@ -83,7 +83,7 @@ class Simulation:
         :return: nothing, data is saved automaticaly or in self.results
         """
         # We process the parameters here in case there were updates
-        pr.parameter_process(self.parameters, self._mappings_for_sbml, self._parameters_for_sbml)
+        pr.parameter_process(self.parameters, self._mappings_for_sbml)
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
             self.plot_parameters['simulation_method'] = 'deterministic'

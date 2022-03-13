@@ -1,5 +1,4 @@
 import sys, os
-import matplotlib.pyplot as plt
 
 # What does this part below do?
 remove = os.getcwd().split('/')[:-1]
@@ -23,8 +22,8 @@ Zero >> dCas [1/60]
 dCas >> Zero [0.000383]
 
 
-g1, g2,g3 = New(gRNA,3)
-P1,P2,P3 = New(Promoter,3)
+g1, g2, g3 = New(gRNA, 3)
+P1,P2,P3 = New(Promoter, 3)
 
 
 g1.no_cas >> Zero[0.0069]

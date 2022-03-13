@@ -17,7 +17,7 @@ We must decide which ones we implement and give to the user
 - start_time (float): the output start time. If the model is not at that start time, a simulation
 will be performed in one step, to reach it before starting to collect output.
 
-- step_size (int): the output step size
+- step_number (int): the output step size
 
 - seeds(list): set the seeds that will be used 
 

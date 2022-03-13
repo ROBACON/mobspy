@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(abs_path))
 from mobspy import *
 
 
+
 # Variable declaration
 Resource, Mortal, Infectible = BaseSpecies(3)
 
@@ -26,6 +27,6 @@ Receptor = Mortal*Infectible
 inf_rate = lambda receptor: 0.2 if receptor.high_inf else 0.1
 Receptor.not_infected + Phage >> Receptor.early_infection [inf_rate]
 Receptor.early_infection >> Receptor.late_infection [0.1]
-Receptor + Resource >> Receptor.young + Receptor [dup_rate]
+Receptor + Resource >> Receptor.low_inf + Receptor [dup_rate]
 
 Simulation(Donor | Receptor | Phage | AA | Glu).compile()
