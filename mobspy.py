@@ -11,6 +11,7 @@ import plot_scripts.default_plots as dp
 import json
 import os
 import inspect
+from pint import UnitRegistry
 
 """
     Potential future optimizations: query all() in modules 
@@ -22,6 +23,8 @@ import inspect
 # TODO Fix local/global name problem
 # TODO Better print random walk data
 
+# u is reserved for units
+u = UnitRegistry()
 
 class Simulation:
 

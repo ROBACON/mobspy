@@ -9,6 +9,6 @@ if __name__ == '__main__':
     A(200) + B(100) >> C[1]
     MySim = Simulation(A | B | C)
     MySim.simulation_method = 'stochastic'
-    MySim.volume = 1
+    MySim.volume = 1 * u.millilitre
     MySim.save_data = False
     MySim.run()

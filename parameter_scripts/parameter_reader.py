@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import numpy as np
 import simulation_logging.log_scripts as simlog
+from pint import Quantity
 
 
 def read_json(json_file_name):
@@ -23,7 +24,6 @@ def read_json(json_file_name):
             exit(1)
 
     return json_data
-
 
 
 def __name_output_file(params, mappings):
@@ -62,7 +62,20 @@ def __check_ode_repetitions(params):
         params["repetitions"] = 1
 
 
+def __convert_parameters_for_COPASI(params):
+    for key, p in params.items():
+        if isinstance(p, Quantity):
+            if str(p.dimensionality) == '[length] ** 3':
+                params[key] = p.to('litre').magnitude
+
+            if str(p.dimensionality) == '[time]':
+                params[key] = p.to('second').magnitude
+
+
 def parameter_process(params, mappings):
     __name_output_file(params, mappings)
     __check_stochastic_repetitions_seeds(params)
     __check_ode_repetitions(params)
+    __convert_parameters_for_COPASI(params)
+
+
