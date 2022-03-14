@@ -2,7 +2,7 @@ def get_example_parameters():
     example_parameters = {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
 
-        "volume_ml": 1,
+        "volume": 1,
         "repetitions": 3,
 
         "__comment_2": "basiCO parameters",

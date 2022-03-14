@@ -19,8 +19,6 @@ import inspect
     Order for characteristics in vector structure (?)
 """
 
-# TODO Fix name problem
-# TODO Fix parameters
 # TODO Fix local/global name problem
 # TODO Better print random walk data
 
@@ -62,7 +60,7 @@ class Simulation:
     def compile(self, verbose=True):
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml = Compiler.compile(self.model, names=self.names,
-                                                                              volume_ml=self.parameters['volume_ml'],
+                                                                              volume=self.parameters['volume'],
                                                                               type_of_model=self.parameters[
                                                                                   "simulation_method"],
                                                                               verbose=verbose)

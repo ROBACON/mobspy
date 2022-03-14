@@ -78,7 +78,7 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate, volume_ml, names=None, type_of_model='deterministic', verbose=True):
+    def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True):
         # Set in model condition
         Reacting_Species.in_model = True
         Species.in_model = True
@@ -164,7 +164,7 @@ class Compiler:
 
         # Volume correction
         for s in species_for_sbml:
-            species_for_sbml[s] = int(species_for_sbml[s] * volume_ml)
+            species_for_sbml[s] = int(species_for_sbml[s] * volume)
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
