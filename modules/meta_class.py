@@ -17,6 +17,9 @@ class Compiler:
         After compilation the species receive the variable name
     """
 
+    # This is were the default order is stored, change it in the beginning of the model
+    default_order = Default
+
     # Basic storage of defined variables for Compiler
     entity_counter = 0
     reactions_set = set()
@@ -258,7 +261,7 @@ class Reactions:
         self.products = products
 
         # Assign default order
-        self.order = Default
+        self.order = Compiler.default_order
 
         self.rate = Compiler.last_rate
         if Compiler.last_rate is not None:
