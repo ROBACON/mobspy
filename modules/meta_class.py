@@ -258,7 +258,7 @@ class Reactions:
         self.products = products
 
         # Assign default order
-        self.order = Round_Robin_RO
+        self.order = Default
 
         self.rate = Compiler.last_rate
         if Compiler.last_rate is not None:

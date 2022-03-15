@@ -129,7 +129,7 @@ class __Round_Robin_Base(__Operator_Base):
 
 
 # Define class to override the operators
-Round_Robin_RO = __Round_Robin_Base()
+All = __Round_Robin_Base()
 
 
 class __RR_Default_Base(__Operator_Base):
