@@ -236,7 +236,7 @@ def get_involved_species(reaction, species_string_dict):
 
 def create_all_reactions(reactions, species_string_dict,
                          ref_characteristics_to_object,
-                         type_of_model):
+                         type_of_model, volume):
     """
         This function creates all reactions
         Returns the reactions_for_sbml and parameters_for_sbml dictionary
@@ -274,7 +274,7 @@ def create_all_reactions(reactions, species_string_dict,
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
                     rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species,
                                                                           reactant_string_list
-                                                                          , reaction.rate, type_of_model)
+                                                                          , reaction.rate, type_of_model, volume)
 
                     for species in extra_species:
                         if species not in reactant_string_list:

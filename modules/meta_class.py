@@ -4,6 +4,7 @@ from modules.order_operators import *
 from modules.function_rate_code import *
 import modules.reaction_construction_nb as rc
 import modules.function_rate_code as frc
+from pint import Quantity
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -162,9 +163,6 @@ class Compiler:
                         species_for_sbml[species_string] = count['quantity']
                         break
 
-        # Volume correction
-        for s in species_for_sbml:
-            species_for_sbml[s] = int(species_for_sbml[s] * volume)
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
@@ -172,7 +170,7 @@ class Compiler:
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(cls.reactions_set,
                                                                           cls.species_string_dict,
                                                                           cls.ref_characteristics_to_object,
-                                                                          type_of_model)
+                                                                          type_of_model, volume)
 
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
@@ -346,9 +344,10 @@ class Reacting_Species:
         return reaction
 
     def __call__(self, quantity):
-        if type(quantity) == int or type(quantity) == float:
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly')
+            quantity = uh.convert_counts(quantity)
 
             species_object = self.list_of_reactants[0]['object']
             characteristics = self.list_of_reactants[0]['characteristics']
@@ -515,7 +514,8 @@ class Species:
     def __call__(self, quantity):
         # It's called quantity because of the original design
         self.in_model = False
-        if type(quantity) == int or type(quantity) == float:
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
+            quantity = uh.convert_counts(quantity)
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_'):

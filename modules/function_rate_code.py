@@ -2,6 +2,7 @@ import modules.meta_class as mc
 import modules.reaction_construction_nb as rc
 import simulation_logging.log_scripts as simlog
 import modules.meta_class as mc
+import modules.unit_handler as uh
 
 
 class Bool_Override:
@@ -65,7 +66,7 @@ class Specific_Species_Operator(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model):
+                          , reaction_rate_function, type_of_model, volume):
     '''
         The order of the reactants appears in species_string_dict appears equality
         to the order they appear on the reaction
@@ -84,17 +85,20 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     '''
     extra_species = []
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float:
+        reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list))
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                     reaction_rate_function, type_of_model)
+                                                     reaction_rate_function, type_of_model, volume)
 
     elif callable(reaction_rate_function):
         arguments = prepare_arguments_for_callable(combination_of_reactant_species,
                                                    reactant_string_list, reaction_rate_function.__code__.co_varnames)
         rate = reaction_rate_function(**arguments)
+        rate = uh.convert_rate(rate, len(reactant_string_list))
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                         rate, type_of_model)
+                                                         rate, type_of_model,
+                                                         volume)
         elif type(rate) == str:
             reaction_rate_string = rate
             extra_species = mc.Compiler.get_extra_species_list()
@@ -113,7 +117,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     return reaction_rate_string, extra_species
 
 
-def basic_kinetics_string(reactants, reaction_rate, type_of_model):
+def basic_kinetics_string(reactants, reaction_rate, type_of_model, volume):
     """
         Just assign basic kinetics string based on the received reactans and rate
         parameters_for_sbml is for the construction of the model later
@@ -134,6 +138,9 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model):
 
     kinetics_string += str(reaction_rate)
 
+    n = kinetics_string.count('*') - 1
+    kinetics_string += f' * volume^{-n}'
+
     return kinetics_string
 
 
@@ -147,6 +154,7 @@ def stochastic_string(reactant_name, number):
             to_return_string = reactant_name
         else:
             to_return_string += f' * ({reactant_name} - {i})/{i + 1}'
+
     return to_return_string
 
 

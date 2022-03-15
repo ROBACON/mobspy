@@ -20,6 +20,7 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
+# TODO Add order to characteristics
 # TODO Fix local/global name problem
 # TODO Better print random walk data
 
@@ -51,31 +52,31 @@ class Simulation:
         if not plot_parameters:
             self.plot_parameters = get_default_plot_parameters()
 
-        simlog.debug('Compiling model')
-        self.compile(verbose=False)
-        self.mappings = deepcopy(self._mappings_for_sbml)
-
         # Other needed things for simulating
         self.sbml_string = None
         self.results = None
         self.packed_data = []
 
     def compile(self, verbose=True):
+        simlog.debug('Compiling model')
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml = Compiler.compile(self.model, names=self.names,
                                                                               volume=self.parameters['volume'],
                                                                               type_of_model=self.parameters[
                                                                                   "simulation_method"],
                                                                               verbose=verbose)
+        self._parameters_for_sbml['volume'] = (self.parameters['volume'], 'litre')
+        self.mappings = deepcopy(self._mappings_for_sbml)
 
         self.all_species_not_mapped = {}
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
 
-    def generate_sbml(self):
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
+
+        print()
         return self.sbml_string
 
     def run(self):
@@ -84,12 +85,14 @@ class Simulation:
         :return: nothing, data is saved automaticaly or in self.results
         """
         # We process the parameters here in case there were updates
-        pr.parameter_process(self.parameters, self._mappings_for_sbml)
+        pr.parameter_process(self.parameters, self.model)
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
             self.plot_parameters['simulation_method'] = 'deterministic'
         elif self.parameters['simulation_method'].lower() == 'stochastic':
             self.plot_parameters['simulation_method'] = 'stochastic'
+
+        self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
         self.sbml_string = sbml_builder.build(self._species_for_sbml,

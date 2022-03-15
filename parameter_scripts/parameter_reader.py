@@ -26,7 +26,7 @@ def read_json(json_file_name):
     return json_data
 
 
-def __name_output_file(params, mappings):
+def __name_output_file(params):
 
     if params['output_dir'][0] == '/':
         params['output_dir'] = params['output_dir'][1:]
@@ -35,10 +35,8 @@ def __name_output_file(params, mappings):
     save_dir = os.path.join(Path(main_directory).parent.absolute(), params['output_dir'])
 
     if params['output_file'] is None:
-        file_name = "r"
-        for species in mappings:
-            file_name += '_' + str(species)
-        file_name += ' ' + str(datetime.now()) + '.json'
+        file_name = "r_"
+        file_name += str(datetime.now()) + '.json'
     else:
         file_name = params['output_file']
 
@@ -73,7 +71,7 @@ def __convert_parameters_for_COPASI(params):
 
 
 def parameter_process(params, mappings):
-    __name_output_file(params, mappings)
+    __name_output_file(params)
     __check_stochastic_repetitions_seeds(params)
     __check_ode_repetitions(params)
     __convert_parameters_for_COPASI(params)
