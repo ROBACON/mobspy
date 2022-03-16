@@ -29,7 +29,9 @@ def convert_counts(quantity):
     if isinstance(quantity, Quantity):
         if str(quantity.units) == 'mole':
             return quantity.magnitude * N_A
-    return quantity.magnitude
+        else:
+            return quantity.magnitude
+    return quantity
 
 
 if __name__ == '__main__':

@@ -20,12 +20,15 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
+# TODO Look into COPASI volume, units
 # TODO Add order to characteristics
 # TODO Fix local/global name problem
 # TODO Better print random walk data
+# TODO Warning when product has species in common
 
 # u is reserved for units
 u = UnitRegistry()
+
 
 class Simulation:
 
@@ -76,7 +79,6 @@ class Simulation:
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
 
-        print()
         return self.sbml_string
 
     def run(self):

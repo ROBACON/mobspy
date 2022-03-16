@@ -94,7 +94,7 @@ def create_model(species={}, parameters={}, reactions={}, events={}):
         unit.setMultiplier(1), "set unit multiplier"
     )  # slight misuse: we operate in min
 
-    # Create a compartment inside this model.
+    # Create a compartment inside this model
 
     c1 = model.createCompartment()
     check(c1, "create compartment")
@@ -127,7 +127,6 @@ def create_model(species={}, parameters={}, reactions={}, events={}):
     # attributes 'id' and 'constant' for a parameter in SBML Level 3, and
     # initialize the parameter with a value along with its units.
 
-    print(parameters)
     for k_str in parameters:
         k = model.createParameter()
         check(k, "create parameter k")
