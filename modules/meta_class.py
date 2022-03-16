@@ -17,9 +17,6 @@ class Compiler:
         After compilation the species receive the variable name
     """
 
-    # This is were the default order is stored, change it in the beginning of the model
-    default_order = Default
-
     # Basic storage of defined variables for Compiler
     entity_counter = 0
     reactions_set = set()
@@ -82,7 +79,8 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True):
+    def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True,
+                default_order=Default):
         # Set in model condition
         Reacting_Species.in_model = True
         Species.in_model = True
@@ -135,6 +133,11 @@ class Compiler:
         for spe_object in list_of_species_objects:
             for reference in spe_object.get_references():
                 cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
+
+        # assign them default order
+        for reaction in cls.reactions_set:
+            if reaction.order is None:
+                reaction.order = default_order
 
         # Setting Species for SBML and 0 for counts
         species_for_sbml = {}
@@ -261,7 +264,7 @@ class Reactions:
         self.products = products
 
         # Assign default order
-        self.order = Compiler.default_order
+        self.order = None
 
         self.rate = Compiler.last_rate
         if Compiler.last_rate is not None:
@@ -333,7 +336,7 @@ class Reacting_Species:
 
     def __add__(self, other):
         if isinstance(other, Species):
-            other = Reacting_Species(other, set(), label=Species.label)
+            other = Reacting_Species(other, set())
         self.list_of_reactants += other.list_of_reactants
         return self
 

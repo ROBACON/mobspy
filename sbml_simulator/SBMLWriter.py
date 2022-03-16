@@ -92,7 +92,7 @@ def create_model(species={}, parameters={}, reactions={}, events={}):
     check(unit.setScale(0), "set unit scale")
     check(
         unit.setMultiplier(1), "set unit multiplier"
-    )  # slight misuse: we operate in min
+    )
 
     # Create a compartment inside this model
 
@@ -103,8 +103,8 @@ def create_model(species={}, parameters={}, reactions={}, events={}):
     check(c1.setSize(1), 'set compartment "size"')
     check(c1.setSpatialDimensions(3), "set compartment dimensions")
     check(
-        c1.setUnits("litre"), "set compartment size units"
-    )  # slight misuse: we operate in mL
+        c1.setUnits("dimensionless"), "set compartment size units"
+    )
 
     # Create species inside this model, set the required attributes
     # for each species in SBML Level 3 (which are the 'id', 'compartment',

@@ -102,6 +102,9 @@ class __Round_Robin_Base(__Operator_Base):
         products = []
         for species, label, characteristics in [(e['species'], e['label'], e['characteristics']) for e in product_species]:
 
+            # species.in_model = False
+            # print(species, label, characteristics)
+
             # Simple round robin
             try:
                 species_to_transform_string = order_dictionary[(species, label)][round_robin_index[(species, label)]]

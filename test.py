@@ -6,9 +6,11 @@ if __name__ == '__main__':
 
     # Check rate dimension
     A, B, C = BaseSpecies(3)
-    A(200) + B(100) >> C[1]
+    A.s1, A.s2, A.s3
+    A.s2 + B >> A.s3 + A [1]
     MySim = Simulation(A | B | C)
     MySim.simulation_method = 'stochastic'
-    MySim.volume = 1 * u.millilitre
+    MySim.volume = 1
     MySim.save_data = False
-    MySim.run()
+    MySim.default_order = All
+    MySim.compile()

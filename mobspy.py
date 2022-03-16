@@ -20,11 +20,13 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
-# TODO Look into COPASI volume, units
 # TODO Add order to characteristics
 # TODO Fix local/global name problem
 # TODO Better print random walk data
 # TODO Warning when product has species in common
+# TODO Look into COPASI volume, units
+# TODO Talk about mols, string based units, counts vs concentration
+# TODO Make it thread safe
 
 # u is reserved for units
 u = UnitRegistry()
@@ -59,15 +61,25 @@ class Simulation:
         self.sbml_string = None
         self.results = None
         self.packed_data = []
+        self.default_order = Default
 
     def compile(self, verbose=True):
         simlog.debug('Compiling model')
+
+        pr.parameter_process(self.parameters, self.model)
+        if self.parameters['simulation_method'].lower() == 'deterministic':
+            self.parameters['repetitions'] = 1
+            self.plot_parameters['simulation_method'] = 'deterministic'
+        elif self.parameters['simulation_method'].lower() == 'stochastic':
+            self.plot_parameters['simulation_method'] = 'stochastic'
+
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml = Compiler.compile(self.model, names=self.names,
                                                                               volume=self.parameters['volume'],
                                                                               type_of_model=self.parameters[
                                                                                   "simulation_method"],
-                                                                              verbose=verbose)
+                                                                              verbose=verbose,
+                                                                              default_order=self.default_order)
         self._parameters_for_sbml['volume'] = (self.parameters['volume'], 'litre')
         self.mappings = deepcopy(self._mappings_for_sbml)
 
@@ -86,14 +98,6 @@ class Simulation:
             Just calls the simulator part of the codes for running
         :return: nothing, data is saved automaticaly or in self.results
         """
-        # We process the parameters here in case there were updates
-        pr.parameter_process(self.parameters, self.model)
-        if self.parameters['simulation_method'].lower() == 'deterministic':
-            self.parameters['repetitions'] = 1
-            self.plot_parameters['simulation_method'] = 'deterministic'
-        elif self.parameters['simulation_method'].lower() == 'stochastic':
-            self.plot_parameters['simulation_method'] = 'stochastic'
-
         self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
@@ -143,6 +147,9 @@ class Simulation:
 
     # Dealing with parameters
     def __setattr__(self, name, value):
+
+        if name == 'default_order':
+            self.__dict__[name] = value
 
         if 'plot_flag' in self.__dict__ and self.__dict__['plot_flag']:
             self.__dict__["plot_parameters"][name] = value
