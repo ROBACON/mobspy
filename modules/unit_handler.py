@@ -8,7 +8,6 @@ import simulation_logging.log_scripts as simlog
 def convert_rate(quantity, reaction_order):
 
     volume_power = reaction_order - 1
-
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
         try:
