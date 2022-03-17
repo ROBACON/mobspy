@@ -19,7 +19,7 @@ def convert_rate(quantity, reaction_order):
             if '[substance]' in quantity.dimensionality:
                 converted_quantity.ito_base_units()
                 converted_quantity.ito(f'liters ** {volume_power}/(moles ** {volume_power} * seconds)')
-                return converted_quantity.magnitude / (N_A ** reaction_order)
+                return converted_quantity.magnitude / (N_A ** volume_power)
             else:
                 converted_quantity.ito_base_units()
                 converted_quantity.ito(f'liters ** {volume_power}/seconds')
