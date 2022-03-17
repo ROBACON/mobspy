@@ -3,7 +3,7 @@ import modules.reaction_construction_nb as rc
 import simulation_logging.log_scripts as simlog
 import modules.meta_class as mc
 import modules.unit_handler as uh
-
+from pint import Quantity
 
 class Bool_Override:
     """
@@ -84,7 +84,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         returns: the reaction kinetics as a string for SBML
     '''
     extra_species = []
-    if type(reaction_rate_function) == int or type(reaction_rate_function) == float:
+    if type(reaction_rate_function) == int or type(reaction_rate_function) == float or isinstance(reaction_rate_function, Quantity):
         reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list))
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model, volume)

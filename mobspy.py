@@ -26,7 +26,7 @@ from pint import UnitRegistry
 # TODO Warning when product has species in common
 # TODO Look into COPASI volume, units
 # TODO Talk about mols, string based units, counts vs concentration
-# TODO Make it thread safe
+# TODO Talk about thread safety = last_rate problem
 
 # u is reserved for units
 u = UnitRegistry()
