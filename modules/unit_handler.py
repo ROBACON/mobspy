@@ -11,20 +11,24 @@ def convert_rate(quantity, reaction_order):
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
         try:
+            if volume_power == 0:
+                converted_quantity.ito_base_units()
+                converted_quantity.ito(f'1/seconds')
+                return converted_quantity.magnitude
+
             if '[substance]' in quantity.dimensionality:
                 converted_quantity.ito_base_units()
                 converted_quantity.ito(f'liters ** {volume_power}/(moles ** {reaction_order} * seconds)')
-                converted_quantity = converted_quantity.magnitude * (N_A ** reaction_order)
+                return converted_quantity.magnitude * (N_A ** reaction_order)
             else:
                 converted_quantity.ito_base_units()
                 converted_quantity.ito(f'liters ** {volume_power}/seconds')
-                converted_quantity = converted_quantity.magnitude
+                return converted_quantity.magnitude
         except Exception as e:
             print(e)
             simlog.error(f'Problem converting rate {quantity} \n'
                          f'Is the rate in the form [volume] ** (order - 1)/[time]?')
 
-        return converted_quantity
     else:
         return quantity
 
