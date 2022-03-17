@@ -1,4 +1,3 @@
-import inspect
 import modules.meta_class_utils as mcu
 from modules.order_operators import *
 from modules.function_rate_code import *
@@ -111,6 +110,14 @@ class Compiler:
 
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
+        names_used = set()
+        for species in list_of_species_objects:
+            if '$' in species.get_name():
+                simlog.error('An error has occurred and one of the species was not named')
+            if species.get_name() in names_used:
+                simlog.error(f'Names must be unique for all species\n' +
+                             f'The name is {species.get_name()}')
+            names_used.add(species.get_name())
 
         # Construct structures necessary for reactions
         cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(list_of_species_objects)

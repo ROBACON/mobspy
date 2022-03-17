@@ -25,7 +25,7 @@ gRNA = New(CasBinding)
 gRNAs_list = ['g1', 'g2', 'g3']
 Promoters_list = ['P1', 'P2', 'P3']
 
-Rev[ gRNA.no_cas + dCas >> gRNA.cas ] [0.0018*6.022e-1, 0.000383]
+Rev[ gRNA.no_cas + dCas >> gRNA.cas ][0.0018*6.022e-1, 0.000383]
 gRNA.no_cas >> Zero [0.0069]
 
 Promoter.active >> 2*Promoter.active [0.000383]

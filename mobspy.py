@@ -20,10 +20,10 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
-# TODO Add order to characteristics
 # TODO Fix local/global name problem
 # TODO Better print random walk data
 # TODO Warning when product has species in common
+# TODO Parallel Species needs an __iter__ update (better that current list thing)
 # TODO Look into COPASI volume, units
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
@@ -44,7 +44,13 @@ class Simulation:
         :param plot_parameters: Plot parameters for plotting
         """
         if names is None:
-            names = inspect.stack()[1][0].f_globals
+            local_names = inspect.stack()[1][0].f_locals
+            global_names = inspect.stack()[1][0].f_globals
+            names = {}
+            for key, item in global_names.items():
+                names[key] = item
+            for key, item in local_names.items():
+                names[key] = item
 
         self.model = model
         self.names = names
