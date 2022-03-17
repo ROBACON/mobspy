@@ -139,7 +139,8 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model, volume):
     kinetics_string += str(reaction_rate)
 
     n = kinetics_string.count('*') - 1
-    kinetics_string += f' * volume^{-n}'
+    if n > 0:
+        kinetics_string += f' * volume^{-n}'
 
     return kinetics_string
 

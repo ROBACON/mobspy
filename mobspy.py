@@ -27,6 +27,7 @@ from pint import UnitRegistry
 # TODO Look into COPASI volume, units
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
+# TODO Spont. generation - Zero Order reaction
 
 # u is reserved for units
 u = UnitRegistry()

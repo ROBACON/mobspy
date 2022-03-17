@@ -11,7 +11,7 @@ def convert_rate(quantity, reaction_order):
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
         try:
-            if volume_power == 0:
+            if volume_power <= 0:
                 converted_quantity.ito_base_units()
                 converted_quantity.ito(f'1/seconds')
                 return converted_quantity.magnitude
