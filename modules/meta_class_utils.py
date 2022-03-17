@@ -146,9 +146,12 @@ def create_species_strings(spe_object, sets_of_characteristics):
         All possible combinations are created, with no intersections between characteristics of
         a same referenced species
     """
+
     # Remove empty sets from the list and transform sets in lists
-    lists_of_definitions = [list(i) for i in sets_of_characteristics if i != set()]
+    # Sort the lists so the characteristics will appear in the same order e
+    lists_of_definitions = [sorted(list(i)) for i in sets_of_characteristics if i != set()]
     set_of_species = set()
+    lists_of_definitions = sorted(lists_of_definitions)
 
     for i in itertools.product(*lists_of_definitions):
         if lists_of_definitions:
