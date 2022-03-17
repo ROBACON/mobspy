@@ -85,7 +85,7 @@ for t in range(len(data['Time'])):
     if break_flag:
         break
 
-plt.scatter(Bacteria_x, Bacteria_y, marker='o', c='b')
-plt.scatter(Phage_x, Phage_y, marker='o', c='r')
-plt.scatter(Meeting_x, Meeting_y, marker='o', c='y')
+plt.plot(Bacteria_x, Bacteria_y, c='b')
+plt.plot(Phage_x, Phage_y, c='r')
+plt.plot(Meeting_x, Meeting_y, c='y')
 plt.show()

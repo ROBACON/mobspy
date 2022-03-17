@@ -20,6 +20,9 @@ def combine_references(species1, species2):
     """
         Combine the sets of references of two species
     """
+    if species1.get_references().intersection(species2.get_references()):
+        simlog.warning(f'A product was executed between species with a common meta-species\n')
+
     return species1.get_references().union(species2.get_references())
 
 

@@ -88,12 +88,6 @@ class Compiler:
 
         # TODO no events for now
         # If there is only a single species
-        if isinstance(species_to_simulate, Species):
-            list_of_species_objects = [species_to_simulate]
-        elif isinstance(species_to_simulate, ParallelSpecies):
-            list_of_species_objects = species_to_simulate.list_of_species
-        else:
-            simlog.error('Wrong input type')
 
         """
             Here we construct the species for Copasi using their objects
@@ -111,7 +105,7 @@ class Compiler:
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
         names_used = set()
-        for species in list_of_species_objects:
+        for species in species_to_simulate:
             if '$' in species.get_name():
                 simlog.error('An error has occurred and one of the species was not named')
             if species.get_name() in names_used:
@@ -120,16 +114,16 @@ class Compiler:
             names_used.add(species.get_name())
 
         # Construct structures necessary for reactions
-        cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(list_of_species_objects)
+        cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(species_to_simulate)
 
         # Start by creating the Mappings for the SBML
         # Convert to user friendly format as well
         mappings_for_sbml = {}
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             mappings_for_sbml[spe_object.get_name()] = []
 
         # List of Species objects
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             list_of_definitions = []
             for reference in spe_object.get_references():
                 list_of_definitions.append(reference.get_characteristics())
@@ -137,7 +131,7 @@ class Compiler:
                                                                              list_of_definitions)
         # Set of reactions involved
         cls.reactions_set = set()
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             for reference in spe_object.get_references():
                 cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
 
@@ -148,18 +142,18 @@ class Compiler:
 
         # Setting Species for SBML and 0 for counts
         species_for_sbml = {}
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             for species_string in cls.species_string_dict[spe_object]:
                 species_for_sbml[species_string] = 0
         cls.sbml_species_for_query = species_for_sbml
 
         # BaseSpecies the mappings for sbml
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             for species_string in cls.species_string_dict[spe_object]:
                 mappings_for_sbml[spe_object.get_name()].append(species_string.replace('_dot_', '.'))
 
         # Set initial counts for SBML
-        for spe_object in list_of_species_objects:
+        for spe_object in species_to_simulate:
             for count in spe_object.get_quantities():
 
                 if count['quantity'] == 0:
@@ -397,6 +391,15 @@ class ParallelSpecies:
             simlog.error('Only Species can be appended')
         self.list_of_species.append(species)
 
+    def __getitem__(self, item):
+        return self.list_of_species[item]
+
+    def __str__(self):
+        to_return = []
+        for spe in self.list_of_species:
+            to_return.append(spe.get_name())
+        return str(to_return)
+
     def __or__(self, other):
         if isinstance(other, Species):
             self.append(other)
@@ -405,6 +408,10 @@ class ParallelSpecies:
             return ParallelSpecies(self.list_of_species + other.list_of_species)
         else:
             simlog.error('Operator must only be used in Species on ParallelSpecies')
+
+    def __iter__(self):
+        for spe in self.list_of_species:
+            yield spe
 
 
 class Species:

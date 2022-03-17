@@ -20,10 +20,6 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
-# TODO Fix local/global name problem
-# TODO Better print random walk data
-# TODO Warning when product has species in common
-# TODO Parallel Species needs an __iter__ update (better that current list thing)
 # TODO Look into COPASI volume, units
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
