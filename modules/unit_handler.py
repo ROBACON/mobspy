@@ -34,12 +34,23 @@ def convert_rate(quantity, reaction_order):
 
 
 def convert_counts(quantity):
+    converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
-        if str(quantity.units) == 'mole':
-            return quantity.magnitude * N_A
-        else:
-            return quantity.magnitude
-    return quantity
+        try:
+            if '[substance]' in quantity.dimensionality:
+                converted_quantity.ito_base_units()
+                if str(converted_quantity.units) != 'mole':
+                    raise Exception
+                if '[substance]' in quantity.dimensionality:
+                    converted_quantity = converted_quantity.magnitude * N_A
+            else:
+                converted_quantity.ito('')
+                converted_quantity = converted_quantity.magnitude
+        except Exception as e:
+            print(e)
+            simlog.error(f'Problem converting rate {quantity} \n'
+                         f'Is it really a count? Concentrations must be converted')
+    return int(converted_quantity)
 
 
 if __name__ == '__main__':

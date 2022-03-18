@@ -20,6 +20,8 @@ from pint import UnitRegistry
     Order for characteristics in vector structure (?)
 """
 
+# TODO Use molar
+# TODO Fix counts and units
 # TODO Look into COPASI volume, units
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
