@@ -37,8 +37,8 @@ Rev[Zero >> dCas][1 / u.minute, 2.3e-2 / u.minute]
 # Fix this!!!!!
 
 DNAPromoter.active.P1(1), DNAPromoter.active.P2(1), DNAPromoter.active.P3(1)
-gRNA.no_cas.g1(0), gRNA.no_cas.g2(40), gRNA.no_cas.g3(1)
-dCas(43)
+gRNA.no_cas.g1(0), gRNA.no_cas.g2(40*u.nanomolar), gRNA.no_cas.g3(1*u.nanomolar)
+dCas(43*u.nanomolar)
 
 # 40 nanomolar, 1
 # dCas 43nm

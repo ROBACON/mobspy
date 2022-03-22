@@ -167,9 +167,13 @@ class Compiler:
                 for species_string in species_for_sbml.keys():
                     species_set = mcu.extract_characteristics_from_string(species_string)
                     if species_set == count_set:
-                        species_for_sbml[species_string] = count['quantity']
+                        temp_count = uh.convert_counts(count['quantity'], volume)
+                        if type(temp_count) == float and not type_of_model == 'deterministic':
+                            simlog.warning('The stochastic simulation rounds floats to integers')
+                            species_for_sbml[species_string] = int(temp_count)
+                        else:
+                            species_for_sbml[species_string] = temp_count
                         break
-
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
@@ -354,8 +358,6 @@ class Reacting_Species:
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly')
-            quantity = uh.convert_counts(quantity)
-
             species_object = self.list_of_reactants[0]['object']
             characteristics = self.list_of_reactants[0]['characteristics']
             species_object.add_quantities(characteristics, quantity)
@@ -535,7 +537,6 @@ class Species:
         # It's called quantity because of the original design
         self.in_model = False
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
-            quantity = uh.convert_counts(quantity)
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_'):
