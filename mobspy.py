@@ -13,7 +13,7 @@ import os
 import inspect
 from pint import UnitRegistry
 
-
+# TODO Add units to plot
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
 # TODO Spont. generation - Zero Order reaction

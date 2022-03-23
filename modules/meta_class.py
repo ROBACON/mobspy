@@ -474,6 +474,9 @@ class Species:
         else:
             return ParallelSpecies([self, other])
 
+    def __iter__(self):
+        yield self
+
     # Creation of reactions using entities ########################
     def __getitem__(self, item):
         return Compiler.override_get_item(self, item)
