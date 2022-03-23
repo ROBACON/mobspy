@@ -13,14 +13,7 @@ import os
 import inspect
 from pint import UnitRegistry
 
-"""
-    Potential future optimizations: query all() in modules 
-    global_scripts directory
-    _dot_ and . in modules
-    Order for characteristics in vector structure (?)
-"""
 
-# TODO Discuss complex string rates
 # TODO Talk about mols, string based units, counts vs concentration
 # TODO Talk about thread safety = last_rate problem
 # TODO Spont. generation - Zero Order reaction

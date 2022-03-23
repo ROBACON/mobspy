@@ -30,7 +30,8 @@ def stochastic_plot(species, data, plot_params):
     new_plot_params = deepcopy(plot_params)
 
     new_plot_params['figures'] = []
-    new_plot_params['xlabel'] = 'Time'
+    new_plot_params['xlabel'] = 'Time (seconds)'
+    new_plot_params['ylabel'] = 'Counts'
     new_plot_params['pad'] = 1.5
     color_cycler = hp.Color_cycle()
     for spe in species:
@@ -69,8 +70,8 @@ def deterministic_plot(species, data, plot_params):
     species, data = qpd.query_plot_data(species, data)
 
     new_plot_params = deepcopy(plot_params)
-    new_plot_params['xlabel'] = 'Time'
-    new_plot_params['ylabel'] = 'Concentration'
+    new_plot_params['xlabel'] = 'Time (seconds)'
+    new_plot_params['ylabel'] = 'Counts'
     new_plot_params['species_to_plot'] = species
     color_cycler = hp.Color_cycle()
     for spe in species:

@@ -15,4 +15,4 @@ My_Sim.save_data = False
 My_Sim.duration = 5
 My_Sim.volume = 10
 My_Sim.simulation_method = 'stochastic'
-print(My_Sim.compile())
+My_Sim.run()
