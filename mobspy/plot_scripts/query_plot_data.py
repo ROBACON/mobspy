@@ -1,5 +1,5 @@
 from copy import deepcopy
-import simulation_logging.log_scripts as simlog
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 def query_plot_data(species, data):

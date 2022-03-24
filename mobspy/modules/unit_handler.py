@@ -2,7 +2,7 @@ from pint import UnitRegistry, Quantity
 from scipy.constants import N_A
 from copy import deepcopy
 import os, sys
-import simulation_logging.log_scripts as simlog
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 def convert_rate(quantity, reaction_order):

@@ -1,9 +1,9 @@
-import plot_scripts.statistics_calculations as sc
+import mobspy.plot_scripts.statistics_calculations as sc
 from copy import deepcopy
-import plot_scripts.hierarchical_plot as hp
+import mobspy.plot_scripts.hierarchical_plot as hp
 import json
-import simulation_logging.log_scripts as simlog
-import plot_scripts.query_plot_data as qpd
+import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.plot_scripts.query_plot_data as qpd
 
 
 def read_plot_json(plot_json_filename):

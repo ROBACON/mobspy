@@ -1,8 +1,8 @@
-import modules.meta_class_utils as mcu
-from modules.order_operators import *
-from modules.function_rate_code import *
-import modules.reaction_construction_nb as rc
-import modules.function_rate_code as frc
+import mobspy.modules.meta_class_utils as mcu
+from mobspy.modules.order_operators import *
+from mobspy.modules.function_rate_code import *
+import mobspy.modules.reaction_construction_nb as rc
+import mobspy.modules.function_rate_code as frc
 from pint import Quantity
 
 

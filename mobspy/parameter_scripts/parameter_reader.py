@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import numpy as np
-import simulation_logging.log_scripts as simlog
+import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
 
 

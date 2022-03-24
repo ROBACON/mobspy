@@ -1,7 +1,7 @@
 from copy import deepcopy
-import modules.meta_class_utils as mcu
-import modules.meta_class as mc
-import simulation_logging.log_scripts as simlog
+import mobspy.modules.meta_class_utils as mcu
+import mobspy.modules.meta_class as mc
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 class __Operator_Base:

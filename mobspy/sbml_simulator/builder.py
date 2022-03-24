@@ -9,7 +9,7 @@
 #####################################################
 
 
-from sbml_simulator.SBMLWriter import create_model
+from mobspy.sbml_simulator.SBMLWriter import create_model
 import libsbml as sbml
 
 

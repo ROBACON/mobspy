@@ -1,8 +1,8 @@
-import modules.meta_class as mc
-import modules.reaction_construction_nb as rc
-import simulation_logging.log_scripts as simlog
-import modules.meta_class as mc
-import modules.unit_handler as uh
+import mobspy.modules.meta_class as mc
+import mobspy.modules.reaction_construction_nb as rc
+import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.modules.meta_class as mc
+import mobspy.modules.unit_handler as uh
 from pint import Quantity
 
 class Bool_Override:

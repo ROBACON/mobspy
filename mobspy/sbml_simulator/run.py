@@ -1,6 +1,6 @@
 import basico
 from joblib import Parallel, delayed
-import simulation_logging.log_scripts as simlog
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 def simulate(sbml_str, params, mappings, species_not_mapped):

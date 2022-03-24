@@ -1,6 +1,6 @@
 import copy
 import itertools
-import simulation_logging.log_scripts as simlog
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 def unite_dictionaries(first_dict, second_dict):

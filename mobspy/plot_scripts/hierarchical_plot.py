@@ -1,8 +1,8 @@
 import json
 import os.path
 import math
-import plot_scripts.statistics_calculations as spd
-import simulation_logging.log_scripts as simlog
+import mobspy.plot_scripts.statistics_calculations as spd
+import mobspy.simulation_logging.log_scripts as simlog
 
 import numpy as np
 import pickle as pkl

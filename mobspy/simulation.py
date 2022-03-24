@@ -1,13 +1,14 @@
-import modules.meta_class
-import sbml_simulator.run
-import simulation_logging.log_scripts as simlog
-from modules.meta_class import *
-from parameter_scripts import parameter_reader as pr
-from parameters.default_reader import get_default_parameters
-from parameters.example_reader import get_example_parameters
-from plot_params.default_plot_reader import get_default_plot_parameters
-import sbml_simulator.builder as sbml_builder
-import plot_scripts.default_plots as dp
+from mobspy.modules import meta_class
+from mobspy.sbml_simulator import run
+import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.modules.meta_class import *
+from mobspy.parameter_scripts import parameter_reader as pr
+from mobspy.parameters.default_reader import get_default_parameters
+from mobspy.parameters.example_reader import get_example_parameters
+from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
+import mobspy.sbml_simulator.builder as sbml_builder
+import mobspy.sbml_simulator.run as sbml_run
+import mobspy.plot_scripts.default_plots as dp
 import json
 import os
 import inspect
@@ -101,7 +102,7 @@ class Simulation:
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
 
-        self.results = sbml_simulator.run.simulate(self.sbml_string, self.parameters, self.mappings,  self.all_species_not_mapped)
+        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings,  self.all_species_not_mapped)
         self._pack_data(self.results['data'])
 
         if self.parameters['save_data']:

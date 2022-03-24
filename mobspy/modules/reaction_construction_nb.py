@@ -1,8 +1,8 @@
 from copy import deepcopy
-import modules.function_rate_code as fr
+import mobspy.modules.function_rate_code as fr
 import itertools
-import modules.meta_class as mc
-import simulation_logging.log_scripts as simlog
+import mobspy.modules.meta_class as mc
+import mobspy.simulation_logging.log_scripts as simlog
 
 
 def iterator_for_combinations(list_of_lists):
