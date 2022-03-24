@@ -11,7 +11,7 @@ with open("mobspy/_version.py") as fh:
 
 setuptools.setup(
     name="mobspy",
-    packages=["mobspy"],
+    packages=setuptools.find_packages(include=["mobspy", "mobspy.*"]),
     version=version,
     description="A Query-Based Language for Chemical Reaction Networks",
     long_description=long_description,
