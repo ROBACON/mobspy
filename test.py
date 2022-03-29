@@ -1,13 +1,41 @@
 from mobspy import *
 import os
 
+# TODO NO NUMPY COMPATIBILITY
+# TODO Parametric plots - No printing - simlog.debug deactivation (?)
+# TODO Add units to plot
+# TODO Talk about mols, string based units, counts vs concentration
+# TODO Talk about thread safety = last_rate problem
+# TODO Spont. generation - Zero Order reaction
+
 if __name__ == '__main__':
 
-    Ecoli = BaseSpecies(1)
-    Ecoli.correct >> Ecoli.incorrect[1 / u.day]
-    Ecoli.correct(1e3)
+    Ager, Mortal, Colored, Location = BaseSpecies(4)
+    Colored.green, Colored.yellow, Colored.brown
+    Location.dense, Location.sparse
+    Ager.young >> Ager.old[1 / 10 / u.year]
+    Mortal >> Zero[lambda r1: 1/ u.year if r1.old else 0.01/ u.year]
+    Tree = Ager * Colored * Mortal * Location
 
-    MySim = Simulation(Ecoli)
+    # replication
+    Tree >> Tree + Tree.green.young[0.1/u.year]
+
+    # color cycling
+    colors = ['green', 'yellow', 'brown']
+    for color, next_color in zip(colors, colors[1:] + colors[:1]):
+        Tree.c(color) >> Tree.c(next_color)[10/u.year]
+
+    # competition
+    Tree.dense.old + Tree.dense.young >> Tree.dense.old [0.001*u.decimeter/u.year]
+
+    # initial conditions
+    Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)
+    MySim = Simulation(Tree)
+    MySim.simulation_method = 'stochastic'
     MySim.save_data = False
     MySim.plot_data = False
-    MySim.compile()
+    MySim.duration = 100*u.years
+    MySim.run()
+    MySim.plot_stochastic(Tree.dense, Tree.sparse, Tree.brown)
+
+

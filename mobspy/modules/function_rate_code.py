@@ -66,7 +66,7 @@ class Specific_Species_Operator(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model, volume):
+                          , reaction_rate_function, type_of_model, volume, dimension):
     '''
         The order of the reactants appears in species_string_dict appears equality
         to the order they appear on the reaction
@@ -85,7 +85,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     '''
     extra_species = []
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or isinstance(reaction_rate_function, Quantity):
-        reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list))
+        reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list), dimension)
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model, volume)
 
@@ -93,7 +93,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         arguments = prepare_arguments_for_callable(combination_of_reactant_species,
                                                    reactant_string_list, reaction_rate_function.__code__.co_varnames)
         rate = reaction_rate_function(**arguments)
-        rate = uh.convert_rate(rate, len(reactant_string_list))
+        rate = uh.convert_rate(rate, len(reactant_string_list), dimension)
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,

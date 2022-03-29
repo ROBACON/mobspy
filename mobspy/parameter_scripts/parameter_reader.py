@@ -63,11 +63,9 @@ def __check_ode_repetitions(params):
 def __convert_parameters_for_COPASI(params):
     for key, p in params.items():
         if isinstance(p, Quantity):
-            if str(p.dimensionality) == '[length] ** 3':
-                params[key] = p.to('litre').magnitude
-
             if str(p.dimensionality) == '[time]':
                 params[key] = p.to('second').magnitude
+                continue
 
 
 def parameter_process(params, mappings):

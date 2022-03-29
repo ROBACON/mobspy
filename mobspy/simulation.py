@@ -14,11 +14,6 @@ import os
 import inspect
 from pint import UnitRegistry
 
-# TODO Add units to plot
-# TODO Talk about mols, string based units, counts vs concentration
-# TODO Talk about thread safety = last_rate problem
-# TODO Spont. generation - Zero Order reaction
-
 # u is reserved for units
 u = UnitRegistry()
 
@@ -77,7 +72,7 @@ class Simulation:
                                                                                   "simulation_method"],
                                                                               verbose=verbose,
                                                                               default_order=self.default_order)
-        self._parameters_for_sbml['volume'] = (self.parameters['volume'], 'litre')
+        self.parameters['volume'] = self._parameters_for_sbml
         self.mappings = deepcopy(self._mappings_for_sbml)
 
         self.all_species_not_mapped = {}
@@ -145,7 +140,11 @@ class Simulation:
     # Dealing with parameters
     def __setattr__(self, name, value):
 
-        if name == 'default_order':
+        white_list = ['default_order', 'volume', 'model', 'names', 'parameters',
+                      'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
+                      '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
+                      'all_species_not_mapped']
+        if name in white_list:
             self.__dict__[name] = value
 
         if 'plot_flag' in self.__dict__ and self.__dict__['plot_flag']:
@@ -155,8 +154,10 @@ class Simulation:
         example_parameters = get_example_parameters()
         if name in example_parameters.keys():
             self.__dict__['parameters'][name] = value
+        elif name in white_list:
+            pass
         else:
-            self.__dict__[name] = value
+            simlog.error(f'Parameter {name} is not supported')
 
     def __getattr__(self, item):
         if item == 'plot':

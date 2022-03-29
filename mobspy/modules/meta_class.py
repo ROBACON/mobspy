@@ -135,6 +135,22 @@ class Compiler:
             for reference in spe_object.get_references():
                 cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
 
+        # Dimension check. Here we check based on the units the area dimension
+        dimension = None
+
+        for reaction in cls.reactions_set:
+            if isinstance(reaction.rate, Quantity):
+                if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension):
+                    dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension)
+
+        for spe_object in species_to_simulate:
+            for count in spe_object.get_quantities():
+                if isinstance(count['quantity'], Quantity):
+                    if uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension):
+                        dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
+
+        volume = uh.convert_volume(volume, dimension)
+
         # assign them default order
         for reaction in cls.reactions_set:
             if reaction.order is None:
@@ -167,7 +183,7 @@ class Compiler:
                 for species_string in species_for_sbml.keys():
                     species_set = mcu.extract_characteristics_from_string(species_string)
                     if species_set == count_set:
-                        temp_count = uh.convert_counts(count['quantity'], volume)
+                        temp_count = uh.convert_counts(count['quantity'], volume, dimension)
                         if type(temp_count) == float and not type_of_model == 'deterministic':
                             simlog.warning('The stochastic simulation rounds floats to integers')
                             species_for_sbml[species_string] = int(temp_count)
@@ -181,7 +197,8 @@ class Compiler:
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(cls.reactions_set,
                                                                           cls.species_string_dict,
                                                                           cls.ref_characteristics_to_object,
-                                                                          type_of_model, volume)
+                                                                          type_of_model, volume, dimension)
+        parameters_for_sbml['volume'] = (volume, f'dimensionless')
 
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
@@ -194,11 +211,6 @@ class Compiler:
                     simlog.warning('The following reaction: \n' +
                                    f'{reactions_for_sbml[r1]} \n' +
                                    'Is doubled. Was that intentional? \n')
-
-        # Attach units to rates
-        # Set rates to per_minute and not per_second
-        for p in parameters_for_sbml:
-            parameters_for_sbml[p] = (parameters_for_sbml[p], 'per_min')
 
         if verbose:
             simlog.debug()
