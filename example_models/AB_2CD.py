@@ -1,10 +1,4 @@
 import sys, os
-
-# What does this part below do?
-remove = os.getcwd().split('/')[:-1]
-abs_path = '/'.join(remove)
-sys.path.append(os.path.abspath(abs_path))
-
 from mobspy import *
 
 A, B, C, D = BaseSpecies(4)

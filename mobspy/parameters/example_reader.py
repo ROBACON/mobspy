@@ -17,6 +17,9 @@ def get_example_parameters():
 
         "__comment_3": "OUTPUT",
 
+        "unit_x":"year",
+        "unit_y":"nanomolar",
+        "output_concentration":True,
         "output_dir": "outputs/",
         "output_event": False,
         "output_file": None,

@@ -1,4 +1,4 @@
-from mobspy import *
+from mobspy.simulation import *
 import os
 
 # TODO NO NUMPY COMPATIBILITY
@@ -9,6 +9,20 @@ import os
 # TODO Spont. generation - Zero Order reaction
 
 if __name__ == '__main__':
+
+    A, B, C, D = BaseSpecies(4)
+    A(200) + B(100) >> 2 * C + D[0.1]
+    My_Sim = Simulation(A | B | C | D)
+    My_Sim.save_data = False
+    My_Sim.duration = 5
+    My_Sim.volume = 10
+    My_Sim.simulation_method = 'stochastic'
+    My_Sim.unit_x = 'year'
+    My_Sim.output_concentration = True
+    My_Sim.unit_y = 'nanomolar'
+    My_Sim.run()
+    exit()
+
 
     Ager, Mortal, Colored, Location = BaseSpecies(4)
     Colored.green, Colored.yellow, Colored.brown

@@ -23,6 +23,25 @@ def read_plot_json(plot_json_filename):
     return json_data
 
 
+def set_plot_units(new_plot_params):
+    new_plot_params['xlabel'] = 'Time'
+    if new_plot_params['unit_x'] is not None:
+        new_plot_params['xlabel'] += f'({new_plot_params["unit_x"]})'
+    else:
+        new_plot_params['xlabel'] += '(second)'
+
+    if new_plot_params['output_concentration']:
+        new_plot_params['ylabel'] = 'Conc.'
+    else:
+        new_plot_params['ylabel'] = 'Counts'
+
+    if new_plot_params['unit_y'] is not None:
+        new_plot_params['ylabel'] += f'({new_plot_params["unit_y"]})'
+    else:
+        if new_plot_params['output_concentration']:
+            new_plot_params['ylabel'] += '(molar)'
+
+
 def stochastic_plot(species, data, plot_params):
     species, data = qpd.query_plot_data(species, data)
 
@@ -30,8 +49,8 @@ def stochastic_plot(species, data, plot_params):
     new_plot_params = deepcopy(plot_params)
 
     new_plot_params['figures'] = []
-    new_plot_params['xlabel'] = 'Time (seconds)'
-    new_plot_params['ylabel'] = 'Counts'
+    set_plot_units(new_plot_params)
+
     new_plot_params['pad'] = 1.5
     color_cycler = hp.Color_cycle()
     for spe in species:
@@ -70,8 +89,7 @@ def deterministic_plot(species, data, plot_params):
     species, data = qpd.query_plot_data(species, data)
 
     new_plot_params = deepcopy(plot_params)
-    new_plot_params['xlabel'] = 'Time (seconds)'
-    new_plot_params['ylabel'] = 'Counts'
+    set_plot_units(new_plot_params)
     new_plot_params['species_to_plot'] = species
     color_cycler = hp.Color_cycle()
     for spe in species:

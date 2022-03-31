@@ -9,6 +9,7 @@ from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
 import mobspy.sbml_simulator.builder as sbml_builder
 import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
+import mobspy.data_handler.process_result_data as dh
 import json
 import os
 import inspect
@@ -72,8 +73,14 @@ class Simulation:
                                                                                   "simulation_method"],
                                                                               verbose=verbose,
                                                                               default_order=self.default_order)
-        self.parameters['volume'] = self._parameters_for_sbml
+        # The volume is converted to the proper unit at the compiler level
+        self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
         self.mappings = deepcopy(self._mappings_for_sbml)
+
+        # Set common parameters for plot and simulation
+        self.plot_parameters['unit_x'] = self.parameters['unit_x']
+        self.plot_parameters['unit_y'] = self.parameters['unit_y']
+        self.plot_parameters['output_concentration'] = self.parameters['output_concentration']
 
         self.all_species_not_mapped = {}
         for key in self._species_for_sbml:
@@ -97,7 +104,11 @@ class Simulation:
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
 
-        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings,  self.all_species_not_mapped)
+        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings, self.all_species_not_mapped)
+        self.results['data'] = dh.convert_data_to_desired_unit(self.results['data'],
+                                                               self.parameters['unit_x'], self.parameters['unit_y'],
+                                                               self.output_concentration, self.parameters['volume'])
+
         self._pack_data(self.results['data'])
 
         if self.parameters['save_data']:

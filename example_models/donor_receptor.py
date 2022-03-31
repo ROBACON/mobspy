@@ -1,8 +1,4 @@
 import sys, os
-remove = os.getcwd().split('/')[:-1]
-abs_path = '/'.join(remove)
-sys.path.append(os.path.abspath(abs_path))
-
 from mobspy import *
 
 # Variable declaration
