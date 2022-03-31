@@ -193,7 +193,7 @@ def extract_species_strings(species, characteristics, species_string_dict):
     species_strings_to_filter = species_strings_to_filter.union(species_string_dict[species])
 
     for species_string in species_strings_to_filter:
-        species_string_split = species_string.split('_dot_')
+        species_string_split = species_string.split('_dot_')[1:]
         if all([char in species_string_split for char in characteristics]):
             species_strings_list.append(species_string)
 

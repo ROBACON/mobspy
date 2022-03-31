@@ -46,7 +46,7 @@ class __Operator_Base:
         for key in species_string_dictionary:
             if species in key.get_references():
                 for species_string in species_string_dictionary[key]:
-                    species_string_split = species_string.split('_dot_')
+                    species_string_split = species_string.split('_dot_')[1:]
                     if all([char in species_string_split for char in characteristics]):
                         to_return.append(species_string)
         return to_return
@@ -65,7 +65,7 @@ class __Operator_Base:
         for key in species_string_dictionary:
             if species in key.get_references():
                 for species_string in species_string_dictionary[key]:
-                    species_string_split = species_string.split('_dot_')
+                    species_string_split = species_string.split('_dot_')[1:]
                     if all([char in species_string_split for char in characteristics_to_find]):
                         to_return.append(species_string)
 

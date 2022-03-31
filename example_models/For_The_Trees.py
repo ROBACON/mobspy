@@ -27,5 +27,6 @@ if __name__ == '__main__':
     MySim.save_data = False
     MySim.plot_data = False
     MySim.duration = 100*u.years
+    MySim.unit_x = 'year'
     MySim.run()
     MySim.plot_stochastic(Tree.dense, Tree.sparse, Tree.brown)

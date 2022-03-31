@@ -554,12 +554,12 @@ class Species:
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
-            for cha in str(quantity).split('_dot_'):
+            for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')
         elif type(quantity) == str:
-            for cha in str(quantity).split('.'):
+            for cha in str(quantity).split('.')[1:]:
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')

@@ -71,12 +71,12 @@ def stochastic_plot(species, data, plot_params):
                 # We define the standard plot for the average and deviation
                 color = color_cycler(1)
                 plots_for_spe_i.append({'species_to_plot': [spe], 'time_series': i + 1,
-                                        spe: {'color': color, 'label': spe + str(i + 1)}})
+                                        spe: {'color': color, 'label': spe}})
 
                 plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': i + 1,
-                                            key_average: {'color': color, 'linestyle': '-', 'label': 'avg' + str(i + 1)}})
+                                            key_average: {'color': color, 'linestyle': '-', 'label': spe + ' avg'}})
                 plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'time_series': i + 1,
-                                            key_dev: {'color': color, 'linestyle': ':', 'label': 'dev' + str(i + 1)}})
+                                            key_dev: {'color': color, 'linestyle': ':', 'label': spe + ' dev'}})
         except KeyError:
             simlog.error(f'{spe} species not found in data')
         new_plot_params['figures'].append({'plots': plots_for_spe_i })

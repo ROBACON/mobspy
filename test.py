@@ -1,27 +1,6 @@
-from mobspy.simulation import *
-import os
-
-# TODO NO NUMPY COMPATIBILITY
-# TODO Parametric plots - No printing - simlog.debug deactivation (?)
-# TODO Add units to plot
-# TODO Talk about mols, string based units, counts vs concentration
-# TODO Talk about thread safety = last_rate problem
-# TODO Spont. generation - Zero Order reaction
+from mobspy import *
 
 if __name__ == '__main__':
-
-    A, B, C, D = BaseSpecies(4)
-    A(200) + B(100) >> 2 * C + D[0.1]
-    My_Sim = Simulation(A | B | C | D)
-    My_Sim.save_data = False
-    My_Sim.duration = 5
-    My_Sim.volume = 10
-    My_Sim.simulation_method = 'stochastic'
-    My_Sim.unit_x = 'year'
-    My_Sim.output_concentration = True
-    My_Sim.unit_y = 'nanomolar'
-    My_Sim.run()
-    exit()
 
     Ager, Mortal, Colored, Location = BaseSpecies(4)
     Colored.green, Colored.yellow, Colored.brown
@@ -48,7 +27,9 @@ if __name__ == '__main__':
     MySim.save_data = False
     MySim.plot_data = False
     MySim.duration = 100*u.years
-    MySim.run()
+    MySim.unit_x = 'year'
+    MySim.compile()
+    exit()
     MySim.plot_stochastic(Tree.dense, Tree.sparse, Tree.brown)
 
 
