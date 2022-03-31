@@ -81,8 +81,8 @@ class Compiler:
     def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True,
                 default_order=Default):
         # Set in model condition
-        Reacting_Species.in_model = True
-        Species.in_model = True
+        Reacting_Species.in_model = False
+        Species.in_model = False
         
         # Define dictionaries to return to avoid compatibility problems
 
