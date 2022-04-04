@@ -31,17 +31,22 @@ def __name_output_file(params):
     if params['output_dir'][0] == '/':
         params['output_dir'] = params['output_dir'][1:]
 
-    main_directory = os.path.abspath(sys.modules['__main__'].__file__)
-    save_dir = os.path.join(Path(main_directory).parent.absolute(), params['output_dir'])
+    try:
+        main_directory = os.path.abspath(sys.modules['__main__'].__file__)
+        save_dir = os.path.join(Path(main_directory).parent.absolute(), params['output_dir'])
 
-    if params['output_file'] is None:
-        file_name = "r_"
-        file_name += str(datetime.now()) + '.json'
-    else:
-        file_name = params['output_file']
+        if params['output_file'] is None:
+            file_name = "r_"
+            file_name += str(datetime.now()) + '.json'
+        else:
+            file_name = params['output_file']
 
-    params['output_absolute_directory'] = save_dir
-    params['output_absolute_file'] = os.path.join(params['output_absolute_directory'], file_name)
+        params['output_absolute_directory'] = save_dir
+        params['output_absolute_file'] = os.path.join(params['output_absolute_directory'], file_name)
+
+    except:
+        simlog.warning('Automatic data-saving setup failed. Please save manually')
+        params['save_data'] = False
 
 
 def __check_stochastic_repetitions_seeds(params):

@@ -133,9 +133,9 @@ class Simulation:
             elif self.plot_parameters['simulation_method'] == 'deterministic':
                 self.plot_deterministic()
 
-    def save_results(self):
+    def save_results(self, file):
         simlog.warning('Only THIS model data will be saved not externally added data')
-        with open(self.parameters['output_absolute_file'], 'w') as jf:
+        with open(file, 'w') as jf:
             json.dump(self.results, jf, indent=4)
 
     def _pack_data(self, time_series_data):

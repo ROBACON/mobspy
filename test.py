@@ -1,5 +1,7 @@
 from mobspy import *
 
+# TODO module '__main__' has no attribute '__file__'
+
 if __name__ == '__main__':
 
     Ager, Mortal, Colored, Location = BaseSpecies(4)
