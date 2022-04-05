@@ -1,6 +1,6 @@
 from mobspy import *
 
-# TODO module '__main__' has no attribute '__file__'
+# TODO Plot has random order for species names
 
 if __name__ == '__main__':
 

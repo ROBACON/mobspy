@@ -3,4 +3,6 @@ __pycache__
 dist
 *.egg-info
 minority_consensus.py
+homework.py
+toogle_switch.py
 .idea

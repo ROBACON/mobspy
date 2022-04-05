@@ -57,7 +57,8 @@ class Simulation:
         self.default_order = Default
 
     def compile(self, verbose=True):
-        simlog.debug('Compiling model')
+        if verbose:
+            simlog.debug('Compiling model')
 
         pr.parameter_process(self.parameters, self.model)
         if self.parameters['simulation_method'].lower() == 'deterministic':
@@ -92,12 +93,13 @@ class Simulation:
 
         return self.sbml_string
 
-    def run(self):
+    def run(self, compile=True):
         """
             Just calls the simulator part of the codes for running
         :return: nothing, data is saved automaticaly or in self.results
         """
-        self.compile(verbose=False)
+        if compile:
+            self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
