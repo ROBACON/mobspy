@@ -277,7 +277,11 @@ def plot_curves(data, axs, figure_index, plot_params):
                     label = None
 
     if legend_flag:
-        axs.legend()
+        if find_parameter(plot_params, key='frameon', index=figure_index) is not None:
+            frameon = find_parameter(plot_params, key='frameon', index=figure_index)
+        else:
+            frameon = True
+        axs.legend(frameon=frameon)
 
 
 def set_figure_characteristics(axis_matrix, plot_params):

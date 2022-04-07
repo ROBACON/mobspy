@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from mobspy import *
 
-g1 = []
-g2 = []
+p1 = []
+p2 = []
 T = []
 
 
@@ -28,7 +28,7 @@ def event_conditions(simulation, event_dict):
                 simulation._species_for_sbml[species_state] = value
 
 
-def toogle_switch(g1_count=0, g2_count=0, state_dict={}):
+def toogle_switch(g1_count=0, g2_count=0, state_dict={}, duration=500000):
     Promoter, Cas_binding, dCas9 = BaseSpecies(3)
     Cas_binding.cas, Cas_binding.no_cas
     Promoter.inactive, Promoter.active
@@ -61,14 +61,17 @@ def toogle_switch(g1_count=0, g2_count=0, state_dict={}):
     MySim = Simulation(gRNA | DNAPromoter | dCas9)
     MySim.save_data = False
     MySim.plot_data = False
-    MySim.duration = 500000
+    MySim.duration = duration
     if not state_dict:
         DNAPromoter.P1.active(1), DNAPromoter.P2.active(1)
         gRNA.no_cas.g1(g1_count), gRNA.no_cas.g2(g2_count)
-        dCas9(10)
+        dCas9(2)
         MySim.run()
     else:
-        event_dict = {'gRNA.no_cas.g1': g1_count, 'gRNA.no_cas.g2': g2_count}
+        if g1_count != 0:
+            event_dict = {'gRNA.no_cas.g1': g1_count}
+        if g2_count != 0:
+            event_dict = {'gRNA.no_cas.g2': g2_count}
         set_model_initial_conditions(MySim, state_dict)
         event_conditions(MySim, event_dict)
         MySim.run(compile=False)
@@ -80,19 +83,19 @@ def toogle_switch(g1_count=0, g2_count=0, state_dict={}):
         else:
             state_dict[key] = MySim.results['data'][key]['runs'][0][-1]
 
-    global g1
-    global g2
-
-    g1 += MySim.results['data']['gRNA.no_cas.g1']['runs'][0]
-    g2 += MySim.results['data']['gRNA.no_cas.g2']['runs'][0]
+    global p1
+    global p2
+    p1 += MySim.results['data']['DNAPromoter.P1.active']['runs'][0]
+    p2 += MySim.results['data']['DNAPromoter.P2.active']['runs'][0]
     return state_dict
 
 
+n = 1e10
 state = toogle_switch(g1_count=10 / 6.022e-1, g2_count=0)
-state = toogle_switch(g1_count=0, g2_count=10 / 6.022e-1, state_dict=state)
-state = toogle_switch(g1_count=10/6.022e-1, g2_count=0, state_dict=state)
-state = toogle_switch(g1_count=0, g2_count=10/6.022e-1, state_dict=state)
-plt.plot(g1)
-plt.plot(g2)
+state = toogle_switch(g1_count=0, g2_count=n*10 / 6.022e-1, state_dict=state)
+state = toogle_switch(g1_count=n*10/6.022e-1, g2_count=0, state_dict=state)
+state = toogle_switch(g1_count=0, g2_count=n*10/6.022e-1, state_dict=state)
+plt.plot(p1)
+plt.plot(p2)
 plt.show()
 

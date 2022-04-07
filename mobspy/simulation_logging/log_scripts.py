@@ -8,16 +8,18 @@ def error(message):
     exit(1)
 
 
-def debug(message=''):
-    message_copy = deepcopy(message)
-    print(message_copy.replace('_dot_', '.'), file=sys.stderr)
+def debug(message='', level=0):
+    if level >= 2:
+        message_copy = deepcopy(message)
+        print(message_copy.replace('_dot_', '.'), file=sys.stderr)
     pass
 
 
-def warning(message):
-    message_copy = deepcopy(message)
-    message.replace('_dot_', '.')
-    print('\033[91m' + 'WARNING: ' + message_copy + '\033[0m', file=sys.stderr)
+def warning(message, level=0):
+    if level >= 1:
+        message_copy = deepcopy(message)
+        message.replace('_dot_', '.')
+        print('\033[91m' + 'WARNING: ' + message_copy + '\033[0m', file=sys.stderr)
 
 
 if __name__ == '__main__':

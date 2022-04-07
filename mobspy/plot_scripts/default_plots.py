@@ -43,14 +43,15 @@ def set_plot_units(new_plot_params):
 
 
 def stochastic_plot(species, data, plot_params):
+    # Data Handling
     species, data = qpd.query_plot_data(species, data)
-
     data_to_plot = deepcopy(data)
     new_plot_params = deepcopy(plot_params)
-
-    new_plot_params['figures'] = []
     set_plot_units(new_plot_params)
 
+    # Plot config
+    new_plot_params['frameon'] = False
+    new_plot_params['figures'] = []
     new_plot_params['pad'] = 1.5
     color_cycler = hp.Color_cycle()
     for spe in species:
@@ -86,10 +87,13 @@ def stochastic_plot(species, data, plot_params):
 
 
 def deterministic_plot(species, data, plot_params):
+    # Data Handling
     species, data = qpd.query_plot_data(species, data)
-
     new_plot_params = deepcopy(plot_params)
     set_plot_units(new_plot_params)
+
+    #  Plot Config
+    new_plot_params['frameon'] = False
     new_plot_params['species_to_plot'] = species
     color_cycler = hp.Color_cycle()
     for spe in species:
