@@ -67,7 +67,7 @@ def stochastic_plot(species, data, plot_params):
                 key_average = spe + '$' + 'average'
                 key_dev = spe + '$' + 'deviation'
                 data_to_plot[i][key_average] = {'runs': [processed_runs[0]]}
-                data_to_plot[i][key_dev] =  {'runs': [processed_runs[1], processed_runs[2]]}
+                data_to_plot[i][key_dev] = {'runs': [processed_runs[1], processed_runs[2]]}
 
                 # We define the standard plot for the average and deviation
                 color = color_cycler(1)
@@ -75,13 +75,13 @@ def stochastic_plot(species, data, plot_params):
                                         spe: {'color': color, 'label': spe}})
 
                 plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': i + 1,
-                                            key_average: {'color': color, 'linestyle': '-', 'label': spe + ' avg'}})
-                plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'time_series': i + 1,
-                                            key_dev: {'color': color, 'linestyle': ':', 'label': spe + ' dev'}})
+                                            key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
+                plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'time_series': i + 1, 'fill_between': True,
+                                            key_dev: {'color': (0.5, 0.5, 0.5), 'linestyle': ':', 'label': 'std. dev'}})
         except KeyError:
             simlog.error(f'{spe} species not found in data')
-        new_plot_params['figures'].append({'plots': plots_for_spe_i })
-        new_plot_params['figures'].append({'plots': plots_for_spe_i_sta})
+        new_plot_params['figures'].append({'ylabel': spe + new_plot_params['ylabel'], 'plots': plots_for_spe_i })
+        new_plot_params['figures'].append({'ylabel': spe + new_plot_params['ylabel'], 'plots': plots_for_spe_i_sta})
 
     hp.plot_data(data_to_plot, new_plot_params)
 

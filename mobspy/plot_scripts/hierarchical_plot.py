@@ -271,10 +271,18 @@ def plot_curves(data, axs, figure_index, plot_params):
                 else:
                     runs = range(len(ts[spe]['runs']))
 
-                for run in runs:
-                    axs.plot(ts['Time'], ts[spe]['runs'][run], color=curve_color,
-                             linestyle=linestyle, linewidth=linewidth, label=label)
-                    label = None
+                if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None and \
+                        find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)):
+                    try:
+                        axs.fill_between(ts['Time'], ts[spe]['runs'][0], ts[spe]['runs'][1], color=curve_color,
+                                         label=label)
+                    except IndexError:
+                        simlog.error('Fill_between must only have two or less runs referring to it')
+                else:
+                    for run in runs:
+                        axs.plot(ts['Time'], ts[spe]['runs'][run], color=curve_color,
+                            linestyle=linestyle, linewidth=linewidth, label=label)
+                        label = None
 
     if legend_flag:
         if find_parameter(plot_params, key='frameon', index=figure_index) is not None:
