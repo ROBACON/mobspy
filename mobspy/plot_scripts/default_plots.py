@@ -77,7 +77,7 @@ def stochastic_plot(species, data, plot_params):
                 plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': i + 1,
                                             key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
                 plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'time_series': i + 1, 'fill_between': True,
-                                            key_dev: {'color': (0.5, 0.5, 0.5), 'linestyle': ':', 'label': 'std. dev'}})
+                                            key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
         except KeyError:
             simlog.error(f'{spe} species not found in data')
         new_plot_params['figures'].append({'ylabel': spe + new_plot_params['ylabel'], 'plots': plots_for_spe_i })
