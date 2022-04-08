@@ -150,6 +150,12 @@ class Simulation:
         self._pack_data(data)
 
     # Dealing with parameters
+    def set_from_json(self, file_name):
+        with open(file_name) as json_file:
+            data = json.load(json_file)
+            for key in data:
+                self.__setattr__(key, data[key])
+
     def __setattr__(self, name, value):
 
         white_list = ['default_order', 'volume', 'model', 'names', 'parameters',
