@@ -57,8 +57,7 @@ class Simulation:
         self.default_order = Default
 
     def compile(self, verbose=True):
-        if verbose:
-            simlog.debug('Compiling model')
+        simlog.debug('Compiling model')
 
         pr.parameter_process(self.parameters, self.model)
         if self.parameters['simulation_method'].lower() == 'deterministic':
@@ -111,6 +110,7 @@ class Simulation:
                                                                self.output_concentration, self.parameters['volume'])
 
         simlog.global_simlog_level = self.parameters['level']
+        print(self.parameters)
         print(simlog.global_simlog_level)
         print(self.parameters['level'])
         exit()
