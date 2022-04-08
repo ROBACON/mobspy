@@ -59,6 +59,7 @@ class Simulation:
     def compile(self, verbose=True):
         simlog.debug('Compiling model')
 
+        simlog.global_simlog_level = self.parameters['level']
         pr.parameter_process(self.parameters, self.model)
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
@@ -108,12 +109,6 @@ class Simulation:
         self.results['data'] = dh.convert_data_to_desired_unit(self.results['data'],
                                                                self.parameters['unit_x'], self.parameters['unit_y'],
                                                                self.output_concentration, self.parameters['volume'])
-
-        simlog.global_simlog_level = self.parameters['level']
-        print(self.parameters)
-        print(simlog.global_simlog_level)
-        print(self.parameters['level'])
-        exit()
 
         self._pack_data(self.results['data'])
 
