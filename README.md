@@ -65,7 +65,7 @@ Just use the Simulation constructor and the run command to execute a simulation.
 
 # Parameter definition
 
-	The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the '.plot.parameter' model.
+The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the '.plot.parameter' model.
 Standard parameters can also be configured using a JSON file with the .set_from_json method. As an example, we have the code below:
 
 	MySim.save_data = False
