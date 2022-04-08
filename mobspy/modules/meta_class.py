@@ -348,7 +348,7 @@ class Reacting_Species:
         if type(stoichiometry) == int:
             self.list_of_reactants[0]['stoichiometry'] = stoichiometry
         else:
-            simlog.error('Stoichiometry can only be an int')
+            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}')
         return self
 
     def __add__(self, other):
