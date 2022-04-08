@@ -113,6 +113,7 @@ class Simulation:
         simlog.global_simlog_level = self.parameters['level']
         print(simlog.global_simlog_level)
         print(self.parameters['level'])
+        exit()
 
         self._pack_data(self.results['data'])
 

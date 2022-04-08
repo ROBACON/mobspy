@@ -12,7 +12,7 @@ def error(message):
 
 def debug(message=''):
     global global_simlog_level
-    if simlog_level >= 2:
+    if global_simlog_level >= 2:
         message_copy = deepcopy(message)
         print(message_copy.replace('_dot_', '.'), file=sys.stderr)
     pass
