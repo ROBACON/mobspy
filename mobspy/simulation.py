@@ -93,13 +93,12 @@ class Simulation:
 
         return self.sbml_string
 
-    def run(self, compile=True):
+    def run(self):
         """
             Just calls the simulator part of the codes for running
         :return: nothing, data is saved automaticaly or in self.results
         """
-        if compile:
-            self.compile(verbose=False)
+        self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
@@ -110,6 +109,10 @@ class Simulation:
         self.results['data'] = dh.convert_data_to_desired_unit(self.results['data'],
                                                                self.parameters['unit_x'], self.parameters['unit_y'],
                                                                self.output_concentration, self.parameters['volume'])
+
+        simlog.global_simlog_level = self.parameters['level']
+        print(simlog.global_simlog_level)
+        print(self.parameters['level'])
 
         self._pack_data(self.results['data'])
 

@@ -8,6 +8,7 @@ def get_default_parameters():
 
         "volume": 1,
         "repetitions": 3,
+        "level": 3,
 
         "__comment_2": "basiCO parameters",
 

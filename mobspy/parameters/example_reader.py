@@ -4,6 +4,7 @@ def get_example_parameters():
 
         "volume": 1,
         "repetitions": 3,
+        "level": 0,
 
         "__comment_2": "basiCO parameters",
 
