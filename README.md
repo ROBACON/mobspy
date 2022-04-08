@@ -73,7 +73,7 @@ Standard parameters can also be configured using a JSON file with the .set_from_
 	MySim.duration = 100
 	MySim.plot.color = 'red'
 
-	For a list of parameters, check the read_me in the parameter directory. The standard parameters can be found in the get_default_parameters() script in the default_reader() script.
+For a list of parameters, check the read_me in the parameter directory. The standard parameters can be found in the get_default_parameters() script in the default_reader() script.
 
 # Units
 	
