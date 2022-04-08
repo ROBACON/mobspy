@@ -57,9 +57,9 @@ class Simulation:
         self.default_order = Default
 
     def compile(self, verbose=True):
+        simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
 
-        simlog.global_simlog_level = self.parameters['level']
         pr.parameter_process(self.parameters, self.model)
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
