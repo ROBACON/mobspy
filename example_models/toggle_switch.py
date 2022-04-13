@@ -3,6 +3,13 @@ import matplotlib.pyplot as plt
 
 from mobspy import *
 
+"""
+    Here we have the implementation of a toggle switch
+    Since MobsPy does not yet have an event implementation, we call the model again with changes made to it
+    In the future we will implement a way to handle events, but for now events can be handled in a similar fashion
+"""
+
+
 p1 = []
 p2 = []
 T = []
@@ -28,7 +35,7 @@ def event_conditions(simulation, event_dict):
                 simulation._species_for_sbml[species_state] = value
 
 
-def toogle_switch(g1_count=0, g2_count=0, state_dict={}, duration=500000):
+def toggle_switch(g1_count=0, g2_count=0, state_dict={}, duration=500000):
     Promoter, Cas_binding, dCas9 = BaseSpecies(3)
     Cas_binding.cas, Cas_binding.no_cas
     Promoter.inactive, Promoter.active
@@ -91,10 +98,10 @@ def toogle_switch(g1_count=0, g2_count=0, state_dict={}, duration=500000):
 
 
 n = 1e10
-state = toogle_switch(g1_count=10 / 6.022e-1, g2_count=0)
-state = toogle_switch(g1_count=0, g2_count=n*10 / 6.022e-1, state_dict=state)
-state = toogle_switch(g1_count=n*10/6.022e-1, g2_count=0, state_dict=state)
-state = toogle_switch(g1_count=0, g2_count=n*10/6.022e-1, state_dict=state)
+state = toggle_switch(g1_count=10 / 6.022e-1, g2_count=0)
+state = toggle_switch(g1_count=0, g2_count=n*10 / 6.022e-1, state_dict=state)
+state = toggle_switch(g1_count=n*10/6.022e-1, g2_count=0, state_dict=state)
+state = toggle_switch(g1_count=0, g2_count=n*10/6.022e-1, state_dict=state)
 plt.plot(p1)
 plt.plot(p2)
 plt.show()

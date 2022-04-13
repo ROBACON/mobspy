@@ -4,6 +4,12 @@ from mobspy import *
 
 # TODO look at repression and promoter reactions
 
+"""
+    This is a more classical oscillator
+    Here the repression is implemented using a hill function as a string
+    It's the classical circle of three compounds repressing each other
+"""
+
 Promoter, Chemical = BaseSpecies(2)
 Promoter.inactive, Promoter.active
 DNAPromoter = New(Promoter)

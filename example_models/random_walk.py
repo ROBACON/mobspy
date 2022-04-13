@@ -2,6 +2,16 @@ import sys, os
 import matplotlib.pyplot as plt
 from mobspy import *
 
+
+"""
+    This is a geometry-based model
+    Here the Meta-Species Mesh is used to represent the positions in a grid
+    And their transitions using a CRN
+    Here we have a bacteria and a phage that move through a Mesh and once they encounter the bacteria becomes infected
+    Although the movement is not realistic, it shows MobsPy geometry capabilities 
+    In future work we hope to implement different type movements or grids
+"""
+
 Mesh = BaseSpecies(1)
 n = 10
 for i in range(n):

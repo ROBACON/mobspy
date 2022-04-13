@@ -2,15 +2,22 @@ from mobspy import *
 
 if __name__ == '__main__':
 
+    """
+        This is the Tree model from the paper
+        We have a population of Trees
+        The Trees can die, age, have different colors and be in two different forests
+        The colors can change randomly from time to time
+        All old Trees can reproduce, but the Three is born green and young 
+    """
     Ager, Mortal, Colored, Location = BaseSpecies(4)
     Colored.green, Colored.yellow, Colored.brown
     Location.dense, Location.sparse
     Ager.young >> Ager.old[1 / 10 / u.year]
-    Mortal >> Zero[lambda r1: 1/ u.year if r1.old else 0.01/ u.year]
+    Mortal >> Zero[lambda r1: 0.1/ u.year if r1.old else 0]
     Tree = Ager * Colored * Mortal * Location
 
     # replication
-    Tree >> Tree + Tree.green.young[0.1/u.year]
+    Tree.old >> Tree + Tree.green.young[0.1/u.year]
 
     # color cycling
     colors = ['green', 'yellow', 'brown']
@@ -18,7 +25,7 @@ if __name__ == '__main__':
         Tree.c(color) >> Tree.c(next_color)[10/u.year]
 
     # competition
-    Tree.dense.old + Tree.dense.young >> Tree.dense.old [0.001*u.decimeter/u.year]
+    Tree.dense.old + Tree.dense.young >> Tree.dense.old[1e-10*u.decimeter/u.year]
 
     # initial conditions
     Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)

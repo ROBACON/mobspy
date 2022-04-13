@@ -1,6 +1,14 @@
 import plotly.express as px
 from mobspy import *
 
+"""
+    In this model we have a simple AND_GATE
+    Here we have the species A and B
+    Once they encounter they form a compound AB that is able to activate a promoter
+    With the promoter active a protein is produced
+    The protein decays to zero (dies) at a certain rate
+"""
+
 
 def AND_GATE(A_conc, B_conc):
     A, B, AB, Promoter, Protein = BaseSpecies(5)

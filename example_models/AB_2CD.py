@@ -1,6 +1,13 @@
 import sys, os
 from mobspy import *
 
+"""
+    This is a basic MobsPy example
+    Here we declare four species and the single reaction A + B >> 2*C + D
+    It enunciates the basics of MobsPy, like declaring a species using the BaseSpecies constructor
+    Species counts are assigned using the call method
+    Rates are assigned using the getitem brackets []
+"""
 A, B, C, D = BaseSpecies(4)
 A(200) + B(100) >> 2*C + D [0.1]
 My_Sim = Simulation(A | B | C | D)

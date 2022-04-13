@@ -1,6 +1,12 @@
 import sys, os
 from mobspy import *
 
+"""
+    Here we have a model with a Phage, Donor and Receptor with resources being considered
+    Both the Donor and Receptor can reproduce with resources
+    The Donor can produce Phages with resources
+    Only the Receptor can be infected by the phages
+"""
 # Variable declaration
 Resource, Mortal, Infectible = BaseSpecies(3)
 

@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from mobspy import *
 
 # Model definition
+"""
+    This model is a simple single repressor
+"""
+
 Chemical, Promoter, Protein = BaseSpecies(3)
 
 Rev[Chemical + Promoter.inactive >> Promoter.active][2, 1]
