@@ -22,8 +22,6 @@ def first_loop():
     # Set of characteristics
     print(DNACounter.get_characteristics())
 
-    Simulation(DNACounter).compile()
-
 
 """
     The New Function can also receive a name instead of a number
@@ -42,7 +40,8 @@ def second_loop():
         else:
             DNAList = DummyDNA | DNAList
 
-    Simulation(DNAList).compile()
+    for DNA in DNAList:
+        print(DNA)
 
 
 if __name__ == '__main__':
