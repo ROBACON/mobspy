@@ -9,7 +9,6 @@ from mobspy import *
     In the future we will implement a way to handle events, but for now events can be handled in a similar fashion
 """
 
-
 p1 = []
 p2 = []
 T = []
