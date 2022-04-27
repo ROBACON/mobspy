@@ -71,7 +71,8 @@ Standard parameters can also be configured using a JSON file with the .set_from_
 	MySim.save_data = False
 	MySim.plot_data = False
 	MySim.duration = 100
-	MySim.plot.color = 'red'
+	MySim.plot.xlim = [0,1]
+	MySim.plot.ylim = [0, 1e3]
 
 For a list of parameters, check the read_me in the parameter directory. The standard parameters can be found in the get_default_parameters() script in the default_reader() script.
 
