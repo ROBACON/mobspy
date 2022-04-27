@@ -94,6 +94,10 @@ MobsPy generates an SBML string for each model. The SBML string is passed to bas
 
 For the rates, MobsPy considers mass action kinetics as default. For different, more complex rates, one can use strings.
 
+# Compatibility
+
+For now MobsPy is not treadsafe and it's not compatible with numpy and deepcopy
+
 
 
 
