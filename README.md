@@ -71,6 +71,7 @@ Standard parameters can also be configured using a JSON file with the .set_from_
 	MySim.save_data = False
 	MySim.plot_data = False
 	MySim.duration = 100
+	MySim.repetitions = 10
 	MySim.plot.xlim = [0,1]
 	MySim.plot.ylim = [0, 1e3]
 
