@@ -65,7 +65,6 @@ MySim.plot_data = False
 MySim.duration = 2.5e6
 MySim.output_event = True
 MySim.step_size = 100
-
 MySim.run()
 MySim.plot_deterministic(gRNA.g1, gRNA.g2, gRNA.g3)
 

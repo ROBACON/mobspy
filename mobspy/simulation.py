@@ -162,20 +162,23 @@ class Simulation:
                       'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
                       'all_species_not_mapped']
+        plotted_flag = False
         if name in white_list:
             self.__dict__[name] = value
 
         if 'plot_flag' in self.__dict__ and self.__dict__['plot_flag']:
             self.__dict__["plot_parameters"][name] = value
             self.__dict__["plot_flag"] = False
+            plotted_flag = True
 
-        example_parameters = get_example_parameters()
-        if name in example_parameters.keys():
-            self.__dict__['parameters'][name] = value
-        elif name in white_list:
-            pass
-        else:
-            simlog.error(f'Parameter {name} is not supported')
+        if not plotted_flag:
+            example_parameters = get_example_parameters()
+            if name in example_parameters.keys():
+                self.__dict__['parameters'][name] = value
+            elif name in white_list:
+                pass
+            else:
+                simlog.error(f'Parameter {name} is not supported')
 
     def __getattr__(self, item):
         if item == 'plot':

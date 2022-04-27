@@ -5,6 +5,7 @@ import mobspy.modules.meta_class as mc
 import mobspy.modules.unit_handler as uh
 from pint import Quantity
 
+
 class Bool_Override:
     """
         This class override the boolean operator of all function rate objects
