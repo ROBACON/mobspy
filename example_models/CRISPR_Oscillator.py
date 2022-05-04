@@ -56,8 +56,6 @@ gRNA.no_cas.g1(0), gRNA.no_cas.g2(40*u.nanomolar), gRNA.no_cas.g3(1*u.nanomolar)
 dCas(43*u.nanomolar)
 
 MySim = Simulation(gRNA | DNAPro | dCas)
-MySim.compile()
-exit()
 MySim.volume = 1*u.femtoliter
 
 # 40 nanomolar, 1
