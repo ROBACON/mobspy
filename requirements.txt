@@ -6,3 +6,5 @@ pandas
 joblib
 tqdm
 copasi-basico
+pint
+
