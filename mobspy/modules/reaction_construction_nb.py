@@ -209,7 +209,6 @@ def get_involved_species(reaction, species_string_dict):
     """
     reactant_species_combination_list = []
     base_species_order = []
-    species_for_reactant = []
 
     for reactant in reaction.reactants:
         flag_absent_reactant = False
@@ -224,12 +223,12 @@ def get_involved_species(reaction, species_string_dict):
                                                  'characteristics': reactant['characteristics']})
                     flag_absent_reactant = True
 
-        if not flag_absent_reactant:
-            simlog.error(f'Species {reactant["object"]} was not found in model \n'
-                         f'For reaction {reaction} \n'
-                         f'Please add the species or remove the reaction')
+            if not flag_absent_reactant:
+                simlog.error(f'Species {reactant["object"]} was not found in model \n'
+                            f'For reaction {reaction} \n'
+                            f'Please add the species or remove the reaction')
 
-        reactant_species_combination_list.append(species_for_reactant)
+            reactant_species_combination_list.append(species_for_reactant)
 
     return base_species_order, reactant_species_combination_list
 

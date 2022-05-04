@@ -49,6 +49,7 @@ class __Operator_Base:
                     species_string_split = species_string.split('_dot_')[1:]
                     if all([char in species_string_split for char in characteristics]):
                         to_return.append(species_string)
+
         return to_return
 
     @staticmethod
@@ -123,6 +124,9 @@ class __Round_Robin_Base(__Operator_Base):
                     if species in key.get_references():
                         species_is_referenced_by.append(key)
 
+                if len(species_is_referenced_by) == 0:
+                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
+
                 for referenciator_species in species_is_referenced_by:
                     products.append(self.find_all_string_references_to_born_species(referenciator_species,
                                                                                     characteristics,
@@ -170,6 +174,9 @@ class __RR_Default_Base(__Operator_Base):
                 for key in species_string_dictionary:
                     if species in key.get_references():
                         species_is_referenced_by.append(key)
+
+                if len(species_is_referenced_by) == 0:
+                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
 
                 for referenciator_species in species_is_referenced_by:
                     products.append(self.find_all_default_references_to_born_species(referenciator_species,

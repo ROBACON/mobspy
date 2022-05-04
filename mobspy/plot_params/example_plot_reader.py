@@ -1,5 +1,4 @@
 
-
 def get_example_plot_parameters():
     example_parameters = {
         "output_dir": "",
@@ -10,9 +9,9 @@ def get_example_plot_parameters():
         "no_title": True,
 
         "figures": [{
-            "plot_1": {
+            "plots": [{
                 "species_to_plot": ["A"]
-            }
+            }]
         }]
     }
     return example_parameters

@@ -25,7 +25,8 @@ if __name__ == '__main__':
         Tree.c(color) >> Tree.c(next_color)[10/u.year]
 
     # competition
-    Tree.dense.old + Tree.dense.young >> Tree.dense.old[1e-10*u.decimeter/u.year]
+    Tree.dense.old + Tree.dense.young >> Tree.dense.old \
+        [1e-10*u.decimeter/u.year]
 
     # initial conditions
     Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)

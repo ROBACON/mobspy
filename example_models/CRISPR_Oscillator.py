@@ -56,15 +56,19 @@ gRNA.no_cas.g1(0), gRNA.no_cas.g2(40*u.nanomolar), gRNA.no_cas.g3(1*u.nanomolar)
 dCas(43*u.nanomolar)
 
 MySim = Simulation(gRNA | DNAPro | dCas)
+MySim.compile()
+exit()
 MySim.volume = 1*u.femtoliter
 
 # 40 nanomolar, 1
 # dCas 43nm
 MySim.save_data = False
 MySim.plot_data = False
-MySim.duration = 2.5e6
-MySim.output_event = True
+MySim.duration = 650*u.hours
 MySim.step_size = 100
+MySim.unit_x = 'hours'
 MySim.run()
-MySim.plot_deterministic(gRNA.g1, gRNA.g2, gRNA.g3)
+MySim.plot_deterministic(gRNA.g1,
+                         gRNA.g2,
+                         gRNA.g3)
 
