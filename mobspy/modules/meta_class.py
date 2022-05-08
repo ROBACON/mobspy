@@ -228,20 +228,19 @@ class Compiler:
                 model_str += map + ' :' + '\n'
                 for element in sorted(mappings_for_sbml[map]):
                     model_str += element + '\n'
-            simlog.debug()
 
             model_str += '\n'
             model_str += 'Parameters' + '\n'
             parameters_alpha = list(sorted(parameters_for_sbml.keys()))
             for par in parameters_alpha:
                 model_str += par + ',' + str(parameters_for_sbml[par][0]) + '\n'
-            simlog.debug()
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
             reaction_alpha = [x[1] for x in list(sorted(reactions_for_sbml.items(), key=lambda x: x[1]))]
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + str(reac) + '\n'
+            model_str += '\n'
 
 
         # This feature has been deprecated (in_model)
