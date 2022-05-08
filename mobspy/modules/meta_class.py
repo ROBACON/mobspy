@@ -242,7 +242,6 @@ class Compiler:
             reaction_alpha = [x[1] for x in list(sorted(reactions_for_sbml.items(), key=lambda x: x[1]))]
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + str(reac) + '\n'
-            model_str += '\n'
 
 
         # This feature has been deprecated (in_model)
