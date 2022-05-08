@@ -212,33 +212,44 @@ class Compiler:
                                    f'{reactions_for_sbml[r1]} \n' +
                                    'Is doubled. Was that intentional? \n')
 
+        model_str = ''
         if verbose:
-            simlog.debug()
-            simlog.debug('Species')
-            for species in species_for_sbml:
-                simlog.debug(species.replace('_dot_', '.') + ',' + str(species_for_sbml[species]))
+            model_str = '\n'
+            model_str += 'Species' + '\n'
+            species_alpha = list(sorted(species_for_sbml.keys()))
+            for spe in species_alpha:
+                model_str += spe.replace('_dot_', '.') + ',' + str(species_for_sbml[spe]) + '\n'
+            model_str += '\n'
+
+            model_str += '\n'
+            model_str += 'Mappings' + '\n'
+            mappings_alpha = list(sorted(mappings_for_sbml.keys()))
+            for map in mappings_alpha:
+                model_str += map + ' :' + '\n'
+                for element in sorted(mappings_for_sbml[map]):
+                    model_str += element + '\n'
             simlog.debug()
 
-            simlog.debug('Mappings')
-            for mapping in mappings_for_sbml:
-                simlog.debug(str(mapping) + ' :')
-                for element in mappings_for_sbml[mapping]:
-                    simlog.debug(element)
+            model_str += '\n'
+            model_str += 'Parameters' + '\n'
+            parameters_alpha = list(sorted(parameters_for_sbml.keys()))
+            for par in parameters_alpha:
+                model_str += par + ',' + str(parameters_for_sbml[par][0]) + '\n'
             simlog.debug()
 
-            simlog.debug('Parameters')
-            for parameters in parameters_for_sbml:
-                simlog.debug(parameters + ',' + str(parameters_for_sbml[parameters]))
-            simlog.debug()
+            model_str += '\n'
+            model_str += 'Reactions' + '\n'
+            reaction_alpha = [x[1] for x in list(sorted(reactions_for_sbml.items(), key=lambda x: x[1]))]
+            for i, reac in enumerate(reaction_alpha):
+                model_str += 'reaction_' + str(i) + ',' + str(reac) + '\n'
+            model_str += '\n'
 
-            simlog.debug('Reactions')
-            for reaction in reactions_for_sbml:
-                simlog.debug(reaction + ',' + str(reactions_for_sbml[reaction]).replace('_dot_', '.'))
-        
-        # Compilation finish, in model not needed anymore:
+
+        # This feature has been deprecated (in_model)
+        # There is no more difference between classes during or outside the compilation
         Reacting_Species.in_model = False
         Species.in_model = False
-        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml
+        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str
 
 
 class Reactions:

@@ -68,12 +68,17 @@ class Simulation:
             self.plot_parameters['simulation_method'] = 'stochastic'
 
         self._species_for_sbml, self._reactions_for_sbml, \
-        self._parameters_for_sbml, self._mappings_for_sbml = Compiler.compile(self.model, names=self.names,
-                                                                              volume=self.parameters['volume'],
-                                                                              type_of_model=self.parameters[
-                                                                                  "simulation_method"],
-                                                                              verbose=verbose,
-                                                                              default_order=self.default_order)
+        self._parameters_for_sbml, self._mappings_for_sbml, \
+        self.model_string = Compiler.compile(self.model, names=self.names,
+                                             volume=self.parameters['volume'],
+                                             type_of_model=self.parameters[
+                                                 "simulation_method"],
+                                             verbose=verbose,
+                                             default_order=self.default_order)
+
+        if self.model_string != '':
+            return self.model_string
+
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
         self.mappings = deepcopy(self._mappings_for_sbml)
@@ -158,7 +163,7 @@ class Simulation:
 
     def __setattr__(self, name, value):
 
-        white_list = ['default_order', 'volume', 'model', 'names', 'parameters',
+        white_list = ['default_order', 'volume', 'model', 'names', 'parameters', 'model_string',
                       'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
                       'all_species_not_mapped']
