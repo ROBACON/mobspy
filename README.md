@@ -10,7 +10,7 @@ To get started, you only need to pip install:
 
 	pip install mobspy 
 
-And check out some example tutorial models in either the example_model folder.
+And check out some example tutorial models in the example_model folder.
 
 # How it works
 
