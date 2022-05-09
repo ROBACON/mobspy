@@ -30,4 +30,4 @@ Receptor.early_infection >> Receptor.late_infection [0.1]
 Receptor + Resource >> Receptor.low_inf + Receptor [dup_rate]
 
 MySim = Simulation(Donor | Receptor | Phage | AA | Glu)
-MySim.compile()
+print(MySim.compile())

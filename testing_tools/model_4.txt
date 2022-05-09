@@ -1,0 +1,29 @@
+
+Species
+B1.infected,0
+B1.not_infected,0
+B2.infected,0
+B2.not_infected,0
+V1,0
+V2,0
+
+Mappings
+B1 :
+B1.infected
+B1.not_infected
+B2 :
+B2.infected
+B2.not_infected
+V1 :
+V1
+V2 :
+V2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'B1.not_infected'), (1, 'V1')], 'pr': [(1, 'B1.infected')], 'kin': 'B1.not_infected * V1 * 1 * volume^-1'}
+reaction_1,{'re': [(1, 'B1.not_infected'), (1, 'V2')], 'pr': [(1, 'B1.infected')], 'kin': 'B1.not_infected * V2 * 1 * volume^-1'}
+reaction_2,{'re': [(1, 'B2.not_infected'), (1, 'V1')], 'pr': [(1, 'B2.infected')], 'kin': 'B2.not_infected * V1 * 1 * volume^-1'}
+reaction_3,{'re': [(1, 'B2.not_infected'), (1, 'V2')], 'pr': [(1, 'B2.infected')], 'kin': 'B2.not_infected * V2 * 1 * volume^-1'}

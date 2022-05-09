@@ -219,7 +219,6 @@ class Compiler:
             species_alpha = list(sorted(species_for_sbml.keys()))
             for spe in species_alpha:
                 model_str += spe.replace('_dot_', '.') + ',' + str(species_for_sbml[spe]) + '\n'
-            model_str += '\n'
 
             model_str += '\n'
             model_str += 'Mappings' + '\n'
@@ -237,11 +236,9 @@ class Compiler:
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
-            reaction_alpha = [x[1] for x in list(sorted(reactions_for_sbml.items(), key=lambda x: x[1]))]
+            reaction_alpha = [str(x[1]).replace('_dot_','.') for x in list(sorted(reactions_for_sbml.items(), key=lambda x: str(x[1])))]
             for i, reac in enumerate(reaction_alpha):
-                model_str += 'reaction_' + str(i) + ',' + str(reac) + '\n'
-            model_str += '\n'
-
+                model_str += 'reaction_' + str(i) + ',' + reac + '\n'
 
         # This feature has been deprecated (in_model)
         # There is no more difference between classes during or outside the compilation

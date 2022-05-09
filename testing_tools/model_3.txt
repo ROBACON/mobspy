@@ -1,0 +1,47 @@
+
+Species
+Music.burning_for_you.charming_man.eletric_fell,0
+Music.burning_for_you.charming_man.kids,0
+Music.burning_for_you.charming_man.little_dark_age,0
+Music.burning_for_you.stop_me.eletric_fell,0
+Music.burning_for_you.stop_me.kids,0
+Music.burning_for_you.stop_me.little_dark_age,0
+Music.reaper.charming_man.eletric_fell,0
+Music.reaper.charming_man.kids,0
+Music.reaper.charming_man.little_dark_age,0
+Music.reaper.stop_me.eletric_fell,0
+Music.reaper.stop_me.kids,0
+Music.reaper.stop_me.little_dark_age,0
+
+Mappings
+Music :
+Music.burning_for_you.charming_man.eletric_fell
+Music.burning_for_you.charming_man.kids
+Music.burning_for_you.charming_man.little_dark_age
+Music.burning_for_you.stop_me.eletric_fell
+Music.burning_for_you.stop_me.kids
+Music.burning_for_you.stop_me.little_dark_age
+Music.reaper.charming_man.eletric_fell
+Music.reaper.charming_man.kids
+Music.reaper.charming_man.little_dark_age
+Music.reaper.stop_me.eletric_fell
+Music.reaper.stop_me.kids
+Music.reaper.stop_me.little_dark_age
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Music.burning_for_you.charming_man.eletric_fell')], 'pr': [(1, 'Music.reaper.charming_man.eletric_fell')], 'kin': 'Music.burning_for_you.charming_man.eletric_fell * 1'}
+reaction_1,{'re': [(1, 'Music.burning_for_you.charming_man.kids')], 'pr': [(1, 'Music.reaper.charming_man.kids')], 'kin': 'Music.burning_for_you.charming_man.kids * 1'}
+reaction_2,{'re': [(1, 'Music.burning_for_you.charming_man.little_dark_age')], 'pr': [(1, 'Music.reaper.charming_man.little_dark_age')], 'kin': 'Music.burning_for_you.charming_man.little_dark_age * 1'}
+reaction_3,{'re': [(1, 'Music.burning_for_you.stop_me.eletric_fell')], 'pr': [(1, 'Music.burning_for_you.charming_man.eletric_fell')], 'kin': 'Music.burning_for_you.stop_me.eletric_fell * 1'}
+reaction_4,{'re': [(1, 'Music.burning_for_you.stop_me.eletric_fell')], 'pr': [(1, 'Music.reaper.stop_me.eletric_fell')], 'kin': 'Music.burning_for_you.stop_me.eletric_fell * 1'}
+reaction_5,{'re': [(1, 'Music.burning_for_you.stop_me.kids')], 'pr': [(1, 'Music.burning_for_you.charming_man.kids')], 'kin': 'Music.burning_for_you.stop_me.kids * 1'}
+reaction_6,{'re': [(1, 'Music.burning_for_you.stop_me.kids')], 'pr': [(1, 'Music.reaper.stop_me.kids')], 'kin': 'Music.burning_for_you.stop_me.kids * 1'}
+reaction_7,{'re': [(1, 'Music.burning_for_you.stop_me.little_dark_age')], 'pr': [(1, 'Music.burning_for_you.charming_man.little_dark_age')], 'kin': 'Music.burning_for_you.stop_me.little_dark_age * 1'}
+reaction_8,{'re': [(1, 'Music.burning_for_you.stop_me.little_dark_age')], 'pr': [(1, 'Music.reaper.stop_me.little_dark_age')], 'kin': 'Music.burning_for_you.stop_me.little_dark_age * 1'}
+reaction_9,{'re': [(1, 'Music.reaper.stop_me.eletric_fell')], 'pr': [(1, 'Music.reaper.charming_man.eletric_fell')], 'kin': 'Music.reaper.stop_me.eletric_fell * 1'}
+reaction_10,{'re': [(1, 'Music.reaper.stop_me.kids')], 'pr': [(1, 'Music.reaper.charming_man.kids')], 'kin': 'Music.reaper.stop_me.kids * 1'}
+reaction_11,{'re': [(1, 'Music.reaper.stop_me.little_dark_age')], 'pr': [(1, 'Music.reaper.charming_man.little_dark_age')], 'kin': 'Music.reaper.stop_me.little_dark_age * 1'}
+
