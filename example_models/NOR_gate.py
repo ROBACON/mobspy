@@ -10,6 +10,8 @@ from mobspy import *
 
 
 def NOR_GATE(A_conc, B_conc):
+    # Here we define the Protein to be produced, the Promoter that will act as the gate
+    # A and B are the inputs any of them can inactivate the Promoter so they inherit from Repressor
     Repressor, Promoter, Protein = BaseSpecies(4)
     Repressor + Promoter.active >> Promoter.inactive [0.5]
     A, B = New(Repressor)

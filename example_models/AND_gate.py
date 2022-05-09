@@ -11,6 +11,8 @@ from mobspy import *
 
 
 def AND_GATE(A_conc, B_conc):
+    # Here we define the Protein to be produced, the Promoter that will act as the gate
+    # A and B are the inputs, they merge into AB to activate the promoter and produce the protein
     A, B, AB, Promoter, Protein = BaseSpecies(5)
     A + B >> AB [0.5]
     AB + Promoter.inactive >> Promoter.active [0.5]
@@ -27,6 +29,7 @@ def AND_GATE(A_conc, B_conc):
     return MySim.results['data']['Protein']['runs'][0][-1]
 
 
+# Here is a simple heatmap definition to show to get working
 heatmap = []
 for a in [0, 25, 50, 75, 100]:
     heatmap_line = []

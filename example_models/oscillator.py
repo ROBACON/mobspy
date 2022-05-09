@@ -2,7 +2,6 @@ import sys, os
 import matplotlib.pyplot as plt
 from mobspy import *
 
-# TODO look at repression and promoter reactions
 
 """
     This is a more classical oscillator
@@ -16,12 +15,15 @@ DNAPromoter = New(Promoter)
 DNAPromoter.PLcl(100), DNAPromoter.PLacl(100), DNAPromoter.PTetR(100)
 Chemical.TetR(1)
 
+# Here we define the activation reactions for the list of chemicals and promoters
 list_of_chemicals = ['TetR', 'Lcl', 'Lacl']
 list_of_promoters = ['PLcl', 'PLacl', 'PTetR']
 for che, pro in zip(list_of_chemicals, list_of_promoters):
     Rev[ DNAPromoter.inactive.c(pro) + Chemical.c(che) >> DNAPromoter.active.c(pro)][1, 1]
 Chemical >> Zero [1]
 
+# And here we define the repression cycle
+# Also we use a string for a non-mass action kinetics rate, we want the hill function for repression here
 repressed = ['TetR', 'Lcl', 'Lacl']
 repressors = ['Lacl' ,'TetR', 'Lcl']
 hill = lambda che: f'10/(1 + ({che})^3)'

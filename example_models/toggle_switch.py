@@ -9,6 +9,13 @@ from mobspy import *
     In the future we will implement a way to handle events, but for now events can be handled in a similar fashion
 """
 
+"""
+    We currently access a private variable to implement event
+    Since we are planning on implementing a better syntax for event-handling
+    In future updates expect a better way to handle this
+    But for now this method is an alternative
+"""
+
 p1 = []
 p2 = []
 T = []

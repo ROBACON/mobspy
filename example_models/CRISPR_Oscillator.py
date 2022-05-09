@@ -4,6 +4,7 @@ from mobspy import *
 """
     This is the CRISP oscillator from the MobsPy publication
     We start by declaring 3 base species and assigning their characteristics
+    We need introduce characteristics here for the queries in other dimensions later
 """
 Promoter, dCas, CasBinding = BaseSpecies(3)
 Promoter.active, Promoter.inactive, CasBinding.no_cas, CasBinding.cas
