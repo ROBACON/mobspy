@@ -1,0 +1,20 @@
+
+Species
+Cat,6.02214076e+23
+Dog,6.02214076e+23
+Herbivore,6.02214076e+23
+
+Mappings
+Cat :
+Cat
+Dog :
+Dog
+Herbivore :
+Herbivore
+
+Parameters
+volume,99.99999999999999
+
+Reactions
+reaction_0,{'re': [(1, 'Cat'), (1, 'Herbivore')], 'pr': [(1, 'Cat')], 'kin': 'Cat * Herbivore * 1 * volume^-1'}
+reaction_1,{'re': [(1, 'Dog'), (1, 'Herbivore')], 'pr': [(1, 'Dog')], 'kin': 'Dog * Herbivore * 1 * volume^-1'}
