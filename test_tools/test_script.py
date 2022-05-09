@@ -1,35 +1,37 @@
 # This script tests the model creation and compilation
 # It also test the calculation capabilities
 # It uses some simple model and assertions
-#
 
+import pytest
 from mobspy import *
 import sys
 
 # TODO Plot has random order for species names
 
-if __name__ == '__main__':
 
-    # Compare results with expected file
-    def compare_model(comp_results, file_name):
+# Compare results with expected file
+def compare_model(comp_results, file_name):
 
-        with open(file_name, 'r') as file:
-            for r, line in zip(comp_results.split('\n'), file.readlines()):
-                line = line.replace('\n', '')
-                assert r == line, f'{r} and {line} do not match'
+    with open(file_name, 'r') as file:
+        for r, line in zip(comp_results.split('\n'), file.readlines()):
+            line = line.replace('\n', '')
+            if r != line:
+                return False
+    return True
 
-        print(f'Model {file_name} passed the test', file=sys.stderr)
 
-
-    # Model to test the basics
+# Model to test the basics
+def test_model_1():
     A, B, C = BaseSpecies(3)
     A + B >> C[1]
     MySim = Simulation(A | B | C)
     MySim.level = 0
     results = MySim.compile()
-    compare_model(results, 'model_1.txt')
+    assert compare_model(results, 'model_1.txt')
 
-    # Model to test basic inheritance
+
+# Model to test basic inheritance
+def test_model_2():
     Carnivore, Herbivore = BaseSpecies(2)
     Cat, Dog = New(Carnivore, 2)
     Carnivore + Herbivore(1 * u.mol) >> Carnivore[1]
@@ -38,9 +40,11 @@ if __name__ == '__main__':
     MySim.level = 0
     MySim.volume = 1 * u.meter ** 2
     results = MySim.compile()
-    compare_model(results, 'model_2.txt')
+    assert compare_model(results, 'model_2.txt')
 
-    # Model to test species multiplication
+
+# Model to test species multiplication
+def test_model_3():
     MGMT, Blue_Oyster_Cult, The_Smiths = BaseSpecies(3)
     MGMT.eletric_fell, MGMT.little_dark_age, MGMT.kids
     Blue_Oyster_Cult.burning_for_you >> Blue_Oyster_Cult.reaper[1]
@@ -49,10 +53,12 @@ if __name__ == '__main__':
     MySim = Simulation(Music)
     MySim.level = 0
     results = MySim.compile()
-    compare_model(results, 'model_3.txt')
+    assert compare_model(results, 'model_3.txt')
 
-    # Model to test inheritance queries
-    # All bacterias are infected by any virus here
+
+# Model to test inheritance queries
+# All bacterias are infected by any virus here
+def test_model_4():
     Bacteria, Virus = BaseSpecies(2)
     B1, B2 = New(Bacteria, 2)
     V1, V2 = New(Virus, 2)
@@ -60,41 +66,53 @@ if __name__ == '__main__':
     MySim = Simulation(B1 | B2 | V1 | V2)
     MySim.level = 0
     results = MySim.compile()
-    compare_model(results, 'model_4.txt')
+    assert compare_model(results, 'model_4.txt')
 
-    # Model to test round-robin and stoichiometry
+
+# Model to test round-robin and stoichiometry
+def test_model_5():
     A = BaseSpecies(1)
     B, C = New(A, 2)
     A >> 2 * A[1]
     2 * A >> 3 * A[1]
     MySim = Simulation(B | C)
     MySim.level = 0
-    MySim.compile()
-    compare_model(results, 'model_5.txt')
+    results = MySim.compile()
+    assert compare_model(results, 'model_5.txt')
 
-    # Model to test well defined orthogonal spaces
+
+# Model to test well defined orthogonal spaces
+def orthogonal_spaces():
     try:
         A, B = BaseSpecies(2)
         A.a, A.b
         C = New(B)
         C.a, C.b
         MySim = Simulation(A | C)
+        MySim.level = 0
         MySim.compile()
+        return False
     except SystemExit:
-        print('Different species with shared-characteristics error Ok')
+        return True
 
-    # Model to test dimensional inconsistency
+
+def test_orthogonal():
+    assert orthogonal_spaces()
+
+
+# Model to test dimensional inconsistency
+def dimensional_inconsistency():
     try:
-        A, B = BaseSpecies(2)
+        A, B, C = BaseSpecies(3)
         A(1 * u.mol / u.meter ** 3) + B(1 * u.mol / u.meter ** 2) >> C[1]
         MySim = Simulation(A | B | C)
         MySim.level = 0
         MySim.compile()
+        return False
     except SystemExit:
         print('Dimensional inconsistency model Ok')
+        return True
 
 
-
-
-
-
+def test_dimensional_inconsistency():
+    assert dimensional_inconsistency()
