@@ -27,7 +27,7 @@ def test_model_1():
     MySim = Simulation(A | B | C)
     MySim.level = 0
     results = MySim.compile()
-    assert compare_model(results, 'model_1.txt')
+    assert compare_model(results, 'test_tools/model_1.txt')
 
 
 # Model to test basic inheritance
@@ -40,7 +40,7 @@ def test_model_2():
     MySim.level = 0
     MySim.volume = 1 * u.meter ** 2
     results = MySim.compile()
-    assert compare_model(results, 'model_2.txt')
+    assert compare_model(results, 'test_tools/model_2.txt')
 
 
 # Model to test species multiplication
@@ -53,7 +53,7 @@ def test_model_3():
     MySim = Simulation(Music)
     MySim.level = 0
     results = MySim.compile()
-    assert compare_model(results, 'model_3.txt')
+    assert compare_model(results, 'test_tools/model_3.txt')
 
 
 # Model to test inheritance queries
@@ -66,7 +66,7 @@ def test_model_4():
     MySim = Simulation(B1 | B2 | V1 | V2)
     MySim.level = 0
     results = MySim.compile()
-    assert compare_model(results, 'model_4.txt')
+    assert compare_model(results, 'test_tools/model_4.txt')
 
 
 # Model to test round-robin and stoichiometry
@@ -78,7 +78,7 @@ def test_model_5():
     MySim = Simulation(B | C)
     MySim.level = 0
     results = MySim.compile()
-    assert compare_model(results, 'model_5.txt')
+    assert compare_model(results, 'test_tools/model_5.txt')
 
 
 # Model to test well defined orthogonal spaces
@@ -116,3 +116,4 @@ def dimensional_inconsistency():
 
 def test_dimensional_inconsistency():
     assert dimensional_inconsistency()
+
