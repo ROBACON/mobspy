@@ -98,6 +98,9 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 
 For now MobsPy is not thread-safe and it's not compatible with numpy and deepcopy
 
+# Release info
+
+Version 1.1 added automated testing to git pushes with test_script.py
 
 
 
