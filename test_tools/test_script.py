@@ -117,3 +117,6 @@ def dimensional_inconsistency():
 def test_dimensional_inconsistency():
     assert dimensional_inconsistency()
 
+
+def test_fail():
+    assert 2 == 5
