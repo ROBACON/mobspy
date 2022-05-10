@@ -42,6 +42,7 @@ for prom, grna in zip(Promoters_list, gRNAs_list):
 
 """
     Simple loop for the repression reaction
+    Here we use the characteristics of gRNA_rep_list as the different type of gRNAs
 """
 gRNA_rep_List = ['g3', 'g1', 'g2']
 for prom, grna in zip(Promoters_list, gRNA_rep_List):
@@ -50,6 +51,7 @@ for prom, grna in zip(Promoters_list, gRNA_rep_List):
     DNAPro.active.c(prom) + gRNA.cas.c(grna) >> DNAPro.inactive.c(prom)[dna_rt1]
     DNAPro.inactive.c(prom) >> 2 * DNAPro.active.c(prom) + gRNA.cas.c(grna)[dna_rt2]
 
+# Rev defines a reversible reaction in both senses
 Rev[Zero >> dCas][1 / u.minute, 2.3e-2 / u.minute]
 
 DNAPro.active.P1(1), DNAPro.active.P2(1), DNAPro.active.P3(1)

@@ -1,0 +1,29 @@
+
+Species
+Amino,0
+Bacteria,0
+Glucose,0
+New_Bacteria,0
+
+Mappings
+Amino :
+Amino
+Bacteria :
+Bacteria
+Glucose :
+Glucose
+New_Bacteria :
+New_Bacteria
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Bacteria'), (1, 'Amino')], 'pr': [(1, 'Bacteria')], 'kin': 'Bacteria * Amino * 1 * volume^-1'}
+reaction_1,{'re': [(1, 'Bacteria'), (1, 'Glucose')], 'pr': [(1, 'Bacteria')], 'kin': 'Bacteria * Glucose * 1 * volume^-1'}
+reaction_2,{'re': [(1, 'Bacteria')], 'pr': [(2, 'Bacteria')], 'kin': 'Bacteria * 1'}
+reaction_3,{'re': [(1, 'Bacteria')], 'pr': [], 'kin': 'Bacteria * 1'}
+reaction_4,{'re': [(1, 'New_Bacteria'), (1, 'Amino')], 'pr': [(1, 'New_Bacteria')], 'kin': 'New_Bacteria * Amino * 1 * volume^-1'}
+reaction_5,{'re': [(1, 'New_Bacteria'), (1, 'Glucose')], 'pr': [(1, 'New_Bacteria')], 'kin': 'New_Bacteria * Glucose * 1 * volume^-1'}
+reaction_6,{'re': [(1, 'New_Bacteria')], 'pr': [(2, 'New_Bacteria')], 'kin': 'New_Bacteria * 1'}
+reaction_7,{'re': [(1, 'New_Bacteria')], 'pr': [], 'kin': 'New_Bacteria * 1'}

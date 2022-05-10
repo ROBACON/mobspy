@@ -1,0 +1,29 @@
+
+Species
+Dummy.blue.old,0
+Dummy.blue.young,0
+Dummy.red.old,0
+Dummy.red.young,0
+Dummy.yellow.old,0
+Dummy.yellow.young,0
+
+Mappings
+Dummy :
+Dummy.blue.old
+Dummy.blue.young
+Dummy.red.old
+Dummy.red.young
+Dummy.yellow.old
+Dummy.yellow.young
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Dummy.blue.old')], 'pr': [], 'kin': 'Dummy.blue.old * 1'}
+reaction_1,{'re': [(1, 'Dummy.blue.young')], 'pr': [(1, 'Dummy.blue.old')], 'kin': 'Dummy.blue.young * 1'}
+reaction_2,{'re': [(1, 'Dummy.red.old')], 'pr': [], 'kin': 'Dummy.red.old * 1'}
+reaction_3,{'re': [(1, 'Dummy.red.young')], 'pr': [(1, 'Dummy.blue.young')], 'kin': 'Dummy.red.young * 1'}
+reaction_4,{'re': [(1, 'Dummy.red.young')], 'pr': [(1, 'Dummy.red.old')], 'kin': 'Dummy.red.young * 1'}
+reaction_5,{'re': [(1, 'Dummy.yellow.old')], 'pr': [], 'kin': 'Dummy.yellow.old * 1'}
+reaction_6,{'re': [(1, 'Dummy.yellow.young')], 'pr': [(1, 'Dummy.yellow.old')], 'kin': 'Dummy.yellow.young * 1'}
