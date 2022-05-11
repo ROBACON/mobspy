@@ -27,7 +27,7 @@ will be performed in one step, to reach it before starting to collect output.
 
 - `output_event` (bool): if true, output will be collected at the time a discrete event occurs.
 
-## Output Parameters
+## Output parameters
 
 - `unit_x` (str): output unit for the x axis
 
