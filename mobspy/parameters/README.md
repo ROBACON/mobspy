@@ -2,7 +2,7 @@
 
 ## Model paramters
 
-- volume: sets the volume in the simulation (default is 1 litre)
+- `volume`: sets the volume in the simulation (default is 1 litre)
 
 - repetitions : sets the number of runs for stochastic
         
