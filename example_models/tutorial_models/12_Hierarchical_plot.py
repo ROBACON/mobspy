@@ -11,6 +11,10 @@ MySim.plot_data = False
 # The override rule is plot-wise > figure-wise > global-wise
 # If the parameter is not found at a local value it searches above
 # Finally, plot raw only accepts dictionaries and JSON
+# For now plot raw does not accept queries for plotting
+# In this case the species names must be written in it's entirety
+# The order of appearance of characteristics in the species names is alphabetical comparison
+# based on the first characteristic alphabetically
 example_parameters = {
 
     'A': {'color': 'red',  'label': 'A'},

@@ -1,0 +1,29 @@
+
+Species
+Thing.big.old,100
+Thing.big.young,0
+Thing.medium.old,0
+Thing.medium.young,100
+Thing.small.old,0
+Thing.small.young,100
+
+Mappings
+Thing :
+Thing.big.old
+Thing.big.young
+Thing.medium.old
+Thing.medium.young
+Thing.small.old
+Thing.small.young
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Thing.big.young')], 'pr': [(1, 'Thing.big.old')], 'kin': 'Thing.big.young * 1'}
+reaction_1,{'re': [(1, 'Thing.medium.old')], 'pr': [(1, 'Thing.big.old')], 'kin': 'Thing.medium.old * 1'}
+reaction_2,{'re': [(1, 'Thing.medium.young')], 'pr': [(1, 'Thing.big.young')], 'kin': 'Thing.medium.young * 1'}
+reaction_3,{'re': [(1, 'Thing.medium.young')], 'pr': [(1, 'Thing.medium.old')], 'kin': 'Thing.medium.young * 1'}
+reaction_4,{'re': [(1, 'Thing.small.old')], 'pr': [(1, 'Thing.medium.old')], 'kin': 'Thing.small.old * 1'}
+reaction_5,{'re': [(1, 'Thing.small.young')], 'pr': [(1, 'Thing.medium.young')], 'kin': 'Thing.small.young * 1'}
+reaction_6,{'re': [(1, 'Thing.small.young')], 'pr': [(1, 'Thing.small.old')], 'kin': 'Thing.small.young * 1'}
