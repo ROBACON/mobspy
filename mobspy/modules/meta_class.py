@@ -81,8 +81,6 @@ class Compiler:
     def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True,
                 default_order=Default):
         # Set in model condition
-        Reacting_Species.in_model = False
-        Species.in_model = False
         
         # Define dictionaries to return to avoid compatibility problems
 
@@ -240,10 +238,6 @@ class Compiler:
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + reac + '\n'
 
-        # This feature has been deprecated (in_model)
-        # There is no more difference between classes during or outside the compilation
-        Reacting_Species.in_model = False
-        Species.in_model = False
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str
 
 
@@ -310,24 +304,17 @@ class Reacting_Species:
         It contains the species object reference, the characteristics involved in the reaction and finally the stoichiometry
         It adds up by appending elements to a list
     """
-    # String querying inside the model
-    in_model = False
+
 
     def __str__(self):
 
-        if not self.in_model:
-            if len(self.list_of_reactants) == 1:
-                to_return = str(self.list_of_reactants[0]['object'])
-                for cha in self.list_of_reactants[0]['characteristics']:
-                    to_return += '.' + cha
-                return to_return
-            else:
-                return self.list_of_reactants
+        if len(self.list_of_reactants) == 1:
+            to_return = str(self.list_of_reactants[0]['object'])
+            for cha in self.list_of_reactants[0]['characteristics']:
+                to_return += '.' + cha
+            return to_return
         else:
-            if len(self.list_of_reactants) == 1:
-                return Compiler.query_str(self.list_of_reactants[0]['object'], self.list_of_reactants[0]['characteristics'])
-            else:
-                simlog.error('Query not accepted. Only one species to str at a time')
+            return self.list_of_reactants
     
     # Labels and value function implementation
     def c(self, item):
@@ -442,14 +429,9 @@ class Species:
         Objects store all the basic information necessary to create an SBML file and construct a model
         So we construct the species through reactions and __getattr__ to form a model
     """
-    # String querying inside the model
-    in_model = False
 
     def __str__(self):
-        if not self.in_model:
-            return self._name
-        else:
-            return Compiler.query_str(self, set())
+        return self._name
 
     # Def c to get the value
     def c(self, item):
@@ -556,7 +538,6 @@ class Species:
     # Adding counts to species
     def __call__(self, quantity):
         # It's called quantity because of the original design
-        self.in_model = False
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
@@ -569,7 +550,6 @@ class Species:
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')
-        self.in_model = True
         return self
 
     def add_quantities(self, characteristics, quantity):
