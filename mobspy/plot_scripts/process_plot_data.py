@@ -1,5 +1,6 @@
 from copy import deepcopy
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.plot_params.example_plot_reader as epr
 
 
 def query_plot_data(species, data):
@@ -44,5 +45,22 @@ def query_plot_data(species, data):
         species_to_plot.append(spe)
 
     return species_to_plot, new_data
+
+
+def check_plot_parameters(species, parameters):
+
+    dictionary = epr.get_example_plot_parameters()
+
+    if 'Time' in parameters:
+        simlog.error('Time must not be a plot parameter name')
+
+    for spe in species:
+        if spe in dictionary.keys():
+            simlog.error(f'Plotting is impossible, species {spe} is a parameter name')
+
+    for key in parameters:
+        if key not in dictionary and key not in species:
+            simlog.warning(f'Parameter {key} not supported')
+
 
 

@@ -220,7 +220,7 @@ def plot_curves(data, axs, figure_index, plot_params):
         if find_parameter(plot_params, key='species_to_plot', index=(figure_index, plot_index)) is not None:
             species = find_parameter(plot_params, key='species_to_plot', index=(figure_index, plot_index))
         else:
-            simlog.error('No species found for plotting in the Plotting Parameters')
+            simlog.error('No species found for plotting in one of the curves or figures')
 
         # Get the time series to plot
         if find_parameter(plot_params, key='time_series', index=(figure_index, plot_index)) is not None:

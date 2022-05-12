@@ -3,7 +3,7 @@ from copy import deepcopy
 import mobspy.plot_scripts.hierarchical_plot as hp
 import json
 import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.plot_scripts.query_plot_data as qpd
+import mobspy.plot_scripts.process_plot_data as ppd
 
 
 def read_plot_json(plot_json_filename):
@@ -44,7 +44,9 @@ def set_plot_units(new_plot_params):
 
 def stochastic_plot(species, data, plot_params):
     # Data Handling
-    species, data = qpd.query_plot_data(species, data)
+    species, data = ppd.query_plot_data(species, data)
+    ppd.check_plot_parameters(species, plot_params)
+
     data_to_plot = deepcopy(data)
     new_plot_params = deepcopy(plot_params)
     set_plot_units(new_plot_params)
@@ -88,7 +90,9 @@ def stochastic_plot(species, data, plot_params):
 
 def deterministic_plot(species, data, plot_params):
     # Data Handling
-    species, data = qpd.query_plot_data(species, data)
+    species, data = ppd.query_plot_data(species, data)
+    ppd.check_plot_parameters(species, plot_params)
+
     new_plot_params = deepcopy(plot_params)
     set_plot_units(new_plot_params)
 
@@ -113,6 +117,9 @@ def raw_plot(data, parameters_or_file):
         plot_params = parameters_or_file
     else:
         simlog.error('Raw plot only takes json files or parameters for configuration')
+
+    species = list(data[0].keys())
+    ppd.check_plot_parameters(species, plot_params)
     hp.plot_data(data, plot_params)
 
 
