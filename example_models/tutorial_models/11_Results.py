@@ -14,31 +14,42 @@ MySim.save_data = False
 # Set to stochastic
 MySim.simulation_method = 'stochastic'
 
-# For the data plot, MobsPy has a default plot
-# The default plot changes for both stochastic and deterministic
+# MobsPy usually has two default plots
+# One for stochastic and one for deterministic
+# The default plots will be called accordingly to the simulation_method
+# after the simulation
+# Unless plot_data is set to false
 MySim.plot_data = False
 
 # Run the sim
 MySim.run()
 
-# For the deterministic plot call
-# If no species are given, MobsPy will plot them all
+# If the default plot was not used one can always call the plot_stochastic or plot_deterministic
+# from the resulting simulation object
+# These function take either species as arguments or nothing at all
+# If no argument is passed all species will be plotted
+# If some species are passed as argument, they will be the only ones to be plotted
+# For the stochastic_plot the default plot consists of two figures for each species
+# One for the runs and the other for the average value with standard deviation
 MySim.plot_stochastic(A, C)
 
 # If save_data is true MobsPy will generate a JSON file containing the data
-# Otherwise it can be accessed directly from the simulation object
-# The simulation results contain the data, parameters and mapping used in the model
-# The data is separated by species name as keys
-# And stored with all the runs in the runs key - to access them use natural numbers
+# Otherwise it can be accessed from the simulation object
+# The simulation results contain the data, parameters and mappings used in the model
+# The data is separated by species name
+# And stored with all the runs under the runs key
+# For example to recover the first run for the A species:
 print(MySim.results['data']['A']['runs'][0])
 
 """
     Plotting with queries
 """
 
-# If the meta-species has several different species inside - MobsPy will plot the sum as default
-# If only a certain characteristic wishes to be plot just query for it inside the plot
-# It will sum over all species with that characteristic
+
+# Plotting functions can also query
+# For instance in the model bellow we are interested in the evolution of a species with a certain characteristic
+# We want to observe all the values of C with the characteristic b1
+# So we just pass C.b1 as an argument to the plotting function
 
 A, B = BaseSpecies(2)
 A.a1, A.a2

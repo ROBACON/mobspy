@@ -26,8 +26,7 @@ A.a1 + A.a2 >> A.a3 + A.a4 [1*u.meter**3/u.second]
 A >> A.a4 [lambda r1: 5/u.second if r1.a1 else 1/u.second]
 
 # But functions that return strings have no support for units yet
-# Please set them for 1/second for any reactions (since it won't be taken as mass action)
-
+# Please set them convert them to units of 1/second
 
 MySim = Simulation(A)
 

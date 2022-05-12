@@ -7,19 +7,18 @@ from mobspy import *
 
 """
     In this model we loop through species in two different ways
-    One by assigning a set of characteristics to a new dummy species
-    And the other by creating a list of species
 """
 
 
 def first_loop():
+    # Define a base species
+    # And an inheritor through the New operator
     DNAStrains = BaseSpecies()
     DNACounter = New(DNAStrains, 1)
 
+    # Here we loop through the species by assigning different characteristics
     for i in range(10):
         DNACounter.c(f"dna_{i}")
-
-    # Set of characteristics
     print(DNACounter.get_characteristics())
 
 
@@ -32,6 +31,11 @@ def first_loop():
 def second_loop():
     DNAStrains = BaseSpecies()
 
+    # In this model we use the New operator to create different meta-species
+    # And store them in the DNAList variable using the | operator
+    # Here since there are no variables to store each meta-species
+    # the new function receives a string which will be the name of the meta-species
+    # When it receives a string it only returns one species with the string as it's name
     DNAList = None
     for i in range(10):
         DummyDNA = New(DNAStrains,f"DNA_{i}")
@@ -40,6 +44,7 @@ def second_loop():
         else:
             DNAList = DummyDNA | DNAList
 
+    # One can then loop through the DNAList using an iterator like a for loop
     for DNA in DNAList:
         print(DNA)
 

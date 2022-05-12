@@ -10,13 +10,23 @@ Position, HandShaker, Lifter, Box = BaseSpecies(4)
 Lifter.weak, Lifter.strong
 Position.p1, Position.p2, Position.p3
 
-# Firstly we want to define a box breaking reaction
-# But we wish to say that strong lifters break the box faster
-# To do so we define a function
-# MobsPy will pass the species from each meta-species as an argument for the function
-# To check if the species passed has the characteristic wanted just use the dot notation
-# It will return True when it does and False otherwise
-# The arguments can be named anything but the first argument will receive the first reactant and so on
+# The rate function arguments work in the following manner:
+#   The rate function will return a different value based on the characteristics of the reactant
+#   Since meta-species are actually a set of species
+#   A meta-reaction involves several reactions between all combinations of those species
+#   And at every defined reaction, one of the species from the set will be used
+#   Finally, the species that are currently being used to construct one reaction from the meta-reaction
+#   will be passed as arguments to a rate function
+#
+# Now we want to define a box breaking reaction:
+#   Here we wish to say that strong lifters break the box faster
+#   In this case r1 will receive a species from the Lifter meta-species as it is the first
+#   to appear in the reaction
+#   If another argument was passed (r2) to the function MobsPy would pass species from the Box meta-species
+#   The arguments can have any name you wish
+#   With the dot notation they return true if the species has that characteristic and false otherwise
+#   In this way only the species from the meta-species lifter that have the strong characteristics will receive
+#   the higher rate
 Lifter + Box >> Lifter [lambda r1: 10 if r1.strong else 1]
 
 # The function can return strings as well

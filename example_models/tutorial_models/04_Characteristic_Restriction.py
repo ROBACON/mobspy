@@ -20,10 +20,13 @@ try:
 except SystemExit:
     pass
 
-# This model results in an error
-# Each species contains a set of the characteristics added to it directly (Without considering inheritance)
-# If two species share an element inside this set MobsPy will throw an error
-# And specify the two species that have the common characteristic
-# Characteristics must be shared through inheritance not by directly adding them
-# This keeps the characteristic state-space independent
+# This model results in an error:
+#   Each species contains a set of the characteristics added to it directly,
+#   which means that is not obtained by inheritance
+#   If two different meta-species in a simulation have an element in common in this set
+#   the compiler will throw an error
+#   In the error the name of the meta-species and the characteristic sets will be displayed
+#
+# To avoid this use inheritance to share characteristics or simply rename the characteristics
+#
 

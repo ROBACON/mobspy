@@ -16,7 +16,7 @@ Thing = Age*Size
 
 # Now the meta-species Thing has 6 species
 # If we use the call operator in Things it will assign the count to the default state
-# The default state is formed by only the first added characteristic from each meta-species
+# The default state is formed by only the first characteristic that added to each meta-species
 # So the count will be assigned to Thing.small.young
 Thing(100)
 
