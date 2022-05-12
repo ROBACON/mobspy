@@ -25,7 +25,15 @@ def get_example_plot_parameters():
             "plots": [{
                 "species_to_plot": ["A"]
             }]
-        }]
+        }],
+
+        # These parameters are not supported by plot_raw
+        # Their only function is to alter the plot labels so please use that parameter
+        # They are only listed here to avoid printing out errors during parameter checks
+        "unit_x": '',
+        "unit_y": '',
+        "output_concentration": False,
+        'simulation_method':'stochastic'
     }
     return example_parameters
 

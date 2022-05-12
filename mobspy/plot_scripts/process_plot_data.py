@@ -47,18 +47,18 @@ def query_plot_data(species, data):
     return species_to_plot, new_data
 
 
-def check_plot_parameters(species, parameters):
+def check_plot_parameters(species, plot_params):
 
     dictionary = epr.get_example_plot_parameters()
 
-    if 'Time' in parameters:
+    if 'Time' in plot_params:
         simlog.error('Time must not be a plot parameter name')
 
     for spe in species:
         if spe in dictionary.keys():
             simlog.error(f'Plotting is impossible, species {spe} is a parameter name')
 
-    for key in parameters:
+    for key in plot_params:
         if key not in dictionary and key not in species:
             simlog.warning(f'Parameter {key} not supported')
 

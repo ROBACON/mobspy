@@ -7,6 +7,11 @@ if __name__ == '__main__':
     MySim = Simulation(A | B | C)
     MySim.save_data = False
     MySim.plot_data = False
+    MySim.unit_x = 'minutes'
+
+    MySim.run()
+    MySim.plot_deterministic(A)
+    exit()
 
     example_parameters = {
 
@@ -27,5 +32,5 @@ if __name__ == '__main__':
         ]
     }
 
-    MySim.run()
-    MySim.plot_raw(example_parameters)
+    # MySim.run()
+    # MySim.plot_raw(example_parameters)
