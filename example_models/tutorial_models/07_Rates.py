@@ -1,11 +1,11 @@
 from mobspy import *
 
 """
-    In this model we discuss rate assignment possibilities in detail
+    In this model we discuss rate assignment possibilities in detail.
 """
 
-# Start with the base species
-# And Add some characteristics
+# We start with the base species
+# and add some characteristics:
 Position, HandShaker, Lifter, Box = BaseSpecies(4)
 Lifter.weak, Lifter.strong
 Position.p1, Position.p2, Position.p3
