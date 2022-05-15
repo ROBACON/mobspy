@@ -21,12 +21,12 @@ except SystemExit:
     pass
 
 # This model results in an error:
-#   Each species contains a set of the characteristics added to it directly,
-#   which means that is not obtained by inheritance
-#   If two different meta-species in a simulation have an element in common in this set
-#   the compiler will throw an error
-#   In the error the name of the meta-species and the characteristic sets will be displayed
+#   Each species contains a set of the characteristics added to it directly
+#   (i.e., characteristics are not obtained by inheritance).
+#   If in a simulation two different meta-species contain the same element,
+#   the compiler will throw an error.
+#   The error message contains the name of the meta-species and the sets of species they cprrespond to.
 #
-# To avoid this use inheritance to share characteristics or simply rename the characteristics
+# To avoid this error, use inheritance to share characteristics, or simply rename the characteristics.
 #
 
