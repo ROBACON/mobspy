@@ -170,6 +170,7 @@ def remap_species(data, mapping, params, species_not_mapped):
 
                 for run in range(params["repetitions"]):
                     this_run = []
+                    runs_not_returned_by_basico = {}
                     for t in T:
                         mapping_sum = 0
                         for spe in the_mapping:
@@ -177,7 +178,16 @@ def remap_species(data, mapping, params, species_not_mapped):
                                 mapping_sum = mapping_sum + data[spe]['runs'][run][t]
                             except KeyError:
                                 mapping_sum = mapping_sum + species_not_mapped[spe]
+                                try:
+                                    runs_not_returned_by_basico[spe] += [species_not_mapped[spe]]
+                                except KeyError:
+                                    runs_not_returned_by_basico[spe] = [species_not_mapped[spe]]
                         this_run.append(mapping_sum)
+                    for spe in runs_not_returned_by_basico:
+                        try:
+                            mapped_data[spe]['runs'].append(runs_not_returned_by_basico[spe])
+                        except KeyError:
+                            mapped_data[spe] = {'runs': [runs_not_returned_by_basico[spe]]}
                     mapped_data[group]['runs'].append(this_run)
 
         except IndexError:
