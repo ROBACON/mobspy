@@ -1,0 +1,23 @@
+
+Species
+B.b1,0
+B.b2,0
+C.c1,0
+C.c2,0
+
+Mappings
+B :
+B.b1
+B.b2
+C :
+C.c1
+C.c2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [], 'pr': [(1, 'B.b1'), (1, 'C.c1')], 'kin': '1'}
+reaction_1,{'re': [], 'pr': [(1, 'C.c1'), (1, 'B.b1')], 'kin': '1'}
+reaction_2,{'re': [], 'pr': [(2, 'B.b1')], 'kin': '1'}
+reaction_3,{'re': [], 'pr': [(2, 'C.c1')], 'kin': '1'}

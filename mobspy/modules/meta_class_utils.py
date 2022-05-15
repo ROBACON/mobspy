@@ -1,3 +1,6 @@
+"""
+    This model stores function used by the meta_class.py module
+"""
 import copy
 import itertools
 import mobspy.simulation_logging.log_scripts as simlog
@@ -5,9 +8,11 @@ import mobspy.simulation_logging.log_scripts as simlog
 
 def unite_dictionaries(first_dict, second_dict):
     """
-        first_dict = first dictionary
-        second_dict = second dictionary
-        Just fuse both dictionaries based on the keys. First key value takes precedence
+        Performs the union of two dictionaries whose values are sets.
+
+        Parameters:
+            first_dict (dict)
+            second_dict (dict)
     """
     for key in second_dict:
         try:
@@ -19,6 +24,10 @@ def unite_dictionaries(first_dict, second_dict):
 def combine_references(species1, species2):
     """
         Combine the sets of references of two species
+
+        Parameters:
+            species1 (Meta-species object)
+            species2 (Meta-species object)
     """
     #if species1.get_references().intersection(species2.get_references()):
     #    simlog.warning(f'A product was executed between species with a common meta-species\n')
@@ -28,8 +37,11 @@ def combine_references(species1, species2):
 
 def check_orthogonality_between_references(references):
     """
-        Check if base species do not have characteristics in common
-        The sets of characteristics must be independent for BASE SPECIES
+        Check if meta-species objects inside a reference do not have characteristics in common
+        The sets of characteristics directly added to species must be independent
+
+        Parameter:
+            references (set) =  set of meta-species objects to check for independence
     """
     for i, reference1 in enumerate(references):
         for j, reference2 in enumerate(references):
@@ -49,6 +61,15 @@ def complete_characteristics_with_first_values(spe_object, characteristics, char
         to it's base species used to construct it
         It allows us to search for the proper string in the model using the result of this function
         It's used to set the quantities using the call method in Species and Reacting_Species
+
+        Parameters:
+            spe_object (meta-species object) = meta-species to generate the species states with the first values
+            characteristics (str) = if there are characteristics to use instead of the default
+            characteristics_to_object (dict) = dictionary with characteristics as keys and the meta-species which
+            they have been added to directly as value (no inheritance or New)
+
+        Returns:
+            Set with the species name and characteristics
     """
     if characteristics == 'std$':
         characteristics = set()
@@ -71,8 +92,11 @@ def complete_characteristics_with_first_values(spe_object, characteristics, char
 
 def extract_characteristics_from_string(species_string):
     """
-        Species are named for the SBML as species_name.characteristic1.characteristic2
+        Species are named for the SBML as species_name_dot_characteristic1_dot_characteristic2
         So this transforms them into a set
+
+        Parameters:
+            species_string (str) = species string in MobsPy for SBML format (with _dot_ instead of .)
     """
     return set(species_string.split('_dot_'))
 
@@ -85,11 +109,12 @@ def turn_set_into_0_value_dict(set):
 
 
 def unite_characteristics(species):
-    '''
-        This function checks if there are repeated characteristics in the model
-    :param species: All species added to the model
-    ;return: characteristics
-    '''
+    """
+        This function unites the characteristics of all the given species
+
+        Parameters:
+            species (list of species or ParallelSpecies object)
+    """
     characteristics = set()
 
     if species is not None:
@@ -100,7 +125,12 @@ def unite_characteristics(species):
 
 
 def extract_characteristics(spe):
+    """
+        Extracts all the characteristics from a species and it's references
 
+        Parameters:
+            spe (meta-species object)
+    """
     lists_of_characteristics = []
     for reference in spe.get_references():
         lists_of_characteristics.append(reference.get_characteristics())
@@ -109,19 +139,20 @@ def extract_characteristics(spe):
 
 
 def create_orthogonal_vector_structure(species):
-    '''
-    :param species: All species used in the model
-    :return: Two hashes one that references objects to characteristics
-            and other that references characteristics to objects
+    """
+        This creates the independent state-structure for the model
+        It is just a dictionary where the keys are characteristics and the values are meta-species objects that have
+        been directly added to that object (no inheritance or New)
+        It simplifies the code by allowing to easily keep track of the 'axis' of each characteristic. Allowing
+        for easy transformation on the products and others
 
-            Here we create the basis of the orthogonal vector structure
-            Each base property object must contain a set of independent characteristics
-            We think of it as properties being unity vectors in a cartesian coordinate system
-            And the characteristics as values
+        Parameters:
+            species (meta-species objects) - meta-species objects used in a model
 
-            We use the dictionary structure to easily define the reactions as being transformations
-            within the same unity vector
-    '''
+        Returns:
+            ref_characteristics_to_object (dict) = a dictionary where the keys are characteristics and the
+            values are meta-species objects that have been directly added to that object
+    """
     ref_characteristics_to_object = {}
     for spe in species:
         for prop in spe.get_references():
@@ -141,13 +172,18 @@ def create_orthogonal_vector_structure(species):
 
 def create_species_strings(spe_object, sets_of_characteristics):
     """
-        spe_object : received species object
-        sets_off_characteristics : all sets of characteristics from the referenced objects
-
         This function combines the species name with all the characteristics of it's references.
         This way it creates the strings that will be used for the SBML
         All possible combinations are created, with no intersections between characteristics of
         a same referenced species
+
+        Parameters:
+            spe_object (meta-species object) = received species object
+            sets_of_characteristics (set of sets (thus not a set)) = all sets of characteristics from the
+            referenced objects
+
+        Returns:
+            set_of_species (set) = set of species from the meta-species object
     """
 
     # Remove empty sets from the list and transform sets in lists

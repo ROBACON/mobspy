@@ -1,3 +1,7 @@
+"""
+    This module is responsible for dealing with units in the modules directory level
+    MobsPy standard units are Decimeter (Liter) - Second - Count
+"""
 from pint import UnitRegistry, Quantity
 from scipy.constants import N_A
 from copy import deepcopy
@@ -6,7 +10,17 @@ import mobspy.simulation_logging.log_scripts as simlog
 
 
 def convert_rate(quantity, reaction_order, dimension):
+    """
+        This function converts the rate from the users given unit to MobsPy standard units
 
+        Parameters:
+            quantity (int, float, Quantity) = If it is a quantity object convert, otherwise it remains the same
+            reaction_order (int) = number of reactants in the reaction, to check if the rate is in the correct unit
+            dimension (int) = model's dimension (1D, 2D, 3D, ... )
+
+        Returns:
+            quantity (int, float) = converted unit into MobsPy standard units
+    """
     volume_power = reaction_order - 1
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
@@ -34,6 +48,18 @@ def convert_rate(quantity, reaction_order, dimension):
 
 
 def convert_counts(quantity, volume, dimension):
+    """
+        This function converts the counts from the users given unit to MobsPy standard units. It also converts
+        concentrations into counts
+
+        Parameters:
+            quantity (int, float, Quantity) = If it is a quantity object convert, otherwise it remains the same
+            volume (int, float) = volume in liters (converted beforehand)
+            dimension (int) = model's dimension (1D, 2D, 3D, ... )
+
+        Returns:
+            converted_quantity (int, float) = converted unit into MobsPy standard units
+    """
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
         try:
@@ -59,6 +85,16 @@ def convert_counts(quantity, volume, dimension):
 
 
 def check_dimension(dimension, value):
+    """
+        Checks for dimension consistency. It "stores" the first dimension it was given by returning it
+
+        Parameters:
+            dimension (int) = model's dimension (1D, 2D, 3D ...)
+            value (int) = dimension value being analysed
+
+        Returns:
+            dimension (int) = model's dimension (1D, 2D, 3D ...)
+    """
     if dimension is None:
         dimension = int(value)
     else:
@@ -68,6 +104,13 @@ def check_dimension(dimension, value):
 
 
 def extract_length_dimension(unit_string, dimension):
+    """
+        Extracts the volume dimension from a Quantity object from Pint
+
+        Parameters:
+            unit_string (str) = unit in str format
+            dimension (int) = model's dimension (1D, 2D, 3D ...)
+    """
     temp_list = unit_string.split()
     try:
         position = temp_list.index('[length]')
@@ -84,6 +127,12 @@ def extract_length_dimension(unit_string, dimension):
 
 
 def convert_volume(volume, dimension):
+    """
+        Converts volume to decimetre**dimension
+
+        Parameters:
+            volume (int, float, Quantity) = volume used in simulation
+    """
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
         volume = volume.to(f'decimeter ** {dimension}').magnitude

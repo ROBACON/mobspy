@@ -1,3 +1,6 @@
+"""
+    Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
+"""
 from mobspy.modules import meta_class
 from mobspy.sbml_simulator import run
 import mobspy.simulation_logging.log_scripts as simlog
@@ -23,11 +26,13 @@ class Simulation:
 
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
-            This part of the code just creates a model
-        :param model: Species or Parallel species object instance for modeling
-        :param names: names of the variables. Set to globals() for easy naming
-        :param parameters: Parameters for a model
-        :param plot_parameters: Plot parameters for plotting
+            Constructor of the simulation object
+
+            Parameters:
+            model (ParallelSpecies object) = Meta-Species object for modeling
+            names (dict) = names of the meta-species in globals() format
+            parameters (dict) = Simulation object parameters
+            plot_parameters (dict) = Parameters for plotting
         """
         if names is None:
             local_names = inspect.stack()[1][0].f_locals
@@ -56,11 +61,24 @@ class Simulation:
         self.packed_data = []
         self.default_order = Default
 
+        self._species_for_sbml = None
+        self._reactions_for_sbml = None
+        self._parameters_for_sbml = None
+        self._mappings_for_sbml = None
+        self.model_string = ''
+
+
     def compile(self, verbose=True):
+        """
+            Compiler method that calls the Compiler class in the modules directory
+
+            Parameters:
+                verbose (bool) = print or not the results of the compilation
+        """
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
 
-        pr.parameter_process(self.parameters, self.model)
+        pr.parameter_process(self.parameters)
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
             self.plot_parameters['simulation_method'] = 'deterministic'
@@ -100,10 +118,11 @@ class Simulation:
 
     def run(self):
         """
-            Just calls the simulator part of the codes for running
-        :return: nothing, data is saved automaticaly or in self.results
+            Runs the simulation by colling the models in the sbml_simulator directory.
+            Compiles the model if it was not yet compiled
         """
-        self.compile(verbose=False)
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
@@ -140,33 +159,70 @@ class Simulation:
                 self.plot_deterministic()
 
     def save_results(self, file):
+        """
+            Save results manually into file. Useful for jupyter notebook users
+
+            Parameters
+                file (str) = name of the file to create and save JSON data
+        """
         simlog.warning('Only THIS model data will be saved not externally added data')
         with open(file, 'w') as jf:
             json.dump(self.results, jf, indent=4)
 
     def _pack_data(self, time_series_data):
+        """
+            Packs data from multiple simulations or external data into one simulation object
+
+            Parameters:
+                time_series_data (data in MobsPy format) = data to be packed in the simulation object
+        """
         self.packed_data.append(time_series_data)
 
     def add_simulation_data(self, results):
+        """
+            Encapsulation. See pack data
+
+            Parameters:
+                results (dict) = result data MobsPy.results
+        """
         self._pack_data(results['data'])
         self.mappings = results['mappings']
 
     def add_external_data(self, data):
+        """
+            Encapsulation. See pack data
+
+            Parameters:
+                results (dict) = result data MobsPy.results["data"]
+        """
         self._pack_data(data)
 
     # Dealing with parameters
     def set_from_json(self, file_name):
+        """
+            Set simulation parameters from json file
+
+            Parameters:
+                file_name (str) = name of the json file
+        """
         with open(file_name) as json_file:
             data = json.load(json_file)
             for key in data:
                 self.__setattr__(key, data[key])
 
     def __setattr__(self, name, value):
+        """
+            __setattr__ override. For seeting simulation parameters using the _dot_ operator
 
+            Parameters:
+                name (str) = name of the parameter to set
+                value = value of the parameter
+        """
         white_list = ['default_order', 'volume', 'model', 'names', 'parameters', 'model_string',
                       'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
-                      'all_species_not_mapped']
+                      'all_species_not_mapped', 'self._species_for_sbml', 'self._reactions_for_sbml',
+                      'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string']
         plotted_flag = False
         if name in white_list:
             self.__dict__[name] = value
@@ -186,6 +242,9 @@ class Simulation:
                 simlog.error(f'Parameter {name} is not supported')
 
     def __getattr__(self, item):
+        """
+            __getattr__ override. For the user to be able to set plot parameters as MySim.plot.parameter
+        """
         if item == 'plot':
             self.__dict__['plot_flag'] = True
         else:
@@ -193,13 +252,28 @@ class Simulation:
         return self
 
     def configure_parameters(self, config):
+        """
+            Configure simulation parameters from json file. Different from set as it overrides previous parameters
+
+            Parameters:
+                file_name (str) = name of the json file
+        """
         self.parameters = self.__config_parameters(config)
 
     def configure_plot_parameters(self, config):
+        """
+            Configure plot parameters from json file. Different from set as it overrides previous parameters
+
+            Parameters:
+                file_name (str) = name of the json file
+        """
         self.plot_parameters = self.__config_parameters(config)
 
     @staticmethod
     def __config_parameters(config):
+        """
+            Encapsulation for config_plot and config_parameters
+        """
         if type(config) == str:
             if os.path.splitext(config)[1] != '.json':
                 simlog.error('Wrong file extension')
@@ -212,7 +286,12 @@ class Simulation:
 
     # Plotting encapsulation
     def extract_plot_essentials(self, *species):
+        """
+            Extract essential information for the hierarchical plotting tool
 
+            Parameters:
+                *species (meta-species objects) = meta-species objects to plot
+        """
         if not species:
             species_strings = list(self.mappings.keys())
         else:
@@ -230,14 +309,23 @@ class Simulation:
         return species_strings, self.packed_data, self.plot_parameters
 
     def plot_stochastic(self, *species):
+        """
+            Calls stochastic plot. See default_plots module in the plot_scripts directory
+        """
         plot_essentials = self.extract_plot_essentials(*species)
         dp.stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_deterministic(self, *species):
+        """
+            Calls deterministic plot. See default_plots module in the plot_scripts directory
+        """
         plot_essentials = self.extract_plot_essentials(*species)
         dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_raw(self, parameters_or_file):
+        """
+            Calls raw plot. See default_plots module in the plot_scripts directory
+        """
         dp.raw_plot(self.packed_data, parameters_or_file)
 
 

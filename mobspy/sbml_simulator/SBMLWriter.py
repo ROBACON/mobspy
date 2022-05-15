@@ -1,3 +1,6 @@
+"""
+    This module is responsible for converting a model_str into a SBML format
+"""
 import libsbml as sbml
 
 

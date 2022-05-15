@@ -8,11 +8,13 @@ import mobspy.plot_scripts.process_plot_data as ppd
 
 def read_plot_json(plot_json_filename):
     """
-    In:
-      plot_json_filename: json file name
+        This function converts a plot_json file into a dictionary
 
-    Returns:
-      plot parameter dictionary
+        Parameters:
+            plot_json_filename (str) = JSON file name
+
+        Returns:
+            json_data (dict) = Converted JSON as dictionary
     """
     with open(plot_json_filename, 'r') as file:
         try:
@@ -24,6 +26,12 @@ def read_plot_json(plot_json_filename):
 
 
 def set_plot_units(new_plot_params):
+    """
+        Sets the plot labels to the unit names by adding to the xlabel and ylabel
+
+        Parameters:
+            new_plot_params (dict) = plot parameters after some changes
+    """
     new_plot_params['xlabel'] = 'Time'
     if new_plot_params['unit_x'] is not None:
         new_plot_params['xlabel'] += f'({new_plot_params["unit_x"]})'
@@ -43,6 +51,17 @@ def set_plot_units(new_plot_params):
 
 
 def stochastic_plot(species, data, plot_params):
+    """
+        Design default stochastic plot using MobsPy plotting hierarchy. It them passes the parameters for plotting
+        in the hierarchical plot module
+
+        Parameters:
+            species (list of str) = list of species names in MobsPy str format (queries are performed with the query plot
+            data function)
+            data (dict) = data in MobsPy format Simulation.results['data']
+            plot_params (dict) = dictionary with the plot parameters supplied by the user before the modifications
+            from this function
+    """
     # Data Handling
     species, data = ppd.query_plot_data(species, data)
     ppd.check_plot_parameters(species, plot_params)
@@ -89,6 +108,17 @@ def stochastic_plot(species, data, plot_params):
 
 
 def deterministic_plot(species, data, plot_params):
+    """
+        Design default deterministic plot using MobsPy plotting hierarchy. It them passes the parameters for plotting
+        in the hierarchical plot module
+
+        Parameters:
+            species (list of str) = list of species names in MobsPy str format (queries are performed with the query plot
+            data function)
+            data (dict) = data in MobsPy format Simulation.results['data']
+            plot_params (dict) = dictionary with the plot parameters supplied by the user before the modifications
+            from this function
+    """
     # Data Handling
     species, data = ppd.query_plot_data(species, data)
     ppd.check_plot_parameters(species, plot_params)
@@ -107,9 +137,12 @@ def deterministic_plot(species, data, plot_params):
 
 def raw_plot(data, parameters_or_file):
     """
-            Plots data from a json or parameter dictionary configured according to the hierarchical plot structure
-        data: data points
-        parameters_or_file: .json file name or python dictionary
+        Plots data from a json or parameter dictionary configured according to the hierarchical plot structure
+        Does not accept parameters from a Simulation object, it must be given the parameters in it's entirety
+
+        Parameters:
+            data (dict) = data in MobsPy format Simulation.results['data']
+            parameters_or_file (dict, str) = Dictionary originated from a JSON or JSON file name
     """
     if type(parameters_or_file) == str and parameters_or_file[-5:] == '.json':
         plot_params = read_plot_json(parameters_or_file)

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-#####################################################
-#                                                   #
-#   Picks and translates a python model into an     #
-#   SBML readable by Copasi. New models must        #
-#   be references here as well.                     #
-#                                                   #
-#####################################################
+"""
+
+    Picks and translates a python model into an
+    SBML readable by Copasi. New models must
+    be references here as well.
+
+"""
 
 
 from mobspy.sbml_simulator.SBMLWriter import create_model

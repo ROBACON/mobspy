@@ -1,3 +1,7 @@
+"""
+    This model is responsible for storing example plotting parameters
+    It's used by the simulation to check which parameters exist or not
+"""
 
 def get_example_plot_parameters():
     example_parameters = {

@@ -7,11 +7,15 @@ def simulate(sbml_str, params, mappings, species_not_mapped):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
-    :param sbml_str: SBML file for running the Copasi simulator
-    :param mappings: Mappings that sum to the same species
-    :param params: simulation parameters from the text file
-    :param species_for_sbml: This is needed because Copasi does not return species such that dS/dt = 0
-    :return: COPASI simulated data
+
+        Parameters:
+            sbml_str (str) = SBML str from a model for running the Copasi simulator
+            mappings (dict) = Mappings that sum the species into the meta-species
+            params (dict) = simulation parameters from the text file
+            species_for_sbml (dict) = This is needed because basiCO does not return species such that dS/dt = 0
+
+        Returns:
+            (dict) Data for MobsPy simulation object
     """
 
     # Run in parallel or sequentially
@@ -36,9 +40,15 @@ def simulate(sbml_str, params, mappings, species_not_mapped):
 
 
 def job_execution(sbml_str, params, jobs):
-    # This is defined for parallelism purposes
-    # THERE MUST BE ONE TEMP DIRECTORY FOR EVERY COPASI FILE
-    # OTHERWISE PARALLELISM DOES NOT WORK - COPASI OVERWRITES THE OUTPUT
+    """
+        This is defined for parallelism purposes
+        Uses multiple cores from the processor to execute stochastic simulations
+        
+        Parameters:
+            params (dict) = simulation parameters
+            jobs (int) = number of cores to use, -1 for all available
+            sbml_str (str) = model SBML string
+    """
     def __single_run(packed):
         sbml_str, i = packed
 
@@ -63,10 +73,12 @@ def job_execution(sbml_str, params, jobs):
 
 def __run_time_course(duration, params, index):
     """
-            This function prepares the parameters for the basiCO.run_time_course
-        params : simulation parameters
-        index : current index of the run
-        duration : simulation duration in seconds
+        This function prepares the parameters for the basiCO.run_time_course
+
+        Parameters:
+            params (dict) = simulation parameters
+            index (int) = current index of the run
+            duration (int, float) = simulation duration in seconds
     """
     kargs = {'method': params["simulation_method"].lower(),
              'start_time': params["start_time"],
@@ -86,6 +98,12 @@ def __run_time_course(duration, params, index):
 
 
 def reformat_time_series(data):
+    """
+        Transforms the _dot_ in from the results into .
+
+        Parameters:
+            data (pd.dataframe) = simulation data results from BasiCO
+    """
     data_dict = {'Time': data.index.tolist()}
 
     for key in data:
@@ -98,11 +116,13 @@ def merge(params, data):
     """
     a basic merge of the data with possible resampling in time to save less data
 
-    params: dict of parameters
-    data:   Array of single runs: data[0], data[1], ...
+        Parameters
+            params (dict) =  dict of parameters
+            data (pd.dataframe) =  Array of single runs: data[0], data[1], ...
 
-    returns: Data merged in a dictionary with all time series from all experiments
-                separated by species and mapping
+        Returns:
+            merged_data (dict) = Data merged in a dictionary with all time series from all experiments
+            separated by species and mapping
     """
 
     for i in range(1, len(data)):
@@ -119,11 +139,17 @@ def merge(params, data):
 
 def remap_species(data, mapping, params, species_not_mapped):
     """
-    Takes the simulated species (data) and add ones defined by
-    mapping (mapping).
+        Takes the simulated species (data) and add ones defined by
+        mapping (mapping).
 
-    By default, a mapping is a list of species in which case the
-    sum is taken: ['a', 'b', ...]
+        By default, a mapping is a list of species in which case the
+        sum is taken: ['a', 'b', ...]
+
+        Parameters:
+            data (dict) = Data in MobsPy format
+            mapping (dict) = Mappings between species and meta-species
+            params (dict) = Simulation parameters
+            species_not_mapped (list of str) = Species not mapped by BasiCO (removed due to the absence of reactions)
     """
 
     mapped_data = {'Time': data['Time']}

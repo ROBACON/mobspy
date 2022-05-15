@@ -81,6 +81,17 @@ def test_model_5():
     assert compare_model(results, 'test_tools/model_5.txt')
 
 
+def test_model_6():
+    # This model tests species that are not referenced in the reactants (we call them Born Species)
+    A = BaseSpecies(1)
+    B = New(A)
+    C = New(A)
+    B.b1, B.b2, C.c1, C.c2
+    Zero >> 2 * A[1]
+    MySim = Simulation(B | C)
+    results = MySim.compile()
+    assert compare_model(results, 'test_tools/model_6.txt')
+
 # Model to test well defined orthogonal spaces
 def orthogonal_spaces():
     try:

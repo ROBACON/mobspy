@@ -1,3 +1,12 @@
+"""
+    mobspy.modules.process_result_data.py
+
+    Handles rate_assignment to the reactions:
+        The passing of arguments to be executed by the user supplied rate function
+        The construction of mass action kinetics
+        Handles the different types of rates supplied by the user
+"""
+
 import mobspy.modules.meta_class as mc
 import mobspy.modules.reaction_construction_nb as rc
 import mobspy.simulation_logging.log_scripts as simlog
@@ -8,11 +17,33 @@ from pint import Quantity
 
 class Bool_Override:
     """
-        This class override the boolean operator of all function rate objects
+        Just a base class for implementing the . operation in the rate function arguments
+        through boolean overriding
+
+        Attributes:
+            _stocked_characteristics (str) = stocks the characteristics of the queries performed by the user
+            species_string (str) = string value from an individual species in MobsPY format
+
+        Methods:
+            __bool__
+
+        related classes:
+            Specific_Species_Operator - inherits from it for the __bool__ method
     """
 
     def __bool__(self):
-        # Return false if the species does not exist in reaction
+        """
+            The implementation of the .dot operation for rate function arguments
+            Returns true when the argument possesses the characteristics
+            Bool is called after the .dot operations
+
+            Parameters:
+                self
+
+            Returns:
+                True if the object contains all the characteristics queried
+                False otherwise
+        """
         if self.species_string == '$Null':
             return False
 
@@ -28,32 +59,62 @@ class Bool_Override:
 
 class Specific_Species_Operator(Bool_Override):
     """
-        Here we create a new species object. It is called specific because it refers to specific
-        species strings
+        This class creates objects from the species strings from the meta-species to pass them to the rate functions
+        as arguments. It uses the Bool_Override class to return true or false to the .dot operation inside the rate
+        functions
 
-        The previous object was generic - Ecoli would refer to ALL Ecoli
-        Here we deal with specific species like Ecoli.blue.happy.alive
+        Attributes:
+            species_string (str) = A string from MobsPy meta-species format
+            species_object (Species) = Meta-species set for which the species_string is contained in
+            _stocked_characteristics (str) = stocks the characteristics of the queries performed by the user
 
-        We override the operators to allow us to write is Ecoli.alive on function rate definition
+        Methods:
+            __getattr__, __str__, is_a, add
 
-        Operators use the constructor and what is inside it to define themselves
-        After that the boolean method is called on the constructed object
-        Thus allowing to set rates based on the specific characteristics of the string created in the beginning
     """
 
     def __init__(self, species_string, species_object):
+        """
+            Constructs the object from the species strings from the meta-species to pass them to the rate functions
+            as arguments.
+
+            Parameters:
+                species_string (str) = A string from MobsPy meta-species format
+                species_object (Species) = Meta-species set for which the species_string is contained in
+
+        """
         self.species_string = species_string
         self._stocked_characteristics = set()
         self._species_object = species_object
 
     def __getattr__(self, characteristic):
+        """
+            Stores the characteristics for the boolean query inside the rate function by adding them to the set
+
+            Parameters:
+                characteristic (str) = characteristic being queried
+        """
         self._stocked_characteristics.add(characteristic)
         return self
 
     def __str__(self):
+        """
+            Returns the species_string from the MobsPy meta-species used in the object construction
+        """
         return self.species_string
 
     def is_a(self, reference):
+        """
+            This function checks to see if the meta-species the species_string belong to has inherited from the
+            parameter reference (reminder: every meta-species inherits from itself)
+
+            Parameters:
+                reference (Species) = Meta-species object
+
+            Returns:
+                True if the meta-species in Specific_Species_Operator has inherited from the reference
+                False otherwise
+        """
         if not self._stocked_characteristics:
             if reference in self._species_object.get_references():
                 return True
@@ -63,32 +124,37 @@ class Specific_Species_Operator(Bool_Override):
             simlog.error('Concatenation of is_a and dot operator still not supported. Please use them separately')
 
     def add(self, characteristic):
+        """
+            Adds characteristics to the set of characteristics
+
+            Parameters:
+                characteristic (str) = characteristic to add to the set
+        """
         self._stocked_characteristics.add(characteristic)
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model, volume, dimension):
-    '''
-        The order of the reactants appears in species_string_dict appears equality
-        to the order they appear on the reaction
+                          , reaction_rate_function, type_of_model, dimension):
+    """
+        This function is responsible for returning the reaction rate string for the model construction. To do this it
+        does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
+        It passes the rate as a string expression in MobsPy standard units
 
-        If an int or a flot is returned we apply basic kinetics from CRN
-        If a str is returned we use that as it is.
-        Remember to set parameters_for_sbml if needed
+        Parameters:
+            combination_of_reactant_species (list of Species) = Meta-species currently being used in this reaction
+            reactant_string_list (list of strings) = list of species strings in order they apear in the reaction
+            reaction_rate_function (float, callable, Quantity) = rate stored in the reaction object
+            dimension (int) = system dimension (for the rate conversion)
 
-        remember 2-Ecoli means Ecoli + Ecoli so stoichiometry must be taken into consideration
-
-        species_string_list is a dictionary with {'reactants' :[ list_of_reactants ], 'products':[ list_of_products ]}
-        reaction_rate_function is the rate function passed by the user
-        parameters_for_sbml are the parameters used for the SBML construction
-
-        returns: the reaction kinetics as a string for SBML
-    '''
+        Returns:
+            reaction_rate_string (str) = the reaction kinetics as a string for SBML
+            extra_species (list) = species that appear in the rate but are not reactants (COPASI will throw an error)
+    """
     extra_species = []
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or isinstance(reaction_rate_function, Quantity):
         reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list), dimension)
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                     reaction_rate_function, type_of_model, volume)
+                                                     reaction_rate_function, type_of_model)
 
     elif callable(reaction_rate_function):
         arguments = prepare_arguments_for_callable(combination_of_reactant_species,
@@ -98,8 +164,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                         rate, type_of_model,
-                                                         volume)
+                                                         rate, type_of_model)
         elif type(rate) == str:
             reaction_rate_string = rate
             extra_species = mc.Compiler.get_extra_species_list()
@@ -118,11 +183,18 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     return reaction_rate_string, extra_species
 
 
-def basic_kinetics_string(reactants, reaction_rate, type_of_model, volume):
+def basic_kinetics_string(reactants, reaction_rate, type_of_model):
     """
-        Just assign basic kinetics string based on the received reactans and rate
-        parameters_for_sbml is for the construction of the model later
-        Type of model is stochastic or deterministic - Used to determine which expression to use
+        This constructs the bases for mass-action kinetics. Both for stochastic and deterministic depending on the type
+        of model
+
+        Parameters:
+            reactants (list of str) = list of reactants in MobsPy str format
+            reaction_rate (float) = reaction constant
+            type_of_model (str) = stochastic or deterministic - rate expressions are different depending on each case
+
+        Returns:
+            kinetics_string (str) = mass action kinetics expression for the reaction
     """
     counts = rc.count_string_dictionary(reactants)
 
@@ -148,7 +220,16 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model, volume):
 
 def stochastic_string(reactant_name, number):
     """
-        In the form S * (S - 1)/2 * .....
+        This function returns the stochastic string expression for mass action kinetics
+        For instance the reaction 2A -> 3A would imply A*(A-1)/2
+        It only does so for one reactant, so it must be called for all reactants in the reaction
+
+        Parameters:
+            reactant_name (str) = species string involved in the reaction
+            number (int) = stoichiometry (number of times it appears)
+
+        Returns:
+            to_return_string (str) = the mass action kinetics string expression for only that species
     """
     to_return_string = ''
     for i in range(number):
@@ -162,7 +243,16 @@ def stochastic_string(reactant_name, number):
 
 def deterministic_string(reactant_name, number):
     """
-        Just the reactants strings multiplied
+        This function returns the deterministic string expression for mass action kinetics
+        For instance the reaction 2A -> 3A would imply A*A
+        It only does so for one reactant, so it must be called for all reactants in the reaction
+
+        Parameters:
+            reactant_name (str) = species string involved in the reaction
+            number (int) = stoichiometry (number of times it appears)
+
+        Returns:
+            to_return_string (str) = the mass action kinetics string expression for only that species
     """
     to_return_string = ''
     for i in range(number):
@@ -175,12 +265,13 @@ def deterministic_string(reactant_name, number):
 
 def prepare_arguments_for_callable(combination_of_reactant_species, reactant_string_list, rate_function_arguments):
     """
-        combination_of_reactant_species : reactant species OBJECTS involved in the reaction
-        reactant_string_list : reactant species STRINGS involved in the reaction
-        rate_function_arguments : arguments received by the rate function
+        This function prepares the requested arguments to the rate function for a given reaction by creating objects
+        of the Specific_Species_Operator class
 
-        This function extracts the requested arguments by the rate function for a given reaction
-        So then it can be given to it using **kwargs
+        Parameters:
+            combination_of_reactant_species : meta-species involved in the reaction
+            reactant_string_list : species strings involved in the reaction
+            rate_function_arguments : arguments received by the rate function
     """
     argument_dict = {}
     i = 0

@@ -1,3 +1,6 @@
+"""
+    This model is responsible for storing MobsPy default parameters
+"""
 from mobspy.parameter_scripts.parameter_reader import read_json
 
 

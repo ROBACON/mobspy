@@ -1,3 +1,6 @@
+"""
+    This module is responsible for the construction of all individual reactions from a meta-reaction
+"""
 from copy import deepcopy
 import mobspy.modules.function_rate_code as fr
 import itertools
@@ -10,6 +13,9 @@ def iterator_for_combinations(list_of_lists):
         Iterate through all the combinations of a list of lists
         [[A,B,C], [D, F, E], [G]] means:
         ADG, AFG, AEG, BDG, BFG, BEG, CDG, CFG, CEG .....
+
+        Parameter:
+            list_of_lists (list of lists) = list of all lists to iterate through all combinations
     """
     for i in itertools.product(*list_of_lists):
         yield i
@@ -17,8 +23,11 @@ def iterator_for_combinations(list_of_lists):
 
 def copy_reaction(reaction):
     """
-        Just copies a reaction
+        Just copies a meta-reaction
         Deepcopy is not working because it calls __getattr__ on the species with a private method
+
+        Parameters:
+            reaction (meta-reaction) = meta-reaction to be copied
     """
     reactants = []
     for reactant in reaction.reactants:
@@ -43,9 +52,14 @@ def copy_reaction(reaction):
 
 def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
     """
-        If a call references two characteristics from the same species it would result in nothing being called
-        Like Ecoli.live.dead - (assuming live and dead belong from the same species)
-        If that ever happens we just pop an error a
+        If query references two independent characteristics from the in meta-species it would result in an empty set
+        Like Ecoli.live.dead - (assuming live and dead belong to the same meta-species characteristics set)
+        If that ever happens inside a meta-reaction we just pop an error
+
+        Parameters:
+            reactions (set of meta-reactions) = set of meta-reactions inside the model
+            ref_characteristics_to_object (dict) = dictionary where the characteristics are the keys and the values
+            are the meta-species objects that they have been directly added to
     """
     for reaction in reactions:
         for reactant in reaction.reactants:
@@ -90,15 +104,16 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
 
 def construct_reactant_structures(reactant_species, species_string_dict):
+    """
+        This function finds the corresponding strings according to the reactant meta-species with or without a query
+        pack then in a list and return
+
+        Parameters:
+            reactant_species (meta-species object) = species objects of the involved species
+            species_string_dict (dict)=  dictionary with species objects as keys and corresponding species strings
+    """
     species_string_combinations = []
 
-    """=
-        reactant_species: species objects of the involved species
-        species_string_dict : dictionary with species objects as keys and corresponding species strings
-        
-        Here we just find the corresponding strings according to the reactant species
-        Pack then in a list and return
-    """
     for reactant in reactant_species:
         species_string_combinations.append(extract_species_strings(reactant['object'],
                                                                    reactant['characteristics'], species_string_dict))
@@ -108,12 +123,19 @@ def construct_reactant_structures(reactant_species, species_string_dict):
 
 def construct_order_structure(species_order_list, current_species_string_list):
     """
-        Order structure for reaction order operations
-        Here species are position in a dictionary where the key is the object and the item are the species strings
-        in order of appearance in the dictionary
-        This helps the implementation of the round_robin_structure
+        Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
+        The meta-species objects are the keys of this dictionary and a lists of species strings currently being used
+        in the reaction are the values - Allowing the product to find it's corresponding species-string in a future
+        step
 
-        # TODO Replace this - Put it in order
+        Parameters:
+            species_order_list (list of meta-species objects): list of meta-species objects as they appear in the
+            meta-reaction
+            current_species_string_list (list of strings): list of strings in MobsPy format of the species currently
+            in this specific reaction
+
+        Returns:
+            cyclic_dict (dict) = Dictionary where the keys are meta-species objects and the values are lists of species
     """
     cyclic_dict = {}
     for species_object, species_string in zip(species_order_list, current_species_string_list):
@@ -128,12 +150,14 @@ def construct_order_structure(species_order_list, current_species_string_list):
 
 def construct_product_structure(reaction):
     '''
-       Here we unpack the products in list. This list will loop through the reactants so we can assign the correct string
-       to each product
+        This function unpacks the products in a meta-reaction
 
-       We need to unpack according to their stoichiometry
-    :param reaction: reaction currently being analysed
-    :return: a list of all products involved unpacked according to their stoichiometry
+        Parameters:
+            reaction = meta-reaction currently being analysed
+
+        Returns:
+            product_list: A list of dictionaries for each product with the meta-species object, the label and the
+            characteristics
     '''
     product_list = []
     for product in reaction.products:
@@ -146,10 +170,18 @@ def construct_product_structure(reaction):
 
 def construct_single_reaction_for_sbml(reactant_species_string_list, product_species_string_list, reaction_rate):
     """
-        Here we construct the reactions for SBML for the conversion by the model builder script
+        This function constructs the reactions for SBML for the conversion by the model builder script
         It follows the following structure 're':[('stoichmetry', reactantant_string) ....
-        The reaction rate must be a string containing the reaction kinetics here
-        We return a single reaction to be appended by the reactions_for_sbml dictionary
+        The reaction rate must be a string containing the reaction kinetics
+        This returns a single reaction to be appended by the reactions_for_sbml dictionary
+
+        Parameters:
+            reactant_species_string_list (list of strings) = list of reactants in MobsPy format
+            product_species_string_list (list of strings) = list of products in MobsPy format
+            reaction_rate (str) = reaction rate expression as a string
+
+        Returns:
+            to_return (dict) = dictionary that packs the reactants products and rate
     """
     to_return = {'re': [], 'pr': [], 'kin': reaction_rate}
 
@@ -167,8 +199,8 @@ def construct_single_reaction_for_sbml(reactant_species_string_list, product_spe
 
 def count_string_dictionary(list_of_strings):
     """
-        Count the number of instances in a list and return them in a dictionary
-        element: instances
+        Count the number of instances in a list and return them in a dictionary where the keys are the strings and
+        the value the number of times it appeared in the list
     """
     to_return = {}
 
@@ -183,9 +215,16 @@ def count_string_dictionary(list_of_strings):
 
 def extract_species_strings(species, characteristics, species_string_dict):
     """
-        Extract a species_string from the species string dictionary
-        Uses the species object as key
-        If the characteristics match with the string it is returned
+        Extract the species strings from the species_string_dict based on the meta-species and characteristics given
+
+        Parameters:
+            species (meta-species object) = Instance of the meta-species to obtain the species strings for
+            characteristics (str) = Characteristics to filter through
+            species_string_dict (dict) = Dictionary where the meta-species are the keys and the values all their
+            species
+
+        Returns:
+            species_strings_list (list of str) = species strings filtered from the meta-species
     """
     species_strings_list = []
     species_strings_to_filter = set()
@@ -202,10 +241,19 @@ def extract_species_strings(species, characteristics, species_string_dict):
 
 def get_involved_species(reaction, species_string_dict):
     """
-        Extract all the involved species with a reaction
-        This is done since reactions are defined through base species (by multiplication)
-        We get all the species that have the base one in it's references
-        We iterate through all to create all possible reactions
+        This extracts all the involved meta-species inside a reaction
+        This function is responsible for implementing the inheritance mechanism, by finding within each meta-species
+        references set, if they reference the meta-species in the reaction
+
+        Parameters:
+            reaction (meta-reaction object)
+            species_string_dict (dict) = dictionary where the keys are meta-species and the values are
+            lists of species they contain (used only for the keys here)
+
+        Returns:
+            base_species_order (list of meta-species objects): order that the meta-species appear in the meta-reaction
+            reactant_species_combination_list (list of lists of meta-species): list of lists of all meta-species that
+            have inherited from the meta-species in the meta-reaction
     """
     reactant_species_combination_list = []
     base_species_order = []
@@ -235,16 +283,22 @@ def get_involved_species(reaction, species_string_dict):
 
 def create_all_reactions(reactions, species_string_dict,
                          ref_characteristics_to_object,
-                         type_of_model, volume, dimension):
+                         type_of_model, dimension):
     """
         This function creates all reactions
         Returns the reactions_for_sbml and parameters_for_sbml dictionary
         Those will be used by another module to create the SBML file
 
-        reactions: reactions objects constructed by the meta_class module
-        species_string_dict: Species object keys and respective species strings values
-        ref_characteristics_to_object: Characteristics as keys objects as values
-        type_of_model: stochastic or deterministic
+        Parameters:
+            reactions (meta-reaction objects) = reactions objects constructed by the meta_class module
+            species_string_dict (dict) = Meta-species object keys and respective species strings values
+            ref_characteristics_to_object (dict) =  Characteristics as keys objects as values
+            type_of_model (str) = stochastic or deterministic
+            dimension (int) = model dimension 1D, 2D, 3D, .....
+
+        Returns:
+            reactions_for_sbml (dict) = dictionary with all reactions that will be added to the sbml model file
+            parameters_for_sbml (dict) = parameters for the sbml model file
     """
 
     reactions_for_sbml = {}
@@ -271,9 +325,10 @@ def create_all_reactions(reactions, species_string_dict,
                                                                                  ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
+
                     rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species,
                                                                           reactant_string_list
-                                                                          , reaction.rate, type_of_model, volume,
+                                                                          , reaction.rate, type_of_model,
                                                                           dimension)
 
                     for species in extra_species:

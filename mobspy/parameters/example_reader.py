@@ -1,3 +1,9 @@
+"""
+    This model is responsible for storing example parameters
+    It's used by the simulation to check which parameters exist or not
+"""
+
+
 def get_example_parameters():
     example_parameters = {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
