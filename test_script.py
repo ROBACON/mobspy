@@ -92,6 +92,34 @@ def test_model_6():
     results = MySim.compile()
     assert compare_model(results, 'test_tools/model_6.txt')
 
+
+def test_model_7():
+
+    def oscillator(beta_m=5, beta_p=10, gamma_m=1, gamma_p=0.01, k=1, n=4, leaky=0.0001):
+        Mortal, Creator = BaseSpecies(2)
+
+        mRNA = Mortal * Creator
+        Protein = New(Mortal)
+
+        # Repression reactions
+        for m, p in zip(['m1', 'm2', 'm3'], ['x2', 'x3', 'x1']):
+            Protein.c(p) >> Protein.c(p) + mRNA.c(m)[lambda pro: f'{beta_m}/(1 + ({pro}/{k})**{n}']
+
+        # Production reactions
+        for m, p in zip(['m1', 'm2', 'm3'], ['x1', 'x2', 'x3']):
+            mRNA.c(m) >> mRNA.c(m) + Protein.c(p)[beta_p]
+
+        # We need the rate of degradation to be different from proteins and mRNA
+        Mortal >> Zero[lambda r1: gamma_p if r1.is_a(Protein) else gamma_m]
+        # This is the leaky mRNA expression, it needs to be low
+        Zero >> Creator[leaky]
+
+        MySim = Simulation(mRNA | Protein)
+        return MySim.compile()
+
+    assert compare_model(oscillator(), 'test_tools/model_7.txt')
+
+
 # Model to test well defined orthogonal spaces
 def orthogonal_spaces():
     try:

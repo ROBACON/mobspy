@@ -81,8 +81,9 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
-                        simlog.error('The characteristic\'s object was not found in the species supplied to the simulator \n'
-                                     'Perhaps a species is missing ?')
+                        simlog.error(
+                            'The characteristic\'s object was not found in the species supplied to the simulator \n'
+                            'Perhaps a species is missing ?')
 
         for product in reaction.products:
 
@@ -273,8 +274,8 @@ def get_involved_species(reaction, species_string_dict):
 
             if not flag_absent_reactant:
                 simlog.error(f'Species {reactant["object"]} was not found in model \n'
-                            f'For reaction {reaction} \n'
-                            f'Please add the species or remove the reaction')
+                             f'For reaction {reaction} \n'
+                             f'Please add the species or remove the reaction')
 
             reactant_species_combination_list.append(species_for_reactant)
 
@@ -325,16 +326,10 @@ def create_all_reactions(reactions, species_string_dict,
                                                                                  ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
-
-                    rate_string, extra_species = fr.extract_reaction_rate(combination_of_reactant_species,
-                                                                          reactant_string_list
-                                                                          , reaction.rate, type_of_model,
-                                                                          dimension)
-
-                    for species in extra_species:
-                        if species not in reactant_string_list:
-                            simlog.error(f'The \'{species}\' string not in reaction with \'{reactant_string_list}\' \n'
-                                         f'Rates can only depend on their reactants, add the reactant if possible')
+                    rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
+                                                           reactant_string_list
+                                                           , reaction.rate, type_of_model,
+                                                           dimension)
 
                     reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
                         construct_single_reaction_for_sbml(reactant_string_list,

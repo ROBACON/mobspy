@@ -167,7 +167,6 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                                                          rate, type_of_model)
         elif type(rate) == str:
             reaction_rate_string = rate
-            extra_species = mc.Compiler.get_extra_species_list()
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
                          + str(reactant_string_list))
@@ -180,7 +179,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         simlog.debug(type(reaction_rate_function))
         simlog.error('The rate type is not supported')
 
-    return reaction_rate_string, extra_species
+    return reaction_rate_string
 
 
 def basic_kinetics_string(reactants, reaction_rate, type_of_model):
