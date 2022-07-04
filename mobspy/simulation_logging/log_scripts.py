@@ -7,7 +7,7 @@ global_simlog_level = 3
 
 def error(message):
     print('\033[91m' + 'ERROR: ' + message + '\033[0m', file=sys.stderr)
-    exit(1)
+    sys.exit(1)
 
 
 def debug(message=''):
