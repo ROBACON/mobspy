@@ -239,6 +239,7 @@ class Compiler:
             model_str += '\n'
             model_str += 'Reactions' + '\n'
             reaction_alpha = [str(x[1]).replace('_dot_','.') for x in list(sorted(reactions_for_sbml.items(), key=lambda x: str(x[1])))]
+
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + reac + '\n'
 

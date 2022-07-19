@@ -19,18 +19,20 @@ if __name__ == '__main__':
     # replication
     Tree.old >> Tree + Tree.green.young[0.1/u.year]
 
+    # competition
+    Tree.dense.old + Tree.dense.young >> Tree.dense.old \
+        [1e-10 * u.decimeter / u.year]
+
     # color cycling
     colors = ['green', 'yellow', 'brown']
     for color, next_color in zip(colors, colors[1:] + colors[:1]):
         Tree.c(color) >> Tree.c(next_color)[10/u.year]
 
-    # competition
-    Tree.dense.old + Tree.dense.young >> Tree.dense.old \
-        [1e-10*u.decimeter/u.year]
-
     # initial conditions
     Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)
     MySim = Simulation(Tree)
+    print(MySim.compile())
+    exit()
     MySim.simulation_method = 'stochastic'
     MySim.save_data = False
     MySim.plot_data = False

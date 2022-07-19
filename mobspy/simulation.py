@@ -67,7 +67,6 @@ class Simulation:
         self._mappings_for_sbml = None
         self.model_string = ''
 
-
     def compile(self, verbose=True):
         """
             Compiler method that calls the Compiler class in the modules directory
@@ -94,9 +93,6 @@ class Simulation:
                                              verbose=verbose,
                                              default_order=self.default_order)
 
-        if self.model_string != '':
-            return self.model_string
-
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
         self.mappings = deepcopy(self._mappings_for_sbml)
@@ -113,6 +109,9 @@ class Simulation:
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
                                               self._parameters_for_sbml,
                                               self._reactions_for_sbml)
+
+        if self.model_string != '':
+            return self.model_string
 
         return self.sbml_string
 

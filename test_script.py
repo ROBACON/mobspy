@@ -103,7 +103,7 @@ def test_model_7():
 
         # Repression reactions
         for m, p in zip(['m1', 'm2', 'm3'], ['x2', 'x3', 'x1']):
-            Protein.c(p) >> Protein.c(p) + mRNA.c(m)[lambda pro: f'{beta_m}/(1 + ({pro}/{k})**{n}']
+            Protein.c(p) >> Protein.c(p) + mRNA.c(m)[lambda pro: f'{beta_m}/(1 + ({pro}/{k})^{n})']
 
         # Production reactions
         for m, p in zip(['m1', 'm2', 'm3'], ['x1', 'x2', 'x3']):
@@ -116,7 +116,6 @@ def test_model_7():
 
         MySim = Simulation(mRNA | Protein)
         return MySim.compile()
-
     assert compare_model(oscillator(), 'test_tools/model_7.txt')
 
 

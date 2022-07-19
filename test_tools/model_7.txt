@@ -21,11 +21,11 @@ Parameters
 volume,1
 
 Reactions
-reaction_0,{'re': [(1, 'Protein.x1')], 'pr': [(1, 'Protein.x1'), (1, 'mRNA.m3')], 'kin': '5/(1 + (Protein.x1/1)**4'}
+reaction_0,{'re': [(1, 'Protein.x1')], 'pr': [(1, 'Protein.x1'), (1, 'mRNA.m3')], 'kin': '5/(1 + (Protein.x1/1)^4)'}
 reaction_1,{'re': [(1, 'Protein.x1')], 'pr': [], 'kin': 'Protein.x1 * 0.01'}
-reaction_2,{'re': [(1, 'Protein.x2')], 'pr': [(1, 'Protein.x2'), (1, 'mRNA.m1')], 'kin': '5/(1 + (Protein.x2/1)**4'}
+reaction_2,{'re': [(1, 'Protein.x2')], 'pr': [(1, 'Protein.x2'), (1, 'mRNA.m1')], 'kin': '5/(1 + (Protein.x2/1)^4)'}
 reaction_3,{'re': [(1, 'Protein.x2')], 'pr': [], 'kin': 'Protein.x2 * 0.01'}
-reaction_4,{'re': [(1, 'Protein.x3')], 'pr': [(1, 'Protein.x3'), (1, 'mRNA.m2')], 'kin': '5/(1 + (Protein.x3/1)**4'}
+reaction_4,{'re': [(1, 'Protein.x3')], 'pr': [(1, 'Protein.x3'), (1, 'mRNA.m2')], 'kin': '5/(1 + (Protein.x3/1)^4)'}
 reaction_5,{'re': [(1, 'Protein.x3')], 'pr': [], 'kin': 'Protein.x3 * 0.01'}
 reaction_6,{'re': [(1, 'mRNA.m1')], 'pr': [(1, 'mRNA.m1'), (1, 'Protein.x1')], 'kin': 'mRNA.m1 * 10'}
 reaction_7,{'re': [(1, 'mRNA.m1')], 'pr': [], 'kin': 'mRNA.m1 * 1'}
