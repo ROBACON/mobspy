@@ -36,7 +36,7 @@ def set_plot_units(new_plot_params):
     if new_plot_params['unit_x'] is not None:
         new_plot_params['xlabel'] += f'({new_plot_params["unit_x"]})'
     else:
-        new_plot_params['xlabel'] += '(second)'
+        new_plot_params['xlabel'] += '(s)'
 
     if new_plot_params['output_concentration']:
         new_plot_params['ylabel'] = 'Conc.'
@@ -47,7 +47,7 @@ def set_plot_units(new_plot_params):
         new_plot_params['ylabel'] += f'({new_plot_params["unit_y"]})'
     else:
         if new_plot_params['output_concentration']:
-            new_plot_params['ylabel'] += '(molar)'
+            new_plot_params['ylabel'] += '(mol/L)'
 
 
 def stochastic_plot(species, data, plot_params):
