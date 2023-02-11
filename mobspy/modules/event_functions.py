@@ -81,7 +81,7 @@ def join_event_data(total_packed_data, data):
             continue
         else:
             if key not in species_already_added:
-                for i, run in enumarate(total_packed_data[key]['runs']):
+                for i, run in enumerate(total_packed_data[key]['runs']):
                     dummy_list = [total_packed_data[key]['runs'][-1] for _ in range(len(data['Time']))]
                     total_packed_data[key]['runs'][i] = total_packed_data[key]['runs'][i] + dummy_list
 
