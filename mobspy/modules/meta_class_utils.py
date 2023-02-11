@@ -185,7 +185,7 @@ def create_species_strings(spe_object, sets_of_characteristics):
         Returns:
             set_of_species (set) = set of species from the meta-species object
     """
-
+    
     # Remove empty sets from the list and transform sets in lists
     # Sort the lists so the characteristics will appear in the same order e
     lists_of_definitions = [sorted(list(i)) for i in sets_of_characteristics if i != set()]

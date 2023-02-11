@@ -10,6 +10,8 @@ from mobspy.modules.function_rate_code import *
 import mobspy.modules.reaction_construction_nb as rc
 import mobspy.modules.function_rate_code as frc
 from pint import Quantity
+import mobspy.modules.event_functions as eh
+from mobspy.modules.logic_operator_objects import *
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -73,8 +75,9 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate, volume=1, names=None, type_of_model='deterministic', verbose=True,
-                default_order=Default):
+    def compile(cls, species_to_simulate,
+                volume=1, names=None, type_of_model='deterministic', verbose=True,
+                default_order=Default, event_dictionary=None):
         """
             Here we construct the species for Copasi using their objects
 
@@ -92,6 +95,7 @@ class Compiler:
                 default_order (Reaction Operator) = Operator that decides the order of the meta-reaction ( for Default
                 we have the round-robin) and how MobsPy will handle meta-species in the products that are not
                 referenced in the reactants - see order_operators.py
+                event_dictionary (dict) - dictionary with all the events to be added to the model
 
             Returns:
                 species_for_sbml (dict) = Dictionary where the species strings (in MobsPy format) are the keys and
@@ -214,6 +218,11 @@ class Compiler:
                                    f'{reactions_for_sbml[r1]} \n' +
                                    'Is doubled. Was that intentional? \n')
 
+        # Event implementation here
+        events_for_sbml = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
+                                                              cls.ref_characteristics_to_object,
+                                                              volume, dimension)
+
         model_str = ''
         if verbose:
             model_str = '\n'
@@ -238,12 +247,21 @@ class Compiler:
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
-            reaction_alpha = [str(x[1]).replace('_dot_','.') for x in list(sorted(reactions_for_sbml.items(), key=lambda x: str(x[1])))]
+            reaction_alpha = [str(x[1]).replace('_dot_', '.') for x in
+                              list(sorted(reactions_for_sbml.items(), key=lambda x: str(x[1])))]
 
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + reac + '\n'
 
-        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str
+            if events_for_sbml != {}:
+                model_str += '\n'
+                model_str += 'Events' + '\n'
+                list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
+                list_to_sort = sorted(list_to_sort)
+                for i in range(len(list_to_sort)):
+                    model_str += 'event_' + str(i) + ',' + list_to_sort[i]
+
+        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, events_for_sbml
 
 
 class Reactions:
@@ -333,7 +351,7 @@ class Reactions:
         self.rate = rate
 
 
-class Reacting_Species:
+class Reacting_Species(ReactingSpeciesComparator):
     """
         This is a intermediary object created when a species is used in a reaction. It is created when a species is
         part of a reaction, so it's constructor is called by the Species class in several of it's methods. It
@@ -363,7 +381,7 @@ class Reacting_Species:
             return to_return
         else:
             return self.list_of_reactants
-    
+
     # Labels and value function implementation
     def c(self, item):
         """
@@ -412,6 +430,7 @@ class Reacting_Species:
                 stoichiometry (int) = stoichiometry value of the meta-species in the reaction
                 label (int, float, str) = value for the label for matching used in this reaction
         """
+        super(Reacting_Species, self).__init__()
         if object_reference.get_name() == 'S0' and characteristics == set():
             self.list_of_reactants = []
         else:
@@ -474,10 +493,22 @@ class Reacting_Species:
                 simlog.error('Assignment used incorrectly')
             species_object = self.list_of_reactants[0]['object']
             characteristics = self.list_of_reactants[0]['characteristics']
-            species_object.add_quantities(characteristics, quantity)
+            quantity_dict = species_object.add_quantities(characteristics, quantity)
         else:
             simlog.error('Reactant_species does not support this type of call')
-        return self
+
+        dummy_object = self.list_of_reactants[0]['object']
+        if dummy_object._simulation_context is not None:
+            try:
+                dummy_object._simulation_context.current_event_count_data.append({'species': dummy_object,
+                                                                                  'characteristics': quantity_dict[
+                                                                                      'characteristics'],
+                                                                                  'quantity': quantity_dict[
+                                                                                      'quantity']})
+            except:
+                simlog.error('Only species count assignments are allowed in a model context')
+        else:
+            return self
 
     def __getattr__(self, characteristic):
         """
@@ -508,6 +539,7 @@ class ParallelSpecies:
         Attributes:
             list_of_species (Species) = Meta-species list to store the meta-species
     """
+
     def __init__(self, list_of_species):
         """
             Constructor not usually used - but a list_of_species is given one can construct the ParallelSpecies from it
@@ -568,9 +600,9 @@ class ParallelSpecies:
         """
         for spe in self.list_of_species:
             yield spe
+    
 
-
-class Species:
+class Species(SpeciesComparator):
     """
         Fundamental class - The meta-species object
         Contains the characteristics, the species name, the reactions it is involved in
@@ -806,7 +838,7 @@ class Species:
                 self = to allow for assigning counts mid-reaction
         """
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
-            self.add_quantities('std$', quantity)
+            quantity_dict = self.add_quantities('std$', quantity)
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
@@ -817,7 +849,17 @@ class Species:
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{self._name} contains no characteristics in {quantity}')
-        return self
+
+        if self._simulation_context is not None:
+            try:
+                self._simulation_context.current_event_count_data.append({'species': self,
+                                                                          'characteristics': quantity_dict[
+                                                                              'characteristics'],
+                                                                          'quantity': quantity_dict['quantity']})
+            except:
+                simlog.error('Only species count assignments are allowed in a model context')
+        else:
+            return self
 
     def add_quantities(self, characteristics, quantity):
         '''
@@ -828,13 +870,16 @@ class Species:
                 characteristics (str) = characteristics of the species to be set
                 quantity (int, float, Quantity) = counts of that specific species
         '''
-        already_in = False
-        for e in self._species_counts:
-            if characteristics == e['characteristics']:
-                e['quantity'] = quantity
-                already_in = True
-        if not already_in:
-            self._species_counts.append({'characteristics': characteristics, 'quantity': quantity})
+        if self._simulation_context is None:
+            already_in = False
+            for e in self._species_counts:
+                if characteristics == e['characteristics']:
+                    e['quantity'] = quantity
+                    already_in = True
+            if not already_in and self._simulation_context is None:
+                self._species_counts.append({'characteristics': characteristics, 'quantity': quantity})
+        else:
+            return {'characteristics': characteristics, 'quantity': quantity}
 
     def reset_quantities(self):
         """
@@ -880,9 +925,11 @@ class Species:
             Parameters:
                 name (str) = Name of the species (can be placeholder if named with N$)
         """
+        super(Species, self).__init__()
         self._name = name
         self._characteristics = set()
         self._references = {self}
+        self._simulation_context = None
 
         # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
         self.first_characteristic = None
@@ -935,6 +982,15 @@ class Species:
     def add_reaction(self, reaction):
         self._reactions.add(reaction)
 
+    def set_simulation_context(self, sim):
+        if self._simulation_context is None:
+            self._simulation_context = sim
+        else:
+            simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
+                         'Please use only one Simulation Object per context assignment')
+
+    def reset_simulation_context(self):
+        self._simulation_context = None
 
 # Property Call to return several properties as called
 def BaseSpecies(number_of_properties=1):
@@ -979,13 +1035,13 @@ def New(species, n=1):
             n (int) = number of species to return
     """
     if type(n) == int:
-        to_return = [species*__S1 for _ in range(n)]
+        to_return = [species * __S1 for _ in range(n)]
         if n == 1:
             return to_return[0]
         else:
             return tuple(to_return)
     elif type(n) == str:
-        to_return = species*__S1
+        to_return = species * __S1
         to_return.name(n)
         return to_return
     else:

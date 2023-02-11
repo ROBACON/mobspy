@@ -141,5 +141,13 @@ def convert_volume(volume, dimension):
         return volume
 
 
+def convert_time(time):
+    if isinstance(time, Quantity):
+        if str(time.dimensionality) == '[time]':
+            return time.to('second').magnitude
+    else:
+        return time
+
+
 if __name__ == '__main__':
     pass

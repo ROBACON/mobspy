@@ -13,7 +13,7 @@ from mobspy.sbml_simulator.SBMLWriter import create_model
 import libsbml as sbml
 
 
-def build(species, parameters, reactions, events={}):
+def build(species, parameters, reactions, events):
 
     doc = create_model(species, parameters, reactions, events)
 

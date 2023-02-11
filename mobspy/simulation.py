@@ -1,7 +1,10 @@
 """
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
+from copy import deepcopy
+from contextlib import contextmanager
 from mobspy.modules import meta_class
+from mobspy.modules import event_functions
 from mobspy.sbml_simulator import run
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.meta_class import *
@@ -16,6 +19,7 @@ import mobspy.data_handler.process_result_data as dh
 import json
 import os
 import inspect
+import mobspy.modules.unit_handler as uh
 from pint import UnitRegistry
 
 # u is reserved for units
@@ -23,6 +27,68 @@ u = UnitRegistry()
 
 
 class Simulation:
+
+    # Event Implementation
+    @classmethod
+    def event_compilation_error(cls):
+        simlog.error('The event condition did not compile.\n'
+                     'Please make sure it follows the following format:\n'
+                     'For simple conditions - if C1 \n'
+                     'For and based condition - if (C1) & (C2)\n'
+                     'For or based conditions - if (C1) & (C2)\n'
+                     'Please include the parentheses')
+
+    def event_context_finish(self):
+        self._event_time = 0
+        self.bool_number_call = 0
+        for meta_species in self._species_to_set:
+            meta_species.reset_simulation_context()
+
+    def event_context_add(self, finish=False):
+
+        if self.bool_number_call != 0:
+            if self.number_of_context_comparisons != 0:
+                self.event_compilation_error()
+
+        if len(self.trigger_list) != 0:
+            if self.trigger_list[-1].order != self.number_of_context_comparisons - 1:
+                self.event_compilation_error()
+            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
+                          'trigger': self.trigger_list[0]}
+        else:
+            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
+                          'trigger': 'true'}
+        self.current_event_count_data = []
+        self.trigger_list = []
+        self.bool_number_call = 0
+        self.number_of_context_comparisons = 0
+
+        if len(event_data['event_counts']) != 0:
+            self.total_packed_events.append(event_data)
+
+        if finish:
+            self.event_context_finish()
+
+    def event_context_initiator(self):
+        if len(self._species_to_set) == 0:
+            for i, frame_tuple in enumerate(inspect.stack()):
+                for _, value in frame_tuple[0].f_globals.items():
+                    if isinstance(value, Species) and value not in self._species_to_set:
+                        self._species_to_set.append(value)
+
+            for meta_species in self._species_to_set:
+                meta_species.set_simulation_context(self)
+        else:
+            pass
+
+    @contextmanager
+    def event_delay(self, time):
+        try:
+            self._event_time = time
+            self.event_context_initiator()
+            yield 0
+        finally:
+            self.event_context_add(finish=True)
 
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
@@ -34,6 +100,17 @@ class Simulation:
             parameters (dict) = Simulation object parameters
             plot_parameters (dict) = Parameters for plotting
         """
+
+        # Event Variable Definitions
+        self._species_to_set = []
+        self._event_time = 0
+        self.trigger_list = []
+        self.current_event_count_data = []
+        self.total_packed_events = []
+        self.bool_number_call = 0
+        self.number_of_context_comparisons = 0
+
+        # Get all names
         if names is None:
             local_names = inspect.stack()[1][0].f_locals
             global_names = inspect.stack()[1][0].f_globals
@@ -65,6 +142,7 @@ class Simulation:
         self._reactions_for_sbml = None
         self._parameters_for_sbml = None
         self._mappings_for_sbml = None
+        self._events_for_sbml = None
         self.model_string = ''
 
     def compile(self, verbose=True):
@@ -86,12 +164,14 @@ class Simulation:
 
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
-        self.model_string = Compiler.compile(self.model, names=self.names,
-                                             volume=self.parameters['volume'],
-                                             type_of_model=self.parameters[
-                                                 "simulation_method"],
-                                             verbose=verbose,
-                                             default_order=self.default_order)
+        self.model_string, self._events_for_sbml = Compiler.compile(self.model,
+                                                                    names=self.names,
+                                                                    volume=self.parameters['volume'],
+                                                                    type_of_model=self.parameters[
+                                                                        "simulation_method"],
+                                                                    verbose=verbose,
+                                                                    default_order=self.default_order,
+                                                                    event_dictionary=self.total_packed_events)
 
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
@@ -108,7 +188,8 @@ class Simulation:
 
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
                                               self._parameters_for_sbml,
-                                              self._reactions_for_sbml)
+                                              self._reactions_for_sbml,
+                                              self._events_for_sbml)
 
         if self.model_string != '':
             return self.model_string
@@ -120,20 +201,26 @@ class Simulation:
             Runs the simulation by colling the models in the sbml_simulator directory.
             Compiles the model if it was not yet compiled
         """
+        # Base case - If there are no events we compile the model here
         if self._species_for_sbml is None:
             self.compile(verbose=False)
 
         simlog.debug('Starting Simulator')
+
         self.sbml_string = sbml_builder.build(self._species_for_sbml,
                                               self._parameters_for_sbml,
-                                              self._reactions_for_sbml)
+                                              self._reactions_for_sbml,
+                                              self._events_for_sbml)
 
-        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings, self.all_species_not_mapped)
+        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings,
+                                         self.all_species_not_mapped)
         self.results['data'] = dh.convert_data_to_desired_unit(self.results['data'],
                                                                self.parameters['unit_x'], self.parameters['unit_y'],
                                                                self.output_concentration, self.parameters['volume'])
 
         self._pack_data(self.results['data'])
+
+        # Event Implementation Ends Here
 
         if self.parameters['save_data']:
             simlog.debug("Saving data (reason: parameter <save_data>)")
@@ -211,7 +298,7 @@ class Simulation:
 
     def __setattr__(self, name, value):
         """
-            __setattr__ override. For seeting simulation parameters using the _dot_ operator
+            __setattr__ override. For setting simulation parameters using the _dot_ operator
 
             Parameters:
                 name (str) = name of the parameter to set
@@ -221,7 +308,12 @@ class Simulation:
                       'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
                       'all_species_not_mapped', 'self._species_for_sbml', 'self._reactions_for_sbml',
-                      'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string']
+                      'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string',
+                      'event_times', 'event_models', 'event_count_dics', '_events_for_sbml',
+                      'total_packed_events', 'species_initial_counts', '_species_to_set',
+                      '_event_time', 'trigger_list', 'current_event_count_data',
+                      'current_condition', 'current_event_trigger_data', 'bool_number_call',
+                      'number_of_context_comparisons']
         plotted_flag = False
         if name in white_list:
             self.__dict__[name] = value

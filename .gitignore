@@ -9,3 +9,6 @@ chronometer.py
 .idea
 for_live_tutorial.py
 local_test.py
+live_demo.py
+in_case_of_panic.py
+text_script.py
