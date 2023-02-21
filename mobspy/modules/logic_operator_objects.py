@@ -21,19 +21,15 @@ class SpeciesComparator:
         return logic_re_object
 
     def __lt__(self, number):
-        self.start_check()
         return self.add_operation_and_number('<', number)
 
     def __le__(self, number):
-        self.start_check()
         return self.add_operation_and_number('<=', number)
 
     def __gt__(self, number):
-        self.start_check()
         return self.add_operation_and_number('>', number)
 
     def __ge__(self, number):
-        self.start_check()
         return self.add_operation_and_number('>=', number)
 
     def __eq__(self, other):
@@ -102,7 +98,8 @@ class MetaSpeciesLogicResolver:
 
     def __bool__(self):
         if self.model_context is not None:
-            self.model_context.bool_number_call += 1
+            self.model_context.event_context_add()
+            self.model_context.bool_number_call = self.model_context.bool_number_call + 1
         return True
 
     def __and__(self, other):

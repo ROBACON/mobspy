@@ -77,7 +77,8 @@ class Compiler:
     @classmethod
     def compile(cls, species_to_simulate,
                 volume=1, names=None, type_of_model='deterministic', verbose=True,
-                default_order=Default, event_dictionary=None):
+                default_order=Default, event_dictionary=None,
+                continuous_sim=False, ending_condition=None):
         """
             Here we construct the species for Copasi using their objects
 
@@ -107,6 +108,8 @@ class Compiler:
                 mappings_for_sbml (dict) = Dictionary that maps a meta-species to the set of species strings that
                 belong to it
                 model_str (str) = str of the variables defined above in a user-readable format
+                continuous_sim (bool) = simulation has fixed duration or conditional-based duration
+                ending_condition (MetaSpeciesLogicResolver) = ending condition for the species:
         """
 
         # We name the species according to variables names for convenience
@@ -136,6 +139,7 @@ class Compiler:
                 list_of_definitions.append(reference.get_characteristics())
             cls.species_string_dict[spe_object] = mcu.create_species_strings(spe_object,
                                                                              list_of_definitions)
+
         # Set of reactions involved
         cls.reactions_set = set()
         for spe_object in species_to_simulate:
@@ -168,6 +172,10 @@ class Compiler:
         for spe_object in species_to_simulate:
             for species_string in cls.species_string_dict[spe_object]:
                 species_for_sbml[species_string] = 0
+
+        # Add the flag species used for verifying if the simulation is over
+        if continuous_sim:
+            species_for_sbml[EndFlagSpecies.get_name()] = 0
 
         # BaseSpecies the mappings for sbml
         for spe_object in species_to_simulate:
@@ -222,6 +230,12 @@ class Compiler:
         events_for_sbml = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
                                                               cls.ref_characteristics_to_object,
                                                               volume, dimension)
+
+        if continuous_sim:
+            end_event = {'trigger': ending_condition.generate_string_from_vec_space(species_for_sbml),
+                         'delay': '0',
+                         'assignments': [('End_Flag_MetaSpecies', '1')]}
+            events_for_sbml['end_event'] = end_event
 
         model_str = ''
         if verbose:
@@ -600,7 +614,7 @@ class ParallelSpecies:
         """
         for spe in self.list_of_species:
             yield spe
-    
+
 
 class Species(SpeciesComparator):
     """
@@ -992,6 +1006,7 @@ class Species(SpeciesComparator):
     def reset_simulation_context(self):
         self._simulation_context = None
 
+
 # Property Call to return several properties as called
 def BaseSpecies(number_of_properties=1):
     """
@@ -1016,10 +1031,11 @@ def BaseSpecies(number_of_properties=1):
         return tuple(to_return)
 
 
-__S0, __S1 = BaseSpecies(2)
+__S0, __S1, __SF = BaseSpecies(3)
 __S0.name('S0')
 __S1.name('S1')
-
+__SF.name('End_Flag_MetaSpecies')
+EndFlagSpecies = __SF
 Zero = __S0
 
 

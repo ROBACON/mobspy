@@ -20,6 +20,7 @@ class Color_cycle:
             index (int) = Current position in the color cycle
             color_list (list) = list of available colors
     """
+
     def __init__(self):
         self.index = 0
         self.color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -247,59 +248,55 @@ def plot_curves(data, axs, figure_index, plot_params):
         else:
             time_series = list(range(len(data)))
 
-        for ts in time_series:
-            ts = data[ts - 1]
+        for spe in species:
 
-            for spe in species:
+            color_index = 0
 
-                color_index = 0
+            # Get the parameters assigned to the species, if not assign empty for None returns
+            if find_parameter(plot_params, key=spe, index=(figure_index, plot_index)) is not None:
+                species_characteristics = find_parameter(plot_params, key=spe, index=(figure_index, plot_index))
+            else:
+                species_characteristics = {}
 
-                # Get the parameters assigned to the species, if not assign empty for None returns
-                if find_parameter(plot_params, key=spe, index=(figure_index, plot_index)) is not None:
-                    species_characteristics = find_parameter(plot_params, key=spe, index=(figure_index, plot_index))
-                else:
-                    species_characteristics = {}
+            # Now we search the species characteristics for parameters
+            if find_parameter(species_characteristics, key='color') is not None:
+                curve_color = find_parameter(species_characteristics, key='color')
+            else:
+                color_index = (color_index + 1) % len(Color_cycle().color_list)
+                curve_color = Color_cycle()(color_index)
 
-                # Now we search the species characteristics for parameters
-                if find_parameter(species_characteristics, key='color') is not None:
-                    curve_color = find_parameter(species_characteristics, key='color')
-                else:
-                    color_index = (color_index + 1) % len(Color_cycle().color_list)
-                    curve_color = Color_cycle()(color_index)
+            if find_parameter(species_characteristics, key='linestyle') is not None:
+                linestyle = find_parameter(species_characteristics, key='linestyle')
+            else:
+                linestyle = '-'
 
-                if find_parameter(species_characteristics, key='linestyle') is not None:
-                    linestyle = find_parameter(species_characteristics, key='linestyle')
-                else:
-                    linestyle = '-'
+            if find_parameter(species_characteristics, key='linewidth') is not None:
+                linewidth = find_parameter(species_characteristics, key='linewidth')
+            else:
+                linewidth = None
 
-                if find_parameter(species_characteristics, key='linewidth') is not None:
-                    linewidth = find_parameter(species_characteristics, key='linewidth')
-                else:
-                    linewidth = None
+            if find_parameter(species_characteristics, key='label') is not None:
+                label = find_parameter(species_characteristics, key='label')
+                legend_flag = True
+            else:
+                label = None
 
-                if find_parameter(species_characteristics, key='label') is not None:
-                    label = find_parameter(species_characteristics, key='label')
-                    legend_flag = True
-                else:
-                    label = None
-
-                if find_parameter(plot_params, key='runs', index=(figure_index, plot_index)) is not None:
-                    runs = find_parameter(plot_params, key='runs', index=(figure_index, plot_index))
-                else:
-                    runs = range(len(ts[spe]['runs']))
-
-                if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None and \
-                        find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)):
-                    try:
-                        axs.fill_between(ts['Time'], ts[spe]['runs'][0], ts[spe]['runs'][1], color=curve_color,
-                                         label=label)
-                    except IndexError:
-                        simlog.error('Fill_between must only have two or less runs referring to it')
-                else:
-                    for run in runs:
-                        axs.plot(ts['Time'], ts[spe]['runs'][run], color=curve_color,
-                            linestyle=linestyle, linewidth=linewidth, label=label)
+            for ts in time_series:
+                ts = data[ts]
+                try:
+                    if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None \
+                            and find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)):
+                        try:
+                            axs.fill_between(ts['Time'], ts[spe][0], ts[spe][1], color=curve_color,
+                                             label=label)
+                        except IndexError:
+                            simlog.error('Fill_between must only have two or less runs referring to it')
+                    else:
+                        axs.plot(ts['Time'], ts[spe], color=curve_color,
+                                 linestyle=linestyle, linewidth=linewidth, label=label)
                         label = None
+                except KeyError:
+                    pass
 
     if legend_flag:
         if find_parameter(plot_params, key='frameon', index=figure_index) is not None:

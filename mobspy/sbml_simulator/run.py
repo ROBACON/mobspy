@@ -1,9 +1,10 @@
 import basico
 from joblib import Parallel, delayed
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.sbml_simulator.builder as sbml_builder
 
 
-def simulate(sbml_str, params, mappings, species_not_mapped):
+def simulate(params, mappings):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
@@ -31,15 +32,20 @@ def simulate(sbml_str, params, mappings, species_not_mapped):
         simlog.debug("Running simulation in parallel")
         jobs = -1
 
-    # TODO: If cluster compatibility is added I suggest here
-    data = job_execution(sbml_str, params, jobs)
-    data = remap_species(data, mappings, params, species_not_mapped)
+    # This is necessary to avoid sending meta-species objects to joblib
+    dummy_copy = params['_end_condition']
+    params['_end_condition'] = None
+
+    data = job_execution(params, jobs)
+
+    # Return original parameters
+    params['_end_condition'] = dummy_copy
 
     simlog.debug("Simulation is Over")
-    return {'data': data, 'params': params, 'mappings': mappings}
+    return data
 
 
-def job_execution(sbml_str, params, jobs):
+def job_execution(params, jobs):
     """
         This is defined for parallelism purposes
         Uses multiple cores from the processor to execute stochastic simulations
@@ -49,29 +55,49 @@ def job_execution(sbml_str, params, jobs):
             jobs (int) = number of cores to use, -1 for all available
             sbml_str (str) = model SBML string
     """
+
     def __single_run(packed):
-        sbml_str, i = packed
+        i = packed
 
-        basico.model_io.load_model_from_string(sbml_str)
-        data = __run_time_course(params['duration'], params, i)
+        added_data = {}
+        for j, (model, sim_par) in enumerate(zip(params['_models'], params['_list_of_parameters'])):
 
-        reformated_data = reformat_time_series(data)
+            sbml_str = model['sbml_string']
+            end_condition_not_satisfied = True
+            if sim_par['_continuous_simulation']:
+                sim_par['duration'] = sim_par['initial_conditional_duration']
 
-        return reformated_data
+            while end_condition_not_satisfied:
+                basico_model = basico.model_io.load_model_from_string(sbml_str)
+                data = __run_time_course(basico_model, sim_par['duration'], sim_par, i)
 
-    parallel_data = Parallel(n_jobs=jobs)(delayed(__single_run)((sbml_str, i)) for i in range(params['repetitions']))
+                reformatted_data = reformat_time_series(data)
+
+                if sim_par['_continuous_simulation']:
+                    if reformatted_data['End_Flag_MetaSpecies'][-1] == 1:
+                        reformatted_data = __filter_condition_event_time_data(reformatted_data)
+                        end_condition_not_satisfied = False
+                    else:
+                        sbml_str = __sbml_new_initial_values(data, model)
+                        sim_par['duration'] = 2*sim_par['duration']
+                else:
+                    end_condition_not_satisfied = False
+                added_data = __add_simulations_data(added_data, reformatted_data)
+
+            added_data = __remap_species(added_data, model['mappings'], model['species_not_mapped'])
+
+        return {'data': added_data, 'params': sim_par, 'mappings': model['mappings']}
+
+    parallel_data = Parallel(n_jobs=jobs)(delayed(__single_run)(i) for i in range(params['repetitions']))
 
     if not parallel_data:
         simlog.error("Error: The parallel model has not produced an output." +
                      "Try addding ('sequential': True) to parameters")
 
-    # We always call merge to keep the data in the format we want
-    merged_data = merge(params, parallel_data)
-
-    return merged_data
+    return parallel_data
 
 
-def __run_time_course(duration, params, index):
+def __run_time_course(basico_model, duration, params, index):
     """
         This function prepares the parameters for the basiCO.run_time_course
 
@@ -80,7 +106,8 @@ def __run_time_course(duration, params, index):
             index (int) = current index of the run
             duration (int, float) = simulation duration in seconds
     """
-    kargs = {'method': params["simulation_method"].lower(),
+    kargs = {'model': basico_model,
+             'method': params["simulation_method"].lower(),
              'start_time': params["start_time"],
              'r_tol': params["r_tol"],
              'a_tol': params["a_tol"],
@@ -92,7 +119,7 @@ def __run_time_course(duration, params, index):
 
     if 'step_size' in params:
         kargs['automatic'] = False
-        kargs['step_number'] = int(params['duration']/params['step_size'])
+        kargs['step_number'] = int(params['duration'] / params['step_size'])
 
     return basico.run_time_course(duration, **kargs)
 
@@ -112,32 +139,82 @@ def reformat_time_series(data):
     return data_dict
 
 
-def merge(params, data):
-    """
-    a basic merge of the data with possible resampling in time to save less data
+def __filter_condition_event_time_data(data):
+    new_data = {}
 
-        Parameters
-            params (dict) =  dict of parameters
-            data (pd.dataframe) =  Array of single runs: data[0], data[1], ...
+    for i, e in enumerate(data['End_Flag_MetaSpecies']):
+        if e == 1:
+            stop_index = i
+            break
 
-        Returns:
-            merged_data (dict) = Data merged in a dictionary with all time series from all experiments
-            separated by species and mapping
-    """
+    for key in data:
+        new_data[key] = data[key][:stop_index + 1]
 
-    for i in range(1, len(data)):
-        assert (data[i - 1]['Time'] == data[i]['Time'])  # should be set at exact same times
-
-    merged_data = {'Time': data[0]['Time']}
-    for key in data[0].keys():
-        if key not in ['Time']:
-            merged_data[key] = {'runs': [data[i][key]
-                                         for i in range(params["repetitions"])]}
-
-    return merged_data
+    return new_data
 
 
-def remap_species(data, mapping, params, species_not_mapped):
+def __sbml_new_initial_values(data, model):
+    species_for_sbml = model['species_for_sbml']
+
+    for key in data:
+        try:
+            if species_for_sbml[key] == 0:
+                species_for_sbml[key] = data[key][-1]
+        except KeyError:
+            pass
+
+    return sbml_builder.build(species_for_sbml, model['parameters_for_sbml'],
+                              model['reactions_for_sbml'], model['events_for_sbml'])
+
+
+def __add_simulations_data(added_data, reformatted_data):
+    if added_data != {}:
+        time_to_add = added_data['Time'][-1]
+    else:
+        time_to_add = 0
+    new_data = {}
+    already_added_keys = set()
+
+    for i, time in enumerate(reformatted_data['Time']):
+
+        if time == 0:
+            for key in reformatted_data:
+                reformatted_data[key].pop(0)
+
+        reformatted_data['Time'][i] = reformatted_data['Time'][i] + time_to_add
+
+    for key in added_data:
+        if key == 'Time':
+            continue
+        try:
+            new_data[key] = added_data[key] + reformatted_data[key]
+            already_added_keys.add(key)
+        except KeyError:
+            dummy = added_data[key][-1]
+            new_data[key] = [dummy for _ in reformatted_data['Time']]
+
+    for key in reformatted_data:
+        if key == 'Time':
+            continue
+
+        if key in already_added_keys:
+            continue
+        else:
+            if time_to_add != 0:
+                new_data[key] = [0 for _ in added_data['Time']]
+                new_data[key] = added_data[key] + reformatted_data[key]
+            else:
+                new_data[key] = reformatted_data[key]
+
+    if time_to_add != 0:
+        new_data['Time'] = added_data['Time'] + reformatted_data['Time']
+    else:
+        new_data['Time'] = reformatted_data['Time']
+
+    return new_data
+
+
+def __remap_species(data, mapping, species_not_mapped):
     """
         Takes the simulated species (data) and add ones defined by
         mapping (mapping).
@@ -161,6 +238,7 @@ def remap_species(data, mapping, params, species_not_mapped):
 
     # 1st pass with sum mappings
     for group in mapping.keys():
+
         the_mapping = mapping[group]
         mapped_data[group] = {'runs': []}
 
@@ -168,27 +246,26 @@ def remap_species(data, mapping, params, species_not_mapped):
             # check if is a list -> sum
             if type(the_mapping) is list:
 
-                for run in range(params["repetitions"]):
-                    this_run = []
-                    runs_not_returned_by_basico = {}
-                    for t in T:
-                        mapping_sum = 0
-                        for spe in the_mapping:
-                            try:
-                                mapping_sum = mapping_sum + data[spe]['runs'][run][t]
-                            except KeyError:
-                                mapping_sum = mapping_sum + species_not_mapped[spe]
-                                try:
-                                    runs_not_returned_by_basico[spe] += [species_not_mapped[spe]]
-                                except KeyError:
-                                    runs_not_returned_by_basico[spe] = [species_not_mapped[spe]]
-                        this_run.append(mapping_sum)
-                    for spe in runs_not_returned_by_basico:
+                this_run = []
+                runs_not_returned_by_basico = {}
+                for t in T:
+                    mapping_sum = 0
+                    for spe in the_mapping:
                         try:
-                            mapped_data[spe]['runs'].append(runs_not_returned_by_basico[spe])
+                            mapping_sum = mapping_sum + data[spe][t]
                         except KeyError:
-                            mapped_data[spe] = {'runs': [runs_not_returned_by_basico[spe]]}
-                    mapped_data[group]['runs'].append(this_run)
+                            mapping_sum = mapping_sum + species_not_mapped[spe]
+                            try:
+                                runs_not_returned_by_basico[spe] += [species_not_mapped[spe]]
+                            except KeyError:
+                                runs_not_returned_by_basico[spe] = [species_not_mapped[spe]]
+                    this_run.append(mapping_sum)
+                for spe in runs_not_returned_by_basico:
+                    try:
+                        mapped_data[spe] = runs_not_returned_by_basico[spe]
+                    except KeyError:
+                        mapped_data[spe] = [runs_not_returned_by_basico[spe]]
+                mapped_data[group] = this_run
 
         except IndexError:
             simlog.error(f'run: remap_species: error when remapping "{the_mapping}".' +
@@ -202,3 +279,7 @@ def remap_species(data, mapping, params, species_not_mapped):
             exit(1)
 
     return mapped_data
+
+
+
+

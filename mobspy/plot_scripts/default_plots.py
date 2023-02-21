@@ -62,11 +62,13 @@ def stochastic_plot(species, data, plot_params):
             plot_params (dict) = dictionary with the plot parameters supplied by the user before the modifications
             from this function
     """
-    # Data Handling
+
+    # Data Handling - Copy data object to not interfere with simulation data
     species, data = ppd.query_plot_data(species, data)
     ppd.check_plot_parameters(species, plot_params)
 
-    data_to_plot = deepcopy(data)
+    data_to_plot = data
+
     new_plot_params = deepcopy(plot_params)
     set_plot_units(new_plot_params)
 
@@ -80,29 +82,31 @@ def stochastic_plot(species, data, plot_params):
         try:
             plots_for_spe_i = []
             plots_for_spe_i_sta = []
-            for i, time_series in enumerate(data):
-                if len(time_series) == 1:
-                    i = ''
 
-                processed_runs = sc.average_plus_standard_deviation(time_series[spe]['runs'])
-                key_average = spe + '$' + 'average'
-                key_dev = spe + '$' + 'deviation'
-                data_to_plot[i][key_average] = {'runs': [processed_runs[0]]}
-                data_to_plot[i][key_dev] = {'runs': [processed_runs[1], processed_runs[2]]}
+            processed_runs = sc.average_plus_standard_deviation(spe, data_to_plot)
 
-                # We define the standard plot for the average and deviation
-                color = color_cycler(1)
-                plots_for_spe_i.append({'species_to_plot': [spe], 'time_series': i + 1,
-                                        spe: {'color': color, 'label': spe}})
+            key_average = spe + '$' + 'average'
+            key_dev = spe + '$' + 'deviation'
 
-                plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': i + 1,
-                                            key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
-                plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'time_series': i + 1, 'fill_between': True,
-                                            key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
-        except KeyError:
+            average_and_deviation_ts = {'Time': data_to_plot.get_max_time_for_species(spe),
+                                        key_average: processed_runs[0],
+                                        key_dev: [processed_runs[1], processed_runs[2]]}
+            data_to_plot.add_ts_to_data(average_and_deviation_ts)
+
+            # We define the standard plot for the average and deviation
+            color = color_cycler(1)
+            plots_for_spe_i.append({'species_to_plot': [spe],
+                                    spe: {'color': color, 'label': spe}})
+
+            plots_for_spe_i_sta.append({'species_to_plot': [key_average],
+                                        key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
+            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True,
+                                        key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
+        except ValueError:
             simlog.error(f'{spe} species not found in data')
-        new_plot_params['figures'].append({'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i })
-        new_plot_params['figures'].append({'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i_sta})
+        new_plot_params['figures'].append({'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i})
+        new_plot_params['figures'].append(
+            {'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i_sta})
 
     hp.plot_data(data_to_plot, new_plot_params)
 

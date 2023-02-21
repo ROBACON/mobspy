@@ -26,11 +26,13 @@ def get_default_parameters():
         "output_dir": "outputs/",
         "output_file": None,
         "output_event": False,
-        "unit_x":None,
-        "unit_y":None,
-        "output_concentration":False,
+        "unit_x": None,
+        "unit_y": None,
+        "output_concentration": False,
         "save_data": True,
-        "plot_data": True
+        "plot_data": True,
 
+        "_continuous_simulation": False,
+        "_end_condition": None
     }
     return default_parameters

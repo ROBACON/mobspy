@@ -47,30 +47,15 @@ def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentr
         for key in data:
             if key == 'Time':
                 continue
-            new_data = []
 
-            for run in data[key]['runs']:
-                new_data_run = []
-                for count in run:
-                    new_data_run.append(count*factor)
-                new_data.append(new_data_run)
-
-            converted_data[key]['runs'] = new_data
+            converted_data[key] = [count*factor for count in data[key]]
 
     def convert_data(data, from_unit, to_unit):
         for key in data:
             if key == 'Time':
                 continue
-            new_data = []
 
-            for run in data[key]['runs']:
-                new_data_run = []
-                for count in run:
-                    quantity_u = count*from_unit
-                    new_data_run.append(quantity_u.to(to_unit).magnitude)
-                new_data.append(new_data_run)
-
-            converted_data[key]['runs'] = new_data
+            converted_data[key] = [(count*from_unit).to(to_unit).magnitude for count in data[key]]
 
     if output_concentration:
         multiply_data_by_factor(converted_data, volume ** -1)

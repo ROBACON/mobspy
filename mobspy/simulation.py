@@ -16,6 +16,7 @@ import mobspy.sbml_simulator.builder as sbml_builder
 import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
+from mobspy.data_handler.time_series_object import MobsPyTimeSeries
 import json
 import os
 import inspect
@@ -46,21 +47,24 @@ class Simulation:
 
     def event_context_add(self, finish=False):
 
-        if self.bool_number_call != 0:
-            if self.number_of_context_comparisons != 0:
-                self.event_compilation_error()
-
-        if len(self.trigger_list) != 0:
-            if self.trigger_list[-1].order != self.number_of_context_comparisons - 1:
-                self.event_compilation_error()
-            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
-                          'trigger': self.trigger_list[0]}
-        else:
+        if self.bool_number_call == 0:
             event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
                           'trigger': 'true'}
+
+        else:
+            if self.previous_trigger.order != self.pre_number_of_context_comparisons - 1:
+                self.event_compilation_error()
+            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
+                          'trigger': self.previous_trigger}
+
+        if len(self.trigger_list) != 0:
+            self.previous_trigger = self.trigger_list[0]
+        else:
+            self.previous_trigger = None
+
         self.current_event_count_data = []
         self.trigger_list = []
-        self.bool_number_call = 0
+        self.pre_number_of_context_comparisons = self.number_of_context_comparisons
         self.number_of_context_comparisons = 0
 
         if len(event_data['event_counts']) != 0:
@@ -82,7 +86,7 @@ class Simulation:
             pass
 
     @contextmanager
-    def event_delay(self, time):
+    def event_delay(self, time=0):
         try:
             self._event_time = time
             self.event_context_initiator()
@@ -105,10 +109,12 @@ class Simulation:
         self._species_to_set = []
         self._event_time = 0
         self.trigger_list = []
+        self.previous_trigger = None
         self.current_event_count_data = []
         self.total_packed_events = []
         self.bool_number_call = 0
         self.number_of_context_comparisons = 0
+        self.pre_number_of_context_comparisons = 0
 
         # Get all names
         if names is None:
@@ -134,8 +140,7 @@ class Simulation:
 
         # Other needed things for simulating
         self.sbml_string = None
-        self.results = None
-        self.packed_data = []
+        self.results = {}
         self.default_order = Default
 
         self._species_for_sbml = None
@@ -164,14 +169,17 @@ class Simulation:
 
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
-        self.model_string, self._events_for_sbml = Compiler.compile(self.model,
-                                                                    names=self.names,
-                                                                    volume=self.parameters['volume'],
-                                                                    type_of_model=self.parameters[
-                                                                        "simulation_method"],
-                                                                    verbose=verbose,
-                                                                    default_order=self.default_order,
-                                                                    event_dictionary=self.total_packed_events)
+        self.model_string, self._events_for_sbml = \
+            Compiler.compile(self.model,
+                             names=self.names,
+                             volume=self.parameters['volume'],
+                             type_of_model=self.parameters[
+                                 "simulation_method"],
+                             verbose=verbose,
+                             default_order=self.default_order,
+                             event_dictionary=self.total_packed_events,
+                             continuous_sim=self.parameters['_continuous_simulation'],
+                             ending_condition=self.parameters['_end_condition'])
 
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
@@ -186,10 +194,18 @@ class Simulation:
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
 
-        self.sbml_string = sbml_builder.build(self._species_for_sbml,
-                                              self._parameters_for_sbml,
-                                              self._reactions_for_sbml,
-                                              self._events_for_sbml)
+        self.sbml_string = sbml_builder.build(self._species_for_sbml, self._parameters_for_sbml,
+                                              self._reactions_for_sbml, self._events_for_sbml)
+
+        self.parameters['_models'] = [{'sbml_string': self.sbml_string,
+                                       'species_for_sbml': self._species_for_sbml,
+                                       'parameters_for_sbml': self._parameters_for_sbml,
+                                       'reactions_for_sbml': self._reactions_for_sbml,
+                                       'events_for_sbml': self._events_for_sbml,
+                                       'species_not_mapped': self.all_species_not_mapped,
+                                       'mappings': self.mappings}]
+
+        self.parameters['_list_of_parameters'] = [self.parameters]
 
         if self.model_string != '':
             return self.model_string
@@ -207,20 +223,18 @@ class Simulation:
 
         simlog.debug('Starting Simulator')
 
-        self.sbml_string = sbml_builder.build(self._species_for_sbml,
-                                              self._parameters_for_sbml,
-                                              self._reactions_for_sbml,
-                                              self._events_for_sbml)
+        unprocessed_data = sbml_run.simulate(self.parameters, self.mappings)
 
-        self.results = sbml_run.simulate(self.sbml_string, self.parameters, self.mappings,
-                                         self.all_species_not_mapped)
-        self.results['data'] = dh.convert_data_to_desired_unit(self.results['data'],
-                                                               self.parameters['unit_x'], self.parameters['unit_y'],
-                                                               self.output_concentration, self.parameters['volume'])
+        pdl = []
+        for updl in unprocessed_data:
+            data_dict = {'data': dh.convert_data_to_desired_unit(updl['data'],
+                                                                 self.parameters['unit_x'], self.parameters['unit_y'],
+                                                                 self.output_concentration, self.parameters['volume']),
+                         'params': updl['params'],
+                         'mappings': updl['mappings']}
+            pdl = pdl + [data_dict]
 
-        self._pack_data(self.results['data'])
-
-        # Event Implementation Ends Here
+        self.results = MobsPyTimeSeries(pdl)
 
         if self.parameters['save_data']:
             simlog.debug("Saving data (reason: parameter <save_data>)")
@@ -271,8 +285,8 @@ class Simulation:
             Parameters:
                 results (dict) = result data MobsPy.results
         """
-        self._pack_data(results['data'])
-        self.mappings = results['mappings']
+        simlog.error('Broken for now')
+        self.results.add_ts_to_data()
 
     def add_external_data(self, data):
         """
@@ -305,15 +319,17 @@ class Simulation:
                 value = value of the parameter
         """
         white_list = ['default_order', 'volume', 'model', 'names', 'parameters', 'model_string',
-                      'plot_parameters', 'sbml_string', 'results', 'packed_data', '_species_for_sbml',
+                      'plot_parameters', 'sbml_string', 'results', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
                       'all_species_not_mapped', 'self._species_for_sbml', 'self._reactions_for_sbml',
                       'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string',
                       'event_times', 'event_models', 'event_count_dics', '_events_for_sbml',
                       'total_packed_events', 'species_initial_counts', '_species_to_set',
-                      '_event_time', 'trigger_list', 'current_event_count_data',
+                      '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data', 'bool_number_call',
-                      'number_of_context_comparisons']
+                      'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
+                      'initial_duration']
+
         plotted_flag = False
         if name in white_list:
             self.__dict__[name] = value
@@ -326,7 +342,13 @@ class Simulation:
         if not plotted_flag:
             example_parameters = get_example_parameters()
             if name in example_parameters.keys():
-                self.__dict__['parameters'][name] = value
+                if name == 'duration' and isinstance(value, MetaSpeciesLogicResolver):
+                    self.__dict__['parameters']['_continuous_simulation'] = True
+                    self.__dict__['parameters']['_end_condition'] = value
+                    if 'initial_conditional_duration' not in self.__dict__['parameters']:
+                        self.__dict__['parameters']['initial_conditional_duration'] = 1
+                else:
+                    self.__dict__['parameters'][name] = value
             elif name in white_list:
                 pass
             else:
@@ -384,20 +406,20 @@ class Simulation:
                 *species (meta-species objects) = meta-species objects to plot
         """
         if not species:
-            species_strings = list(self.mappings.keys())
+            species_strings = set(self.mappings.keys())
         else:
-            species_strings = []
+            species_strings = set()
 
         for spe in species:
             if isinstance(spe, Species):
-                species_strings.append(str(spe))
+                species_strings.add(str(spe))
             elif isinstance(spe, Reacting_Species):
-                species_strings.append(str(spe))
+                species_strings.add(str(spe))
             elif type(spe) == str:
-                species_strings.append(spe)
+                species_strings.add(spe)
             else:
                 simlog.error('Only species objects or strings for plotting arguments')
-        return species_strings, self.packed_data, self.plot_parameters
+        return species_strings, self.results, self.plot_parameters
 
     def plot_stochastic(self, *species):
         """
@@ -418,6 +440,53 @@ class Simulation:
             Calls raw plot. See default_plots module in the plot_scripts directory
         """
         dp.raw_plot(self.packed_data, parameters_or_file)
+
+    def __add__(self, other):
+        return SimulationComposition(self, other)
+
+
+class SimulationComposition:
+
+    def __init__(self, S1, S2):
+        if isinstance(S1, Simulation) and isinstance(S2, Simulation):
+            self.list_of_simulations = [S1] + [S2]
+        elif isinstance(S1, SimulationComposition) and isinstance(S2, Simulation):
+            self.list_of_simulations = S1.list_of_simulations + [S2]
+        elif isinstance(S1, Simulation) and isinstance(S2, SimulationComposition):
+            self.list_of_simulations = [S1] + S2.list_of_simulations
+        elif isinstance(S1, SimulationComposition) and isinstance(S2, SimulationComposition):
+            self.list_of_simulations = S1.list_of_simulations + S2.list_of_simulations
+        else:
+            simlog.error('Simulation compositions can only be performed with other simulations')
+        self.results = None
+
+    def __add__(self, other):
+        return SimulationComposition(self, other)
+
+    def compile(self, verbose=True):
+        str = ''
+        for sim in self.list_of_simulations:
+            str += sim.compile(verbose)
+        if str != '':
+            print(str)
+
+    #        if self._species_for_sbml is None:
+    #        self.compile(verbose=False)
+
+    def run(self):
+        for sim in self.list_of_simulations:
+            if sim._species_for_sbml is None:
+                sim.compile(verbose=False)
+
+        base_sim = self.list_of_simulations[0]
+        for sim in self.list_of_simulations:
+            if sim == base_sim:
+                continue
+
+            base_sim.parameters['_models'] += sim.parameters['_models']
+            base_sim.parameters['_list_of_parameters'] += sim.parameters['_list_of_parameters']
+            base_sim.run()
+            self.results = base_sim.results
 
 
 if __name__ == '__main__':
