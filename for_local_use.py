@@ -30,6 +30,7 @@ if __name__ == '__main__':
 
     # SC = S1 + S2
     S1.run()
+    print(S1.results[A])
 
     # R1 = -5*A + B > 5
     # R2 = A.a1 == 0
