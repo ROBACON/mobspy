@@ -890,7 +890,7 @@ class Species(SpeciesComparator):
                 if characteristics == e['characteristics']:
                     e['quantity'] = quantity
                     already_in = True
-            if not already_in and self._simulation_context is None:
+            if not already_in:
                 self._species_counts.append({'characteristics': characteristics, 'quantity': quantity})
         else:
             return {'characteristics': characteristics, 'quantity': quantity}

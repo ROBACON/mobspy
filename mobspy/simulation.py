@@ -44,9 +44,9 @@ class Simulation:
         self.bool_number_call = 0
         for meta_species in self._species_to_set:
             meta_species.reset_simulation_context()
+        self._species_to_set = set()
 
     def event_context_add(self, finish=False):
-
         if self.bool_number_call == 0:
             event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
                           'trigger': 'true'}
@@ -78,7 +78,7 @@ class Simulation:
             for i, frame_tuple in enumerate(inspect.stack()):
                 for _, value in frame_tuple[0].f_globals.items():
                     if isinstance(value, Species) and value not in self._species_to_set:
-                        self._species_to_set.append(value)
+                        self._species_to_set.add(value)
 
             for meta_species in self._species_to_set:
                 meta_species.set_simulation_context(self)
@@ -106,7 +106,7 @@ class Simulation:
         """
 
         # Event Variable Definitions
-        self._species_to_set = []
+        self._species_to_set = set()
         self._event_time = 0
         self.trigger_list = []
         self.previous_trigger = None
