@@ -154,3 +154,43 @@ def dimensional_inconsistency():
 
 def test_dimensional_inconsistency():
     assert dimensional_inconsistency()
+
+
+def average_value():
+    try:
+        E = BaseSpecies(1)
+        Zero >> E[12]
+        E >> Zero[25]
+
+        MySim = Simulation(E)
+        MySim.save_data = False
+        MySim.run()
+    except:
+        pass
+
+
+def hybrid_sim():
+    A, B = BaseSpecies(2)
+    A >> 2 * A[1]
+
+    A(1)
+    S1 = Simulation(A | B)
+    S1.save_data = False
+    S1.plot_data = False
+    S1.duration = 3
+
+    A.reset_reactions()
+    A + B >> Zero[0.01]
+
+    B(50)
+    S2 = Simulation(A | B)
+    S2.method = 'stochastic'
+    S2.duration = (A <= 0) | (B <= 0)
+
+    Sim = S1 + S2
+    Sim.run()
+    return Sim.results[A][-1] == 0 or Sim.results[B][-1] == 0
+
+
+#def test_hybrid_sim():
+#    assert hybrid_sim()

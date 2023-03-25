@@ -87,6 +87,7 @@ class Simulation:
 
     @contextmanager
     def event_delay(self, time=0):
+        self.__dict__['parameters']['_with_event'] = True
         try:
             self._event_time = time
             self.event_context_initiator()
@@ -129,6 +130,12 @@ class Simulation:
         self.model = model
         self.names = names
 
+        # Get all meta - reactions
+        self._reactions_set = set()
+        for spe_object in self.model:
+            for reference in spe_object.get_references():
+                self._reactions_set = self._reactions_set.union(reference.get_reactions())
+
         if not isinstance(model, Species) and not isinstance(model, ParallelSpecies):
             simlog.error('Model must be formed by Species objects')
 
@@ -139,7 +146,6 @@ class Simulation:
             self.plot_parameters = get_default_plot_parameters()
 
         # Other needed things for simulating
-        self.sbml_string = None
         self.results = {}
         self.default_order = Default
 
@@ -161,6 +167,9 @@ class Simulation:
         simlog.debug('Compiling model')
 
         pr.parameter_process(self.parameters)
+        if self.parameters['method'] is not None:
+            self.parameters['simulation_method'] = self.parameters['method']
+
         if self.parameters['simulation_method'].lower() == 'deterministic':
             self.parameters['repetitions'] = 1
             self.plot_parameters['simulation_method'] = 'deterministic'
@@ -171,6 +180,7 @@ class Simulation:
         self._parameters_for_sbml, self._mappings_for_sbml, \
         self.model_string, self._events_for_sbml = \
             Compiler.compile(self.model,
+                             reactions_set = self._reactions_set,
                              names=self.names,
                              volume=self.parameters['volume'],
                              type_of_model=self.parameters[
@@ -194,11 +204,7 @@ class Simulation:
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
 
-        self.sbml_string = sbml_builder.build(self._species_for_sbml, self._parameters_for_sbml,
-                                              self._reactions_for_sbml, self._events_for_sbml)
-
-        self.parameters['_models'] = [{'sbml_string': self.sbml_string,
-                                       'species_for_sbml': self._species_for_sbml,
+        self.parameters['_models'] = [{'species_for_sbml': self._species_for_sbml,
                                        'parameters_for_sbml': self._parameters_for_sbml,
                                        'reactions_for_sbml': self._reactions_for_sbml,
                                        'events_for_sbml': self._events_for_sbml,
@@ -209,8 +215,6 @@ class Simulation:
 
         if self.model_string != '':
             return self.model_string
-
-        return self.sbml_string
 
     def run(self):
         """
@@ -223,7 +227,7 @@ class Simulation:
 
         simlog.debug('Starting Simulator')
 
-        unprocessed_data = sbml_run.simulate(self.parameters, self.mappings)
+        unprocessed_data = sbml_run.simulate(self.parameters)
 
         pdl = []
         for updl in unprocessed_data:
@@ -319,7 +323,7 @@ class Simulation:
                 value = value of the parameter
         """
         white_list = ['default_order', 'volume', 'model', 'names', 'parameters', 'model_string',
-                      'plot_parameters', 'sbml_string', 'results', '_species_for_sbml',
+                      'plot_parameters', 'results', '_species_for_sbml',
                       '_reactions_for_sbml', '_parameters_for_sbml', '_mappings_for_sbml', 'mappings',
                       'all_species_not_mapped', 'self._species_for_sbml', 'self._reactions_for_sbml',
                       'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string',
@@ -328,7 +332,7 @@ class Simulation:
                       '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data', 'bool_number_call',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
-                      'initial_duration']
+                      'initial_duration', '_reactions_set']
 
         plotted_flag = False
         if name in white_list:
@@ -406,7 +410,9 @@ class Simulation:
                 *species (meta-species objects) = meta-species objects to plot
         """
         if not species:
-            species_strings = set(self.mappings.keys())
+            species_strings = set()
+            for model in self.parameters['_models']:
+                species_strings = species_strings.union(model['mappings'])
         else:
             species_strings = set()
 
@@ -469,9 +475,6 @@ class SimulationComposition:
             str += sim.compile(verbose)
         if str != '':
             print(str)
-
-    #        if self._species_for_sbml is None:
-    #        self.compile(verbose=False)
 
     def run(self):
         for sim in self.list_of_simulations:

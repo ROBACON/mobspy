@@ -4,7 +4,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.sbml_simulator.builder as sbml_builder
 
 
-def simulate(params, mappings):
+def simulate(params):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
@@ -33,13 +33,17 @@ def simulate(params, mappings):
         jobs = -1
 
     # This is necessary to avoid sending meta-species objects to joblib
-    dummy_copy = params['_end_condition']
-    params['_end_condition'] = None
+
+    dummy_copy = []
+    for p in params['_list_of_parameters']:
+        dummy_copy.append(p['_end_condition'])
+        p['_end_condition'] = None
 
     data = job_execution(params, jobs)
 
     # Return original parameters
-    params['_end_condition'] = dummy_copy
+    for p, d in zip(params['_list_of_parameters'], dummy_copy):
+        p['_end_condition'] = d
 
     simlog.debug("Simulation is Over")
     return data
@@ -62,7 +66,12 @@ def job_execution(params, jobs):
         added_data = {}
         for j, (model, sim_par) in enumerate(zip(params['_models'], params['_list_of_parameters'])):
 
-            sbml_str = model['sbml_string']
+            # Generate SBML here
+            if j > 0:
+                sbml_str = __sbml_new_initial_values(reformatted_data, model, sim_par, new_model=True)
+            else:
+                sbml_str = __sbml_new_initial_values({}, model, sim_par)
+
             end_condition_not_satisfied = True
             if sim_par['_continuous_simulation']:
                 sim_par['duration'] = sim_par['initial_conditional_duration']
@@ -78,8 +87,8 @@ def job_execution(params, jobs):
                         reformatted_data = __filter_condition_event_time_data(reformatted_data)
                         end_condition_not_satisfied = False
                     else:
-                        sbml_str = __sbml_new_initial_values(data, model)
-                        sim_par['duration'] = 2*sim_par['duration']
+                        sbml_str = __sbml_new_initial_values(data, model, sim_par)
+                        sim_par['duration'] = 2 * sim_par['duration']
                 else:
                     end_condition_not_satisfied = False
                 added_data = __add_simulations_data(added_data, reformatted_data)
@@ -106,8 +115,12 @@ def __run_time_course(basico_model, duration, params, index):
             index (int) = current index of the run
             duration (int, float) = simulation duration in seconds
     """
+    params["simulation_method"] = params["simulation_method"].lower()
+    if (params['_with_event'] or params['_continuous_simulation']) and params["simulation_method"] == 'stochastic':
+        params["simulation_method"] = 'directmethod'
+
     kargs = {'model': basico_model,
-             'method': params["simulation_method"].lower(),
+             'method': params["simulation_method"],
              'start_time': params["start_time"],
              'r_tol': params["r_tol"],
              'a_tol': params["a_tol"],
@@ -153,13 +166,22 @@ def __filter_condition_event_time_data(data):
     return new_data
 
 
-def __sbml_new_initial_values(data, model):
+def __sbml_new_initial_values(data, model, sim_para, new_model=False):
     species_for_sbml = model['species_for_sbml']
 
+    check_list = ["stochastic", "directmethod"]
     for key in data:
         try:
-            if species_for_sbml[key] == 0:
-                species_for_sbml[key] = data[key][-1]
+            if sim_para["simulation_method"].lower() in check_list:
+                species_for_sbml[key] = int(list(data[key])[-1])
+            else:
+                species_for_sbml[key] = list(data[key])[-1]
+        except KeyError:
+            pass
+
+    if new_model:
+        try:
+            species_for_sbml['End_Flag_MetaSpecies'] = 0
         except KeyError:
             pass
 
@@ -202,7 +224,7 @@ def __add_simulations_data(added_data, reformatted_data):
         else:
             if time_to_add != 0:
                 new_data[key] = [0 for _ in added_data['Time']]
-                new_data[key] = added_data[key] + reformatted_data[key]
+                new_data[key] = new_data[key] + reformatted_data[key]
             else:
                 new_data[key] = reformatted_data[key]
 
@@ -279,7 +301,3 @@ def __remap_species(data, mapping, species_not_mapped):
             exit(1)
 
     return mapped_data
-
-
-
-

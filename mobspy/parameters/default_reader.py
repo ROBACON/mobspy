@@ -16,6 +16,7 @@ def get_default_parameters():
         "__comment_2": "basiCO parameters",
 
         "simulation_method": "deterministic",
+        "method": None,
         "start_time": 0,
         "duration": 60,
         "r_tol": 1e-8,
@@ -33,6 +34,7 @@ def get_default_parameters():
         "plot_data": True,
 
         "_continuous_simulation": False,
-        "_end_condition": None
+        "_end_condition": None,
+        "_with_event": False
     }
     return default_parameters

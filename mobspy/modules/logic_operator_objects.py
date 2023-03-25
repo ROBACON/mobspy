@@ -103,28 +103,23 @@ class MetaSpeciesLogicResolver:
         return True
 
     def __and__(self, other):
-        if not isinstance(other, MetaSpeciesLogicResolver):
-            print('ERROR')
-            exit()
-
-        new_operation = ['('] + ['('] + self.operation + [')'] + ['&&'] + ['('] + other.operation + [')'] + [')']
-        self.operation = new_operation
-        self.order += 1
-        if self.model_context is not None:
-            self.model_context.trigger_list.append(self)
-        return self
+        return self._join(other, '&&')
 
     def __or__(self, other):
+        return self._join(other, '||')
+
+    def _join(self, other, symbol):
         if not isinstance(other, MetaSpeciesLogicResolver):
             print('ERROR')
             exit()
 
-        new_operation = ['('] + ['('] + self.operation + + [')'] + ['||'] + ['(']  + other.operation + [')'] + [')']
+        new_operation = ['('] + ['('] + self.operation + [')'] + [symbol] + ['(']  + other.operation + [')'] + [')']
         self.operation = new_operation
         self.order += 1
         if self.model_context is not None:
             self.model_context.trigger_list.append(self.operation)
         return self
+
 
     @classmethod
     def find_all_species_strings(cls, species, characteristics, species_for_sbml):

@@ -15,6 +15,7 @@ def get_example_parameters():
         "__comment_2": "basiCO parameters",
 
         "simulation_method": "stochastic",
+        "method": None,
         "start_time": 0,
         "duration": None,
         "r_tol": 1e-8,

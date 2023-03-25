@@ -75,7 +75,7 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate,
+    def compile(cls, species_to_simulate, reactions_set,
                 volume=1, names=None, type_of_model='deterministic', verbose=True,
                 default_order=Default, event_dictionary=None,
                 continuous_sim=False, ending_condition=None):
@@ -141,15 +141,16 @@ class Compiler:
                                                                              list_of_definitions)
 
         # Set of reactions involved
-        cls.reactions_set = set()
-        for spe_object in species_to_simulate:
-            for reference in spe_object.get_references():
-                cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
+        # HERE TO FIX MULTI MODEL
+        #cls.reactions_set = set()
+        #for spe_object in species_to_simulate:
+        #    for reference in spe_object.get_references():
+        #        cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
 
         # Dimension check. Here we check based on the units the area dimension
         dimension = None
 
-        for reaction in cls.reactions_set:
+        for reaction in reactions_set:
             if isinstance(reaction.rate, Quantity):
                 if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension):
                     dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension)
@@ -163,7 +164,7 @@ class Compiler:
         volume = uh.convert_volume(volume, dimension)
 
         # assign them default order
-        for reaction in cls.reactions_set:
+        for reaction in reactions_set:
             if reaction.order is None:
                 reaction.order = default_order
 
@@ -208,7 +209,7 @@ class Compiler:
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
-        reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(cls.reactions_set,
+        reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
                                                                           cls.species_string_dict,
                                                                           cls.ref_characteristics_to_object,
                                                                           type_of_model, dimension)
@@ -992,6 +993,9 @@ class Species(SpeciesComparator):
 
     def set_reactions(self, reactions):
         self._reactions = reactions
+
+    def reset_reactions(self):
+        self._reactions = set()
 
     def add_reaction(self, reaction):
         self._reactions.add(reaction)
