@@ -474,7 +474,7 @@ class SimulationComposition:
         for sim in self.list_of_simulations:
             str += sim.compile(verbose)
         if str != '':
-            print(str)
+            return str
 
     def run(self):
         for sim in self.list_of_simulations:

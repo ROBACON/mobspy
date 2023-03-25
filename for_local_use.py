@@ -11,7 +11,7 @@ if __name__ == '__main__':
     S1 = Simulation(A)
     S1.save_data = False
     # S1.plot_data = False
-    S1.duration = A >= 70
+    S1.duration = 3
 
     A.reset_reactions()
     A + B >> Zero[0.01]
@@ -22,10 +22,7 @@ if __name__ == '__main__':
     S2.duration = (A <= 0) | (B <= 0)
 
     Sim = S1 + S2
-    Sim.run()
-    print(Sim.results[A][-1])
-    print(Sim.results[B][-1])
-    print(Sim.results[A][-1] == 0 or Sim.results[B][-1] == 0)
+    Sim.compile()
 
 
 

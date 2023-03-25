@@ -2,7 +2,7 @@
 # It also test the calculation capabilities
 # It uses some simple model and assertions
 
-import pytest
+# import pytest
 from mobspy import *
 import sys
 
@@ -165,6 +165,7 @@ def average_value():
         MySim = Simulation(E)
         MySim.save_data = False
         MySim.run()
+
     except:
         pass
 
@@ -188,9 +189,8 @@ def hybrid_sim():
     S2.duration = (A <= 0) | (B <= 0)
 
     Sim = S1 + S2
-    Sim.run()
-    return Sim.results[A][-1] == 0 or Sim.results[B][-1] == 0
+    return compare_model(Sim.compile(), 'test_tools/model_8.txt')
 
 
-#def test_hybrid_sim():
-#    assert hybrid_sim()
+def test_hybrid_sim():
+    assert hybrid_sim()
