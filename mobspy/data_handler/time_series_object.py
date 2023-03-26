@@ -4,24 +4,10 @@ from mobspy.modules.meta_class import *
 
 class MobsPyTimeSeries:
 
-    def __init__(self, unprocessed_data_list):
-        self.ts_data = [data['data'] for data in unprocessed_data_list]
-        self.ts_parameters = [data['params'] for data in unprocessed_data_list]
-        self.ts_mappings = [data['mappings'] for data in unprocessed_data_list]
-        self.time_series_number = 0
-
-    def add_ts_to_data(self, time_series):
-        if isinstance(time_series, MobsPyTimeSeries):
-            for ts in time_series:
-                self.ts_data += ts
-            for ts_parameters in self.ts_parameters:
-                self.ts_parameters += ts_parameters
-            for ts_mappings in self.ts_mappings:
-                self.ts_mappings += ts_mappings
-        elif type(time_series) == dict:
-            self.ts_data += [time_series]
-            self.ts_parameters += [None]
-            self.ts_mappings += [None]
+    def __init__(self, data_dict):
+        self.ts_data = data_dict['data']
+        self.ts_parameters = data_dict['params']
+        self.ts_models = data_dict['models']
 
     def __len__(self):
         return len(self.ts_data)
@@ -33,18 +19,32 @@ class MobsPyTimeSeries:
             tr = tr + str(pd.DataFrame.from_dict(data)) + '\n\n'
         return tr
 
+    def add_ts_to_data(self, time_series):
+        if type(time_series) == dict:
+            self.ts_data += [time_series]
+
     def __getitem__(self, item):
+        to_return = []
         if type(item) == int:
             return self.ts_data[item]
         elif type(item) == str:
             try:
-                return self.ts_data[self.time_series_number][item]
+                for ts in self:
+                    to_return.append(ts[item])
             except KeyError:
-                return self._sum_reacting_species_data(item, self.time_series_number)
+                for i in range(len(self)):
+                    to_return.append(self._sum_reacting_species_data(item, self.time_series_number))
         elif isinstance(item, Species):
-            return self.ts_data[self.time_series_number][item.get_name()]
+            for ts in self:
+                to_return.append(ts[item.get_name()])
         elif isinstance(item, Reacting_Species):
-            return self._sum_reacting_species_data(item, self.time_series_number)
+            for i in range(len(self)):
+                to_return.append(self._sum_reacting_species_data(item, self.time_series_number))
+
+        if len(to_return) == 1:
+            return to_return[0]
+        else:
+            return to_return
 
     def _sum_reacting_species_data(self, item, ts_index):
 

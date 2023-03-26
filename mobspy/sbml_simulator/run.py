@@ -4,20 +4,20 @@ import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.sbml_simulator.builder as sbml_builder
 
 
-def simulate(params):
+def simulate(list_of_params, models):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
 
         Parameters:
-            sbml_str (str) = SBML str from a model for running the Copasi simulator
-            mappings (dict) = Mappings that sum the species into the meta-species
             params (dict) = simulation parameters from the text file
-            species_for_sbml (dict) = This is needed because basiCO does not return species such that dS/dt = 0
+            models (dict) = {'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
+                            'events_for_sbml':, 'species_not_mapped':, 'mappings':}
 
         Returns:
             (dict) Data for MobsPy simulation object
     """
+    params = list_of_params[0]
 
     # Run in parallel or sequentially
     # If nothing is specified just run it in parallel
@@ -35,21 +35,17 @@ def simulate(params):
     # This is necessary to avoid sending meta-species objects to joblib
 
     dummy_copy = []
-    for p in params['_list_of_parameters']:
+    for p in list_of_params:
         dummy_copy.append(p['_end_condition'])
         p['_end_condition'] = None
 
-    data = job_execution(params, jobs)
-
-    # Return original parameters
-    for p, d in zip(params['_list_of_parameters'], dummy_copy):
-        p['_end_condition'] = d
+    data = job_execution(list_of_params, models, jobs)
 
     simlog.debug("Simulation is Over")
     return data
 
 
-def job_execution(params, jobs):
+def job_execution(params, models, jobs):
     """
         This is defined for parallelism purposes
         Uses multiple cores from the processor to execute stochastic simulations
@@ -64,8 +60,10 @@ def job_execution(params, jobs):
         i = packed
 
         added_data = {}
-        for j, (model, sim_par) in enumerate(zip(params['_models'], params['_list_of_parameters'])):
+        for j, (sim_par, model) in enumerate(zip(params, models)):
 
+            # This is only need to avoid git errors
+            reformatted_data = {}
             # Generate SBML here
             if j > 0:
                 sbml_str = __sbml_new_initial_values(reformatted_data, model, sim_par, new_model=True)
@@ -95,9 +93,9 @@ def job_execution(params, jobs):
 
             added_data = __remap_species(added_data, model['mappings'], model['species_not_mapped'])
 
-        return {'data': added_data, 'params': sim_par, 'mappings': model['mappings']}
+        return added_data
 
-    parallel_data = Parallel(n_jobs=jobs)(delayed(__single_run)(i) for i in range(params['repetitions']))
+    parallel_data = Parallel(n_jobs=jobs)(delayed(__single_run)(i) for i in range(params[0]['repetitions']))
 
     if not parallel_data:
         simlog.error("Error: The parallel model has not produced an output." +

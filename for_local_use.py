@@ -3,28 +3,17 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-
     A, B = BaseSpecies(2)
-    A >> 2 * A[1]
-
-    A(1)
-    S1 = Simulation(A)
-    S1.save_data = False
-    # S1.plot_data = False
-    S1.duration = 3
-
-    A.reset_reactions()
     A + B >> Zero[0.01]
 
-    B(50)
+    A(50), B(30)
     S2 = Simulation(A | B)
     S2.method = 'stochastic'
+    # S2.save_data = True
+    # S2.output_dir = './output/'
+    S2.repetitions = 1
     S2.duration = (A <= 0) | (B <= 0)
-
-    Sim = S1 + S2
-    Sim.compile()
-
-
+    S2.run()
 
 
 

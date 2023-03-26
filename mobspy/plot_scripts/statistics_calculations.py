@@ -22,15 +22,15 @@ def time_series_average(species_string, mobspy_ts):
         for s2 in list_series:
             if s1 == s2:
                 continue
-            if len(s1['Time']) != len(s2['Time']):
-                simlog.warning('The time length vectors sizes are different \n')
+            # if len(s1['Time']) != len(s2['Time']):
+            #    simlog.warning('The time length vectors sizes are different \n')
 
             for t1, t2 in zip(s1['Time'], s2['Time']):
                 if t1 != t2:
                     simlog.error('Time vectors are different')
 
     average_series = []
-    for j in range(len(mobspy_ts['Time'])):
+    for j in range(len(mobspy_ts.get_max_time_for_species(species_string))):
         add = 0
         size = 0
         for series in list_series:
@@ -61,7 +61,7 @@ def standard_deviation(species_string, mobspy_ts, average_series = None):
         average_series = time_series_average(species_string, mobspy_ts)
     deviation_series = []
 
-    for j in range(len(mobspy_ts['Time'])):
+    for j in range(len(mobspy_ts.get_max_time_for_species(species_string))):
 
         add = 0
         size = 0

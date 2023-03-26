@@ -38,25 +38,10 @@ def __name_output_file(params):
         Parameters:
             params (dict) = Dictionary with simulation parameters
     """
-    if params['output_dir'][0] == '/':
-        params['output_dir'] = params['output_dir'][1:]
 
-    try:
-        main_directory = os.path.abspath(sys.modules['__main__'].__file__)
-        save_dir = os.path.join(Path(main_directory).parent.absolute(), params['output_dir'])
-
-        if params['output_file'] is None:
-            file_name = "r_"
-            file_name += str(datetime.now()) + '.json'
-        else:
-            file_name = params['output_file']
-
-        params['output_absolute_directory'] = save_dir
-        params['output_absolute_file'] = os.path.join(params['output_absolute_directory'], file_name)
-
-    except:
-        simlog.warning('Automatic data-saving setup failed. Please save manually')
-        params['save_data'] = False
+    file_name = "r_"
+    file_name += str(datetime.now()) + '.json'
+    params["absolute_output_file"] = params["output_dir"] + file_name
 
 
 def __check_stochastic_repetitions_seeds(params):
@@ -72,17 +57,6 @@ def __check_stochastic_repetitions_seeds(params):
                 simlog.error('Seeds must be equal to the number of repetitions')
         except Exception:
             simlog.error('Parameter seeds must be a list')
-
-
-def __check_ode_repetitions(params):
-    """
-        If the method is deterministic MobsPy sets the number of repetitions to one
-
-        Parameters:
-            params (dict) = Dictionary with simulation parameters
-    """
-    if params["simulation_method"].lower() == 'deterministic':
-        params["repetitions"] = 1
 
 
 def __convert_parameters_for_COPASI(params):
@@ -102,7 +76,6 @@ def __convert_parameters_for_COPASI(params):
 def parameter_process(params):
     __name_output_file(params)
     __check_stochastic_repetitions_seeds(params)
-    __check_ode_repetitions(params)
     __convert_parameters_for_COPASI(params)
 
 

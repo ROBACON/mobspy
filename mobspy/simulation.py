@@ -116,6 +116,8 @@ class Simulation:
         self.bool_number_call = 0
         self.number_of_context_comparisons = 0
         self.pre_number_of_context_comparisons = 0
+        self._list_of_models = []
+        self._list_of_parameters = []
 
         # Get all names
         if names is None:
@@ -180,7 +182,7 @@ class Simulation:
         self._parameters_for_sbml, self._mappings_for_sbml, \
         self.model_string, self._events_for_sbml = \
             Compiler.compile(self.model,
-                             reactions_set = self._reactions_set,
+                             reactions_set=self._reactions_set,
                              names=self.names,
                              volume=self.parameters['volume'],
                              type_of_model=self.parameters[
@@ -204,14 +206,14 @@ class Simulation:
         for key in self._species_for_sbml:
             self.all_species_not_mapped[key.replace('_dot_', '.')] = self._species_for_sbml[key]
 
-        self.parameters['_models'] = [{'species_for_sbml': self._species_for_sbml,
-                                       'parameters_for_sbml': self._parameters_for_sbml,
-                                       'reactions_for_sbml': self._reactions_for_sbml,
-                                       'events_for_sbml': self._events_for_sbml,
-                                       'species_not_mapped': self.all_species_not_mapped,
-                                       'mappings': self.mappings}]
+        self._list_of_models += [{'species_for_sbml': self._species_for_sbml,
+                                  'parameters_for_sbml': self._parameters_for_sbml,
+                                  'reactions_for_sbml': self._reactions_for_sbml,
+                                  'events_for_sbml': self._events_for_sbml,
+                                  'species_not_mapped': self.all_species_not_mapped,
+                                  'mappings': self.mappings}]
 
-        self.parameters['_list_of_parameters'] = [self.parameters]
+        self._list_of_parameters = [self.parameters]
 
         if self.model_string != '':
             return self.model_string
@@ -227,34 +229,28 @@ class Simulation:
 
         simlog.debug('Starting Simulator')
 
-        unprocessed_data = sbml_run.simulate(self.parameters)
+        unprocessed_data = sbml_run.simulate(self._list_of_parameters, self._list_of_models)
 
-        pdl = []
+        processed_data = []
         for updl in unprocessed_data:
-            data_dict = {'data': dh.convert_data_to_desired_unit(updl['data'],
-                                                                 self.parameters['unit_x'], self.parameters['unit_y'],
-                                                                 self.output_concentration, self.parameters['volume']),
-                         'params': updl['params'],
-                         'mappings': updl['mappings']}
-            pdl = pdl + [data_dict]
+            processed_data.append(dh.convert_data_to_desired_unit(updl, self.parameters['unit_x'],
+                                                                  self.parameters['unit_y'],
+                                                                  self.output_concentration,
+                                                                  self.parameters['volume']))
 
-        self.results = MobsPyTimeSeries(pdl)
+        data_dict = {'data': processed_data,
+                     'params': self.parameters,
+                     'models': self._list_of_models}
+
+        self.results = MobsPyTimeSeries(data_dict)
 
         if self.parameters['save_data']:
-            simlog.debug("Saving data (reason: parameter <save_data>)")
-            pickled = {'data': self.results,
-                       'mappings': self._mappings_for_sbml,
-                       'params': self.parameters}
-            # Save pickle data
-            # TODO Add error here
-            if not os.path.isdir(self.parameters['output_absolute_directory']):
-                simlog.debug("Creating output directory: %s..." % (self.parameters['output_absolute_directory']))
-                os.makedirs(self.parameters['output_absolute_directory'], exist_ok=True)
-
-            with open(self.parameters['output_absolute_file'], 'w') as jf:
-                json.dump(pickled, jf, indent=4)
-        else:
-            simlog.warning("NOT saving data (reason: parameter <save_data>)")
+            try:
+                with open(self.parameters["absolute_output_file"], 'w') as f:
+                    json.dump(data_dict, f)
+            except Exception as e:
+                simlog.warning("Error saving data")
+                simlog.warning(str(e))
 
         if self.parameters['plot_data']:
             if self.plot_parameters['simulation_method'] == 'stochastic':
@@ -281,25 +277,6 @@ class Simulation:
                 time_series_data (data in MobsPy format) = data to be packed in the simulation object
         """
         self.packed_data.append(time_series_data)
-
-    def add_simulation_data(self, results):
-        """
-            Encapsulation. See pack data
-
-            Parameters:
-                results (dict) = result data MobsPy.results
-        """
-        simlog.error('Broken for now')
-        self.results.add_ts_to_data()
-
-    def add_external_data(self, data):
-        """
-            Encapsulation. See pack data
-
-            Parameters:
-                results (dict) = result data MobsPy.results["data"]
-        """
-        self._pack_data(data)
 
     # Dealing with parameters
     def set_from_json(self, file_name):
@@ -332,7 +309,7 @@ class Simulation:
                       '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data', 'bool_number_call',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
-                      'initial_duration', '_reactions_set']
+                      'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters']
 
         plotted_flag = False
         if name in white_list:
@@ -411,7 +388,7 @@ class Simulation:
         """
         if not species:
             species_strings = set()
-            for model in self.parameters['_models']:
+            for model in self._list_of_models:
                 species_strings = species_strings.union(model['mappings'])
         else:
             species_strings = set()
@@ -486,8 +463,8 @@ class SimulationComposition:
             if sim == base_sim:
                 continue
 
-            base_sim.parameters['_models'] += sim.parameters['_models']
-            base_sim.parameters['_list_of_parameters'] += sim.parameters['_list_of_parameters']
+            base_sim._list_of_models += sim._list_of_models
+            base_sim._list_of_parameters += sim._list_of_parameters
             base_sim.run()
             self.results = base_sim.results
 

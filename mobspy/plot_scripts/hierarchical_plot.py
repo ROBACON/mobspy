@@ -283,6 +283,7 @@ def plot_curves(data, axs, figure_index, plot_params):
 
             for ts in time_series:
                 ts = data[ts]
+
                 try:
                     if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None \
                             and find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)):

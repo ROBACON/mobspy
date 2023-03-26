@@ -30,7 +30,7 @@ def get_default_parameters():
         "unit_x": None,
         "unit_y": None,
         "output_concentration": False,
-        "save_data": True,
+        "save_data": False,
         "plot_data": True,
 
         "_continuous_simulation": False,
