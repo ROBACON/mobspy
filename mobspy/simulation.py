@@ -90,7 +90,7 @@ class Simulation:
             pass
 
     def _event_handler(self, time):
-        # CONVERT DELAY HERE
+        time = uh.convert_time(time)
         if self._context_not_active:
             self._context_not_active = False
             self.__dict__['parameters']['_with_event'] = True

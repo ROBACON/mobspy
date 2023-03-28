@@ -279,4 +279,19 @@ def test_reacting_species_event():
     assert reacting_species_event()
 
 
+def unit_event_test():
+    A = BaseSpecies(1)
+    A >> Zero[1 / u.s]
+
+    A(1 * u.mol)
+    S = Simulation(A)
+    with S.event_condition() as _:
+        if A < 0.5 * u.mol:
+            A(1 * u.mol)
+    S.duration = 3
+    return compare_model(S.compile(), 'test_tools/model_10.txt')
+
+
+def test_unit_event_test():
+    assert unit_event_test()
 

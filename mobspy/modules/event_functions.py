@@ -1,6 +1,7 @@
 import mobspy.modules.meta_class_utils as mcu
 import mobspy.modules.unit_handler as uh
 import mobspy.simulation_logging.log_scripts as simlog
+from pint import Quantity
 
 
 def prepare_event_count_dictionary(meta_species_counts):
@@ -118,6 +119,13 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
     """
 
     reformed_event_list = []
+
+    # Convert count from triggers
+    for ev in event_list:
+        for i, e in enumerate(ev['trigger'].operation):
+            if isinstance(e, Quantity):
+                ev['trigger'].operation[i] = uh.convert_counts(e, volume, dimension)
+
     for ev in event_list:
         if not ev['event_counts']:
             continue
