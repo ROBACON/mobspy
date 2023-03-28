@@ -1,0 +1,29 @@
+
+Species
+A.a1.b1,100
+A.a1.b2,100
+B.b1,100
+B.b2,0
+
+Mappings
+A :
+A.a1.b1
+A.a1.b2
+B :
+B.b1
+B.b2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1.b1')], 'pr': [], 'kin': 'A.a1.b1 * 1'}
+reaction_1,{'re': [(1, 'A.a1.b1')], 'pr': [], 'kin': 'A.a1.b1 * 1'}
+reaction_2,{'re': [(1, 'A.a1.b2')], 'pr': [], 'kin': 'A.a1.b2 * 0.5'}
+reaction_3,{'re': [(1, 'A.a1.b2')], 'pr': [], 'kin': 'A.a1.b2 * 1'}
+reaction_4,{'re': [(1, 'A.a1.b2')], 'pr': [], 'kin': 'A.a1.b2 * 1'}
+reaction_5,{'re': [(1, 'B.b1')], 'pr': [], 'kin': 'B.b1 * 1'}
+reaction_6,{'re': [(1, 'B.b2')], 'pr': [], 'kin': 'B.b2 * 1'}
+
+Events
+event_0,{'trigger': '( ( 1 * (A.a1.b1 + A.a1.b2) <= 10 ) && ( 1 * (B.b1) <= 10 ) ) ', 'delay': '0', 'assignments': [('A.a1.b1', '100')]}

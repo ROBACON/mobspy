@@ -10,7 +10,7 @@ def get_default_parameters():
         "__comment_1": "Model parameters - Repetitions only for stochastic",
 
         "volume": 1,
-        "repetitions": 3,
+        "repetitions": 1,
         "level": 3,
 
         "__comment_2": "basiCO parameters",

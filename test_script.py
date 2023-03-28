@@ -5,6 +5,7 @@
 # import pytest
 from mobspy import *
 import sys
+import matplotlib.pyplot as plt
 
 # TODO Plot has random order for species names
 
@@ -165,7 +166,6 @@ def average_value():
         MySim = Simulation(E)
         MySim.save_data = False
         MySim.run()
-
     except:
         pass
 
@@ -194,3 +194,89 @@ def hybrid_sim():
 
 def test_hybrid_sim():
     assert hybrid_sim()
+
+
+def concatenated_simulation():
+    A, B, C = BaseSpecies(3)
+    A >> Zero[1]
+
+    A(50)
+    S1 = Simulation(A)
+    S1.plot_data = False
+    S1.duration = 5
+
+    B >> Zero[1]
+
+    B(50)
+    S2 = Simulation(B)
+    S2.duration = 5
+
+    C >> Zero[1]
+
+    C(50)
+    S3 = Simulation(C)
+    S3.duration = 5
+
+    S = S1 + S2 + S3
+    S.run()
+    return S.results[A][-1] < 1 and S.results[B][-1] < 1 and S.results[C][-1] < 1
+
+
+def test_concatenated_simulation():
+    assert concatenated_simulation()
+
+
+def event_type_test():
+    A, B, C, D, E, F = BaseSpecies(6)
+
+    A + B >> Zero[1]
+
+    A(50), B(50), C(0)
+    S = Simulation(A | B | C | D | E | F)
+    S.plot_data = False
+
+    with S.event_time(0) as _:
+        F(1)
+
+    with S.event_condition() as _:
+        if (A <= 1) & (B <= 1):
+            C(1)
+        if A <= 1:
+            D(1)
+        if B <= 1:
+            E(1)
+
+    S.duration = 5
+    S.run()
+    return S.results[C][-1] == 1 and S.results[D][-1] == 1 and S.results[E][-1] == 1 and S.results[F][-1] == 1
+
+
+def test_event_type_test():
+    event_type_test()
+
+
+def reacting_species_event():
+    B = BaseSpecies(1)
+    B.b1, B.b2
+    A = New(B)
+
+    B >> Zero[1]
+    A.b2 >> Zero[0.5]
+    A.a1 >> Zero[1]
+
+    A.a1(100), A.b2(100), B.b1(100)
+    S = Simulation(A | B)
+
+    with S.event_condition() as _:
+        if (A.a1 <= 10) & (B.b1 <= 10):
+            A.a1(100)
+
+    S.duration = 5
+    return compare_model(S.compile(), 'test_tools/model_9.txt')
+
+
+def test_reacting_species_event():
+    assert reacting_species_event()
+
+
+

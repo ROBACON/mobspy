@@ -60,10 +60,10 @@ def job_execution(params, models, jobs):
         i = packed
 
         added_data = {}
+        # This is only need to avoid git errors
+        reformatted_data = {}
         for j, (sim_par, model) in enumerate(zip(params, models)):
 
-            # This is only need to avoid git errors
-            reformatted_data = {}
             # Generate SBML here
             if j > 0:
                 sbml_str = __sbml_new_initial_values(reformatted_data, model, sim_par, new_model=True)
@@ -195,6 +195,9 @@ def __add_simulations_data(added_data, reformatted_data):
     new_data = {}
     already_added_keys = set()
 
+    for key in added_data:
+        new_data[key] = added_data[key]
+
     for i, time in enumerate(reformatted_data['Time']):
 
         if time == 0:
@@ -211,7 +214,7 @@ def __add_simulations_data(added_data, reformatted_data):
             already_added_keys.add(key)
         except KeyError:
             dummy = added_data[key][-1]
-            new_data[key] = [dummy for _ in reformatted_data['Time']]
+            new_data[key] += [dummy for _ in reformatted_data['Time']]
 
     for key in reformatted_data:
         if key == 'Time':

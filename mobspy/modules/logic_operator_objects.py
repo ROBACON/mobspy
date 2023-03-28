@@ -68,6 +68,7 @@ class ReactingSpeciesComparator(SpeciesComparator):
     def add_operation_and_number(self, symbol, number):
         operation = []
 
+        self.check_context()
         for i, react_dict in enumerate(self.list_of_reactants):
             if i > 0:
                 dl = ['+']
@@ -79,7 +80,6 @@ class ReactingSpeciesComparator(SpeciesComparator):
         operation = operation + [symbol, number]
         logic_re_object = MetaSpeciesLogicResolver(operation, self._simulation_context)
 
-        self.check_context()
         if self._simulation_context is not None:
             self._simulation_context.number_of_context_comparisons += 1
             self._simulation_context.trigger_list.append(logic_re_object)
@@ -119,7 +119,6 @@ class MetaSpeciesLogicResolver:
         if self.model_context is not None:
             self.model_context.trigger_list.append(self.operation)
         return self
-
 
     @classmethod
     def find_all_species_strings(cls, species, characteristics, species_for_sbml):

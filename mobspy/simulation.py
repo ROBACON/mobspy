@@ -45,8 +45,12 @@ class Simulation:
         for meta_species in self._species_to_set:
             meta_species.reset_simulation_context()
         self._species_to_set = set()
+        self._context_not_active = True
 
     def event_context_add(self, finish=False):
+
+        # CONVERT TRIGGER HERE
+
         if self.bool_number_call == 0:
             event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
                           'trigger': 'true'}
@@ -85,12 +89,28 @@ class Simulation:
         else:
             pass
 
-    @contextmanager
-    def event_delay(self, time=0):
-        self.__dict__['parameters']['_with_event'] = True
-        try:
+    def _event_handler(self, time):
+        # CONVERT DELAY HERE
+        if self._context_not_active:
+            self._context_not_active = False
+            self.__dict__['parameters']['_with_event'] = True
             self._event_time = time
             self.event_context_initiator()
+        else:
+            simlog.error('MobsPy does not support multiple context calls')
+
+    @contextmanager
+    def event_condition(self, delay=0):
+        try:
+            self._event_handler(delay)
+            yield 0
+        finally:
+            self.event_context_add(finish=True)
+
+    @contextmanager
+    def event_time(self, time):
+        try:
+            self._event_handler(time)
             yield 0
         finally:
             self.event_context_add(finish=True)
@@ -118,6 +138,7 @@ class Simulation:
         self.pre_number_of_context_comparisons = 0
         self._list_of_models = []
         self._list_of_parameters = []
+        self._context_not_active = True
 
         # Get all names
         if names is None:
@@ -137,6 +158,9 @@ class Simulation:
         for spe_object in self.model:
             for reference in spe_object.get_references():
                 self._reactions_set = self._reactions_set.union(reference.get_reactions())
+
+        # Get all current species counts
+        # HERE FABRICIO
 
         if not isinstance(model, Species) and not isinstance(model, ParallelSpecies):
             simlog.error('Model must be formed by Species objects')
@@ -173,7 +197,6 @@ class Simulation:
             self.parameters['simulation_method'] = self.parameters['method']
 
         if self.parameters['simulation_method'].lower() == 'deterministic':
-            self.parameters['repetitions'] = 1
             self.plot_parameters['simulation_method'] = 'deterministic'
         elif self.parameters['simulation_method'].lower() == 'stochastic':
             self.plot_parameters['simulation_method'] = 'stochastic'
@@ -253,9 +276,12 @@ class Simulation:
                 simlog.warning(str(e))
 
         if self.parameters['plot_data']:
-            if self.plot_parameters['simulation_method'] == 'stochastic':
+            methods_list = [x['simulation_method'] for x in self._list_of_parameters]
+
+            if ('stochastic' in methods_list or 'directedMethod' in methods_list) \
+                    and self.parameters['repetitions'] > 1:
                 self.plot_stochastic()
-            elif self.plot_parameters['simulation_method'] == 'deterministic':
+            else:
                 self.plot_deterministic()
 
     def save_results(self, file):
@@ -309,7 +335,8 @@ class Simulation:
                       '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data', 'bool_number_call',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
-                      'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters']
+                      'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
+                      '_context_not_active']
 
         plotted_flag = False
         if name in white_list:
@@ -465,8 +492,8 @@ class SimulationComposition:
 
             base_sim._list_of_models += sim._list_of_models
             base_sim._list_of_parameters += sim._list_of_parameters
-            base_sim.run()
-            self.results = base_sim.results
+        base_sim.run()
+        self.results = base_sim.results
 
 
 if __name__ == '__main__':

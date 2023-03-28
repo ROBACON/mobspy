@@ -274,7 +274,7 @@ class Compiler:
                 list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
                 list_to_sort = sorted(list_to_sort)
                 for i in range(len(list_to_sort)):
-                    model_str += 'event_' + str(i) + ',' + list_to_sort[i]
+                    model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, events_for_sbml
 
@@ -987,6 +987,9 @@ class Species(SpeciesComparator):
 
     def set_references(self, reference_set):
         self._references = reference_set
+
+    def reset_references(self):
+        self._references = {self}
 
     def get_reactions(self):
         return self._reactions
