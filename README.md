@@ -103,6 +103,10 @@ For now MobsPy is not thread-safe and it's not compatible with numpy and deepcop
 
 Version 1.1 added automated testing to git pushes with test_script.py
 
+Version 2.0.1 added events, ability to concatenate simulations, and changed the structure of output data to be more 
+user-friendly. Now MySim.results["data"]["runs"]["MetaSpeciesName"] has been deprecated. It has been replaced by 
+MySim.results["MetaSpeciesName"] or MySim.results[MetaSpeciesObject]. It will return only one run if there are no 
+repetitions and multiple runs with several repetitions.
 
 
 	
