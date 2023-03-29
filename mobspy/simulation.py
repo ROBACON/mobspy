@@ -452,6 +452,9 @@ class Simulation:
         plot_essentials = self.extract_plot_essentials(*species)
         dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
+    def plot(self, *species):
+        self.plot_deterministic(*species)
+
     def plot_raw(self, parameters_or_file):
         """
             Calls raw plot. See default_plots module in the plot_scripts directory
@@ -476,9 +479,18 @@ class SimulationComposition:
         else:
             simlog.error('Simulation compositions can only be performed with other simulations')
         self.results = None
+        self.base_sim = self.list_of_simulations[0]
 
     def __add__(self, other):
         return SimulationComposition(self, other)
+
+    # FIX THIS
+    def __setattr__(self, name, value):
+        white_list = ['list_of_simulations', 'results', 'base_sim']
+        if name in white_list:
+            self.__dict__[name] = value
+        else:
+            self.base_sim.__setattr__(name, value)
 
     def compile(self, verbose=True):
         str = ''
@@ -492,15 +504,23 @@ class SimulationComposition:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
 
-        base_sim = self.list_of_simulations[0]
         for sim in self.list_of_simulations:
-            if sim == base_sim:
+            if sim == self.base_sim:
                 continue
 
-            base_sim._list_of_models += sim._list_of_models
-            base_sim._list_of_parameters += sim._list_of_parameters
-        base_sim.run()
-        self.results = base_sim.results
+            self.base_sim._list_of_models += sim._list_of_models
+            self.base_sim._list_of_parameters += sim._list_of_parameters
+        self.base_sim.run()
+        self.results = self.base_sim.results
+
+    def plot_deterministic(self, *species):
+        self.base_sim.plot_deterministic(*species)
+
+    def plot_stochastic(self, *species):
+        self.base_sim.plot_stochastic(*species)
+
+    def plot(self, *species):
+        self.base_sim.plot(*species)
 
 
 if __name__ == '__main__':

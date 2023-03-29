@@ -170,16 +170,20 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
+        sbml_key = key.replace('.', '_dot_')
+        if sbml_key not in species_for_sbml.keys():
+            continue
+
         if key == 'Time':
             continue
         try:
             # Case of species set
-            if key in model['assigned_species'] and new_model:
+            if sbml_key in model['assigned_species'] and new_model:
                 continue
             if sim_para["simulation_method"].lower() in check_list:
-                species_for_sbml[key] = int(list(data[key])[-1])
+                species_for_sbml[sbml_key] = int(list(data[key])[-1])
             else:
-                species_for_sbml[key] = list(data[key])[-1]
+                species_for_sbml[sbml_key] = list(data[key])[-1]
         except KeyError:
             pass
 
@@ -264,8 +268,6 @@ def __remap_species(data, mapping, species_not_mapped):
     # copy over all unmapped ones
     for k in data.keys():
         mapped_data[k] = data[k]
-
-    print(species_not_mapped)
 
     dot_species_not_mapped = {}
     for key in species_not_mapped:

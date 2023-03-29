@@ -33,13 +33,13 @@ class MobsPyTimeSeries:
                     to_return.append(ts[item])
             except KeyError:
                 for i in range(len(self)):
-                    to_return.append(self._sum_reacting_species_data(item, self.time_series_number))
+                    to_return.append(self._sum_reacting_species_data(item, i))
         elif isinstance(item, Species):
             for ts in self:
                 to_return.append(ts[item.get_name()])
         elif isinstance(item, Reacting_Species):
             for i in range(len(self)):
-                to_return.append(self._sum_reacting_species_data(item, self.time_series_number))
+                to_return.append(self._sum_reacting_species_data(item, i))
 
         if len(to_return) == 1:
             return to_return[0]
@@ -61,7 +61,9 @@ class MobsPyTimeSeries:
         if isinstance(item, Reacting_Species):
             for reactant in item.list_of_reactants:
                 for key in time_series:
-                    if reactant['characteristics'].union(reactant['object'].get_name()).issubset(set(key.split('.'))):
+                    reactant_name = reactant['object'].get_name()
+                    reactant_full_name = reactant['characteristics'].union([reactant_name])
+                    if reactant_full_name.issubset(set(key.split('.'))):
                         to_return = _sum_element_by_element(to_return, time_series[key])
                         found_flag = True
         elif type(item) == str:

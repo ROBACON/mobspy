@@ -337,7 +337,7 @@ def test_count_assignment():
 
 def reaction_deactivation():
     A, R = BaseSpecies(2)
-    A + R >> 2 * A + R[1]
+    A + R.r1 >> 2 * A + R.r1[1]
 
     A(1), R(1)
     S1 = Simulation(A | R)
@@ -354,3 +354,54 @@ def reaction_deactivation():
 
 def test_reaction_deactivation():
     assert reaction_deactivation()
+
+
+def complex_cell_model():
+    Resource, Phage, Infectable = BaseSpecies(3)
+    Cell = New(Infectable)
+    Cell.t1, Cell.t2, Cell.t3
+
+    def reproduction_rate(r):
+        if r.t1:
+            return 2
+        elif r.t2:
+            return 1
+        elif r.t3:
+            return 0.5
+
+    Infectable.not_infected + Phage >> Infectable.infected[1]
+    Cell + Resource >> 2 * Cell[lambda r1: reproduction_rate(r1)]
+    Zero >> Resource[1]
+    Resource >> Zero[1]
+    Cell >> Zero[0.1]
+
+    Cell.t1(1), Cell.t2(1), Cell.t3(1)
+    S1 = Simulation(Cell | Resource | Phage)
+    S1.duration = 30
+
+    Cell.reset_reactions()
+    Phage(1000)
+    S2 = Simulation(Cell | Phage)
+    S2.duration = 10
+    S = S1 + S2
+    S.plot_data = False
+    S.run()
+
+    for i, c in enumerate(S.results['Cell.t1.not_infected']):
+        if c > 0:
+            continue
+        else:
+            change_index = i
+            break
+
+    boll_1 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.results[Cell.t1.infected][-1], 2)
+    boll_2 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.results[Cell.t1.infected][-1], 2)
+    boll_3 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.results[Cell.t1.infected][-1], 2)
+    return boll_1 and boll_2 and boll_3
+
+
+def test_complex_cell_model():
+    assert complex_cell_model()
