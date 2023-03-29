@@ -115,12 +115,13 @@ class Compiler:
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
         names_used = set()
-        for species in species_to_simulate:
+        for i, species in enumerate(species_to_simulate):
             if '$' in species.get_name():
                 simlog.error('An error has occurred and one of the species was not named')
             if species.get_name() in names_used:
                 simlog.error(f'Names must be unique for all species\n' +
-                             f'The name is {species.get_name()}')
+                             f'The repeated name is {species.get_name()} in position {i}\n' +
+                             f'Another possibility could be a repeated meta-species in the model')
             names_used.add(species.get_name())
 
         # Construct structures necessary for reactions
