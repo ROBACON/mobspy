@@ -139,6 +139,7 @@ class Simulation:
         self._list_of_models = []
         self._list_of_parameters = []
         self._context_not_active = True
+        self._assigned_species_list = []
 
         # Get all names
         if names is None:
@@ -159,8 +160,12 @@ class Simulation:
             for reference in spe_object.get_references():
                 self._reactions_set = self._reactions_set.union(reference.get_reactions())
 
-        # Get all current species counts
-        # HERE FABRICIO
+        self._species_counts = []
+        for spe_object in self.model:
+            for count in spe_object.get_quantities():
+                self._species_counts.append({'object': spe_object, 'characteristics': count['characteristics'],
+                                             'quantity': count['quantity']})
+            spe_object.reset_counts()
 
         if not isinstance(model, Species) and not isinstance(model, ParallelSpecies):
             simlog.error('Model must be formed by Species objects')
@@ -203,9 +208,10 @@ class Simulation:
 
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
-        self.model_string, self._events_for_sbml = \
+        self.model_string, self._events_for_sbml, self._assigned_species_list = \
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
+                             species_counts=self._species_counts,
                              names=self.names,
                              volume=self.parameters['volume'],
                              type_of_model=self.parameters[
@@ -234,7 +240,8 @@ class Simulation:
                                   'reactions_for_sbml': self._reactions_for_sbml,
                                   'events_for_sbml': self._events_for_sbml,
                                   'species_not_mapped': self.all_species_not_mapped,
-                                  'mappings': self.mappings}]
+                                  'mappings': self.mappings,
+                                  'assigned_species': self._assigned_species_list}]
 
         self._list_of_parameters = [self.parameters]
 
@@ -336,7 +343,7 @@ class Simulation:
                       'current_condition', 'current_event_trigger_data', 'bool_number_call',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
-                      '_context_not_active']
+                      '_context_not_active', '_species_counts', '_assigned_species_list']
 
         plotted_flag = False
         if name in white_list:

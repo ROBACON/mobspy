@@ -50,51 +50,6 @@ def correct_species_count(simulation_dictionary, event_dictionary, results_dicti
     pass
 
 
-def join_event_data(total_packed_data, data):
-    def sum_list_with_element(e, list):
-        to_return_list = []
-        for l in list:
-            to_return_list.append(e + l)
-        return to_return_list
-
-    species_already_added = []
-    for key in data:
-        if key == 'Time':
-            continue
-        else:
-            species_already_added.append(key)
-            if key in total_packed_data:
-                for i in len(total_packed_data[key]['runs']):
-                    total_packed_data[key]['runs'][i] = total_packed_data[key]['runs'][i] + data[key]['runs'][i]
-            else:
-                total_packed_data[key] = {'runs': []}
-                for run in data[key]['runs']:
-
-                    if 'Time' in total_packed_data.keys():
-                        dummy_list = [0 for _ in range(len(total_packed_data['Time']))] + run
-                    else:
-                        dummy_list = run
-
-                    total_packed_data[key]['runs'].append(dummy_list)
-
-    for key in total_packed_data:
-        if key == 'Time':
-            continue
-        else:
-            if key not in species_already_added:
-                for i, run in enumerate(total_packed_data[key]['runs']):
-                    dummy_list = [total_packed_data[key]['runs'][-1] for _ in range(len(data['Time']))]
-                    total_packed_data[key]['runs'][i] = total_packed_data[key]['runs'][i] + dummy_list
-
-    if 'Time' in total_packed_data:
-        total_packed_data['Time'] = total_packed_data['Time'] \
-                                    + sum_list_with_element(total_packed_data['Time'][-1], data['time'])
-    else:
-        total_packed_data['Time'] = data['Time']
-
-    return total_packed_data
-
-
 def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristics_to_object,
                                      volume, dimension):
     """

@@ -75,7 +75,7 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate, reactions_set,
+    def compile(cls, species_to_simulate, reactions_set, species_counts,
                 volume=1, names=None, type_of_model='deterministic', verbose=True,
                 default_order=Default, event_dictionary=None,
                 continuous_sim=False, ending_condition=None):
@@ -140,13 +140,6 @@ class Compiler:
             cls.species_string_dict[spe_object] = mcu.create_species_strings(spe_object,
                                                                              list_of_definitions)
 
-        # Set of reactions involved
-        # HERE TO FIX MULTI MODEL
-        #cls.reactions_set = set()
-        #for spe_object in species_to_simulate:
-        #    for reference in spe_object.get_references():
-        #        cls.reactions_set = cls.reactions_set.union(reference.get_reactions())
-
         # Dimension check. Here we check based on the units the area dimension
         dimension = None
 
@@ -155,11 +148,10 @@ class Compiler:
                 if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension):
                     dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension)
 
-        for spe_object in species_to_simulate:
-            for count in spe_object.get_quantities():
-                if isinstance(count['quantity'], Quantity):
-                    if uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension):
-                        dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
+        for count in species_counts:
+            if isinstance(count['quantity'], Quantity):
+                if uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension):
+                    dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
 
         volume = uh.convert_volume(volume, dimension)
 
@@ -184,27 +176,27 @@ class Compiler:
                 mappings_for_sbml[spe_object.get_name()].append(species_string.replace('_dot_', '.'))
 
         # Set initial counts for SBML
-        for spe_object in species_to_simulate:
-            for count in spe_object.get_quantities():
+        # Create the list HERE
+        assigned_species = []
+        for count in species_counts:
 
-                if count['quantity'] == 0:
-                    continue
+            count_set = \
+                mcu.complete_characteristics_with_first_values(count['object'],
+                                                               count['characteristics'],
+                                                               cls.ref_characteristics_to_object)
 
-                count_set = \
-                    mcu.complete_characteristics_with_first_values(spe_object,
-                                                                   count['characteristics'],
-                                                                   cls.ref_characteristics_to_object)
-
-                for species_string in species_for_sbml.keys():
-                    species_set = mcu.extract_characteristics_from_string(species_string)
-                    if species_set == count_set:
-                        temp_count = uh.convert_counts(count['quantity'], volume, dimension)
-                        if type(temp_count) == float and not type_of_model == 'deterministic':
-                            simlog.warning('The stochastic simulation rounds floats to integers')
-                            species_for_sbml[species_string] = int(temp_count)
-                        else:
-                            species_for_sbml[species_string] = temp_count
-                        break
+            for species_string in species_for_sbml.keys():
+                species_set = mcu.extract_characteristics_from_string(species_string)
+                if species_set == count_set:
+                    temp_count = uh.convert_counts(count['quantity'], volume, dimension)
+                    if type(temp_count) == float and not type_of_model == 'deterministic':
+                        simlog.warning('The stochastic simulation rounds floats to integers')
+                        species_for_sbml[species_string] = int(temp_count)
+                        assigned_species.append(species_string)
+                    else:
+                        species_for_sbml[species_string] = temp_count
+                        assigned_species.append(species_string)
+                    break
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
@@ -276,7 +268,8 @@ class Compiler:
                 for i in range(len(list_to_sort)):
                     model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
-        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, events_for_sbml
+        return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
+               events_for_sbml, assigned_species
 
 
 class Reactions:
@@ -1002,6 +995,9 @@ class Species(SpeciesComparator):
 
     def add_reaction(self, reaction):
         self._reactions.add(reaction)
+
+    def reset_counts(self):
+        self._species_counts = []
 
     def set_simulation_context(self, sim):
         if self._simulation_context is None:

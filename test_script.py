@@ -7,12 +7,12 @@ from mobspy import *
 import sys
 import matplotlib.pyplot as plt
 
+
 # TODO Plot has random order for species names
 
 
 # Compare results with expected file
 def compare_model(comp_results, file_name):
-
     with open(file_name, 'r') as file:
         for r, line in zip(comp_results.split('\n'), file.readlines()):
             line = line.replace('\n', '')
@@ -95,7 +95,6 @@ def test_model_6():
 
 
 def test_model_7():
-
     def oscillator(beta_m=5, beta_p=10, gamma_m=1, gamma_p=0.01, k=1, n=4, leaky=0.0001):
         Mortal, Creator = BaseSpecies(2)
 
@@ -117,6 +116,7 @@ def test_model_7():
 
         MySim = Simulation(mRNA | Protein)
         return MySim.compile()
+
     assert compare_model(oscillator(), 'test_tools/model_7.txt')
 
 
@@ -295,3 +295,62 @@ def unit_event_test():
 def test_unit_event_test():
     assert unit_event_test()
 
+
+def reaction_deactivation():
+    A, R = BaseSpecies(2)
+    A + R >> 2 * A + R[1]
+
+    A(1), R(1)
+    S1 = Simulation(A | R)
+    S1.duration = 1
+    S1.plot_data = False
+
+    R(0)
+    S2 = Simulation(A | R)
+    S2.duration = 1
+
+    Sim = S1 + S2
+    Sim.run()
+    assert Sim.results[A][0] < Sim.results[A][-1] and Sim.results[R][0] == 1 and Sim.results[R][-1] == 0
+
+
+def count_assignment():
+    A = BaseSpecies(1)
+    B = New(A)
+    A.a1, A.a2
+
+    B.b1 >> Zero[1]
+
+    A.a1(100), A.a2(100)
+    B.b1(100), B.b2(100)
+    S = Simulation(A | B)
+    S.plot_data = False
+    S.duration = 5
+    S.run()
+    return compare_model(S.compile(), 'test_tools/model_11.txt') \
+           and 150 > S.results[B][-1] > 100 and S.results[A][-1] == 200
+
+
+def test_count_assignment():
+    assert count_assignment()
+
+
+def reaction_deactivation():
+    A, R = BaseSpecies(2)
+    A + R >> 2 * A + R[1]
+
+    A(1), R(1)
+    S1 = Simulation(A | R)
+    S1.plot_data = False
+    S1.duration = 2
+
+    R(0)
+    S2 = Simulation(A | R)
+    S2.duration = 2
+    Sim = S1 + S2
+    Sim.run()
+    return Sim.results[R][-1] == 0 and Sim.results[R][0] == 1 and Sim.results[A][-2] == Sim.results[A][-1]
+
+
+def test_reaction_deactivation():
+    assert reaction_deactivation()

@@ -2,6 +2,7 @@ import basico
 from joblib import Parallel, delayed
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.sbml_simulator.builder as sbml_builder
+from copy import deepcopy
 
 
 def simulate(list_of_params, models):
@@ -85,13 +86,13 @@ def job_execution(params, models, jobs):
                         reformatted_data = __filter_condition_event_time_data(reformatted_data)
                         end_condition_not_satisfied = False
                     else:
-                        sbml_str = __sbml_new_initial_values(data, model, sim_par)
+                        sbml_str = __sbml_new_initial_values(reformatted_data, model, sim_par)
                         sim_par['duration'] = 2 * sim_par['duration']
                 else:
                     end_condition_not_satisfied = False
-                added_data = __add_simulations_data(added_data, reformatted_data)
 
-            added_data = __remap_species(added_data, model['mappings'], model['species_not_mapped'])
+                reformatted_data = __remap_species(reformatted_data, model['mappings'], model['species_for_sbml'])
+                added_data = __add_simulations_data(added_data, reformatted_data)
 
         return added_data
 
@@ -169,7 +170,12 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
+        if key == 'Time':
+            continue
         try:
+            # Case of species set
+            if key in model['assigned_species'] and new_model:
+                continue
             if sim_para["simulation_method"].lower() in check_list:
                 species_for_sbml[key] = int(list(data[key])[-1])
             else:
@@ -259,6 +265,12 @@ def __remap_species(data, mapping, species_not_mapped):
     for k in data.keys():
         mapped_data[k] = data[k]
 
+    print(species_not_mapped)
+
+    dot_species_not_mapped = {}
+    for key in species_not_mapped:
+        dot_species_not_mapped[key.replace('_dot_', '.')] = species_not_mapped[key]
+
     # 1st pass with sum mappings
     for group in mapping.keys():
 
@@ -277,11 +289,11 @@ def __remap_species(data, mapping, species_not_mapped):
                         try:
                             mapping_sum = mapping_sum + data[spe][t]
                         except KeyError:
-                            mapping_sum = mapping_sum + species_not_mapped[spe]
+                            mapping_sum = mapping_sum + dot_species_not_mapped[spe]
                             try:
-                                runs_not_returned_by_basico[spe] += [species_not_mapped[spe]]
+                                runs_not_returned_by_basico[spe] += [dot_species_not_mapped[spe]]
                             except KeyError:
-                                runs_not_returned_by_basico[spe] = [species_not_mapped[spe]]
+                                runs_not_returned_by_basico[spe] = [dot_species_not_mapped[spe]]
                     this_run.append(mapping_sum)
                 for spe in runs_not_returned_by_basico:
                     try:
