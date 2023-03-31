@@ -7,6 +7,7 @@ import itertools
 import mobspy.modules.meta_class as mc
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.species_string_generator as ssg
+from inspect import signature
 
 
 def iterator_for_combinations(list_of_lists):
@@ -258,6 +259,20 @@ def get_involved_species(reaction, species_string_dict):
     return base_species_order, reactant_species_combination_list
 
 
+def construct_rate_function_arguments(rate_function):
+    rate_function_arguments = str(signature(rate_function))
+
+    black_list = ['*', '=']
+    if any(i in rate_function_arguments for i in black_list):
+        simlog.error('Rate arguments must not contain = or *')
+
+    rate_function_arguments = str(rate_function_arguments).replace('(', '')
+    rate_function_arguments = str(rate_function_arguments).replace(')', '')
+    rate_function_arguments = str(rate_function_arguments).replace(' ', '')
+    rate_function_arguments = rate_function_arguments.split(',')
+    return rate_function_arguments
+
+
 def create_all_reactions(reactions, species_string_dict,
                          ref_characteristics_to_object,
                          type_of_model, dimension):
@@ -306,10 +321,14 @@ def create_all_reactions(reactions, species_string_dict,
                                             if len(reactant) > 1 else reactant[0].get_name()
                                             for reactant in reactant_string_list]
 
+                    reaction_rate_arguments = None
+                    if callable(reaction.rate):
+                        reaction_rate_arguments = construct_rate_function_arguments(reaction.rate)
+
                     rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
                                                            reactant_string_list
                                                            , reaction.rate, type_of_model,
-                                                           dimension)
+                                                           dimension, reaction_rate_arguments)
                     if rate_string == 0:
                         continue
 

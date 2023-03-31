@@ -470,6 +470,13 @@ class Simulation:
     def __add__(self, other):
         return SimulationComposition(self, other)
 
+    def generate_sbml(self):
+        to_return = []
+        for sbml_data in self._list_of_models:
+            to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
+                                                sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
+        return to_return
+
 
 class SimulationComposition:
 
@@ -527,6 +534,7 @@ class SimulationComposition:
 
     def plot(self, *species):
         self.base_sim.plot(*species)
+
 
 
 if __name__ == '__main__':

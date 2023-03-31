@@ -134,13 +134,14 @@ class Specific_Species_Operator(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model, dimension):
+                          , reaction_rate_function, type_of_model, dimension, function_rate_arguments=None):
     """
         This function is responsible for returning the reaction rate string for the model construction. To do this it
         does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
         It passes the rate as a string expression in MobsPy standard units
 
         Parameters:
+            function_rate_arguments: list of strings of the function rate argument ex:['r1', 'r2', ....]
             combination_of_reactant_species (list of Species) = Meta-species currently being used in this reaction
             reactant_string_list (list of strings) = list of species strings in order they apear in the reaction
             reaction_rate_function (float, callable, Quantity) = rate stored in the reaction object
@@ -159,9 +160,12 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
 
-    elif callable(reaction_rate_function):
+    elif function_rate_arguments is not None:
+
         arguments = prepare_arguments_for_callable(combination_of_reactant_species,
-                                                   reactant_string_list, reaction_rate_function.__code__.co_varnames)
+                                                   reactant_string_list, function_rate_arguments)
+
+
         rate = reaction_rate_function(**arguments)
         rate = uh.convert_rate(rate, len(reactant_string_list), dimension)
         if rate == 0:
@@ -277,6 +281,7 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
             reactant_string_list : species strings involved in the reaction
             rate_function_arguments : arguments received by the rate function
     """
+
     argument_dict = {}
     i = 0
     for i, (species, reactant_string) in enumerate(zip(combination_of_reactant_species, reactant_string_list)):
@@ -288,8 +293,8 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
             continue
 
     while len(argument_dict) < len(rate_function_arguments):
-        argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
         i += 1
+        argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
 
     return argument_dict
 

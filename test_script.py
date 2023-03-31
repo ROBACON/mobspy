@@ -421,3 +421,56 @@ def zero_rate_reactions():
 def test_zero_rate_reaction():
     zero_rate_reactions()
 
+
+def double_rate():
+    A, B = BaseSpecies(2)
+    A.a1, A.a2, B.b1, B.b2
+
+    def rate(r1, ball):
+        factor1 = 0.5 if r1.a1 else 1
+        factor2 = 0.5 if ball.b1 else 1
+        return factor1 * factor2
+
+    A + B >> Zero[rate]
+    S = Simulation(A | B)
+    return compare_model(S.compile(), 'test_tools/model_13.txt')
+
+
+def test_double_rate():
+    assert double_rate()
+
+
+def single_rate():
+    A, B = BaseSpecies(2)
+    A.a1, A.a2, B.b1, B.b2
+
+    def rate(r1):
+        factor1 = 0.5 if r1.a1 else 1
+        return factor1
+
+    A + B >> Zero[rate]
+    S = Simulation(A | B)
+    return compare_model(S.compile(), 'test_tools/model_14.txt')
+
+
+def test_single_rate():
+    assert single_rate()
+
+
+def triple_rate():
+    A, B = BaseSpecies(2)
+    A.a1, A.a2, B.b1, B.b2
+
+    def rate(r1, r2, r3):
+        factor1 = 0.5 if r1.a1 else 1
+        factor2 = 0.5 if r2.b1 else 1
+        factor3 = 0.5 if r3.c1 else 1
+        return factor1*factor2*factor3
+
+    A + B >> Zero[rate]
+    S = Simulation(A | B)
+    return compare_model(S.compile(), 'test_tools/model_13.txt')
+
+
+def test_triple_rate():
+    assert triple_rate()
