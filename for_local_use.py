@@ -9,9 +9,8 @@ if __name__ == '__main__':
     A(50), B(30)
     S2 = Simulation(A | B)
     S2.method = 'stochastic'
-    # S2.save_data = True
-    # S2.output_dir = './output/'
-    S2.repetitions = 1
+    S2.repetitions = 3
+    S2.plot_data = False
     S2.duration = (A <= 0) | (B <= 0)
     S2.run()
 

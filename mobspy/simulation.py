@@ -275,12 +275,7 @@ class Simulation:
         self.results = MobsPyTimeSeries(data_dict)
 
         if self.parameters['save_data']:
-            try:
-                with open(self.parameters["absolute_output_file"], 'w') as f:
-                    json.dump(data_dict, f)
-            except Exception as e:
-                simlog.warning("Error saving data")
-                simlog.warning(str(e))
+            self.save_data()
 
         if self.parameters['plot_data']:
             methods_list = [x['simulation_method'] for x in self._list_of_parameters]
@@ -291,16 +286,27 @@ class Simulation:
             else:
                 self.plot_deterministic()
 
-    def save_results(self, file):
+    def save_data(self, file=None):
+        self._save_data(data_dict=self.results, file=file)
+
+    def _save_data(self, data_dict, file=None):
         """
             Save results manually into file. Useful for jupyter notebook users
 
             Parameters
                 file (str) = name of the file to create and save JSON data
         """
-        simlog.warning('Only THIS model data will be saved not externally added data')
-        with open(file, 'w') as jf:
-            json.dump(self.results, jf, indent=4)
+        if file is None:
+            try:
+                with open(self.parameters["absolute_output_file"], 'w') as f:
+                    json.dump(self.results.to_dict(), f, indent=4)
+            except Exception as e:
+                simlog.warning("Error saving data. Potential solve: file name parameter")
+                simlog.warning(str(e))
+        else:
+            file += '.json'
+            with open(file, 'w') as jf:
+                json.dump(self.results.to_dict(), jf, indent=4)
 
     def _pack_data(self, time_series_data):
         """

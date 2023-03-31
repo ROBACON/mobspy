@@ -9,6 +9,11 @@ class MobsPyTimeSeries:
         self.ts_parameters = data_dict['params']
         self.ts_models = data_dict['models']
 
+    def to_dict(self):
+        return {'data': self.ts_data,
+                'params': self.ts_parameters,
+                'models': self.ts_models}
+
     def __len__(self):
         return len(self.ts_data)
 
@@ -92,5 +97,3 @@ class MobsPyTimeSeries:
                     max_length = len(ts)
                     max_ts = ts
         return max_ts['Time']
-
-
