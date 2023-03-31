@@ -405,3 +405,19 @@ def complex_cell_model():
 
 def test_complex_cell_model():
     assert complex_cell_model()
+
+
+def zero_rate_reactions():
+    A, B = BaseSpecies(2)
+
+    A.a1, A.a2, B.b1, B.b2
+    Combination = A * B
+
+    Combination >> Zero[lambda r1: 0 if r1.b2 else 1]
+    S = Simulation(Combination)
+    return compare_model(S.compile(), 'test_tools/model_12.txt')
+
+
+def test_zero_rate_reaction():
+    zero_rate_reactions()
+

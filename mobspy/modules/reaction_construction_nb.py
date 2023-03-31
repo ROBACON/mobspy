@@ -310,6 +310,8 @@ def create_all_reactions(reactions, species_string_dict,
                                                            reactant_string_list
                                                            , reaction.rate, type_of_model,
                                                            dimension)
+                    if rate_string == 0:
+                        continue
 
                     reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
                         construct_single_reaction_for_sbml(reactant_string_list,

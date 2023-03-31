@@ -1,0 +1,20 @@
+
+Species
+Combination.a1.b1,0
+Combination.a1.b2,0
+Combination.a2.b1,0
+Combination.a2.b2,0
+
+Mappings
+Combination :
+Combination.a1.b1
+Combination.a1.b2
+Combination.a2.b1
+Combination.a2.b2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Combination.a1.b1')], 'pr': [], 'kin': 'Combination.a1.b1 * 1'}
+reaction_1,{'re': [(1, 'Combination.a2.b1')], 'pr': [], 'kin': 'Combination.a2.b1 * 1'}

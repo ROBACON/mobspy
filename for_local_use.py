@@ -4,15 +4,10 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     A, B = BaseSpecies(2)
-    A + B >> Zero[0.01]
 
-    A(50), B(30)
-    S2 = Simulation(A | B)
-    S2.method = 'stochastic'
-    S2.repetitions = 3
-    S2.plot_data = False
-    S2.duration = (A <= 0) | (B <= 0)
-    S2.run()
+    A.a1, A.a2, B.b1, B.b2
+    Combination = A*B
 
-
-
+    Combination >> Zero [lambda r1: 0 if r1.b2 else 1]
+    S = Simulation(Combination)
+    print(S.compile())
