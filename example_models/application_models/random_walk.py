@@ -43,6 +43,8 @@ MySim.output_event = True
 MySim.plot_data = False
 MySim.save_data = False
 
+MySim.run()
+
 
 def grab_position(species_position, list_x, list_y):
     _, x, y = Mesh(species_position).split('_')
