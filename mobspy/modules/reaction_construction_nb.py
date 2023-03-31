@@ -6,6 +6,7 @@ import mobspy.modules.function_rate_code as fr
 import itertools
 import mobspy.modules.meta_class as mc
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.modules.species_string_generator as ssg
 
 
 def iterator_for_combinations(list_of_lists):
@@ -104,7 +105,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 
 
-def construct_reactant_structures(reactant_species, species_string_dict):
+def construct_reactant_structures(reactant_species, ref_characteristics_to_object):
     """
         This function finds the corresponding strings according to the reactant meta-species with or without a query
         pack then in a list and return
@@ -116,8 +117,9 @@ def construct_reactant_structures(reactant_species, species_string_dict):
     species_string_combinations = []
 
     for reactant in reactant_species:
-        species_string_combinations.append(extract_species_strings(reactant['object'],
-                                                                   reactant['characteristics'], species_string_dict))
+        species_string_combinations.append(ssg.construct_all_combinations(reactant['object'],
+                                                                          reactant['characteristics'],
+                                                                          ref_characteristics_to_object))
 
     return species_string_combinations
 
@@ -214,32 +216,6 @@ def count_string_dictionary(list_of_strings):
     return to_return
 
 
-def extract_species_strings(species, characteristics, species_string_dict):
-    """
-        Extract the species strings from the species_string_dict based on the meta-species and characteristics given
-
-        Parameters:
-            species (meta-species object) = Instance of the meta-species to obtain the species strings for
-            characteristics (str) = Characteristics to filter through
-            species_string_dict (dict) = Dictionary where the meta-species are the keys and the values all their
-            species
-
-        Returns:
-            species_strings_list (list of str) = species strings filtered from the meta-species
-    """
-    species_strings_list = []
-    species_strings_to_filter = set()
-
-    species_strings_to_filter = species_strings_to_filter.union(species_string_dict[species])
-
-    for species_string in species_strings_to_filter:
-        species_string_split = species_string.split('_dot_')[1:]
-        if all([char in species_string_split for char in characteristics]):
-            species_strings_list.append(species_string)
-
-    return species_strings_list
-
-
 def get_involved_species(reaction, species_string_dict):
     """
         This extracts all the involved meta-species inside a reaction
@@ -314,7 +290,7 @@ def create_all_reactions(reactions, species_string_dict,
         for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
 
             reactant_species_string_combination_list = \
-                construct_reactant_structures(combination_of_reactant_species, species_string_dict)
+                construct_reactant_structures(combination_of_reactant_species, ref_characteristics_to_object)
 
             for reactant_string_list in iterator_for_combinations(reactant_species_string_combination_list):
 
@@ -326,6 +302,10 @@ def create_all_reactions(reactions, species_string_dict,
                                                                                  ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
+                    reactant_string_list = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
+                                            if len(reactant) > 1 else reactant[0].get_name()
+                                            for reactant in reactant_string_list]
+
                     rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
                                                            reactant_string_list
                                                            , reaction.rate, type_of_model,

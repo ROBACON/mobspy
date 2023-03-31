@@ -12,6 +12,7 @@ import mobspy.modules.function_rate_code as frc
 from pint import Quantity
 import mobspy.modules.event_functions as eh
 from mobspy.modules.logic_operator_objects import *
+import mobspy.modules.species_string_generator as ssg
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -127,6 +128,10 @@ class Compiler:
         # Construct structures necessary for reactions
         cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(species_to_simulate)
 
+        # Order the species references for later usage
+        for species in species_to_simulate:
+            species.order_references()
+
         # Start by creating the Mappings for the SBML
         # Convert to user friendly format as well
         mappings_for_sbml = {}
@@ -134,12 +139,16 @@ class Compiler:
             mappings_for_sbml[spe_object.get_name()] = []
 
         # List of Species objects
+        species_for_sbml = {}
+        mappings_for_sbml = {}
         for spe_object in species_to_simulate:
-            list_of_definitions = []
-            for reference in spe_object.get_references():
-                list_of_definitions.append(reference.get_characteristics())
-            cls.species_string_dict[spe_object] = mcu.create_species_strings(spe_object,
-                                                                             list_of_definitions)
+            species_string_list = ssg.construct_all_combinations(spe_object, 'std$',
+                                                                 cls.ref_characteristics_to_object)
+            for x in species_string_list:
+                x[0] = x[0].get_name()
+            mappings_for_sbml[spe_object.get_name()] = ['.'.join(x) for x in species_string_list]
+            for species_string in species_string_list:
+                species_for_sbml['_dot_'.join(species_string)] = 0
 
         # Dimension check. Here we check based on the units the area dimension
         dimension = None
@@ -161,49 +170,35 @@ class Compiler:
             if reaction.order is None:
                 reaction.order = default_order
 
-        # Setting Species for SBML and 0 for counts
-        species_for_sbml = {}
-        for spe_object in species_to_simulate:
-            for species_string in cls.species_string_dict[spe_object]:
-                species_for_sbml[species_string] = 0
-
         # Add the flag species used for verifying if the simulation is over
         if continuous_sim:
             species_for_sbml[EndFlagSpecies.get_name()] = 0
-
-        # BaseSpecies the mappings for sbml
-        for spe_object in species_to_simulate:
-            for species_string in cls.species_string_dict[spe_object]:
-                mappings_for_sbml[spe_object.get_name()].append(species_string.replace('_dot_', '.'))
 
         # Set initial counts for SBML
         # Create the list HERE
         assigned_species = []
         for count in species_counts:
 
-            count_set = \
-                mcu.complete_characteristics_with_first_values(count['object'],
-                                                               count['characteristics'],
-                                                               cls.ref_characteristics_to_object)
+            print(count['object'], count['characteristics'])
 
-            for species_string in species_for_sbml.keys():
-                species_set = mcu.extract_characteristics_from_string(species_string)
-                if species_set == count_set:
-                    temp_count = uh.convert_counts(count['quantity'], volume, dimension)
-                    if type(temp_count) == float and not type_of_model == 'deterministic':
-                        simlog.warning('The stochastic simulation rounds floats to integers')
-                        species_for_sbml[species_string] = int(temp_count)
-                        assigned_species.append(species_string)
-                    else:
-                        species_for_sbml[species_string] = temp_count
-                        assigned_species.append(species_string)
-                    break
+            species_string = ssg.construct_species_char_list(count['object'], count['characteristics'],
+                                                             cls.ref_characteristics_to_object,
+                                                             symbol='_dot_')
+
+            temp_count = uh.convert_counts(count['quantity'], volume, dimension)
+            if type(temp_count) == float and not type_of_model == 'deterministic':
+                simlog.warning('The stochastic simulation rounds floats to integers')
+                species_for_sbml[species_string] = int(temp_count)
+                assigned_species.append(species_string)
+            else:
+                species_for_sbml[species_string] = temp_count
+                assigned_species.append(species_string)
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
-                                                                          cls.species_string_dict,
+                                                                          species_to_simulate,
                                                                           cls.ref_characteristics_to_object,
                                                                           type_of_model, dimension)
         parameters_for_sbml['volume'] = (volume, f'dimensionless')
@@ -938,7 +933,9 @@ class Species(SpeciesComparator):
         self._name = name
         self._characteristics = set()
         self._references = {self}
+        self._ordered_references = []
         self._simulation_context = None
+        self._reference_index_dictionary = {}
 
         # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
         self.first_characteristic = None
@@ -1009,6 +1006,20 @@ class Species(SpeciesComparator):
 
     def reset_simulation_context(self):
         self._simulation_context = None
+
+    def order_references(self):
+        cleaned_references = [x for x in self.get_references() if x.get_characteristics() != set()]
+        self._ordered_references = sorted(cleaned_references, key=lambda x: sorted(list(x.get_characteristics())))
+        i = 1
+        for reference in self._ordered_references:
+            self._reference_index_dictionary[reference] = i
+            i = i + 1
+
+    def get_ordered_references(self):
+        return self._ordered_references
+
+    def get_index_from_reference_dict(self, reference):
+        return self._reference_index_dictionary[reference]
 
 
 # Property Call to return several properties as called

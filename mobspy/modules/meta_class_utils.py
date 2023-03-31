@@ -6,21 +6,6 @@ import itertools
 import mobspy.simulation_logging.log_scripts as simlog
 
 
-def unite_dictionaries(first_dict, second_dict):
-    """
-        Performs the union of two dictionaries whose values are sets.
-
-        Parameters:
-            first_dict (dict)
-            second_dict (dict)
-    """
-    for key in second_dict:
-        try:
-            first_dict[key].union(second_dict[key])
-        except KeyError:
-            first_dict[key] = second_dict[key]
-
-
 def combine_references(species1, species2):
     """
         Combine the sets of references of two species
@@ -90,24 +75,6 @@ def complete_characteristics_with_first_values(spe_object, characteristics, char
     return {spe_object.get_name()}.union(first_characteristics).union(characteristics)
 
 
-def extract_characteristics_from_string(species_string):
-    """
-        Species are named for the SBML as species_name_dot_characteristic1_dot_characteristic2
-        So this transforms them into a set
-
-        Parameters:
-            species_string (str) = species string in MobsPy for SBML format (with _dot_ instead of .)
-    """
-    return set(species_string.split('_dot_'))
-
-
-def turn_set_into_0_value_dict(set):
-    to_return = {}
-    for e in set:
-        to_return[e] = 0
-    return to_return
-
-
 def unite_characteristics(species):
     """
         This function unites the characteristics of all the given species
@@ -122,20 +89,6 @@ def unite_characteristics(species):
             characteristics = characteristics.union(spe.get_characteristics())
 
     return characteristics
-
-
-def extract_characteristics(spe):
-    """
-        Extracts all the characteristics from a species and it's references
-
-        Parameters:
-            spe (meta-species object)
-    """
-    lists_of_characteristics = []
-    for reference in spe.get_references():
-        lists_of_characteristics.append(reference.get_characteristics())
-
-    return lists_of_characteristics
 
 
 def create_orthogonal_vector_structure(species):
@@ -168,37 +121,6 @@ def create_orthogonal_vector_structure(species):
                                 f'Characteristics: {spe.get_characteristics()}, {ref_characteristics_to_object[cha].get_characteristics()} \n')
 
     return ref_characteristics_to_object
-
-
-def create_species_strings(spe_object, sets_of_characteristics):
-    """
-        This function combines the species name with all the characteristics of it's references.
-        This way it creates the strings that will be used for the SBML
-        All possible combinations are created, with no intersections between characteristics of
-        a same referenced species
-
-        Parameters:
-            spe_object (meta-species object) = received species object
-            sets_of_characteristics (set of sets (thus not a set)) = all sets of characteristics from the
-            referenced objects
-
-        Returns:
-            set_of_species (set) = set of species from the meta-species object
-    """
-    
-    # Remove empty sets from the list and transform sets in lists
-    # Sort the lists so the characteristics will appear in the same order e
-    lists_of_definitions = [sorted(list(i)) for i in sets_of_characteristics if i != set()]
-    set_of_species = set()
-    lists_of_definitions = sorted(lists_of_definitions)
-
-    for i in itertools.product(*lists_of_definitions):
-        if lists_of_definitions:
-            set_of_species.add(spe_object.get_name() + '_dot_' + '_dot_'.join(i))
-        else:
-            set_of_species.add(spe_object.get_name())
-
-    return set_of_species
 
 
 if __name__ == '__main__':

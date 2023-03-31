@@ -8,6 +8,7 @@ from copy import deepcopy
 import mobspy.modules.meta_class_utils as mcu
 import mobspy.modules.meta_class as mc
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.modules.species_string_generator as ssg
 
 
 class __Operator_Base:
@@ -39,17 +40,21 @@ class __Operator_Base:
                 ref_characteristics_to_object (dict) = Dictionary with the characteristics as keys and meta-species
                 objects as values
         """
-        species_to_return = deepcopy(species_string)
-        for characteristic in characteristics_to_transform:
-            replaceable_characteristics = ref_characteristics_to_object[characteristic].get_characteristics()
+        species_object = species_string[0]
+        species_to_return = [species_object.get_name()] + deepcopy(species_string[1:]) \
+            if len(species_string) > 1 else [species_object.get_name()]
 
-            for rep_cha in replaceable_characteristics:
-                species_to_return = species_to_return.replace('_dot_' + rep_cha, '_dot_' + characteristic)
+        for characteristic in characteristics_to_transform:
+            obj = ref_characteristics_to_object[characteristic]
+            i = species_object.get_index_from_reference_dict(obj)
+            species_to_return[i] = characteristic
+        species_to_return = '_dot_'.join(species_to_return)
 
         return species_to_return
 
     @staticmethod
-    def find_all_string_references_to_born_species(species_referenced_by, characteristics, species_string_dictionary):
+    def find_all_string_references_to_born_species(species_referenced_by, characteristics,
+                                                   model, ref_characteristics_to_object):
         """
             Finds all the string species that reference the born-meta species, including inheritors
             Returns them all in a list for the product construction
@@ -63,17 +68,12 @@ class __Operator_Base:
         """
         to_return = []
         for species in species_referenced_by:
-            for key in species_string_dictionary:
-                if species in key.get_references():
-                    for species_string in species_string_dictionary[key]:
-                        species_string_split = species_string.split('_dot_')[1:]
-                        if all([char in species_string_split for char in characteristics]):
-                            to_return.append(species_string)
-
+            to_return += ssg.construct_all_combinations(species, characteristics,
+                                                        ref_characteristics_to_object, symbol='_dot_')
         return to_return
 
     @staticmethod
-    def find_all_default_references_to_born_species(species_referenced_by, characteristics, species_string_dictionary,
+    def find_all_default_references_to_born_species(species_referenced_by, characteristics, model,
                                                     ref_characteristics_to_object):
         """
             Finds only the DEFAULT string species that reference the born-meta species, including inheritors
@@ -89,22 +89,68 @@ class __Operator_Base:
                 objects that they have been directly added to as values
         """
         to_return = []
-
         for species in species_referenced_by:
-            characteristics_to_find = mcu.complete_characteristics_with_first_values(species, characteristics,
-                                                                                     ref_characteristics_to_object)
-
-            characteristics_to_find.remove(species.get_name())
-            characteristics_to_find.union(characteristics)
-
-            for key in species_string_dictionary:
-                if species in key.get_references():
-                    for species_string in species_string_dictionary[key]:
-                        species_string_split = species_string.split('_dot_')[1:]
-                        if all([char in species_string_split for char in characteristics_to_find]):
-                            to_return.append(species_string)
+            to_return += [ssg.construct_species_char_list(species, characteristics,
+                                                          ref_characteristics_to_object, symbol='_dot_')]
 
         return to_return
+
+    def __call__(self, order_dictionary, product_species,
+                 model, ref_characteristics_to_object, all_reactions=False):
+        """
+            This function is responsible for parrying the products with the reactants according to their meta-species
+            It parries them using the order_dictionary and an index-system for the round-robin application
+            If it cannot find a parrying it considers it a born species
+
+            Parameters:
+                order_dictionary (dict) = Dictionary with the meta-species as keys and the list of meta-species strings
+                product_species (dict) = Product species dict with the meta-species object (key: species),
+                label (key: label), and characteristics (key: characteristics)
+                ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
+                objects that they have been directly added to as values
+        """
+        round_robin_index = {}
+        for species, label in [(e['species'], e['label']) for e in product_species]:
+            round_robin_index[(species, label)] = 0
+
+        products = []
+        for species, label, characteristics in [(e['species'], e['label'], e['characteristics']) for e in
+                                                product_species]:
+
+            # Simple round robin
+            try:
+                species_to_transform_string = order_dictionary[(species, label)][round_robin_index[(species, label)]]
+                round_robin_index[(species, label)] = (round_robin_index[(species, label)] + 1) % len(
+                    order_dictionary[(species, label)])
+
+                # Return in list of lists format for combination later
+                products.append([self.transform_species_string(species_to_transform_string, characteristics,
+                                                               ref_characteristics_to_object)])
+
+            # If the species is not on the reactants - order_dictionary
+            except KeyError:
+                species_is_referenced_by = []
+                for spe_obe in model:
+                    if species in spe_obe.get_references():
+                        species_is_referenced_by.append(spe_obe)
+
+                if len(species_is_referenced_by) == 0:
+                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
+
+                if all_reactions:
+                    # Find all the species that reference the one in the reaction
+                    products.append(self.find_all_string_references_to_born_species(species_is_referenced_by,
+                                                                                    characteristics,
+                                                                                    model,
+                                                                                    ref_characteristics_to_object))
+                else:
+                    # Find only default state of the species
+                    products.append(self.find_all_default_references_to_born_species(species_is_referenced_by,
+                                                                                     characteristics,
+                                                                                     model,
+                                                                                     ref_characteristics_to_object))
+
+        return products
 
 
 class __Round_Robin_Base(__Operator_Base):
@@ -131,7 +177,7 @@ class __Round_Robin_Base(__Operator_Base):
 
     def __call__(self, order_dictionary, product_species,
                  species_string_dictionary,
-                 ref_characteristics_to_object):
+                 ref_characteristics_to_object, all_reactions=True):
         """
             This function is responsible for parrying the products with the reactants according to their meta-species
             It parries them using the order_dictionary and an index-system for the round-robin application
@@ -144,41 +190,8 @@ class __Round_Robin_Base(__Operator_Base):
                 ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
                 objects that they have been directly added to as values
         """
-        round_robin_index = {}
-        for species, label in [(e['species'], e['label']) for e in product_species]:
-            round_robin_index[(species, label)] = 0
-
-        products = []
-        for species, label, characteristics in [(e['species'], e['label'], e['characteristics']) for e in
-                                                product_species]:
-
-            # Simple round robin
-            try:
-                species_to_transform_string = order_dictionary[(species, label)][round_robin_index[(species, label)]]
-                round_robin_index[(species, label)] = (round_robin_index[(species, label)] + 1) % len(
-                    order_dictionary[(species, label)])
-
-                # Return in list of lists format for combination later
-                products.append([self.transform_species_string(species_to_transform_string, characteristics,
-                                                               ref_characteristics_to_object)])
-
-            # If the species is not on the reactants - order_dictionary
-            except KeyError:
-
-                # Find all the species that reference the one in the reaction
-                species_is_referenced_by = []
-                for key in species_string_dictionary:
-                    if species in key.get_references():
-                        species_is_referenced_by.append(key)
-
-                if len(species_is_referenced_by) == 0:
-                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
-
-                products.append(self.find_all_string_references_to_born_species(species_is_referenced_by,
-                                                                                characteristics,
-                                                                                species_string_dictionary))
-
-        return products
+        return super().__call__(order_dictionary, product_species, species_string_dictionary,
+                                ref_characteristics_to_object, all_reactions)
 
 
 # Define class to override the operators
@@ -197,7 +210,7 @@ class __RR_Default_Base(__Operator_Base):
     # Here is the default order requested by Thomas
     def __call__(self, order_dictionary, product_species,
                  species_string_dictionary,
-                 ref_characteristics_to_object):
+                 ref_characteristics_to_object, all_reactions=False):
         """
             This function is responsible for parrying the products with the reactants according to their meta-species
             It parries them using the order_dictionary and an index-system for the round-robin application
@@ -210,42 +223,8 @@ class __RR_Default_Base(__Operator_Base):
                 ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
                 objects that they have been directly added to as values
         """
-        round_robin_index = {}
-        for species, label in [(e['species'], e['label']) for e in product_species]:
-            round_robin_index[(species, label)] = 0
-
-        products = []
-        for species, label, characteristics in [(e['species'], e['label'], e['characteristics']) for e in
-                                                product_species]:
-
-            # Simple round robin
-            try:
-                species_to_transform_string = order_dictionary[(species, label)][round_robin_index[(species, label)]]
-                round_robin_index[(species, label)] = (round_robin_index[(species, label)] + 1) % len(
-                    order_dictionary[(species, label)])
-
-                # Return in list of lists format for combination later
-                products.append([self.transform_species_string(species_to_transform_string, characteristics,
-                                                               ref_characteristics_to_object)])
-
-            # If the species is not on the reactants - order_dictionary
-            except KeyError:
-
-                # Find all the species that reference the one in the reaction
-                species_is_referenced_by = []
-                for key in species_string_dictionary:
-                    if species in key.get_references():
-                        species_is_referenced_by.append(key)
-
-                if len(species_is_referenced_by) == 0:
-                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
-
-                products.append(self.find_all_default_references_to_born_species(species_is_referenced_by,
-                                                                                 characteristics,
-                                                                                 species_string_dictionary,
-                                                                                 ref_characteristics_to_object))
-
-        return products
+        return super().__call__(order_dictionary, product_species, species_string_dictionary,
+                                ref_characteristics_to_object, all_reactions)
 
 
 Default = __RR_Default_Base()
@@ -257,6 +236,7 @@ class __Set_Reversible_Rate:
         Since reversible reactions have too rates
         The process is in __getitem__
     """
+
     def __getitem__(self, both_rates):
         """
             This function extracts both reaction rates from a tuple
