@@ -1,6 +1,7 @@
 import sys, os
 import matplotlib.pyplot as plt
 from mobspy import *
+import time
 
 
 """
@@ -12,8 +13,10 @@ from mobspy import *
     In future work we hope to implement different type movements or grids
 """
 
+start_time = time.time()
+
 Mesh = BaseSpecies(1)
-n = 10
+n = 12
 for i in range(n):
     for j in range(n):
         coordinate = 'p_' + str(i) + '_' + str(j)
@@ -40,7 +43,9 @@ MySim.output_event = True
 MySim.plot_data = False
 MySim.save_data = False
 
-MySim.run()
+print(MySim.compile())
+print("--- %s seconds ---" % (time.time() - start_time))
+exit()
 
 
 def grab_position(species_position, list_x, list_y):

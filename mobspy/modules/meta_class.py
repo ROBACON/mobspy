@@ -179,8 +179,6 @@ class Compiler:
         assigned_species = []
         for count in species_counts:
 
-            print(count['object'], count['characteristics'])
-
             species_string = ssg.construct_species_char_list(count['object'], count['characteristics'],
                                                              cls.ref_characteristics_to_object,
                                                              symbol='_dot_')

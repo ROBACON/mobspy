@@ -1,6 +1,7 @@
 import mobspy.modules.meta_class_utils as mcu
 import mobspy.modules.unit_handler as uh
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.modules.species_string_generator as ssg
 from pint import Quantity
 
 
@@ -41,15 +42,6 @@ def extract_results_dictionary(data):
         results_dictionary[str(species)] = [run[-1] for run in data[species]['runs']]
 
 
-def correct_species_count(simulation_dictionary, event_dictionary, results_dictionary, parameters):
-    # Event Dictionary is not received in the correct units when it arrives to this point
-    # One needs to call the unit conversion function to account for this
-    # Not used yet
-    for key in event_dictionary:
-        event_dictionary[key] = uh.convert_counts(event_dictionary[key], parameters['volume'], parameters['dimension'])
-    pass
-
-
 def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristics_to_object,
                                      volume, dimension):
     """
@@ -86,9 +78,8 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
             continue
         event_dictionary = {}
         for ec in ev['event_counts']:
-            dummy = mcu.complete_characteristics_with_first_values(ec['species'], ec['characteristics'],
-                                                                   characteristics_to_object)
-            dummy = '_dot_'.join(dummy)
+            dummy = ssg.construct_species_char_list(ec['species'], ec['characteristics'],
+                                                    characteristics_to_object, symbol='_dot_')
             event_dictionary[dummy] = uh.convert_counts(ec['quantity'], volume, dimension)
         if type(ev['trigger']) == str:
             reformed_event_list.append({'event_time': ev['event_time'], 'event_counts': event_dictionary,
@@ -100,14 +91,12 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
     events_for_sbml = {}
     for i, event in enumerate(reformed_event_list):
         assignments = []
-        for key_1 in event['event_counts']:
-            dummy_set = set(key_1.split('_dot_'))
-            for key_2 in species_for_sbml:
-                if dummy_set == set(key_2.split('_dot_')):
-                    assignments.append((key_2, str(event['event_counts'][key_1])))
-                    break
+        for key in event['event_counts']:
+            if key not in species_for_sbml:
+                assignments.append((key, str(event['event_counts'][key])))
+                break
             else:
-                simlog.error(f'Species {dummy_set} was not found in the model')
+                simlog.error(f'Species {key} was not found in the model')
 
         events_for_sbml['e' + str(i)] = {'trigger': event['trigger'],
                                          'delay': str(event['event_time']),
@@ -115,6 +104,3 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
 
     return events_for_sbml
 
-
-def inspect_event_triggers(self, list_of_logic_resolver_objects):
-    pass

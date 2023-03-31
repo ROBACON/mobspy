@@ -81,15 +81,6 @@ class MobsPyTimeSeries:
         for ts in self.ts_data:
             yield ts
 
-    def __getattr__(self, item):
-        if 'sts' in item:
-            self.time_series_number = int(item.split('_')[-1])
-            return self
-        elif 'runs' in item:
-            return _MobsPyTimeSeriesRuns(self)
-        else:
-            super().__getattribute__(item)
-
     def get_max_time_for_species(self, species):
         if type(species) != str:
             species = species.get_name()
@@ -101,19 +92,5 @@ class MobsPyTimeSeries:
                     max_length = len(ts)
                     max_ts = ts
         return max_ts['Time']
-
-
-class _MobsPyTimeSeriesRuns:
-
-    def __init__(self, mobspy_ts):
-        self.mobspy_ts = mobspy_ts
-
-    def __getitem__(self, item):
-        if type(item) == str:
-            return [self.mobspy_ts.ts_data[i][item] for i in range(len(self.mobspy_ts))]
-        elif isinstance(item, Species):
-            return [self.mobspy_ts.ts_data[i][item.get_name()] for i in range(len(self.mobspy_ts))]
-        elif isinstance(item, Reacting_Species):
-            return [self.mobspy_ts._sum_reacting_species_data(item, i) for i in range(len(self.mobspy_ts))]
 
 
