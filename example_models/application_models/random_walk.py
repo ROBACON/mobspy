@@ -16,7 +16,7 @@ import time
 start_time = time.time()
 
 Mesh = BaseSpecies(1)
-n = 12
+n = 10
 for i in range(n):
     for j in range(n):
         coordinate = 'p_' + str(i) + '_' + str(j)
@@ -42,10 +42,6 @@ MySim.duration = 100
 MySim.output_event = True
 MySim.plot_data = False
 MySim.save_data = False
-
-print(MySim.compile())
-print("--- %s seconds ---" % (time.time() - start_time))
-exit()
 
 
 def grab_position(species_position, list_x, list_y):
