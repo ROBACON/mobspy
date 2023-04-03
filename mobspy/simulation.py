@@ -41,30 +41,15 @@ class Simulation:
 
     def event_context_finish(self):
         self._event_time = 0
-        self.bool_number_call = 0
         for meta_species in self._species_to_set:
             meta_species.reset_simulation_context()
         self._species_to_set = set()
         self._context_not_active = True
 
-    def event_context_add(self, finish=False):
+    def event_context_add(self, time, trigger):
 
-        # CONVERT TRIGGER HERE
-
-        if self.bool_number_call == 0:
-            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
-                          'trigger': 'true'}
-
-        else:
-            if self.previous_trigger.order != self.pre_number_of_context_comparisons - 1:
-                self.event_compilation_error()
-            event_data = {'event_time': self._event_time, 'event_counts': list(self.current_event_count_data),
-                          'trigger': self.previous_trigger}
-
-        if len(self.trigger_list) != 0:
-            self.previous_trigger = self.trigger_list[0]
-        else:
-            self.previous_trigger = None
+        event_data = {'event_time': time, 'event_counts': list(self.current_event_count_data),
+                      'trigger': trigger}
 
         self.current_event_count_data = []
         self.trigger_list = []
@@ -74,46 +59,54 @@ class Simulation:
         if len(event_data['event_counts']) != 0:
             self.total_packed_events.append(event_data)
 
-        if finish:
-            self.event_context_finish()
+        self.event_context_finish()
 
     def event_context_initiator(self):
+
+        # Set context in all meta-species
         if len(self._species_to_set) == 0:
-            for i, frame_tuple in enumerate(inspect.stack()):
-                for _, value in frame_tuple[0].f_globals.items():
-                    if isinstance(value, Species) and value not in self._species_to_set:
-                        self._species_to_set.add(value)
+            for i in range(len(inspect.stack())):
+                local_names = inspect.stack()[i][0].f_locals
+                global_names = inspect.stack()[i][0].f_globals
+                for key, item in global_names.items():
+                    if isinstance(item, Species):
+                        self._species_to_set.add(item)
+                for key, item in local_names.items():
+                    if isinstance(item, Species):
+                        self._species_to_set.add(item)
 
             for meta_species in self._species_to_set:
                 meta_species.set_simulation_context(self)
         else:
             pass
 
-    def _event_handler(self, time):
-        time = uh.convert_time(time)
+    def _event_handler(self):
         if self._context_not_active:
             self._context_not_active = False
             self.__dict__['parameters']['_with_event'] = True
-            self._event_time = time
             self.event_context_initiator()
         else:
             simlog.error('MobsPy does not support multiple context calls')
 
     @contextmanager
-    def event_condition(self, delay=0):
+    def event_condition(self, trigger, delay=0):
         try:
-            self._event_handler(delay)
+            self._conditional_event = True
+            self._event_handler()
             yield 0
         finally:
-            self.event_context_add(finish=True)
+            delay = uh.convert_time(delay)
+            self._conditional_event = False
+            self.event_context_add(delay, trigger)
 
     @contextmanager
     def event_time(self, time):
         try:
-            self._event_handler(time)
+            self._event_handler()
             yield 0
         finally:
-            self.event_context_add(finish=True)
+            time = uh.convert_time(time)
+            self.event_context_add(time, 'true')
 
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
@@ -133,13 +126,14 @@ class Simulation:
         self.previous_trigger = None
         self.current_event_count_data = []
         self.total_packed_events = []
-        self.bool_number_call = 0
         self.number_of_context_comparisons = 0
         self.pre_number_of_context_comparisons = 0
         self._list_of_models = []
         self._list_of_parameters = []
         self._context_not_active = True
         self._assigned_species_list = []
+        self._conditional_event = False
+        self._end_condition = None
 
         # Get all names
         if names is None:
@@ -205,6 +199,10 @@ class Simulation:
             self.plot_parameters['simulation_method'] = 'deterministic'
         elif self.parameters['simulation_method'].lower() == 'stochastic':
             self.plot_parameters['simulation_method'] = 'stochastic'
+
+        # Pass end condition to dict parameters - It is stored outside of parameters to the parameters serializable
+        # However, it is necessary for the compilation so it is passed as a parameter
+        self.parameters['_end_condition'] = self._end_condition
 
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
@@ -346,10 +344,11 @@ class Simulation:
                       'event_times', 'event_models', 'event_count_dics', '_events_for_sbml',
                       'total_packed_events', 'species_initial_counts', '_species_to_set',
                       '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
-                      'current_condition', 'current_event_trigger_data', 'bool_number_call',
+                      'current_condition', 'current_event_trigger_data',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
-                      '_context_not_active', '_species_counts', '_assigned_species_list']
+                      '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
+                      '_end_condition']
 
         plotted_flag = False
         if name in white_list:
@@ -365,7 +364,7 @@ class Simulation:
             if name in example_parameters.keys():
                 if name == 'duration' and isinstance(value, MetaSpeciesLogicResolver):
                     self.__dict__['parameters']['_continuous_simulation'] = True
-                    self.__dict__['parameters']['_end_condition'] = value
+                    self.__dict__['_end_condition'] = value
                     if 'initial_conditional_duration' not in self.__dict__['parameters']:
                         self.__dict__['parameters']['initial_conditional_duration'] = 1
                 else:
@@ -500,6 +499,12 @@ class SimulationComposition:
     # FIX THIS
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim']
+        broad_cast_parameters = ['level']
+
+        if name in broad_cast_parameters:
+            for sim in self.list_of_simulations:
+                sim.__dict__['parameters'][name] = value
+
         if name in white_list:
             self.__dict__[name] = value
         else:
@@ -534,7 +539,6 @@ class SimulationComposition:
 
     def plot(self, *species):
         self.base_sim.plot(*species)
-
 
 
 if __name__ == '__main__':

@@ -82,7 +82,7 @@ def job_execution(params, models, jobs):
                 reformatted_data = reformat_time_series(data)
 
                 if sim_par['_continuous_simulation']:
-                    if reformatted_data['End_Flag_MetaSpecies'][-1] == 1:
+                    if reformatted_data['End_Flag_MetaSpecies'][-1] > 0:
                         reformatted_data = __filter_condition_event_time_data(reformatted_data)
                         end_condition_not_satisfied = False
                     else:

@@ -13,6 +13,7 @@ from pint import Quantity
 import mobspy.modules.event_functions as eh
 from mobspy.modules.logic_operator_objects import *
 import mobspy.modules.species_string_generator as ssg
+from copy import deepcopy
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -76,7 +77,7 @@ class Compiler:
                 key.name(name)
 
     @classmethod
-    def compile(cls, species_to_simulate, reactions_set, species_counts,
+    def compile(cls, meta_species_to_simulate, reactions_set, species_counts,
                 volume=1, names=None, type_of_model='deterministic', verbose=True,
                 default_order=Default, event_dictionary=None,
                 continuous_sim=False, ending_condition=None):
@@ -88,7 +89,7 @@ class Compiler:
             It also performs checks to see if the model is valid
 
             Parameters:
-                species_to_simulate (ParallelSpecies or Species) = Species to generate the model, reactions are stored
+                meta_species_to_simulate (ParallelSpecies or Species) = Species to generate the model, reactions are stored
                 inside the Species objects
                 volume (int, flot) = Simulation volume
                 names (dict) = alternative naming for species - see name_all_involved_species
@@ -116,7 +117,7 @@ class Compiler:
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
         names_used = set()
-        for i, species in enumerate(species_to_simulate):
+        for i, species in enumerate(meta_species_to_simulate):
             if '$' in species.get_name():
                 simlog.error('An error has occurred and one of the species was not named')
             if species.get_name() in names_used:
@@ -126,22 +127,22 @@ class Compiler:
             names_used.add(species.get_name())
 
         # Construct structures necessary for reactions
-        cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(species_to_simulate)
+        cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(meta_species_to_simulate)
 
         # Order the species references for later usage
-        for species in species_to_simulate:
+        for species in meta_species_to_simulate:
             species.order_references()
 
         # Start by creating the Mappings for the SBML
         # Convert to user friendly format as well
         mappings_for_sbml = {}
-        for spe_object in species_to_simulate:
+        for spe_object in meta_species_to_simulate:
             mappings_for_sbml[spe_object.get_name()] = []
 
         # List of Species objects
         species_for_sbml = {}
         mappings_for_sbml = {}
-        for spe_object in species_to_simulate:
+        for spe_object in meta_species_to_simulate:
             species_string_list = ssg.construct_all_combinations(spe_object, 'std$',
                                                                  cls.ref_characteristics_to_object)
             for x in species_string_list:
@@ -196,7 +197,7 @@ class Compiler:
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
-                                                                          species_to_simulate,
+                                                                          meta_species_to_simulate,
                                                                           cls.ref_characteristics_to_object,
                                                                           type_of_model, dimension)
         parameters_for_sbml['volume'] = (volume, f'dimensionless')
@@ -216,12 +217,15 @@ class Compiler:
         # Event implementation here
         events_for_sbml = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
                                                               cls.ref_characteristics_to_object,
-                                                              volume, dimension)
+                                                              volume, dimension, meta_species_to_simulate)
 
         if continuous_sim:
-            end_event = {'trigger': ending_condition.generate_string_from_vec_space(species_for_sbml),
+            end_event = {'trigger': ending_condition.generate_string(cls.ref_characteristics_to_object),
                          'delay': '0',
                          'assignments': [('End_Flag_MetaSpecies', '1')]}
+
+            reactions_for_sbml['reaction_end'] = {'re': [(10, 'End_Flag_MetaSpecies')], 'pr': [],
+                                                  'kin': 'End_Flag_MetaSpecies * 1e-60'}
             events_for_sbml['end_event'] = end_event
 
         model_str = ''
@@ -248,8 +252,10 @@ class Compiler:
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
+            remove_hack_end_reaction = deepcopy(reactions_for_sbml)
+            remove_hack_end_reaction.pop('reaction_end', None)
             reaction_alpha = [str(x[1]).replace('_dot_', '.') for x in
-                              list(sorted(reactions_for_sbml.items(), key=lambda x: str(x[1])))]
+                              list(sorted(remove_hack_end_reaction.items(), key=lambda x: str(x[1])))]
 
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + reac + '\n'

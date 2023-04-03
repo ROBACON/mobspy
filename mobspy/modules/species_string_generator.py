@@ -55,6 +55,7 @@ def construct_all_combinations(spe_object, characteristics, characteristics_to_o
                              if len(i) > 1 else spe_object.get_name())
         else:
             to_return.append(list(i))
+
     return to_return
 
 

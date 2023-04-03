@@ -43,7 +43,7 @@ def extract_results_dictionary(data):
 
 
 def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristics_to_object,
-                                     volume, dimension):
+                                     volume, dimension, meta_species_to_simulate):
     """
     Creates events_for_sbml dictionary for sbml file construction on the sbml_simulator/SBMLWriter.py
 
@@ -69,9 +69,10 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
 
     # Convert count from triggers
     for ev in event_list:
-        for i, e in enumerate(ev['trigger'].operation):
-            if isinstance(e, Quantity):
-                ev['trigger'].operation[i] = uh.convert_counts(e, volume, dimension)
+        if ev['trigger'] != 'true':
+            for i, e in enumerate(ev['trigger'].operation):
+                if isinstance(e, Quantity):
+                    ev['trigger'].operation[i] = uh.convert_counts(e, volume, dimension)
 
     for ev in event_list:
         if not ev['event_counts']:
@@ -85,16 +86,21 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
             reformed_event_list.append({'event_time': ev['event_time'], 'event_counts': event_dictionary,
                                         'trigger': ev['trigger']})
         else:
-            reformed_event_list.append({'event_time': ev['event_time'], 'event_counts': event_dictionary,
-                                        'trigger': ev['trigger'].generate_string_from_vec_space(species_for_sbml)})
+            for e in ev['trigger'].operation:
+                if type(e) == dict:
+                    if e['object'] not in meta_species_to_simulate:
+                        simlog.error(f'Meta species {e["object"]} was used in an event but is not in the model')
+            reformed_event_list.append({'event_time': ev['event_time'],
+                                        'event_counts': event_dictionary,
+                                        'trigger': ev['trigger'].generate_string(characteristics_to_object,
+                                                                                 to_sort=True)})
 
     events_for_sbml = {}
     for i, event in enumerate(reformed_event_list):
         assignments = []
         for key in event['event_counts']:
-            if key not in species_for_sbml:
+            if key in species_for_sbml:
                 assignments.append((key, str(event['event_counts'][key])))
-                break
             else:
                 simlog.error(f'Species {key} was not found in the model')
 

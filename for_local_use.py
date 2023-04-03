@@ -1,13 +1,27 @@
 from mobspy import *
 import matplotlib.pyplot as plt
-
+import os
 
 if __name__ == '__main__':
+
     A, B = BaseSpecies(2)
+    A >> 2 * A[1]
 
-    A.a1, A.a2, B.b1, B.b2
-    Combination = A*B
+    A(1)
+    S1 = Simulation(A | B)
+    S1.save_data = False
+    S1.plot_data = True
+    S1.duration = 3
+    S1.level = -1
 
-    Combination >> Zero [lambda r1: 0 if r1.b2 else 1]
-    S = Simulation(Combination)
-    print(S.compile())
+    A.reset_reactions()
+    A + B >> Zero[0.01]
+
+    B(50)
+    S2 = Simulation(A | B)
+    S2.duration = (A <= 0.5) | (B <= 0.5)
+    S2.level = -1
+
+    Sim = S1 + S2
+    Sim.run()
+    print(Sim.results[A][-1])
