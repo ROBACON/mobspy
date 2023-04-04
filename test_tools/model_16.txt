@@ -1,0 +1,19 @@
+
+Species
+A.a1,0
+A.a2,0
+A.a3,0
+
+Mappings
+A :
+A.a1
+A.a2
+A.a3
+
+Parameters
+volume,1
+
+Reactions
+
+Events
+event_0,{'trigger': '( ( ( ( 2 * (A.a1 + A.a2 + A.a3) <= 10 ) && ( (A.a1 + A.a2 + A.a3) <= 10 ) ) ) || ( (A.a1 + A.a2 + A.a3) <= 10 ) ) ', 'delay': '0', 'assignments': [('A.a1', '100')]}
