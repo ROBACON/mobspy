@@ -1027,8 +1027,22 @@ class Species(SpeciesComparator):
         return self._reference_index_dictionary[reference]
 
 
+def compile_species_number_line(function, code_line):
+    pos = code_line.find('=')
+    if pos == -1:
+        return 0
+    else:
+        code_line = code_line[0:pos]
+    n = code_line.count(',') + 1
+
+    if n > 1:
+        return [function(1) for _ in range(n)]
+    else:
+        return function(1)
+
+
 # Property Call to return several properties as called
-def BaseSpecies(number_of_properties=1):
+def BaseSpecies(number_of_properties=None):
     """
         Function that returns a number of base species according to the number_of_properties
         BaseSpecies are just Species with no inheritance attached to it
@@ -1039,13 +1053,17 @@ def BaseSpecies(number_of_properties=1):
         Returns:
             Species objects according to the number of species requested
     """
+    if number_of_properties is None:
+        code_line = inspect.stack()[1].code_context[0][:-1]
+        return compile_species_number_line(BaseSpecies, code_line)
+
     to_return = []
     for i in range(number_of_properties):
         Compiler.entity_counter += 1
         name = 'N$' + str(Compiler.entity_counter)
         to_return.append(Species(name))
 
-    if number_of_properties == 1:
+    if len(to_return) == 1:
         return to_return[0]
     else:
         return tuple(to_return)
@@ -1059,7 +1077,7 @@ EndFlagSpecies = __SF
 Zero = __S0
 
 
-def New(species, n=1):
+def New(species, n=None):
     """
         New is just a multiplication in disguise. It contains a __S1 meta-species that multiplies the species used as a
         parameter. The species __S1 contains no characteristics and it's only used to create a higher-dimensional
@@ -1070,6 +1088,10 @@ def New(species, n=1):
         Parameters:
             n (int) = number of species to return
     """
+    if n is None:
+        code_line = inspect.stack()[1].code_context[0][:-1]
+        return compile_species_number_line(lambda i: New(species, i), code_line)
+
     if type(n) == int:
         to_return = [species * __S1 for _ in range(n)]
         if n == 1:

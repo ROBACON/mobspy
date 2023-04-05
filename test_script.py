@@ -189,7 +189,6 @@ def test_hybrid_sim():
     assert Sim.results[A][-1] == 0 or Sim.results[B][-1] == 0
 
 
-
 def test_concatenated_simulation():
     A, B, C = BaseSpecies(3)
     A >> Zero[1]
@@ -503,11 +502,35 @@ def test_logic_operator_syntax():
         assert False
 
 
+def test_stack_position():
+
+    Cell = BaseSpecies()
+    Cell >> 2 * Cell[1]
+    A, B, C = New(Cell)
+    S = Simulation(A | B | C)
+    S.level = -1
+    compare_model(S.compile(), 'test_tools/model_17.txt')
+
+    def hi():
+        Cell = BaseSpecies()
+        Cell >> 2 * Cell[1]
+        A, B, C = New(Cell)
+
+        S = Simulation(A | B | C)
+        S.level = -1
+        compare_model(S.compile(), 'test_tools/model_17.txt')
+    hi()
+
+    def hi_inside_hi():
+        hi()
+    hi_inside_hi()
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
              test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
-             test_logic_operator_syntax]
+             test_logic_operator_syntax, test_stack_position]
 
 sub_test = test_list
 
