@@ -229,16 +229,16 @@ def test_event_type():
     S.plot_data = False
     S.level = -1
 
-    with S.event_time(0) as _:
+    with S.event_time(0):
         F(1)
 
-    with S.event_condition((A <= 1) & (B <= 1)) as _:
+    with S.event_condition((A <= 1) & (B <= 1)):
         C(1)
 
-    with S.event_condition((A <= 1) & (B <= 1)) as _:
+    with S.event_condition((A <= 1) & (B <= 1)):
         D(1)
 
-    with S.event_condition(B <= 1) as _:
+    with S.event_condition(B <= 1):
         E(1)
 
     S.duration = 5
@@ -258,7 +258,7 @@ def test_reacting_species_event():
     S = Simulation(A | B)
     S.level = -1
 
-    with S.event_condition((A.a1 <= 10) & (B.b1 <= 10)) as _:
+    with S.event_condition((A.a1 <= 10) & (B.b1 <= 10)):
         A.a1(100)
 
     S.duration = 5
@@ -272,7 +272,7 @@ def test_unit_event_test():
     A(1 * u.mol)
     S = Simulation(A)
     S.level = -1
-    with S.event_condition(A < 0.5 * u.mol) as _:
+    with S.event_condition(A < 0.5 * u.mol):
         A(1 * u.mol)
     S.duration = 3
     assert compare_model(S.compile(), 'test_tools/model_10.txt')
@@ -485,7 +485,7 @@ def test_logic_operator_syntax():
     try:
         S1 = Simulation(A)
         S1.level = -1
-        with S1.event_condition(B <= 10) as _:
+        with S1.event_condition(B <= 10):
             A(100)
         S1.compile()
         test_failed = True
@@ -513,9 +513,6 @@ sub_test = test_list
 
 
 def perform_tests():
-
-    test_passed = []
-    test_failed = []
 
     any_failed = False
     for test in sub_test:
