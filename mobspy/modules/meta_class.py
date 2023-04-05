@@ -209,7 +209,8 @@ class Compiler:
                     continue
 
                 if reactions_for_sbml[r1]['re'] == reactions_for_sbml[r2]['re'] \
-                        and reactions_for_sbml[r1]['pr'] == reactions_for_sbml[r2]['pr']:
+                        and reactions_for_sbml[r1]['pr'] == reactions_for_sbml[r2]['pr'] \
+                        and reactions_for_sbml[r1]['kin'] == reactions_for_sbml[r2]['kin']:
                     simlog.warning('The following reaction: \n' +
                                    f'{reactions_for_sbml[r1]} \n' +
                                    'Is doubled. Was that intentional? \n')
