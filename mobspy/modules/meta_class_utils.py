@@ -10,9 +10,8 @@ def combine_references(species1, species2):
     """
         Combine the sets of references of two species
 
-        Parameters:
-            species1 (Meta-species object)
-            species2 (Meta-species object)
+        :param species1: (Meta-species object)
+        :param species2: (Meta-species object)
     """
     #if species1.get_references().intersection(species2.get_references()):
     #    simlog.warning(f'A product was executed between species with a common meta-species\n')
@@ -25,8 +24,8 @@ def check_orthogonality_between_references(references):
         Check if meta-species objects inside a reference do not have characteristics in common
         The sets of characteristics directly added to species must be independent
 
-        Parameter:
-            references (set) =  set of meta-species objects to check for independence
+        :param references: (set) set of meta-species objects to check for independence
+        :raise simlog.error: raises error if there are repeated characteristics in different meta-species
     """
     for i, reference1 in enumerate(references):
         for j, reference2 in enumerate(references):

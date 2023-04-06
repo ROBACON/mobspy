@@ -1,3 +1,6 @@
+"""
+    This module implements the class that stores the results from a MobsPy simulation
+"""
 import pandas as pd
 from mobspy.modules.meta_class import *
 
@@ -5,16 +8,27 @@ from mobspy.modules.meta_class import *
 class MobsPyTimeSeries:
 
     def __init__(self, data_dict):
+        """Creates the MobsPy timeseries object
+
+            :param data: (dict) resulting dictionary from simulation
+            {'data': ...., 'params':....., 'models':.......}
+        """
         self.ts_data = data_dict['data']
         self.ts_parameters = data_dict['params']
         self.ts_models = data_dict['models']
 
     def to_dict(self):
+        """
+            :return: data in dict format {'data': ...., 'params':....., 'models':.......}
+        """
         return {'data': self.ts_data,
                 'params': self.ts_parameters,
                 'models': self.ts_models}
 
     def __len__(self):
+        """
+            Length of MobsPy Time Series is equal to the number of runs from simulation
+        """
         return len(self.ts_data)
 
     def __str__(self):
@@ -25,10 +39,20 @@ class MobsPyTimeSeries:
         return tr
 
     def add_ts_to_data(self, time_series):
+        """
+            Add a new time series to the TS data. Used for stochastic plotting
+            the average and standard deviation
+
+            :param time_series: (dict) dictionary with species strings as keys and run as value
+        """
         if type(time_series) == dict:
             self.ts_data += [time_series]
 
     def __getitem__(self, item):
+        """
+            Implements run retrieval using a meta-species object. Returns one run if there is only one
+            time-series and returns multiple runs if there are multiple time series
+        """
         to_return = []
         if type(item) == int:
             return self.ts_data[item]
@@ -52,7 +76,12 @@ class MobsPyTimeSeries:
             return to_return
 
     def _sum_reacting_species_data(self, item, ts_index):
+        """
+            Maps meta-species according to characteristics ex: A.a1 = A.a1.b1 + A.a1.b2 + A.a1.b3
 
+            :param item: Meta-species object or string to be retrieved
+            :ts_index: Index of the time series to perform the sum
+        """
         def _sum_element_by_element(l1, l2):
             rt = []
             for e1, e2 in zip(l1, l2):
@@ -87,6 +116,9 @@ class MobsPyTimeSeries:
             yield ts
 
     def get_max_time_for_species(self, species):
+        """
+            Returns the maximum time in all the time-series stored for a given species
+        """
         if type(species) != str:
             species = species.get_name()
         max_length = 0

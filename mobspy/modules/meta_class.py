@@ -23,24 +23,16 @@ class Compiler:
         The compiler is responsible for constructing the model from the meta-species and meta-reactions given
         and checking if it is a valid MobsPy model
 
-        Attributes:
-            entity_counter (int) = counts the number of defined meta-species (for having a unique placeholder name for
-            species before the user or MobsPy name them)
-            reactions_set (set) = set of reactions involved in the model
-            species_string_dict (dict) = dictionary with meta-species as keys and their respective species as values
-            last_rate (float, callable, Quantity) = due to python operator priority the __getitem__ operation executes
-            in the beginning of a reaction definition, so the compiler stores it until it is needed
-            ref_characteristics_to_object (dict) = dictionary where the keys are the characteristics and the value is
-            the meta-species that the characteristic was added directly to (no inheritance)
-
-        Methods:
-            override_get_item, name_all_involved_species, compile,
+        :param entity_counter: (int) counts the number of defined meta-species (for having a unique placeholder name
+        for species before the user or MobsPy name them)
+        :param  last_rate: (float, callable, Quantity)  due to python operator priority the __getitem__
+        operation executes in the beginning of a reaction definition, so the compiler stores it until it is needed
+        :param ref_characteristics_to_object: (dict)  dictionary where the keys are the characteristics and the value
+         is the meta-species that the characteristic was added directly to (no inheritance)
     """
 
     # Basic storage of defined variables for Compiler
     entity_counter = 0
-    reactions_set = set()
-    species_string_dict = {}
     ref_characteristics_to_object = {}
     last_rate = None
 
@@ -52,9 +44,8 @@ class Compiler:
             Important: the rate is used before the compilation level, it's used when the reaction has been completely
             defined
 
-            Parameters:
-                object_to_return (Species or Reacting): returns the object that the __getitem__ was performed on
-                item (int, float, callable, Quantity) : stored reaction rate
+            :param object_to_return: (Species or Reacting) returns the object that the __getitem__ was performed on
+            :param item: (int, float, callable, Quantity) stored reaction rate
         """
         cls.last_rate = item
         return object_to_return
@@ -64,8 +55,7 @@ class Compiler:
         """
             Name species automatically according to their variable names
 
-            Parameters:
-                names (dict) = dictionary with other name options - follows globals() format
+            :param names: (dict) dictionary with other name options - follows globals() format
         """
         if not names:
             simlog.error('Species must be named' +
@@ -88,32 +78,27 @@ class Compiler:
             mappings_for_sbml, model_str which will be used to write the sbml_string for basiCO
             It also performs checks to see if the model is valid
 
-            Parameters:
-                meta_species_to_simulate (ParallelSpecies or Species) = Species to generate the model, reactions are stored
-                inside the Species objects
-                volume (int, flot) = Simulation volume
-                names (dict) = alternative naming for species - see name_all_involved_species
-                type_of_model (str) = deterministic or stochastic
-                verbose (bool) = print or not the model results by generating a model_str
-                default_order (Reaction Operator) = Operator that decides the order of the meta-reaction ( for Default
-                we have the round-robin) and how MobsPy will handle meta-species in the products that are not
-                referenced in the reactants - see order_operators.py
-                event_dictionary (dict) - dictionary with all the events to be added to the model
+            :param meta_species_to_simulate: (ParallelSpecies or Species) Species to generate the model
+            :param volume: (int, flot) Simulation volume
+            :param names: (dict) alternative naming for species - see name_all_involved_species
+            :param type_of_model: (str) deterministic or stochastic
+            :param verbose: (bool) print or not the model results by generating a model_str
+            :param default_order: (Reaction Operator) Operator that decides the order of the
+            meta-reaction ( or Default we have the round-robin) and how MobsPy will handle meta-species in
+            the products that are not referenced in the reactants - see order_operators.py
+            :param event_dictionary: (dict) dictionary with all the events to be added to the model
+            :param continuous_sim: (bool) simulation with conditional duration or not
+            :param ending_condition: (MetaSpeciesLogicResolver) trigger for the ending contion
 
-            Returns:
-                species_for_sbml (dict) = Dictionary where the species strings (in MobsPy format) are the keys and
-                the values are their counts inside the model
-                reactions_for_sbml (dict) = Reaction in dictionary format with keys 're', 'pr' and 'rate'. Values are
-                strings
-                parameters_for_sbml (dict) = Value with parameter name and tuple with quantity and unit. For standard
-                models it only holds the volume
-                mappings_for_sbml (dict) = Dictionary that maps a meta-species to the set of species strings that
-                belong to it
-                model_str (str) = str of the variables defined above in a user-readable format
-                continuous_sim (bool) = simulation has fixed duration or conditional-based duration
-                ending_condition (MetaSpeciesLogicResolver) = ending condition for the species:
+            :returns: species_for_sbml (dict) = dictionary where the species strings (in MobsPy format) are the keys and
+            the values are their counts inside the model. reactions_for_sbml (dict) = Reaction in dictionary format
+            with keys 're', 'pr' and 'rate'. Values are strings parameters_for_sbml (dict) = value with parameter
+            name and tuple with quantity and unit. For standard models it only holds the volume mappings_for_sbml
+            (dict) = Dictionary that maps a meta-species to the set of species strings that belong to it. model_str
+            (str) = str of the variables defined above in a user-readable format. events_for_sbml (dict) = dictionary
+            containing the event trigger and count assignments. assigned_species (list) = list of meta-species which
+            had counts assigned to them during this model execution (used when composing simulations)
         """
-
         # We name the species according to variables names for convenience
         cls.name_all_involved_species(names)
         names_used = set()
@@ -278,14 +263,10 @@ class Reactions:
         This is the Reaction class. It contains the reactants, products, rate and order
         Reactions are created with the >> operator. In each reaction is stored in all involved objects
 
-        Attributes:
-            reactants (list of Species) = list of meta-species used as reactants in the meta-reaction
-            products (list of Species) = list of meta-species used as products in the meta-reaction
-            order (Order Operator) = reaction order operator - default in a Round-Robin base
-            rate (int, float, callable, Quantity) = reaction rate
-
-        Methods:
-            __create_reactants_string, __str__, __getitem__, __init__, set_rate
+        :param reactants: (list of Species) list of meta-species used as reactants in the meta-reaction
+        :param products: (list of Species) list of meta-species used as products in the meta-reaction
+        :param order: (Order Operator) reaction order operator - default in a Round-Robin base
+        :param rate: (int, float, callable, Quantity) reaction rate
     """
 
     @staticmethod
@@ -295,8 +276,7 @@ class Reactions:
             Not relevant for simulation
             Important: here reactants are used interchangeably with products, this works for a list_of_products too
 
-            Parameters:
-                list_of_reactants (list of Species) = list of products or reactants in the reaction
+            :param list_of_reactants: (list of Species) list of products or reactants in the reaction
         """
         reaction_string = ''
         for i, r in enumerate(list_of_reactants):
@@ -325,8 +305,7 @@ class Reactions:
         """
             Override of __getitem__ for dealing with reaction rates
 
-            Parameters:
-                item (int, float, callable, Quantity) = reaction rate
+            :param item: (int, float, callable, Quantity) = reaction rate
         """
         return Compiler.override_get_item(self, item)
 
@@ -335,9 +314,8 @@ class Reactions:
             Constructor of the reaction object. For the object construction only the reactants and products are
             necessary - the order and the rate are assigned later by the compiler
 
-            Parameter:
-                reactants (list of Species) = list of meta-species used as reactants in the meta-reaction
-                products (list of Species) = list of meta-species used as products in the meta-reaction
+            :param reactants: (list of Species) list of meta-species used as reactants in the meta-reaction
+            :param products: (list of Species) list of meta-species used as products in the meta-reaction
         """
         self.reactants = reactants
         self.products = products
@@ -357,9 +335,15 @@ class Reactions:
             product['object'].add_reaction(self)
 
     def set_rate(self, rate):
+        """
+            Sets the stored reaction rate. See Compiler.override_get_item(self, item)
+
+            :param rate: (int, float, callable, Quantity) = reaction rate
+        """
         self.rate = rate
 
 
+# HERE FABRICIO
 class Reacting_Species(ReactingSpeciesComparator):
     """
         This is a intermediary object created when a species is used in a reaction. It is created when a species is
@@ -369,14 +353,10 @@ class Reacting_Species(ReactingSpeciesComparator):
 
         The >> operator calls the Reaction constructor to finally define a reaction object
 
-        Attributes:
-            list_of_reactants (list of dict) = used interchangeably for products and reactants. A list of dictionaries
-            containing the following {'object': meta-species object reference, 'characteristics': the characteristics
-            queried, 'stoichiometry': stoichiometry value, 'label': label if used (None)}
-
-        Methods:
-            __str__, c, label, __getitem__, __init__, __rmul__, __add__, __rshift__, __call__,  __getattr__
-
+        :param  list_of_reactants: (list of dict) used interchangeably for products and reactants.
+        A list of dictionaries containing the following {'object': meta-species object reference,
+        'characteristics': the characteristics queried, 'stoichiometry': stoichiometry value,
+        'label': label if used (None)}
     """
 
     def __str__(self):
@@ -538,6 +518,10 @@ class Reacting_Species(ReactingSpeciesComparator):
             reactant['characteristics'].add(characteristic)
 
         return self
+
+    @classmethod
+    def is_species(cls):
+        return False
 
 
 class ParallelSpecies:
@@ -1025,6 +1009,10 @@ class Species(SpeciesComparator):
 
     def get_index_from_reference_dict(self, reference):
         return self._reference_index_dictionary[reference]
+
+    @classmethod
+    def is_species(cls):
+        return True
 
 
 def compile_species_number_line(function, code_line):

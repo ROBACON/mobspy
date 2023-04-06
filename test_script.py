@@ -526,11 +526,61 @@ def test_stack_position():
     hi_inside_hi()
 
 
+def test_empty_arguments():
+    A, B = BaseSpecies()
+
+    A >> Zero[lambda: f'{A}*0.01']
+    S = Simulation(A)
+    S.duration = 5
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_18.txt')
+
+
+def test_conditional_between_meta_species():
+    Cu = BaseSpecies()
+    Cu.c1, Cu.c2
+    Azi, Byy = New(Cu)
+    Azi.a1, Azi.a2, Byy.b1, Byy.b2
+
+    Azi >> Zero[1]
+    Byy >> Zero[0.1]
+
+    Azi(200), Byy(50)
+    S = Simulation(Azi | Byy)
+    S.plot_data = False
+    S.level = -1
+    with S.event_condition(Azi.a1 <= Byy.b1):
+        Azi(200)
+    S.duration = 10
+    S.method = 'stochastic'
+    assert compare_model(S.compile(), 'test_tools/model_19.txt')
+    S.run()
+    for i in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
+        assert S.results[Azi][i] > S.results[Byy][i]
+
+
+def test_conditional_between_meta_species_2():
+    A, B = BaseSpecies()
+
+    A >> Zero[1]
+    B >> Zero[0.1]
+
+    r1 = ((A < B) & (A < B) | (A < B))
+
+    A(200), B(50)
+    S = Simulation(A | B)
+    with S.event_condition(r1):
+        A(200)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_20.txt')
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
              test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
-             test_logic_operator_syntax, test_stack_position]
+             test_logic_operator_syntax, test_stack_position, test_empty_arguments,
+             test_conditional_between_meta_species, test_conditional_between_meta_species_2]
 
 sub_test = test_list
 

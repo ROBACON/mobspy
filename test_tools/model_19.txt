@@ -1,0 +1,38 @@
+
+Species
+Azi.a1.c1,200
+Azi.a1.c2,0
+Azi.a2.c1,0
+Azi.a2.c2,0
+Byy.b1.c1,50
+Byy.b1.c2,0
+Byy.b2.c1,0
+Byy.b2.c2,0
+
+Mappings
+Azi :
+Azi.a1.c1
+Azi.a1.c2
+Azi.a2.c1
+Azi.a2.c2
+Byy :
+Byy.b1.c1
+Byy.b1.c2
+Byy.b2.c1
+Byy.b2.c2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Azi.a1.c1')], 'pr': [], 'kin': 'Azi.a1.c1 * 1'}
+reaction_1,{'re': [(1, 'Azi.a1.c2')], 'pr': [], 'kin': 'Azi.a1.c2 * 1'}
+reaction_2,{'re': [(1, 'Azi.a2.c1')], 'pr': [], 'kin': 'Azi.a2.c1 * 1'}
+reaction_3,{'re': [(1, 'Azi.a2.c2')], 'pr': [], 'kin': 'Azi.a2.c2 * 1'}
+reaction_4,{'re': [(1, 'Byy.b1.c1')], 'pr': [], 'kin': 'Byy.b1.c1 * 0.1'}
+reaction_5,{'re': [(1, 'Byy.b1.c2')], 'pr': [], 'kin': 'Byy.b1.c2 * 0.1'}
+reaction_6,{'re': [(1, 'Byy.b2.c1')], 'pr': [], 'kin': 'Byy.b2.c1 * 0.1'}
+reaction_7,{'re': [(1, 'Byy.b2.c2')], 'pr': [], 'kin': 'Byy.b2.c2 * 0.1'}
+
+Events
+event_0,{'trigger': '1 * (Azi.a1.c1 + Azi.a1.c2) <= 1 * (Byy.b1.c1 + Byy.b1.c2) ', 'delay': '0', 'assignments': [('Azi.a1.c1', '200')]}

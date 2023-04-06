@@ -11,27 +11,16 @@ u = UnitRegistry()
 
 
 def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentration=False, volume=1):
-    """
-        Converts the data from the MobsPy standard units to the desired units specified by the user
+    """Converts the simulation output data from the MobsPy standard units
+    to the desired units specified by the user
 
-        Parameters:
-            data (dict) - resulting data from a MobsPy simulation execution
-                Accepts MobsPy results['data'] format
-
-            unit_x (str) - (x axis unit - Time) unit that the user desires the time in
-                Accepts strings with the unit name
-
-            unit_y (str) - (y axis unit - Concentration or Counts) unit that the user desires the counts in
-                Accepts strings with the unit name
-
-            output_concentration (bool) - boolean - decide if output should be a concentration or count
-
-            volume (float) - volume set as parameter to the simulation
-
-        Returns:
-
-            converted_data (dict) - input data converted to the desired units
-                Output data in the MobsPy results['data'] format
+    :param data: (dict) resulting data from a MobsPy simulation execution
+    :param unit_x: (str) unit that the user desires the time in, defaults to dimensionless (None)
+    :param unit_y: (str) unit that the user desires the y axis to be in (Concentration or counts)
+    :param output_concentration: (bool) decide if output should be a concentration or count
+    :param volume: (float) - volume set as parameter to the simulation
+    :return: converted_data - input data converted to the desired units
+    :rtype: (dict) Dictionary meta-species as key and run as value
     """
     u = UnitRegistry()
     converted_data = deepcopy(data)

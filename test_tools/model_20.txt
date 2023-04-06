@@ -1,0 +1,21 @@
+
+Species
+A,200
+B,50
+
+Mappings
+A :
+A
+B :
+B
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A')], 'pr': [], 'kin': 'A * 1'}
+reaction_1,{'re': [(1, 'B')], 'pr': [], 'kin': 'B * 0.1'}
+
+Events
+event_0,{'trigger': '( ( ( ( (A) < (B) ) && ( (A) < (B) ) ) ) || ( (A) < (B) ) ) ', 'delay': '0', 'assignments': [('A', '200')]}
+

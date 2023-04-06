@@ -52,7 +52,6 @@ class Simulation:
                       'trigger': trigger}
 
         self.current_event_count_data = []
-        self.trigger_list = []
         self.pre_number_of_context_comparisons = self.number_of_context_comparisons
         self.number_of_context_comparisons = 0
 
@@ -122,7 +121,6 @@ class Simulation:
         # Event Variable Definitions
         self._species_to_set = set()
         self._event_time = 0
-        self.trigger_list = []
         self.previous_trigger = None
         self.current_event_count_data = []
         self.total_packed_events = []
@@ -343,7 +341,7 @@ class Simulation:
                       'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string',
                       'event_times', 'event_models', 'event_count_dics', '_events_for_sbml',
                       'total_packed_events', 'species_initial_counts', '_species_to_set',
-                      '_event_time', 'trigger_list', 'previous_trigger', 'current_event_count_data',
+                      '_event_time', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
