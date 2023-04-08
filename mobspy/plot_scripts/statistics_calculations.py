@@ -6,11 +6,9 @@ def time_series_average(species_string, mobspy_ts):
     """
         Badly named function - Average between all RUNS inside a single time-series
 
-        Parameters:
-            list_series (list) = a list of all runs from a time-series to calculate the average
-
-        Returns:
-            average_series (list) = a list with the average values from all runs
+        :param species_string: (str) species string to perform the average upon
+        :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
+        :return: average_series (list) a list with the average values from all runs
     """
 
     list_series = []
@@ -49,13 +47,12 @@ def time_series_average(species_string, mobspy_ts):
 
 def standard_deviation(species_string, mobspy_ts, average_series = None):
     """
-       Standard deviation between all RUNS inside a single time-series
+        Standard deviation between all RUNS inside a single time-series
 
-       Parameters:
-           list_series (list) = a list of all runs from a time-series to calculate the average
-
-       Returns:
-           deviation_series (list) = a list with the standard deviation values from all runs
+        :param species_string: (str) Species string
+        :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
+        :param average_series: (list) if the average series is given it is not recalculated
+        :return: deviation_series (list) a list with the standard deviation values from all runs
    """
     if average_series is None:
         average_series = time_series_average(species_string, mobspy_ts)
@@ -79,18 +76,18 @@ def standard_deviation(species_string, mobspy_ts, average_series = None):
     return deviation_series
 
 
-def average_plus_standard_deviation(species_string, mobspy_ts, average_series = None, deviation_series=None):
+def average_plus_standard_deviation(species_string, mobspy_ts, average_series=None, deviation_series=None):
     """
-        Combines the average with the standard deviation
+        Standard deviation between all RUNS inside a single time-series
 
-        Parameters:
-           list_series (list) = a list of all runs from a time-series to calculate the average
+        :param species_string: (str) Species string
+        :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
+        :param average_series: (list) if the average series is given it is not recalculated
+        :param deviation_series: (list) if the deviation is given it is not recalculated
 
-       Returns:
-           series_average (list) = a list with the average values from all runs
-           plus (list) = average list + std deviation list (element by element)
-           minus (list) = average list - std deviation list (element by element)
-    """
+        :return: series_average (list) = average value of the run,  plus (list) = average + deviation,
+        minus (list) = average - deviation,
+   """
     if average_series is None:
         series_average = time_series_average(species_string, mobspy_ts)
     if deviation_series is None:

@@ -15,11 +15,11 @@ def read_json(json_file_name):
     """
         Reads json file
 
-        Parameters:
-            plot_json_filename: json file name
+        :param plot_json_filename: json file name
 
-        Returns:
-            plot parameter dictionary
+        :raise simlog.error: If the file was not able to be read
+
+        :return: plot parameter dictionary
     """
     with open(json_file_name, 'r') as file:
         try:
@@ -35,8 +35,7 @@ def __name_output_file(params):
     """
         Gives a name to the output file - just date time in case the user has not specified one
 
-        Parameters:
-            params (dict) = Dictionary with simulation parameters
+        :param params: (dict) Dictionary with simulation parameters
     """
 
     file_name = "r_"
@@ -48,8 +47,7 @@ def __check_stochastic_repetitions_seeds(params):
     """
         The list of seeds must be equal to the number of repetitions specified
 
-        Parameters:
-            params (dict) = Dictionary with simulation parameters
+        :param params (dict) = Dictionary with simulation parameters
     """
     if 'seeds' in params:
         try:
@@ -63,8 +61,7 @@ def __convert_parameters_for_COPASI(params):
     """
         Converts parameters units to MobsPy standard units (basiCO needs seconds for simulation duration)
 
-        Parameters:
-            params (dict) = Dictionary with simulation parameters
+        :param params: (dict) = Dictionary with simulation parameters
     """
     for key, p in params.items():
         if isinstance(p, Quantity):

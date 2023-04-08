@@ -112,10 +112,10 @@ class Simulation:
             Constructor of the simulation object
 
             Parameters:
-            model (ParallelSpecies object) = Meta-Species object for modeling
-            names (dict) = names of the meta-species in globals() format
-            parameters (dict) = Simulation object parameters
-            plot_parameters (dict) = Parameters for plotting
+            :param model: (ParallelSpecies object) Meta-Species object for modeling
+            :param names: (dict) names of the meta-species in globals() format. If none it uses the variable names
+            :param parameters: (dict) Simulation object parameters. If none takes default parameters
+            :param plot_parameters: (dict) Parameters for plotting. If none takes default
         """
 
         # Event Variable Definitions
@@ -183,8 +183,7 @@ class Simulation:
         """
             Compiler method that calls the Compiler class in the modules directory
 
-            Parameters:
-                verbose (bool) = print or not the results of the compilation
+            :param verbose: (bool) = print or not the results of the compilation
         """
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
@@ -283,9 +282,14 @@ class Simulation:
                 self.plot_deterministic()
 
     def save_data(self, file=None):
-        self._save_data(data_dict=self.results, file=file)
+        """
+            Saves the simulation result data to a file in json format
 
-    def _save_data(self, data_dict, file=None):
+            :param file: (str) name of the file to save the data to. If none a default name is provided
+        """
+        self._save_data(file=file)
+
+    def _save_data(self, file=None):
         """
             Save results manually into file. Useful for jupyter notebook users
 
@@ -308,8 +312,7 @@ class Simulation:
         """
             Packs data from multiple simulations or external data into one simulation object
 
-            Parameters:
-                time_series_data (data in MobsPy format) = data to be packed in the simulation object
+            :param time_series_data: (data in MobsPy format) data to be packed in the simulation object
         """
         self.packed_data.append(time_series_data)
 
@@ -318,8 +321,7 @@ class Simulation:
         """
             Set simulation parameters from json file
 
-            Parameters:
-                file_name (str) = name of the json file
+            :param file_name: (str) name of the json file
         """
         with open(file_name) as json_file:
             data = json.load(json_file)
@@ -330,9 +332,8 @@ class Simulation:
         """
             __setattr__ override. For setting simulation parameters using the _dot_ operator
 
-            Parameters:
-                name (str) = name of the parameter to set
-                value = value of the parameter
+            :param name: (str) name of the parameter to set
+            :param value: value of the parameter
         """
         white_list = ['default_order', 'volume', 'model', 'names', 'parameters', 'model_string',
                       'plot_parameters', 'results', '_species_for_sbml',
@@ -384,19 +385,17 @@ class Simulation:
 
     def configure_parameters(self, config):
         """
-            Configure simulation parameters from json file. Different from set as it overrides previous parameters
+            Configure simulation parameters from json file or dictionary
 
-            Parameters:
-                file_name (str) = name of the json file
+            :param file_name: (str) name of the json file
         """
         self.parameters = self.__config_parameters(config)
 
     def configure_plot_parameters(self, config):
         """
-            Configure plot parameters from json file. Different from set as it overrides previous parameters
+            Configure plot parameters from json file or dictionary
 
-            Parameters:
-                file_name (str) = name of the json file
+            :param file_name: (str) name of the json file
         """
         self.plot_parameters = self.__config_parameters(config)
 
@@ -418,10 +417,11 @@ class Simulation:
     # Plotting encapsulation
     def extract_plot_essentials(self, *species):
         """
-            Extract essential information for the hierarchical plotting tool
+            Extract essential information for plotting
 
-            Parameters:
-                *species (meta-species objects) = meta-species objects to plot
+            :param species: (meta-species objects) meta-species objects to plot
+            :return: species_strings (str) = species strings to be plotted, self.results = data resulting from the
+            simulation, self.plot_parameters (dict) = parameters for plotting
         """
         if not species:
             species_strings = set()
@@ -444,6 +444,8 @@ class Simulation:
     def plot_stochastic(self, *species):
         """
             Calls stochastic plot. See default_plots module in the plot_scripts directory
+
+            :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
         dp.stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
@@ -451,16 +453,26 @@ class Simulation:
     def plot_deterministic(self, *species):
         """
             Calls deterministic plot. See default_plots module in the plot_scripts directory
+
+            :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
         dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot(self, *species):
+        """
+            Another way of calling plot_deterministic for simplicity
+
+            :param species: (str or meta-species objects) list of species to be plotted
+        """
         self.plot_deterministic(*species)
 
     def plot_raw(self, parameters_or_file):
         """
             Calls raw plot. See default_plots module in the plot_scripts directory
+
+            :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot
+            parameter configuration
         """
         dp.raw_plot(self.packed_data, parameters_or_file)
 
@@ -468,6 +480,11 @@ class Simulation:
         return SimulationComposition(self, other)
 
     def generate_sbml(self):
+        """
+            Generates sbmls strings from the current stored models in the simulation
+
+            "return: to_return (list of str) list of sbml files from all the simulations stored
+        """
         to_return = []
         for sbml_data in self._list_of_models:
             to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
@@ -537,6 +554,9 @@ class SimulationComposition:
 
     def plot(self, *species):
         self.base_sim.plot(*species)
+
+    def generate_sbml(self):
+        return self.base_sim.generate_sbml()
 
 
 if __name__ == '__main__':

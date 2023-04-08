@@ -2,6 +2,14 @@ import itertools
 
 
 def characteristics_dictionary(characteristics, characteristics_to_object):
+    """
+        This function constructs a dictionary that leads from the species string characteristics to their respective
+        object. This structure allows to easily find where the characteristics in a species string are locates
+
+        :param characteristics: (set) of characteristics
+        :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
+        object as value
+    """
     object_to_characteristic = {}
     for characteristic in characteristics:
         object_to_characteristic[characteristics_to_object[characteristic]] = characteristic
@@ -9,7 +17,18 @@ def characteristics_dictionary(characteristics, characteristics_to_object):
 
 
 def construct_species_char_list(spe_object, characteristics, characteristics_to_object, symbol=None):
+    """
+        This function constructs a list in the format ['species_name', 'char1', 'char2', ...]. It generetes this list
+        for a given meta-species and the specified characteristics. Values of characteristics not specified in a
+        particular position are replaced by their default value. If a symbol is given it generates a string from
+        the list using the symbol to join it.
 
+        :param spe_object: meta-species object to be used
+        :param characteristics: (set) of characteristics given
+        :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
+        object as value
+        :param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol
+    """
     if characteristics == 'std$':
         characteristics = set()
 
@@ -32,6 +51,17 @@ def construct_species_char_list(spe_object, characteristics, characteristics_to_
 
 
 def construct_all_combinations(spe_object, characteristics, characteristics_to_object, symbol=None):
+    """
+       This function constructs all possible list in the format ['species_name', 'char1', 'char2', ...] using
+       all combinations of characteristics from the vector coordinates not used in the characteristics specified
+       in the function argument. If a symbol is given it generates a string from the list using the symbol to join it.
+
+       :param spe_object: meta-species object to be used
+       :param characteristics: (set) of characteristics given
+       :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
+       object as value
+       :param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol
+    """
 
     if characteristics == 'std$':
         characteristics = set()

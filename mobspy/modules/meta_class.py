@@ -316,7 +316,21 @@ class Reactions:
 
             :param reactants: (list of Species) list of meta-species used as reactants in the meta-reaction
             :param products: (list of Species) list of meta-species used as products in the meta-reaction
+
+            :raise simlog.error: if a reaction is defined under a simulation context
+            :raise simlog.error: if was called from Zero to Zero
         """
+        try:
+            to_test_context_object = reactants[0]['object']
+        except IndexError:
+            try:
+                to_test_context_object = products[0]['object']
+            except IndexError:
+                simlog.error('No Meta-Species detected in the reaction')
+
+        if to_test_context_object._simulation_context is not None:
+            simlog.error('Reactions cannot be defined under event context. Only species counts')
+
         self.reactants = reactants
         self.products = products
 
@@ -343,7 +357,6 @@ class Reactions:
         self.rate = rate
 
 
-# HERE FABRICIO
 class Reacting_Species(ReactingSpeciesComparator):
     """
         This is a intermediary object created when a species is used in a reaction. It is created when a species is
@@ -377,8 +390,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             c query implementation, queries by the value inside a variable instead of the name
             it just calls __getattr__ with the value inside the variable
 
-            Parameters:
-                item : value to query over
+            :param item: value to query over
         """
         item = str(item)
         if item in ['c']:
@@ -387,10 +399,10 @@ class Reacting_Species(ReactingSpeciesComparator):
 
     def label(self, label):
         """
-            Label function implementation. This function matches equal meta-species if they have equal labels
+            Label function implementation. This function assigns labels to meta-species to be matched by the compiler
+            later
 
-            Parameters:
-                label (int, float, str) = value for the label for matching
+            :param label: (int, float, str) value for the label for matching
         """
         if len(self.list_of_reactants) == 1:
             self.list_of_reactants[0]['label'] = label
@@ -402,8 +414,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
             Override of __getitem__ for dealing with reaction rates
 
-            Parameters:
-                item (int, float, callable, Quantity) = reaction rate
+            :param item: (int, float, callable, Quantity) = reaction rate
         """
         return Compiler.override_get_item(self, item)
 
@@ -413,11 +424,10 @@ class Reacting_Species(ReactingSpeciesComparator):
             have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
             finally a label if used.
 
-            Parameters:
-                object_reference (Species) = meta-species object reference
-                characteristics (str) = characteristics used to query over the meta-species inside this reaction
-                stoichiometry (int) = stoichiometry value of the meta-species in the reaction
-                label (int, float, str) = value for the label for matching used in this reaction
+            :param object_reference: (Species) meta-species object reference
+            :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
+            :param stoichiometry: (int) stoichiometry value of the meta-species in the reaction
+            :param label: (int, float, str) value for the label for matching used in this reaction
         """
         super(Reacting_Species, self).__init__()
         if object_reference.get_name() == 'S0' and characteristics == set():
@@ -430,8 +440,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
             Multiplication by the stoichiometry for reactions
 
-            Parameters:
-                stoichiometry (int) = stoichiometry value of the meta-species in the reaction
+            :params stoichiometry: (int) stoichiometry value of the meta-species in the reaction
         """
         if type(stoichiometry) == int:
             self.list_of_reactants[0]['stoichiometry'] = stoichiometry
@@ -445,8 +454,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             species ) or other reacting species. With this we concatenate different reacting species in the
             list_of_reactants to eventually transform into a reaction with the >> operator
 
-            Parameter:
-                other (Species or Reacting Species) = other object being added
+            :param  other: (Species or Reacting Species) other object being added
         """
         if isinstance(other, Species):
             other = Reacting_Species(other, set())
@@ -458,8 +466,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             The >> operator for defining reactions. It passes two instances of reacting species to construct the
             list_of_reactants and list_of_products in the reaction object
 
-            Parameter:
-                other (Species or Reacting Species) = product side of the reaction being added
+            :param other: (Species or Reacting Species) product side of the reaction being added
         """
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
@@ -474,8 +481,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             The call operator here is used to add counts to species non-default state. This stores the characteristics
             that have been called using the dot operator to assign the count after the call operation
 
-            Parameters:
-                quantity (int, float, Quantity) = count to be assigned to the species
+            :param quantity: (int, float, Quantity) count to be assigned to the species
         """
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
@@ -504,8 +510,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             This is the implementation of the .dot operation. Adds characteristics to the species and/or perform
             queries
 
-            Parameters:
-                characteristic (str) = characteristic for the query
+            :param characteristic: (str) characteristic for the query
         """
         for reactant in self.list_of_reactants:
 
@@ -529,8 +534,7 @@ class ParallelSpecies:
         This class just stores species after the | operation. It creates a list of species than can be loop through or
         given to the simulator
 
-        Attributes:
-            list_of_species (Species) = Meta-species list to store the meta-species
+        :param list_of_species: (Species) Meta-species list to store the meta-species
     """
 
     def __init__(self, list_of_species):
@@ -538,8 +542,7 @@ class ParallelSpecies:
             Constructor not usually used - but a list_of_species is given one can construct the ParallelSpecies from it
             It is advised to use the | operator
 
-            Parameters:
-                list_of_species (Species) = Meta-species list to store the meta-species
+            :param list_of_species: (Species) Meta-species list to store the meta-species
         """
         self.list_of_species = list_of_species
 
@@ -547,8 +550,7 @@ class ParallelSpecies:
         """
             Add species to the list_of_species called by the | operator
 
-            Parameters:
-                species (Species) = meta-species to be added to the ParallelSpecies
+            :param species: (Species) meta-species to be added to the ParallelSpecies
         """
         if not isinstance(species, Species):
             simlog.error('Only Species can be appended')
@@ -558,8 +560,7 @@ class ParallelSpecies:
         """
             Equal to list[item]
 
-            Parameters:
-                item (int) = value of index to get the element
+            :param item: (int) value of index to get the element
         """
         return self.list_of_species[item]
 
@@ -603,25 +604,17 @@ class Species(SpeciesComparator):
         Objects store all the basic information necessary to create an SBML file and construct a model
         So we construct the species through reactions and __getattr__ to form a model
 
-        Parameters:
-            _name (str) = name of the species - named firstly as N$Counter as a placeholder. During compilation it is
-            named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
-            _characteristics (str) = set of characteristics DIRECTLY added to a species, does not contain inherited
-            characteristics
-            _references (set) = set of meta-species a meta-species has inherited from (used in it's construction).
-            Every species contains itself in this set
-            first_characteristic (str) = first characteristic added to the species
-            _reactions (set) = Every species stores all reactions is involved in. The compiler performs the union of
-            the set with all species and species in the _references set to get the reactions back
-            _species_counts (list) = counts listed for the species. Stores dictionaries with the characteristics as
-            keys and the counts of values
-
-        Methods:
-            __str__, c, label, show_reactions, show_characteristics, show_references, show_quantities, __or__,
-            __iter__, __getitem__, __rmul__, __radd__, __add__, __rshift__, __getattr__, __call__, add_quantity,
-            reset_quantities, get_quantities, __mul__, __init__, get_name, add_characteristic, remove_characteristic,
-            print_characteristics, get_references, add_reference, set_references, set_reactions, add_reactions
-
+        :param _name: (str) name of the species - named firstly as N$Counter as a placeholder. During compilation it is
+        named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
+        :param _characteristics: (str) set of characteristics DIRECTLY added to a species, does not contain inherited
+        characteristics
+        :param _references: (set) set of meta-species a meta-species has inherited from (used in it's construction).
+        Every species contains itself in this set
+        :param first_characteristic: (str) first characteristic added to the species
+        :param _reactions: (set) Every species stores all reactions is involved in. The compiler performs the union of
+        the set with all species and species in the _references set to get the reactions back
+        :param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
+        keys and the counts of values
     """
 
     def __str__(self):
@@ -636,8 +629,7 @@ class Species(SpeciesComparator):
             c query implementation, queries by the value inside a variable instead of the name
             it just calls __getattr__ with the value inside the variable
 
-            Parameters:
-                item : value to query over
+            :param item: value to query over
         """
         item = str(item)
         if item in ['c']:
@@ -650,11 +642,8 @@ class Species(SpeciesComparator):
             Label function implementation. This function matches equal meta-species if they have equal labels
             Here it returns a Reacting_Species as labels need to be used in reactions
 
-            Parameters:
-                label (int, float, str) = value for the label for matching
-
-            Returns:
-                Reacting_Species object created with the label in the constructor
+            :param label: (int, float, str) value for the label for matching
+            :return: Reacting_Species object created with the label in the constructor
         """
         return Reacting_Species(self, set(), label=label)
 
@@ -700,8 +689,7 @@ class Species(SpeciesComparator):
         """
             Creates an instance of ParallelSpecies using the | operator
 
-            Parameters:
-                other (Species or ParallelSpecies) = Species or ParallelSpecies to combine into
+            :param other: (Species or ParallelSpecies) Species or ParallelSpecies to combine into
         """
         if isinstance(other, ParallelSpecies):
             other.append(self)
@@ -713,8 +701,7 @@ class Species(SpeciesComparator):
         """
             iter defined to be consistent with ParallelSpecies behavior
 
-            Returns:
-                Itself
+            :returns: Itself
         """
         yield self
 
@@ -723,8 +710,7 @@ class Species(SpeciesComparator):
         """
             Override of __getitem__ for dealing with reaction rates
 
-            Parameters:
-                item (int, float, callable, Quantity) = reaction rate
+            :param item: (int, float, callable, Quantity) reaction rate
         """
         return Compiler.override_get_item(self, item)
 
@@ -732,11 +718,8 @@ class Species(SpeciesComparator):
         """
             Multiplication by the stoichiometry
 
-            Parameters:
-                stoichiometry (int) = Stoichiometry of the meta-species in the meta-reaction
-
-            Returns:
-                r (Reacting_Species) = Reacting_Species with the stoichiometry added to it
+            :param stoichiometry: (int) Stoichiometry of the meta-species in the meta-reaction
+            :return: r (Reacting_Species) Reacting_Species with the stoichiometry added to it
         """
         if type(stoichiometry) == int:
             r = Reacting_Species(self, set(), stoichiometry)
@@ -749,11 +732,8 @@ class Species(SpeciesComparator):
             Implementation of addition. In case a Species object is being used in a reaction, so it can then generate
             a Reacting_Species object
 
-            Parameters:
-                other (Species or Reacting Species object) = Other objected added to construct a reaction
-
-            Returns:
-                r1 + r2 (Reacting Species) = Reacting Species objected created by the sum of the two
+            :param other: (Species or Reacting Species object) Other objected added to construct a reaction
+            :return: r1 + r2 (Reacting Species) Reacting Species objected created by the sum of the two
         """
         r1 = Reacting_Species(self, set())
         if isinstance(other, Reacting_Species):
@@ -773,11 +753,8 @@ class Species(SpeciesComparator):
             Reaction definition (>> operator) in case one uses only a single species. Allows it to transform
             into a reacting species before adding it into the reaction
 
-            Parameters:
-                other (Species or Reacting_Species) = Reaction products
-
-            Returns
-                The reaction
+            :param other: (Species or Reacting_Species) reaction products
+            :return: the reaction
         """
         myself = Reacting_Species(self, set())
 
@@ -798,11 +775,8 @@ class Species(SpeciesComparator):
             If it is the first time is called we add it to the set of characteristics
             Second time, it just creates a Reacting_Species for reaction construction
 
-            Parameters:
-                characteristic (str) = characteristic to be added or to be use as a query in the reaction
-
-            Returns:
-                Reacting_Species with the characteristic added for querying
+            :param characteristic: (str) characteristic to be added or to be use as a query in the reaction
+            :return: Reacting_Species with the characteristic added for querying
         """
         characteristics_from_references = mcu.unite_characteristics(self.get_references())
         characteristics = {characteristic}
@@ -823,12 +797,10 @@ class Species(SpeciesComparator):
             First, it adds characteristics to the default state of the meta-species if the quantity is a real
             Secondly, it returns the name of the characteristic from a species string that belongs to this meta-species
 
-            Parameters:
-                quantity (int, float, Quantity) = for count assignment
-                        (Specific_Species_Operator object) = for characteristic extraction
+            :param: quantity (int, float, Quantity) = for count assignment
+            (Specific_Species_Operator object) = for characteristic extraction
 
-            Returns:
-                self = to allow for assigning counts mid-reaction
+            :return self: to allow for assigning counts mid-reaction
         """
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             quantity_dict = self.add_quantities('std$', quantity)
@@ -855,14 +827,13 @@ class Species(SpeciesComparator):
             return self
 
     def add_quantities(self, characteristics, quantity):
-        '''
+        """
             This function was implemented because Python can't accept sets as dictionary keys
             Set the quantity of an specific string of species
 
-            Parameters
-                characteristics (str) = characteristics of the species to be set
-                quantity (int, float, Quantity) = counts of that specific species
-        '''
+            :param characteristics: (str) characteristics of the species to be set
+            :param quantity: (int, float, Quantity) counts of that specific species
+        """
         if self._simulation_context is None:
             already_in = False
             for e in self._species_counts:
@@ -895,11 +866,8 @@ class Species(SpeciesComparator):
             Instead we combine the sets of references, objects can access the characteristics from other through the
             reference set
 
-            Parameters:
-                other (Species) = Species for the multiplication and creation of a higher order species
-
-            Returns:
-                new_entity (Species) = Higher order species resulted from the multiplication
+            :param other: (Species) Species for the multiplication and creation of a higher order species
+            :return: new_entity (Species) Higher order species resulted from the multiplication
         """
         Compiler.entity_counter += 1
         name = 'N$' + str(Compiler.entity_counter)
@@ -915,8 +883,7 @@ class Species(SpeciesComparator):
         """
             Object constructor - We recommend using BaseSpecies instead
 
-            Parameters:
-                name (str) = Name of the species (can be placeholder if named with N$)
+            :param name: (str) Name of the species (can be placeholder if named with N$)
         """
         super(Species, self).__init__()
         self._name = name
@@ -939,8 +906,7 @@ class Species(SpeciesComparator):
         """
             Function to name a species. Allows the user to use a name different from the variable's name
 
-            Parameters:
-                name (str) = name of the species
+            :param name: (str) name of the species
         """
         self._name = name
 
@@ -1035,11 +1001,8 @@ def BaseSpecies(number_of_properties=None):
         Function that returns a number of base species according to the number_of_properties
         BaseSpecies are just Species with no inheritance attached to it
 
-        Parameters:
-            number_of_properties (int) = number of base species wanted
-
-        Returns:
-            Species objects according to the number of species requested
+        :param  number_of_properties: (int) number of base species wanted
+        :return: Species objects according to the number of species requested
     """
     if number_of_properties is None:
         code_line = inspect.stack()[1].code_context[0][:-1]
@@ -1073,8 +1036,7 @@ def New(species, n=None):
         It can also return several meta-species objects at a time and be used for designing list of species ( check
         tutorial)
 
-        Parameters:
-            n (int) = number of species to return
+        :param: n (int) number of species to return
     """
     if n is None:
         code_line = inspect.stack()[1].code_context[0][:-1]

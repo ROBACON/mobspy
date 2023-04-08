@@ -1,6 +1,9 @@
 """
     This model is responsible for storing example parameters
-    It's used by the simulation to check which parameters exist or not
+    It's used by the simulation to check which parameters exist or not.
+    If a new parameter is added, they key must be added here as an example.
+    Otherwise the simulation object will throw a compilation error, telling the user that the parameter is not
+    supported,
 """
 
 

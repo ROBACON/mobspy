@@ -8,9 +8,8 @@ def query_plot_data(species, data):
         Performs a query of the plot data, when one wishes to plot species with characteristics
         It creates a new data structure with the results from the query added to it for the plotting structure
 
-        Parameters:
-            species (str) = Species name in string format
-            data (dict) = Data in MobsPy dictionary format
+        :param species: (str) Species name in string format
+        :param data: (dict) Data in MobsPy dictionary format
     """
     new_data = deepcopy(data)
 
@@ -37,9 +36,8 @@ def check_plot_parameters(species, plot_params):
     """
         Performs a check of the plot_parameters given. To see if the parameters are correctly named
 
-        Parameters:
-             species (str) = Species in str format
-             plot_params (dict) = Plot parameter dictionary
+        :param species: (str) Species in str format
+        :param plot_params: (dict) Plot parameter dictionary
     """
     dictionary = epr.get_example_plot_parameters()
 

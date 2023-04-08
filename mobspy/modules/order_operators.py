@@ -19,7 +19,6 @@ class __Operator_Base:
         It also overrides the getitem method so we can use:
         Operator[Reaction] to assign an order to the reaction
     """
-
     # Assign order structure
     def __getitem__(self, item):
         item.order = self
@@ -34,11 +33,10 @@ class __Operator_Base:
             MobsPy them converts the characteristics in the same position as that one (that have been directly
             added to the same meta-species) to the one in the characteristics_to_transform variable
 
-            Parameters:
-                species_string (str) = A string associated with a species in the MobsPy format
-                characteristics_to_transform (str) = Characteristics received by the species object in the product
-                ref_characteristics_to_object (dict) = Dictionary with the characteristics as keys and meta-species
-                objects as values
+            :param  species_string: (str) A string associated with a species in the MobsPy format
+            :param  characteristics_to_transform: (str) Characteristics received by the species object in the product
+            :param ref_characteristics_to_object: (dict) Dictionary with the characteristics as keys and meta-species
+            objects as values
         """
         species_object = species_string[0]
         species_to_return = [species_object.get_name()] + deepcopy(species_string[1:]) \
@@ -54,17 +52,16 @@ class __Operator_Base:
 
     @staticmethod
     def find_all_string_references_to_born_species(species_referenced_by, characteristics,
-                                                   model, ref_characteristics_to_object):
+                                                   ref_characteristics_to_object):
         """
             Finds all the string species that reference the born-meta species, including inheritors
             Returns them all in a list for the product construction
 
-            Parameters:
-                species_referenced_by (meta-species list) = List of species that inherit from the born-meta species
-                in the reaction
-                characteristics (str) = List of characteristics queried on the born species in the product
-                species_string_dictionary (dict) = Dictionary with meta-species as keys and a list of species strings
-                as values
+            :param species_referenced_by: (meta-species list) List of species that inherit from the born-meta species
+            in the reaction
+            :param characteristics: (str) List of characteristics queried on the born species in the product
+            :param meta_species_in_model: (list) list of meta-species in model
+            as values
         """
         to_return = []
         for species in species_referenced_by:
@@ -73,20 +70,18 @@ class __Operator_Base:
         return to_return
 
     @staticmethod
-    def find_all_default_references_to_born_species(species_referenced_by, characteristics, model,
+    def find_all_default_references_to_born_species(species_referenced_by, characteristics,
                                                     ref_characteristics_to_object):
         """
             Finds only the DEFAULT string species that reference the born-meta species, including inheritors
             Returns them all in a list for the product construction.
 
-            Parameters:
-                species_referenced_by (meta-species list) = List of species that inherit from the born-meta species
-                in the reaction
-                characteristics (str) = List of characteristics queried on the born species in the product
-                species_string_dictionary (dict) = Dictionary with meta-species as keys and a list of species strings
-                as values
-                ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
-                objects that they have been directly added to as values
+            :param species_referenced_by: (meta-species list) List of species that inherit from the born-meta species
+            in the reaction
+            :param characteristics: (str) List of characteristics queried on the born species in the product
+            :param meta_species_in_model: (list) list of meta-species in model
+            :param ref_characteristics_to_object: (dict) Dictionary with the characteristics as keys and meta-species
+            objects that they have been directly added to as values
         """
         to_return = []
         for species in species_referenced_by:
@@ -102,12 +97,12 @@ class __Operator_Base:
             It parries them using the order_dictionary and an index-system for the round-robin application
             If it cannot find a parrying it considers it a born species
 
-            Parameters:
-                order_dictionary (dict) = Dictionary with the meta-species as keys and the list of meta-species strings
-                product_species (dict) = Product species dict with the meta-species object (key: species),
-                label (key: label), and characteristics (key: characteristics)
-                ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
-                objects that they have been directly added to as values
+            :param order_dictionary: (dict) Dictionary with the meta-species as keys and the list of 
+            meta-species strings
+            :param product_species: (dict) Product species dict with the meta-species object (key: species),
+            label (key: label), and characteristics (key: characteristics)
+            :param ref_characteristics_to_object: (dict) Dictionary with the characteristics as keys and meta-species
+            objects that they have been directly added to as values
         """
         round_robin_index = {}
         for species, label in [(e['species'], e['label']) for e in product_species]:
@@ -141,13 +136,11 @@ class __Operator_Base:
                     # Find all the species that reference the one in the reaction
                     products.append(self.find_all_string_references_to_born_species(species_is_referenced_by,
                                                                                     characteristics,
-                                                                                    model,
                                                                                     ref_characteristics_to_object))
                 else:
                     # Find only default state of the species
                     products.append(self.find_all_default_references_to_born_species(species_is_referenced_by,
                                                                                      characteristics,
-                                                                                     model,
                                                                                      ref_characteristics_to_object))
 
         return products
@@ -170,27 +163,24 @@ class __Round_Robin_Base(__Operator_Base):
         The products will keep the characteristics of the reactants except if stated otherwise with .
         For completely new species (no reactant of the same species) we use ALL possible combinations
         For only the default option see the code bellow
-
-        Methods:
-            __call__
     """
 
     def __call__(self, order_dictionary, product_species,
-                 species_string_dictionary,
+                 meta_species_in_model,
                  ref_characteristics_to_object, all_reactions=True):
         """
             This function is responsible for parrying the products with the reactants according to their meta-species
             It parries them using the order_dictionary and an index-system for the round-robin application
             If it cannot find a parrying it considers it a born species
 
-            Parameters:
-                order_dictionary (dict) = Dictionary with the meta-species as keys and the list of meta-species strings
-                product_species (dict) = Product species dict with the meta-species object (key: species),
-                label (key: label), and characteristics (key: characteristics)
-                ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
-                objects that they have been directly added to as values
+            :param order_dictionary: (dict) Dictionary with the meta-species as keys and the list of 
+            meta-species strings
+            :param product_species: (dict) Product species dict with the meta-species object (key: species),
+            label (key: label), and characteristics (key: characteristics)
+            :param ref_characteristics_to_object: (dict)  Dictionary with the characteristics as keys and meta-species
+            objects that they have been directly added to as values
         """
-        return super().__call__(order_dictionary, product_species, species_string_dictionary,
+        return super().__call__(order_dictionary, product_species, meta_species_in_model,
                                 ref_characteristics_to_object, all_reactions)
 
 
@@ -202,28 +192,25 @@ class __RR_Default_Base(__Operator_Base):
     """
         Only default options for born species (no reference in reactant)
         See __Round_Robin_Base for clarification
-
-        Methods:
-            __call__
     """
 
     # Here is the default order requested by Thomas
     def __call__(self, order_dictionary, product_species,
-                 species_string_dictionary,
+                 meta_species_in_model,
                  ref_characteristics_to_object, all_reactions=False):
         """
             This function is responsible for parrying the products with the reactants according to their meta-species
             It parries them using the order_dictionary and an index-system for the round-robin application
             If it cannot find a parrying it considers it a born species
 
-            Parameters:
-                order_dictionary (dict) = Dictionary with the meta-species as keys and the list of meta-species strings
-                product_species (dict) = Product species dict with the meta-species object (key: species),
-                label (key: label), and characteristics (key: characteristics)
-                ref_characteristics_to_object (dict) =  Dictionary with the characteristics as keys and meta-species
-                objects that they have been directly added to as values
+            :param order_dictionary: (dict) Dictionary with the meta-species as keys and the list of meta-species
+            strings
+            :param product_species: (dict) Product species dict with the meta-species object (key: species),
+            label (key: label), and characteristics (key: characteristics)
+            :param ref_characteristics_to_object: (dict) Dictionary with the characteristics as keys and meta-species
+            objects that they have been directly added to as values
         """
-        return super().__call__(order_dictionary, product_species, species_string_dictionary,
+        return super().__call__(order_dictionary, product_species, meta_species_in_model,
                                 ref_characteristics_to_object, all_reactions)
 
 
@@ -241,8 +228,7 @@ class __Set_Reversible_Rate:
         """
             This function extracts both reaction rates from a tuple
 
-            Parameters:
-                both_rates (rate functions) = rate function from the direct and reverse reaction
+            :param both_rates: (rate functions) rate function from the direct and reverse reaction
         """
         if len(both_rates) != 2:
             simlog.error('The reversible reaction must receive 2 rates')
@@ -270,8 +256,7 @@ class __Reversible_Base:
             This __getitem__ uses the rate setter which is a instance of __Set_Reversible_Rate to set the reversible
             reaction rates. It also creates the reverse reaction with the constructor
 
-            Parameters:
-                reaction (Reaction object) = object from the reaction class
+            :param reaction: (Reaction object) object from the reaction class
         """
         reaction_direct = reaction
         reaction_reverse = mc.Reactions(reaction_direct.products, reaction_direct.reactants)

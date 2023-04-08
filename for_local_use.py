@@ -4,7 +4,13 @@ import os
 
 if __name__ == '__main__':
 
-    pass
+    A = BaseSpecies()
+    A >> Zero [1]
+
+    S = Simulation(A)
+
+    with S.event_time(0):
+        Zero >> A [1]
 
 
 

@@ -13,13 +13,11 @@ def convert_rate(quantity, reaction_order, dimension):
     """
         This function converts the rate from the users given unit to MobsPy standard units
 
-        Parameters:
-            quantity (int, float, Quantity) = If it is a quantity object convert, otherwise it remains the same
-            reaction_order (int) = number of reactants in the reaction, to check if the rate is in the correct unit
-            dimension (int) = model's dimension (1D, 2D, 3D, ... )
+        :param quantity: (int, float, Quantity) If it is a quantity object convert, otherwise it remains the same
+        :param reaction_order: (int) number of reactants in the reaction, to check if the rate is in the correct unit
+        :param dimension: (int) model's dimension (1D, 2D, 3D, ... )
 
-        Returns:
-            quantity (int, float) = converted unit into MobsPy standard units
+        :param quantity: (int, float) converted unit into MobsPy standard units
     """
     volume_power = reaction_order - 1
     converted_quantity = deepcopy(quantity)
@@ -52,13 +50,11 @@ def convert_counts(quantity, volume, dimension):
         This function converts the counts from the users given unit to MobsPy standard units. It also converts
         concentrations into counts
 
-        Parameters:
-            quantity (int, float, Quantity) = If it is a quantity object convert, otherwise it remains the same
-            volume (int, float) = volume in liters (converted beforehand)
-            dimension (int) = model's dimension (1D, 2D, 3D, ... )
+        :param quantity: (int, float, Quantity) If it is a quantity object convert, otherwise it remains the same
+        :param volume: (int, float) volume in liters (converted beforehand)
+        :param dimension: (int) model's dimension (1D, 2D, 3D, ... )
 
-        Returns:
-            converted_quantity (int, float) = converted unit into MobsPy standard units
+        :return: converted_quantity (int, float) = converted unit into MobsPy standard units
     """
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
@@ -88,12 +84,12 @@ def check_dimension(dimension, value):
     """
         Checks for dimension consistency. It "stores" the first dimension it was given by returning it
 
-        Parameters:
-            dimension (int) = model's dimension (1D, 2D, 3D ...)
-            value (int) = dimension value being analysed
+        :param dimension: (int) model's dimension (1D, 2D, 3D ...)
+        :param value: (int) dimension value being analysed
 
-        Returns:
-            dimension (int) = model's dimension (1D, 2D, 3D ...)
+        :raise simlog.error: If dimensions are not consistent through the given units (units in 1D with 2D mixed)
+
+        :return: dimension (int) = model's dimension (1D, 2D, 3D ...)
     """
     if dimension is None:
         dimension = int(value)
@@ -107,9 +103,8 @@ def extract_length_dimension(unit_string, dimension):
     """
         Extracts the volume dimension from a Quantity object from Pint
 
-        Parameters:
-            unit_string (str) = unit in str format
-            dimension (int) = model's dimension (1D, 2D, 3D ...)
+        :param unit_string: (str) unit in str format
+        :param dimension: (int) model's dimension (1D, 2D, 3D ...)
     """
     temp_list = unit_string.split()
     try:
@@ -130,8 +125,9 @@ def convert_volume(volume, dimension):
     """
         Converts volume to decimetre**dimension
 
-        Parameters:
-            volume (int, float, Quantity) = volume used in simulation
+        :param volume: (int, float, Quantity) volume used in simulation
+
+        :return: the converted volume in MobsPy units
     """
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
@@ -142,6 +138,11 @@ def convert_volume(volume, dimension):
 
 
 def convert_time(time):
+    """
+        Converts time into seconds
+
+        :param time: (int, float, Quantity) any time used
+    """
     if isinstance(time, Quantity):
         if str(time.dimensionality) == '[time]':
             return time.to('second').magnitude

@@ -10,13 +10,10 @@ def simulate(list_of_params, models):
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
 
-        Parameters:
-            params (dict) = simulation parameters from the text file
-            models (dict) = {'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
-                            'events_for_sbml':, 'species_not_mapped':, 'mappings':}
-
-        Returns:
-            (dict) Data for MobsPy simulation object
+        :param list_of_params: (dict) simulation parameters from the text file
+        :param models: (list) [{'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
+                            'events_for_sbml':, 'species_not_mapped':, 'mappings':}]
+        :return: data (dict) = dictionary containing the resulting data from simulation
     """
     params = list_of_params[0]
 
@@ -50,11 +47,13 @@ def job_execution(params, models, jobs):
     """
         This is defined for parallelism purposes
         Uses multiple cores from the processor to execute stochastic simulations
-        
-        Parameters:
-            params (dict) = simulation parameters
-            jobs (int) = number of cores to use, -1 for all available
-            sbml_str (str) = model SBML string
+
+        :param params: (dict) = simulation parameters
+        :param models: (list) [{'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
+                            'events_for_sbml':, 'species_not_mapped':, 'mappings':}]
+        :param jobs: (int) = number of cores to use, -1 for all available
+
+        :return: parallel_data data of all the individual simulations executed in parallel
     """
 
     def __single_run(packed):
@@ -109,10 +108,10 @@ def __run_time_course(basico_model, duration, params, index):
     """
         This function prepares the parameters for the basiCO.run_time_course
 
-        Parameters:
-            params (dict) = simulation parameters
-            index (int) = current index of the run
-            duration (int, float) = simulation duration in seconds
+        :param basico_model: basico model to be run in the simulation
+        :param params: (dict) simulation parameters
+        :param index: (int) current index of the run
+        :param duration: (int, float) simulation duration in seconds
     """
     params["simulation_method"] = params["simulation_method"].lower()
     if (params['_with_event'] or params['_continuous_simulation']) and params["simulation_method"] == 'stochastic':
@@ -140,8 +139,7 @@ def reformat_time_series(data):
     """
         Transforms the _dot_ in from the results into .
 
-        Parameters:
-            data (pd.dataframe) = simulation data results from BasiCO
+        :param data: (pd.dataframe) simulation data results from BasiCO
     """
     data_dict = {'Time': data.index.tolist()}
 
@@ -152,6 +150,12 @@ def reformat_time_series(data):
 
 
 def __filter_condition_event_time_data(data):
+    """
+        This function filters all the data until the event was triggered. It is used for the conditional duration
+        simulations
+
+        :param data: (dict) single run data with species as keys and values
+    """
     new_data = {}
 
     for i, e in enumerate(data['End_Flag_MetaSpecies']):
@@ -166,6 +170,15 @@ def __filter_condition_event_time_data(data):
 
 
 def __sbml_new_initial_values(data, model, sim_para, new_model=False):
+    """
+        This function adjusts the new sbml counts to the end of the previous concatenation simulation or conditional
+        simulation
+
+        :param data: (dict) single run data with species as keys and values
+        :param model: (dict) model to be used in the next simulation
+        :param model: (sim_par) parameters to be used in the next simulation
+        :param new_model: (bool) is a new model being used or the model is the same as the old one
+    """
     species_for_sbml = model['species_for_sbml']
 
     check_list = ["stochastic", "directmethod"]
@@ -198,6 +211,13 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
 
 
 def __add_simulations_data(added_data, reformatted_data):
+    """
+        Adds the data from the new executed simulation to the data stored so far
+
+        :param added_data: (dict) added data so far in the simulation (key: species string - value: run)
+        :param reformatted_data: (dict) data return from the simulation after being formatted using the reformat
+        data function
+    """
     if added_data != {}:
         time_to_add = added_data['Time'][-1]
     else:
@@ -251,15 +271,14 @@ def __remap_species(data, mapping, species_not_mapped):
     """
         Takes the simulated species (data) and add ones defined by
         mapping (mapping).
-
         By default, a mapping is a list of species in which case the
         sum is taken: ['a', 'b', ...]
+        It also adds species that have been removed from the basico simulation
 
         Parameters:
-            data (dict) = Data in MobsPy format
-            mapping (dict) = Mappings between species and meta-species
-            params (dict) = Simulation parameters
-            species_not_mapped (list of str) = Species not mapped by BasiCO (removed due to the absence of reactions)
+        :param data: (dict) Data in MobsPy format
+        :param mapping: (dict) = Mappings between species and meta-species
+        :param species_not_mapped: (list of str) Species not mapped by BasiCO
     """
 
     mapped_data = {'Time': data['Time']}

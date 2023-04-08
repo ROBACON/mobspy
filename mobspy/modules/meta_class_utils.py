@@ -13,9 +13,6 @@ def combine_references(species1, species2):
         :param species1: (Meta-species object)
         :param species2: (Meta-species object)
     """
-    #if species1.get_references().intersection(species2.get_references()):
-    #    simlog.warning(f'A product was executed between species with a common meta-species\n')
-
     return species1.get_references().union(species2.get_references())
 
 
@@ -46,14 +43,12 @@ def complete_characteristics_with_first_values(spe_object, characteristics, char
         It allows us to search for the proper string in the model using the result of this function
         It's used to set the quantities using the call method in Species and Reacting_Species
 
-        Parameters:
-            spe_object (meta-species object) = meta-species to generate the species states with the first values
-            characteristics (str) = if there are characteristics to use instead of the default
-            characteristics_to_object (dict) = dictionary with characteristics as keys and the meta-species which
-            they have been added to directly as value (no inheritance or New)
+        :param spe_object: (meta-species object) meta-species to generate the species states with the first values
+        :param characteristics: (str) if there are characteristics to use instead of the default
+        :param characteristics_to_object: (dict) dictionary with characteristics as keys and the meta-species which
+        they have been added to directly as value (no inheritance or New)
 
-        Returns:
-            Set with the species name and characteristics
+        :return: Set with the species name and characteristics
     """
     if characteristics == 'std$':
         characteristics = set()
@@ -78,8 +73,7 @@ def unite_characteristics(species):
     """
         This function unites the characteristics of all the given species
 
-        Parameters:
-            species (list of species or ParallelSpecies object)
+        :param species: (list of species or ParallelSpecies object)
     """
     characteristics = set()
 
@@ -98,12 +92,10 @@ def create_orthogonal_vector_structure(species):
         It simplifies the code by allowing to easily keep track of the 'axis' of each characteristic. Allowing
         for easy transformation on the products and others
 
-        Parameters:
-            species (meta-species objects) - meta-species objects used in a model
+        :param species: (meta-species objects) - meta-species objects used in a model
 
-        Returns:
-            ref_characteristics_to_object (dict) = a dictionary where the keys are characteristics and the
-            values are meta-species objects that have been directly added to that object
+        :return ref_characteristics_to_object: (dict) a dictionary where the keys are characteristics and the
+        values are meta-species objects that have been directly added to that object
     """
     ref_characteristics_to_object = {}
     for spe in species:
@@ -117,7 +109,8 @@ def create_orthogonal_vector_structure(species):
                 else:
                     simlog.error(f'A characteristic must be unique for each species \n'
                                 f'Repetition in: {spe}, {ref_characteristics_to_object[cha] } \n'
-                                f'Characteristics: {spe.get_characteristics()}, {ref_characteristics_to_object[cha].get_characteristics()} \n')
+                                f'Characteristics: {spe.get_characteristics()}, '
+                                 f'{ref_characteristics_to_object[cha].get_characteristics()} \n')
 
     return ref_characteristics_to_object
 

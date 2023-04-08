@@ -35,31 +35,27 @@ def check(value, message="error"):
 
 
 def create_model(species={}, parameters={}, reactions={}, events={}):
-    """Returns an SBML Level 3 model.
-
+    """
+    Returns an SBML Level 3 model.
     Example:
-
-    species = { 'E': 1, \
-                'EM': 0, \
-                'EM2': 0, \
-                'F': 100, \
-                }
-
-    parameters = {'k': (1e-06,'per_min'), \
+    species = { 'E': 1,
+                'EM': 0,
+                'EM2': 0,
+                'F': 100,
+                },
+    parameters = {'k': (1e-06,'per_min'),
                  }
-
-    reactions = { 'Production_E': \
-                        { 're': [(1,'E'),(1,'F')], \
-                          'pr': [(2,'E')], \
-                          'kin' : 'k * E * F' \
-                        }, \
-                }
-
-    events = {'e': \
-              { 'trigger': 'true', \
-                'delay': '10', \
-                'assignments': [('M','1'),], \
-              }, \
+    reactions = { 'Production_E':
+                        { 're': [(1,'E'),(1,'F')],
+                          'pr': [(2,'E')],
+                          'kin' : 'k * E * F'
+                        },
+                },
+    events = {'e':
+              { 'trigger': 'true',
+                'delay': '10',
+                'assignments': [('M','1'),],
+              },
     }
     """
 
