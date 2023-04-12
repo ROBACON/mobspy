@@ -16,6 +16,7 @@ import mobspy.sbml_simulator.builder as sbml_builder
 import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
+from mobspy.modules.set_counts_module import set_counts
 from mobspy.data_handler.time_series_object import MobsPyTimeSeries
 import json
 import os
@@ -112,7 +113,7 @@ class Simulation:
             Constructor of the simulation object
 
             Parameters:
-            :param model: (ParallelSpecies object) Meta-Species object for modeling
+            :param model: (List_Species object) Meta-Species object for modeling
             :param names: (dict) names of the meta-species in globals() format. If none it uses the variable names
             :param parameters: (dict) Simulation object parameters. If none takes default parameters
             :param plot_parameters: (dict) Parameters for plotting. If none takes default
@@ -133,15 +134,17 @@ class Simulation:
         self._conditional_event = False
         self._end_condition = None
 
+
+        # HERE FABRICIO
         # Get all names
-        if names is None:
-            local_names = inspect.stack()[1][0].f_locals
-            global_names = inspect.stack()[1][0].f_globals
-            names = {}
-            for key, item in global_names.items():
-                names[key] = item
-            for key, item in local_names.items():
-                names[key] = item
+        #if names is None:
+        #    local_names = inspect.stack()[1][0].f_locals
+        #    global_names = inspect.stack()[1][0].f_globals
+        #    names = {}
+        #    for key, item in global_names.items():
+        #        names[key] = item
+        #    for key, item in local_names.items():
+        #        names[key] = item
 
         self.model = model
         self.names = names
@@ -159,7 +162,7 @@ class Simulation:
                                              'quantity': count['quantity']})
             spe_object.reset_counts()
 
-        if not isinstance(model, Species) and not isinstance(model, ParallelSpecies):
+        if not isinstance(model, Species) and not isinstance(model, List_Species):
             simlog.error('Model must be formed by Species objects')
 
         if not parameters:

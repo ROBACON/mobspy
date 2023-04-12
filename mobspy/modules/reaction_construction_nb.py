@@ -8,6 +8,7 @@ import mobspy.modules.meta_class as mc
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.species_string_generator as ssg
 from inspect import signature
+from mobspy.modules.order_operators import Default
 
 
 def iterator_for_combinations(list_of_lists):
@@ -102,7 +103,8 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                                  f' referenced at the same time \n'
                                  f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
                 except KeyError:
-                    check_for_duplicates[ref_characteristics_to_object[cha]] = cha
+                    if '$' not in cha:
+                        check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 
 
 def construct_reactant_structures(reactant_species, ref_characteristics_to_object):
@@ -300,28 +302,35 @@ def create_all_reactions(reactions, meta_species_in_model,
                 product_object_list = construct_product_structure(reaction)
                 order_structure = construct_order_structure(base_species_order, reactant_string_list)
 
-                product_species_species_string_combination_list = reaction.order(order_structure, product_object_list,
-                                                                                 meta_species_in_model,
-                                                                                 ref_characteristics_to_object)
+                if reaction.order is None:
+                    product_species_species_string_combination_list = Default(order_structure, product_object_list,
+                                                                              meta_species_in_model,
+                                                                              ref_characteristics_to_object)
+                else:
+                    product_species_species_string_combination_list = reaction.order(order_structure,
+                                                                                     product_object_list,
+                                                                                     meta_species_in_model,
+                                                                                     ref_characteristics_to_object)
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
-                    reactant_string_list = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
-                                            if len(reactant) > 1 else reactant[0].get_name()
-                                            for reactant in reactant_string_list]
+
+                    reactant_strings = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
+                                        if len(reactant) > 1 else reactant[0].get_name()
+                                        for reactant in reactant_string_list]
 
                     reaction_rate_arguments = None
                     if callable(reaction.rate):
                         reaction_rate_arguments = construct_rate_function_arguments(reaction.rate)
 
                     rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
-                                                           reactant_string_list
+                                                           reactant_strings
                                                            , reaction.rate, type_of_model,
                                                            dimension, reaction_rate_arguments)
                     if rate_string == 0:
                         continue
 
                     reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
-                        construct_single_reaction_for_sbml(reactant_string_list,
+                        construct_single_reaction_for_sbml(reactant_strings,
                                                            product_string_list,
                                                            rate_string)
 

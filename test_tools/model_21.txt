@@ -1,0 +1,34 @@
+
+Species
+C.a1.b1,100
+C.a1.b2,100
+C.a2.b1,100
+C.a2.b2,100
+
+Mappings
+C :
+C.a1.b1
+C.a1.b2
+C.a2.b1
+C.a2.b2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'C.a1.b1')], 'pr': [(1, 'C.a1.b1')], 'kin': 'C.a1.b1 * 1'}
+reaction_1,{'re': [(1, 'C.a1.b1')], 'pr': [(1, 'C.a1.b2')], 'kin': 'C.a1.b1 * 1'}
+reaction_2,{'re': [(1, 'C.a1.b1')], 'pr': [(1, 'C.a2.b1')], 'kin': 'C.a1.b1 * 1'}
+reaction_3,{'re': [(1, 'C.a1.b1')], 'pr': [(1, 'C.a2.b2')], 'kin': 'C.a1.b1 * 1'}
+reaction_4,{'re': [(1, 'C.a1.b2')], 'pr': [(1, 'C.a1.b1')], 'kin': 'C.a1.b2 * 1'}
+reaction_5,{'re': [(1, 'C.a1.b2')], 'pr': [(1, 'C.a1.b2')], 'kin': 'C.a1.b2 * 1'}
+reaction_6,{'re': [(1, 'C.a1.b2')], 'pr': [(1, 'C.a2.b1')], 'kin': 'C.a1.b2 * 1'}
+reaction_7,{'re': [(1, 'C.a1.b2')], 'pr': [(1, 'C.a2.b2')], 'kin': 'C.a1.b2 * 1'}
+reaction_8,{'re': [(1, 'C.a2.b1')], 'pr': [(1, 'C.a1.b1')], 'kin': 'C.a2.b1 * 1'}
+reaction_9,{'re': [(1, 'C.a2.b1')], 'pr': [(1, 'C.a1.b2')], 'kin': 'C.a2.b1 * 1'}
+reaction_10,{'re': [(1, 'C.a2.b1')], 'pr': [(1, 'C.a2.b1')], 'kin': 'C.a2.b1 * 1'}
+reaction_11,{'re': [(1, 'C.a2.b1')], 'pr': [(1, 'C.a2.b2')], 'kin': 'C.a2.b1 * 1'}
+reaction_12,{'re': [(1, 'C.a2.b2')], 'pr': [(1, 'C.a1.b1')], 'kin': 'C.a2.b2 * 1'}
+reaction_13,{'re': [(1, 'C.a2.b2')], 'pr': [(1, 'C.a1.b2')], 'kin': 'C.a2.b2 * 1'}
+reaction_14,{'re': [(1, 'C.a2.b2')], 'pr': [(1, 'C.a2.b1')], 'kin': 'C.a2.b2 * 1'}
+reaction_15,{'re': [(1, 'C.a2.b2')], 'pr': [(1, 'C.a2.b2')], 'kin': 'C.a2.b2 * 1'}

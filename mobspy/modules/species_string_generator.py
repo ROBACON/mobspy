@@ -12,7 +12,8 @@ def characteristics_dictionary(characteristics, characteristics_to_object):
     """
     object_to_characteristic = {}
     for characteristic in characteristics:
-        object_to_characteristic[characteristics_to_object[characteristic]] = characteristic
+        if '$' not in characteristic:
+            object_to_characteristic[characteristics_to_object[characteristic]] = characteristic
     return object_to_characteristic
 
 

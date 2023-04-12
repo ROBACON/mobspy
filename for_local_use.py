@@ -4,14 +4,14 @@ import os
 
 if __name__ == '__main__':
 
-    A = BaseSpecies()
-    A >> Zero [1]
+    A, C = BaseSpecies()
+    A.a1, A.a2
+    B = New(A)
+    B.b1, B.b2
 
-    S = Simulation(A)
-
-    with S.event_time(0):
-        Zero >> A [1]
-
+    model = set_counts({All['B.a1']: 100, C: 200*u.mols, 'A.a1': 100, A.a2: 50})
+    S = Simulation(model)
+    print(S.compile())
 
 
 

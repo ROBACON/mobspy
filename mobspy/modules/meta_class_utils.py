@@ -73,7 +73,7 @@ def unite_characteristics(species):
     """
         This function unites the characteristics of all the given species
 
-        :param species: (list of species or ParallelSpecies object)
+        :param species: (list of species or List_Species object)
     """
     characteristics = set()
 

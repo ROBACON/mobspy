@@ -5,15 +5,16 @@
     are just regular classes
 """
 import mobspy.modules.meta_class_utils as mcu
-from mobspy.modules.order_operators import *
 from mobspy.modules.function_rate_code import *
 import mobspy.modules.reaction_construction_nb as rc
 import mobspy.modules.function_rate_code as frc
 from pint import Quantity
+from mobspy.modules.order_operators import *
 import mobspy.modules.event_functions as eh
 from mobspy.modules.logic_operator_objects import *
 import mobspy.modules.species_string_generator as ssg
 from copy import deepcopy
+import re
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -50,26 +51,26 @@ class Compiler:
         cls.last_rate = item
         return object_to_return
 
-    @classmethod
-    def name_all_involved_species(cls, names=None):
-        """
-            Name species automatically according to their variable names
+    # @classmethod
+    #def name_all_involved_species(cls, names=None):
+    #    """
+    #        Name species automatically according to their variable names
 
-            :param names: (dict) dictionary with other name options - follows globals() format
-        """
-        if not names:
-            simlog.error('Species must be named' +
-                         'Please set ( names == globals() ) in the MobsPy constructor for automatic naming')
+    #        :param names: (dict) dictionary with other name options - follows globals() format
+    #    """
+    #    if not names:
+    #        simlog.error('Species must be named' +
+    #                     'Please set ( names == globals() ) in the MobsPy constructor for automatic naming')
 
-        for name, key in names.items():
-            # If the symbol '$' is in there, the species has not yet been named
-            if isinstance(key, Species) and '$' in key.get_name():
-                key.name(name)
+    #    for name, key in names.items():
+    #        # If the symbol '$' is in there, the species has not yet been named
+    #        if isinstance(key, Species) and '$' in key.get_name():
+    #            key.name(name)
 
     @classmethod
     def compile(cls, meta_species_to_simulate, reactions_set, species_counts,
                 volume=1, names=None, type_of_model='deterministic', verbose=True,
-                default_order=Default, event_dictionary=None,
+                default_order=None, event_dictionary=None,
                 continuous_sim=False, ending_condition=None):
         """
             Here we construct the species for Copasi using their objects
@@ -78,7 +79,7 @@ class Compiler:
             mappings_for_sbml, model_str which will be used to write the sbml_string for basiCO
             It also performs checks to see if the model is valid
 
-            :param meta_species_to_simulate: (ParallelSpecies or Species) Species to generate the model
+            :param meta_species_to_simulate: (List_Species or Species) Species to generate the model
             :param volume: (int, flot) Simulation volume
             :param names: (dict) alternative naming for species - see name_all_involved_species
             :param type_of_model: (str) deterministic or stochastic
@@ -99,9 +100,10 @@ class Compiler:
             containing the event trigger and count assignments. assigned_species (list) = list of meta-species which
             had counts assigned to them during this model execution (used when composing simulations)
         """
-        # We name the species according to variables names for convenience
-        cls.name_all_involved_species(names)
+        # Check to see if all species are named
         names_used = set()
+        # Removing repeated elements to ensure only one meta-species in the simulation
+        meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
         for i, species in enumerate(meta_species_to_simulate):
             if '$' in species.get_name():
                 simlog.error('An error has occurred and one of the species was not named')
@@ -151,19 +153,40 @@ class Compiler:
 
         volume = uh.convert_volume(volume, dimension)
 
-        # assign them default order
-        for reaction in reactions_set:
-            if reaction.order is None:
-                reaction.order = default_order
-
         # Add the flag species used for verifying if the simulation is over
         if continuous_sim:
             species_for_sbml[EndFlagSpecies.get_name()] = 0
 
-        # Set initial counts for SBML
-        # Create the list HERE
+        # Assignments with all do not take priority
+        # This allows specific assignments to override All assignments
         assigned_species = []
         for count in species_counts:
+
+            if 'all$' not in count['characteristics']:
+                continue
+
+            temp_set = set(count['characteristics'])
+            temp_set.remove('all$')
+            species_strings = ssg.construct_all_combinations(count['object'], temp_set,
+                                                             cls.ref_characteristics_to_object,
+                                                             symbol='_dot_')
+
+            temp_count = uh.convert_counts(count['quantity'], volume, dimension)
+            for spe_str in species_strings:
+                if type(temp_count) == float and not type_of_model == 'deterministic':
+                    simlog.warning('The stochastic simulation rounds floats to integers')
+                    species_for_sbml[spe_str] = int(temp_count)
+                    assigned_species.append(spe_str)
+                else:
+                    species_for_sbml[spe_str] = temp_count
+                    assigned_species.append(spe_str)
+
+        # Set initial counts for SBML
+        # Create the list HERE
+        for count in species_counts:
+
+            if 'all$' in count['characteristics']:
+                continue
 
             species_string = ssg.construct_species_char_list(count['object'], count['characteristics'],
                                                              cls.ref_characteristics_to_object,
@@ -517,7 +540,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             species_object = reactant['object']
             characteristics_from_references = mcu.unite_characteristics(species_object.get_references())
 
-            if characteristic not in characteristics_from_references:
+            if characteristic not in characteristics_from_references and '$' not in characteristic:
                 species_object.add_characteristic(characteristic)
 
             reactant['characteristics'].add(characteristic)
@@ -528,48 +551,49 @@ class Reacting_Species(ReactingSpeciesComparator):
     def is_species(cls):
         return False
 
+    @classmethod
+    def is_spe_or_reac(cls):
+        return True
 
-class ParallelSpecies:
+
+class List_Species:
     """
         This class just stores species after the | operation. It creates a list of species than can be loop through or
         given to the simulator
 
         :param list_of_species: (Species) Meta-species list to store the meta-species
     """
-
-    def __init__(self, list_of_species):
+    def __init__(self, iterable):
         """
-            Constructor not usually used - but a list_of_species is given one can construct the ParallelSpecies from it
+            Constructor not usually used - but a list_of_species is given one can construct the List_Species from it
             It is advised to use the | operator
 
             :param list_of_species: (Species) Meta-species list to store the meta-species
         """
-        self.list_of_species = list_of_species
+        self._list_species = []
+        for item in iterable:
+            if isinstance(item, Species):
+                self._list_species.append(item)
+            else:
+                simlog.error('Only Species can used to construct List_Species')
 
     def append(self, species):
         """
-            Add species to the list_of_species called by the | operator
+            Add species to the list_of_species
 
-            :param species: (Species) meta-species to be added to the ParallelSpecies
+            :param species: (Species) meta-species to be added to the List_Species
         """
         if not isinstance(species, Species):
             simlog.error('Only Species can be appended')
-        self.list_of_species.append(species)
-
-    def __getitem__(self, item):
-        """
-            Equal to list[item]
-
-            :param item: (int) value of index to get the element
-        """
-        return self.list_of_species[item]
+        else:
+            self._list_species.append(species)
 
     def __str__(self):
         """
-            String representation of the ParallelSpecies just the list of meta-species
+            String representation of the List_Species just the list of meta-species
         """
         to_return = []
-        for spe in self.list_of_species:
+        for spe in self:
             to_return.append(spe.get_name())
         return str(to_return)
 
@@ -578,22 +602,87 @@ class ParallelSpecies:
             Implementation of the | operator. Adds species to the Parallel species
 
             Parameters:
-                other (Species) = meta-species to be added to the ParallelSpecies
+                other (Species) = meta-species to be added to the List_Species
         """
         if isinstance(other, Species):
-            self.append(other)
-            return self
-        elif isinstance(other, ParallelSpecies):
-            return ParallelSpecies(self.list_of_species + other.list_of_species)
+            self._list_species.append(other)
+        elif isinstance(other, List_Species):
+            self._list_species = self._list_species + other._list_species
         else:
-            simlog.error('Operator must only be used in Species on ParallelSpecies')
+            simlog.error('Operator must only be used in Species on List_Species')
+
+        return self
 
     def __iter__(self):
-        """
-            Iterator through the species inside the ParallelSpecies
-        """
-        for spe in self.list_of_species:
+        for spe in self._list_species:
             yield spe
+
+    def __len__(self):
+        return len(self._list_species)
+
+    def is_in(self, item):
+        if item in self._list_species:
+            return True
+        else:
+            return False
+
+    def __setitem__(self, index, item):
+        self._list_species[index] = item
+
+    def __getitem__(self, item):
+        return self._list_species[item]
+
+    def remove_repeated_elements(self):
+        """
+            This function creates a List_Species with no repetitions. The order of elements is lost
+
+            :return: List_Species with no repeated elements
+        """
+        set_species = set(self._list_species)
+        return List_Species(set_species)
+
+    def insert(self, index, item):
+        self._list_species.insert(index, item)
+        
+    def extend(self, other):
+        if isinstance(other, List_Species):
+            self._list_species = self._list_species + other._list_species
+
+    def remove(self, value):
+        """
+            Removes all instances of the meta-species in the object
+
+            :return: The number of instances removed
+        """
+        indexes = []
+        for i, e in enumerate(self._list_species):
+            if e == value or str(e) == str(value):
+                indexes.append(-len(self._list_species) + i)
+
+        for i in indexes:
+            del self._list_species[i]
+        return len(indexes)
+
+
+def ListSpecies(number_of_elements, inherits_from=None):
+    code = inspect.stack()[1].code_context[0][:-1]
+    before_eq, after_eq = code.split('=')
+    before_eq = before_eq.replace(" ", '')
+    if ',' in before_eq:
+        simlog.error(f"At: {code} \n"
+                     f"No comas are allowed in the right-side of the equality during the creation of a ListSpecies")
+    name = before_eq.split('=')[0]
+
+    temp_list = []
+    for i in range(number_of_elements):
+        temp_name = name + '_' + str(i+1)
+
+        if inherits_from is None:
+            temp_list.append(BaseSpecies([temp_name]))
+        else:
+            temp_list.append(New(inherits_from, [temp_name]))
+
+    return List_Species(temp_list)
 
 
 class Species(SpeciesComparator):
@@ -684,26 +773,35 @@ class Species(SpeciesComparator):
         """
         simlog.debug(self._species_counts)
 
-    # Creation of ParallelSpecies For Simulation ##################
+    # Creation of List_Species For Simulation ##################
     def __or__(self, other):
         """
-            Creates an instance of ParallelSpecies using the | operator
+            Creates an instance of List_Species using the | operator
 
-            :param other: (Species or ParallelSpecies) Species or ParallelSpecies to combine into
+            :param other: (Species or List_Species) Species or List_Species to combine into
         """
-        if isinstance(other, ParallelSpecies):
+        if isinstance(other, List_Species):
             other.append(self)
             return other
+        elif isinstance(other, Species):
+            return List_Species([self, other])
         else:
-            return ParallelSpecies([self, other])
+            simlog.error('Only Species and List_Species can be concatenated')
 
+    # Both are defined bellow to be consistent with List_Species behavior
     def __iter__(self):
         """
-            iter defined to be consistent with ParallelSpecies behavior
-
-            :returns: Itself
+            iter defined to be consistent with List_Species behavior
+            :return: Itself
         """
         yield self
+
+    def remove_repeated_elements(self):
+        """
+            Defined to be consistent with the model behavior from List_Species
+            :return: Itself
+        """
+        return self
 
     # Creation of reactions using entities ########################
     def __getitem__(self, item):
@@ -781,8 +879,7 @@ class Species(SpeciesComparator):
         characteristics_from_references = mcu.unite_characteristics(self.get_references())
         characteristics = {characteristic}
 
-        if characteristic not in characteristics_from_references:
-
+        if characteristic not in characteristics_from_references and '$' not in characteristic:
             if len(self.get_characteristics()) == 0:
                 self.first_characteristic = characteristic
 
@@ -869,8 +966,15 @@ class Species(SpeciesComparator):
             :param other: (Species) Species for the multiplication and creation of a higher order species
             :return: new_entity (Species) Higher order species resulted from the multiplication
         """
+        code_line = inspect.stack()[1].code_context[0][:-1]
+
+        if not isinstance(other, Species):
+            simlog.error(f'At {code_line}: \n' + 'Meta-Species can only be multiplied by other meta-species \n'
+                         + f'It was multiplied by the type {type(other)}')
+
+        name = code_line.replace(" ", "").split("=")[0]
+
         Compiler.entity_counter += 1
-        name = 'N$' + str(Compiler.entity_counter)
         new_entity = Species(name)
         new_entity.set_references(mcu.combine_references(self, other))
         new_entity.add_reference(new_entity)
@@ -928,6 +1032,17 @@ class Species(SpeciesComparator):
     def get_references(self):
         return self._references
 
+    def get_all_characteristics(self):
+        """
+            Different that get_characteristics. This function the characteristics directly added to it and the
+            characteristics of the references. While get_characteristics only returns the characteristics directly
+            added to that meta-species.
+        """
+        all_char = set()
+        for reference in self._references:
+            all_char = all_char.union(reference.get_characteristics())
+        return all_char
+
     def add_reference(self, reference):
         self._references.add(reference)
 
@@ -980,44 +1095,83 @@ class Species(SpeciesComparator):
     def is_species(cls):
         return True
 
+    @classmethod
+    def is_spe_or_reac(cls):
+        return True
 
-def compile_species_number_line(function, code_line):
-    pos = code_line.find('=')
-    if pos == -1:
-        return 0
-    else:
-        code_line = code_line[0:pos]
+
+def compile_species_number_line(code_line):
+    """
+        Compiles code line for BaseSpecies and New
+
+        :param code_line: - Line of code where BaseSpecies or New has been called
+        :return: n (int) = number of variables after a coma, names (list) = list of strings with the names of the
+        variables
+    """
+    before_eq, after_eq = code_line.split('=')[0], code_line.split('=')[1]
+    if after_eq.count('BaseSpecies') > 1:
+        simlog.error(f'At {after_eq}: \n' + 'BaseSpecies can only be called once at a time')
+
+    code_line = before_eq
     n = code_line.count(',') + 1
+    code_line = code_line.replace(' ', '')
+    names = code_line.split(',')
 
-    if n > 1:
-        return [function(1) for _ in range(n)]
-    else:
-        return function(1)
+    return n, names
 
 
-# Property Call to return several properties as called
-def BaseSpecies(number_of_properties=None):
-    """
-        Function that returns a number of base species according to the number_of_properties
-        BaseSpecies are just Species with no inheritance attached to it
+def _Create_Species(species, code_line, number_or_names=None):
+    if number_or_names is not None:
+        if type(number_or_names) == int:
+            if number_or_names < 1:
+                simlog.error(f'At {code_line}: Please use stricly positive integers for number of properties')
+        elif type(number_or_names) == list:
+            pass
+        else:
+            simlog.error(f'At {code_line}: Only numbers or lists of strings accepted')
 
-        :param  number_of_properties: (int) number of base species wanted
-        :return: Species objects according to the number of species requested
-    """
-    if number_of_properties is None:
-        code_line = inspect.stack()[1].code_context[0][:-1]
-        return compile_species_number_line(BaseSpecies, code_line)
+    if number_or_names is None or type(number_or_names) == int:
+        number_of_properties, compiled_names = compile_species_number_line(code_line)
+        names = compiled_names
+        if number_or_names is not None:
+            if number_of_properties != number_or_names:
+                simlog.error(f'At: {code_line}. \n'
+                             f'The number of properties is not equal to the number of variables')
+    elif type(number_or_names) == list:
+        number_of_properties = len(number_or_names)
+        names = number_or_names
 
     to_return = []
     for i in range(number_of_properties):
         Compiler.entity_counter += 1
-        name = 'N$' + str(Compiler.entity_counter)
-        to_return.append(Species(name))
+        if names is None:
+            name = 'N$' + str(Compiler.entity_counter)
+        else:
+            name = names[i]
+        if species is None:
+            to_return.append(Species(name))
+        else:
+            temp = __S1 * species
+            temp.name(name)
+            to_return.append(temp)
 
     if len(to_return) == 1:
         return to_return[0]
     else:
         return tuple(to_return)
+
+
+# Property Call to return several properties as called
+def BaseSpecies(number_or_names=None):
+    """
+        Function that returns a number of base species according to the number_of_properties
+        BaseSpecies are just Species with no inheritance attached to it
+
+        :param number_or_names: (int) number of base species wanted or (list) list of names of wanted Species
+        :return: Species objects according to the number of species requested
+    """
+    code_line = inspect.stack()[1].code_context[0][:-1]
+    return _Create_Species(None, code_line, number_or_names)
 
 
 __S0, __S1, __SF = BaseSpecies(3)
@@ -1028,33 +1182,15 @@ EndFlagSpecies = __SF
 Zero = __S0
 
 
-def New(species, n=None):
+def New(species, number_or_names=None):
     """
-        New is just a multiplication in disguise. It contains a __S1 meta-species that multiplies the species used as a
-        parameter. The species __S1 contains no characteristics and it's only used to create a higher-dimensional
-        species from the species used as an argument
-        It can also return several meta-species objects at a time and be used for designing list of species ( check
-        tutorial)
+        Function that returns a number of meta-species that inherit from the species supplied
 
-        :param: n (int) number of species to return
+        :param number_or_names: (int) number of meta-species wanted, (list) list of names wanted
+        :return: Species objects according to the number of species requested
     """
-    if n is None:
-        code_line = inspect.stack()[1].code_context[0][:-1]
-        return compile_species_number_line(lambda i: New(species, i), code_line)
-
-    if type(n) == int:
-        to_return = [species * __S1 for _ in range(n)]
-        if n == 1:
-            return to_return[0]
-        else:
-            return tuple(to_return)
-    elif type(n) == str:
-        to_return = species * __S1
-        to_return.name(n)
-        return to_return
-    else:
-        simlog.error('New only supports numbers for creating multiple species \n '
-                     ' or exclusively string for single species name')
+    code_line = inspect.stack()[1].code_context[0][:-1]
+    return _Create_Species(species, code_line, number_or_names)
 
 
 if __name__ == '__main__':

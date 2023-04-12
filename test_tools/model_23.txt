@@ -1,0 +1,26 @@
+
+Species
+A.a1,100
+A.a2,50
+B.a1.b1,100
+B.a1.b2,100
+B.a2.b1,0
+B.a2.b2,0
+C,1.204428152e+26
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B.a1.b1
+B.a1.b2
+B.a2.b1
+B.a2.b2
+C :
+C
+
+Parameters
+volume,1
+
+Reactions

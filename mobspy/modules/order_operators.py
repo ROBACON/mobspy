@@ -19,9 +19,21 @@ class __Operator_Base:
         It also overrides the getitem method so we can use:
         Operator[Reaction] to assign an order to the reaction
     """
+
     # Assign order structure
     def __getitem__(self, item):
-        item.order = self
+        try:
+            if type(item) == str:
+                return item + '.all$'
+
+            if item.is_species():
+                return item.c('all$')
+            elif not item.is_species():
+                for reactant in item.list_of_reactants:
+                    reactant['characteristics'].add('all$')
+                return item
+        except AttributeError:
+            simlog.error('All can only be used on species, reacting species and strings under set_count')
 
     # Transform product function
     @staticmethod
@@ -111,6 +123,16 @@ class __Operator_Base:
         products = []
         for species, label, characteristics in [(e['species'], e['label'], e['characteristics']) for e in
                                                 product_species]:
+
+            if 'all$' in characteristics:
+                species_is_referenced_by = []
+                for spe_obe in model:
+                    if species in spe_obe.get_references():
+                        species_is_referenced_by.append(spe_obe)
+                products.append(self.find_all_string_references_to_born_species(species_is_referenced_by,
+                                                                                characteristics,
+                                                                                ref_characteristics_to_object))
+                continue
 
             # Simple round robin
             try:
