@@ -37,8 +37,8 @@ def convert_rate(quantity, reaction_order, dimension):
                 converted_quantity.ito(f'decimeters ** {dimension*volume_power}/seconds')
                 return converted_quantity.magnitude
         except Exception as e:
-            print(e)
-            simlog.error(f'Problem converting rate {quantity} \n'
+            simlog.error(str(e) + '\n' +
+                         f'Problem converting rate {quantity} \n'
                          f'Is the rate in the form [volume] ** (order - 1)/[time]?')
 
     else:
@@ -58,6 +58,9 @@ def convert_counts(quantity, volume, dimension):
     """
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
+        if '[length] ** 3' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
+            simlog.error(f'The assigned quantity {quantity} is neither a count or concentration')
+
         try:
             if '[substance]' in quantity.dimensionality:
                 converted_quantity.ito_base_units()
@@ -72,11 +75,10 @@ def convert_counts(quantity, volume, dimension):
                     converted_quantity.ito(f'1/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
                 converted_quantity = converted_quantity.magnitude
-
         except Exception as e:
-            print(e)
-            simlog.error(f'Problem converting rate {quantity} \n'
-                         f'Is it really a count? Concentrations must be converted')
+            simlog.error(str(e) + '\n' +
+                         f'Problem converting rate {quantity} \n'
+                         f'Is it really a count or concentration?')
     return converted_quantity
 
 
@@ -95,7 +97,8 @@ def check_dimension(dimension, value):
         dimension = int(value)
     else:
         if dimension != int(value):
-            simlog.error('The dimensions are not consistent')
+            simlog.error('The dimensions are not consistent. There are at least two units given for different '
+                         'dimension models')
     return dimension
 
 

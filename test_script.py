@@ -640,13 +640,38 @@ def test_set_counts():
     assert compare_model(S.compile(), 'test_tools/model_23.txt')
 
 
+def test_bool_error():
+    B = BaseSpecies()
+
+    B >> Zero[1]
+    B(100)
+
+    S = Simulation(B)
+
+    simlog.global_simlog_level = -1
+    try:
+        with S.event_condition(B == 0):
+            B(100)
+        assert False
+    except SystemExit:
+        pass
+
+    try:
+        S.duration = True
+        assert False
+    except SystemExit:
+        pass
+    assert True
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
              test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
              test_logic_operator_syntax, test_stack_position, test_empty_arguments,
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
-             test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts]
+             test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
+             test_bool_error]
 
 sub_test = test_list
 

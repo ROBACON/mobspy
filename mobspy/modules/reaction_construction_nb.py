@@ -72,13 +72,14 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                 # Ok I love try catches for checking if something is in a dict. Don't judge me
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog.error('Illegal reaction, there is a product with multiple '
-                                 'characteristics from the same Species referenced \n'
-                                 'Please divide the reaction accordingly \n'
-                                 f'Error in {ref_characteristics_to_object[cha]} both {cha} and '
-                                 f'{check_for_duplicates[ref_characteristics_to_object[cha]]}'
-                                 f' referenced at the same time \n'
-                                 f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
+                    simlog.error(f'Illegal reaction: {reaction}. \n'
+                                 'There is a query with two characteristics '
+                                 f'{ref_characteristics_to_object[cha].get_characteristics()} from the same'
+                                 f' vector axis resulting in an impossible query. \n'
+                                 f'As all those characteristics have been directly added to'
+                                 f'{ref_characteristics_to_object[cha]}, they are located in the same vector axis. \n'
+                                 f'To solve this either assign the characteristics to new meta-species and use '
+                                 f'inheritance or create a new reaction for each desired query.')
                 except KeyError:
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
@@ -95,13 +96,14 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                 # Ok I love try catches for checking if something is in a dict. Don't judge me
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog.error('Illegal reaction, there is a product with multiple '
-                                 'characteristics from the same Species referenced \n'
-                                 'Please divide the reaction accordingly \n'
-                                 f'Error in {ref_characteristics_to_object[cha]} both {cha} and '
-                                 f'{check_for_duplicates[ref_characteristics_to_object[cha]]}'
-                                 f' referenced at the same time \n'
-                                 f'The characteristics: {ref_characteristics_to_object[cha].get_characteristics()}')
+                    simlog.error(f'Illegal reaction: {reaction}. \n'
+                                 'There is a transformation with two characteristics '
+                                 f'{ref_characteristics_to_object[cha].get_characteristics()} from the same'
+                                 f' vector axis resulting in an undefinable transformation. \n'
+                                 f'As all those characteristics have been directly added to '
+                                 f'{ref_characteristics_to_object[cha]}, they are located in the same vector axis. \n'
+                                 f'To solve this either assign the characteristics to new meta-species and use '
+                                 f'inheritance or create a new reaction for each desired query.')
                 except KeyError:
                     if '$' not in cha:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
@@ -243,7 +245,7 @@ def get_involved_species(reaction, meta_species_in_model):
                     flag_absent_reactant = True
 
             if not flag_absent_reactant:
-                simlog.error(f'Species {reactant["object"]} was not found in model \n'
+                simlog.error(f'Species {reactant["object"]} or any inheritors were not found in model \n'
                              f'For reaction {reaction} \n'
                              f'Please add the species or remove the reaction')
 
@@ -252,12 +254,14 @@ def get_involved_species(reaction, meta_species_in_model):
     return base_species_order, reactant_species_combination_list
 
 
-def construct_rate_function_arguments(rate_function):
+def construct_rate_function_arguments(rate_function, reaction):
     rate_function_arguments = str(signature(rate_function))
 
     black_list = ['*', '=']
     if any(i in rate_function_arguments for i in black_list):
-        simlog.error('Rate arguments must not contain = or *')
+        simlog.error(f'Rate arguments must not contain = or *. \n'
+                     f'Error in reaction {reaction}. \n'
+                     f'Error in rate function {rate_function} in signature {str(signature(rate_function))}')
 
     rate_function_arguments = str(rate_function_arguments).replace('(', '')
     rate_function_arguments = str(rate_function_arguments).replace(')', '')
@@ -320,7 +324,7 @@ def create_all_reactions(reactions, meta_species_in_model,
 
                     reaction_rate_arguments = None
                     if callable(reaction.rate):
-                        reaction_rate_arguments = construct_rate_function_arguments(reaction.rate)
+                        reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
 
                     rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
                                                            reactant_strings

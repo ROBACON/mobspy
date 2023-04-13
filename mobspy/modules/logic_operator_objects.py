@@ -18,6 +18,7 @@ class SpeciesComparator:
 
         :param _simulation_context: (Simulation) current simulation under context
     """
+
     @classmethod
     def check_parenthesis(cls, code_line, line_number, pos, symbol, number_of_comp):
         """
@@ -47,16 +48,16 @@ class SpeciesComparator:
                 # Check if finished
                 if i == 0 or i == len(code_line):
                     if number_of_comp > 1:
-                        simlog.error('All clauses must be individually isolated by parenthesis '
-                                     '- Ex: (A <= 0) & (B <= 0) \n'
-                                     + f'Problem in {line_number} : {code_line}')
+                        simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                                     'All clauses must be individually isolated by parenthesis '
+                                     '- Ex: (A <= 0) & (B <= 0) \n')
                     else:
                         return False
 
                 char = code_line[i]
                 if char == '<' or char == '>' or char == '|' or char == '&':
-                    simlog.error('All clauses must be isolated by parenthesis - Ex: (A <= 0) & (B <= 0) \n' +
-                                 f'Problem in {line_number} : {code_line}')
+                    simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                                 'All clauses must be isolated by parenthesis - Ex: (A <= 0) & (B <= 0) \n')
                 elif char == ')' and number_of_comp > 1:
                     if symbol == ')':
                         condition_not_satisfied = False
@@ -77,16 +78,17 @@ class SpeciesComparator:
         code_line = inspect.stack()[2].code_context[0][:-1]
         line_number = inspect.stack()[2].lineno
         if 'and' in code_line or 'or' in code_line:
-            simlog.error('Event notation did not compile, please use & for \'and\' and  | for \'or\' \n'
+            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                         'Event notation did not compile, please use & for \'and\' and  | for \'or\' \n'
                          'Please also put the clauses under parentheses: example (A <= 0) & (B <= 0)')
 
         temp_code_line = code_line.replace(' ', '')
         multiplication_position = [pos for pos, char in enumerate(temp_code_line) if char == '*']
         for pos in multiplication_position:
             if not (temp_code_line[pos - 1].isnumeric() or temp_code_line[pos + 1].isnumeric()):
-                simlog.error('Multiplication between meta-species under comparison context'
-                             ' not yet supported by MobsPy - \n.' +
-                             f'Problem in {line_number} : {code_line}')
+                simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                             'Multiplication between meta-species under comparison context' +
+                             ' not yet supported by MobsPy - \n.')
 
         number_of_comp = code_line.count('<') + code_line.count('>')
         comparison_position = [pos for pos, char in enumerate(code_line) if char == '<' or char == '>']
@@ -194,6 +196,7 @@ class ReactingSpeciesComparator(SpeciesComparator):
 
         :param _simulation_context: (Simulation) current simulation under context
     """
+
     def __init__(self):
         super(ReactingSpeciesComparator, self).__init__()
         self._simulation_context = None
@@ -236,6 +239,7 @@ class MetaSpeciesLogicResolver:
         [{object: ..., characteristics:...}, '<=', 10]
         :param simulation_context: (Simulation) simulation under context
     """
+
     def __init__(self, operation, simulation_context=None):
         self.operation = operation
         self.simulation_context = simulation_context

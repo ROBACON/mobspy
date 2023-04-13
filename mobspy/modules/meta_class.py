@@ -349,10 +349,10 @@ class Reactions:
             try:
                 to_test_context_object = products[0]['object']
             except IndexError:
-                simlog.error('No Meta-Species detected in the reaction')
+                simlog.error('No Meta-Species detected in the reaction', stack_index=3)
 
         if to_test_context_object._simulation_context is not None:
-            simlog.error('Reactions cannot be defined under event context. Only species counts')
+            simlog.error('Reactions cannot be defined under event context. Only species counts', stack_index=3)
 
         self.reactants = reactants
         self.products = products
@@ -416,8 +416,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             :param item: value to query over
         """
         item = str(item)
-        if item in ['c']:
-            simlog.error(f'Characteristic {item} is not allowed. Please pick another name')
+        Species.check_if_valid_characteristic(item)
         return self.__getattr__(item)
 
     def label(self, label):
@@ -430,7 +429,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         if len(self.list_of_reactants) == 1:
             self.list_of_reactants[0]['label'] = label
         else:
-            simlog.error('Error assigning label to reactant')
+            simlog.error('Labels cannot be assigned to multiple reacting species at the same time.', stack_index=2)
         return self
 
     def __getitem__(self, item):
@@ -468,7 +467,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         if type(stoichiometry) == int:
             self.list_of_reactants[0]['stoichiometry'] = stoichiometry
         else:
-            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}')
+            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
         return self
 
     def __add__(self, other):
@@ -491,6 +490,12 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param other: (Species or Reacting Species) product side of the reaction being added
         """
+        code_line = inspect.stack()[0].code_context[0][:-1]
+        line_number = inspect.stack()[0].lineno
+        if '[' not in code_line or ']' not in code_line:
+            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
+                         + f'No rate detect for this reaction')
+
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
         else:
@@ -508,12 +513,13 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
-                simlog.error('Assignment used incorrectly')
+                simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             species_object = self.list_of_reactants[0]['object']
             characteristics = self.list_of_reactants[0]['characteristics']
             quantity_dict = species_object.add_quantities(characteristics, quantity)
         else:
-            simlog.error('Reactant_species does not support this type of call')
+            simlog.error(f'Reactant_species count assignment does not support the type {type(quantity)}',
+                         stack_index=2)
 
         dummy_object = self.list_of_reactants[0]['object']
         if dummy_object._simulation_context is not None:
@@ -535,6 +541,8 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param characteristic: (str) characteristic for the query
         """
+        Species.check_if_valid_characteristic(characteristic)
+
         for reactant in self.list_of_reactants:
 
             species_object = reactant['object']
@@ -556,6 +564,9 @@ class Reacting_Species(ReactingSpeciesComparator):
         return True
 
 
+_methods_Reacting_Species = set(dir(Reacting_Species))
+
+
 class List_Species:
     """
         This class just stores species after the | operation. It creates a list of species than can be loop through or
@@ -575,7 +586,7 @@ class List_Species:
             if isinstance(item, Species):
                 self._list_species.append(item)
             else:
-                simlog.error('Only Species can used to construct List_Species')
+                simlog.error('Only Species can used to construct List_Species', stack_index=2)
 
     def append(self, species):
         """
@@ -584,7 +595,7 @@ class List_Species:
             :param species: (Species) meta-species to be added to the List_Species
         """
         if not isinstance(species, Species):
-            simlog.error('Only Species can be appended')
+            simlog.error('Only Species can be appended', stack_index=2)
         else:
             self._list_species.append(species)
 
@@ -609,7 +620,7 @@ class List_Species:
         elif isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
         else:
-            simlog.error('Operator must only be used in Species on List_Species')
+            simlog.error('Operator must only be used in Species on List_Species', stack_index=2)
 
         return self
 
@@ -705,6 +716,25 @@ class Species(SpeciesComparator):
         :param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
         keys and the counts of values
     """
+    @classmethod
+    def check_if_valid_characteristic(cls, char):
+        """
+            Checks if the characteristics is valid. If there is any conflict between the methods of the class or
+            attributes of the class the user will be asked to rename the characteristic
+
+            :param: char - name of the characteristic to be added:
+            :raises: simlog.error if the characteristic name is not allowed
+            :return: True if characteristic is allowed false if not
+        """
+        black_list = {'list_of_reactants', 'first_characteristic'}
+        if char[0] == '_':
+            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+
+        if char in _methods_Reacting_Species or char in _methods_Species or char in black_list:
+            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+            return False
+        else:
+            return True
 
     def __str__(self):
         """
@@ -721,8 +751,7 @@ class Species(SpeciesComparator):
             :param item: value to query over
         """
         item = str(item)
-        if item in ['c']:
-            simlog.error(f'Characteristic {item} is not allowed. Please pick another name')
+        Species.check_if_valid_characteristic(item)
         return self.__getattr__(item)
 
     # Def labels
@@ -786,7 +815,7 @@ class Species(SpeciesComparator):
         elif isinstance(other, Species):
             return List_Species([self, other])
         else:
-            simlog.error('Only Species and List_Species can be concatenated')
+            simlog.error('Only Species and List_Species can be concatenated', stack_index=2)
 
     # Both are defined bellow to be consistent with List_Species behavior
     def __iter__(self):
@@ -822,7 +851,7 @@ class Species(SpeciesComparator):
         if type(stoichiometry) == int:
             r = Reacting_Species(self, set(), stoichiometry)
         else:
-            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}')
+            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
         return r
 
     def __add__(self, other):
@@ -855,6 +884,11 @@ class Species(SpeciesComparator):
             :return: the reaction
         """
         myself = Reacting_Species(self, set())
+        code_line = inspect.stack()[1].code_context[0][:-1]
+        line_number = inspect.stack()[1].lineno
+        if '[' not in code_line or ']' not in code_line:
+            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
+                         + f'No rate detect for this reaction')
 
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
@@ -876,6 +910,8 @@ class Species(SpeciesComparator):
             :param characteristic: (str) characteristic to be added or to be use as a query in the reaction
             :return: Reacting_Species with the characteristic added for querying
         """
+        Species.check_if_valid_characteristic(characteristic)
+
         characteristics_from_references = mcu.unite_characteristics(self.get_references())
         characteristics = {characteristic}
 
@@ -905,12 +941,12 @@ class Species(SpeciesComparator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
                     return cha
-            simlog.error(f'{self._name} contains no characteristics in {quantity}')
+            simlog.error(f'{quantity} contains no characteristics from {self._name}', stack_index=2)
         elif type(quantity) == str:
             for cha in str(quantity).split('.')[1:]:
                 if cha in self._characteristics:
                     return cha
-            simlog.error(f'{self._name} contains no characteristics in {quantity}')
+            simlog.error(f'{quantity} contains no characteristics from {self._name}', stack_index=2)
 
         if self._simulation_context is not None:
             try:
@@ -1072,7 +1108,7 @@ class Species(SpeciesComparator):
             self._simulation_context = sim
         else:
             simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
-                         'Please use only one Simulation Object per context assignment')
+                         'Please use only one Simulation Object per context assignment', stack_index=6)
 
     def reset_simulation_context(self):
         self._simulation_context = None
@@ -1100,6 +1136,9 @@ class Species(SpeciesComparator):
         return True
 
 
+_methods_Species = set(dir(Species))
+
+
 def compile_species_number_line(code_line):
     """
         Compiles code line for BaseSpecies and New
@@ -1124,19 +1163,18 @@ def _Create_Species(species, code_line, number_or_names=None):
     if number_or_names is not None:
         if type(number_or_names) == int:
             if number_or_names < 1:
-                simlog.error(f'At {code_line}: Please use stricly positive integers for number of properties')
+                simlog.error('Please use strictly positive integers for number of properties', stack_index=3)
         elif type(number_or_names) == list:
             pass
         else:
-            simlog.error(f'At {code_line}: Only numbers or lists of strings accepted')
+            simlog.error('Only numbers or lists of strings accepted', stack_index=3)
 
     if number_or_names is None or type(number_or_names) == int:
         number_of_properties, compiled_names = compile_species_number_line(code_line)
         names = compiled_names
         if number_or_names is not None:
             if number_of_properties != number_or_names:
-                simlog.error(f'At: {code_line}. \n'
-                             f'The number of properties is not equal to the number of variables')
+                simlog.error(f'The number of properties is not equal to the number of variables', stack_index=3)
     elif type(number_or_names) == list:
         number_of_properties = len(number_or_names)
         names = number_or_names

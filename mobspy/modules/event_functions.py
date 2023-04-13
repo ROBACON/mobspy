@@ -56,7 +56,7 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
             if key in species_for_sbml:
                 assignments.append((key, str(event['event_counts'][key])))
             else:
-                simlog.error(f'Species {key} was not found in the model')
+                simlog.error(f'Species {key} used in an event assignment but it is not in the model')
 
         events_for_sbml['e' + str(i)] = {'trigger': event['trigger'],
                                          'delay': str(event['event_time']),

@@ -31,7 +31,8 @@ def check_orthogonality_between_references(references):
                 continue
 
             if len(reference1.get_characteristics().intersection(reference2.get_characteristics())) != 0:
-                simlog.error(f'A characteristic must be unique for species construction'
+                simlog.error(f'The same characteristic can only be shared through inheritance. ' +
+                             f'There are two characteristics directly added to two meta-species \n'
                              f'Repetition in: {reference1}, {reference2}'
                              f'Characteristics: {reference1.get_characteristics()}, {reference2.get_characteristics()}')
 
@@ -107,7 +108,8 @@ def create_orthogonal_vector_structure(species):
                 elif ref_characteristics_to_object[cha] == prop:
                     pass
                 else:
-                    simlog.error(f'A characteristic must be unique for each species \n'
+                    simlog.error(f'The same characteristic can only be shared through inheritance. ' +
+                                 f'There are two characteristics directly added to two meta-species \n'
                                 f'Repetition in: {spe}, {ref_characteristics_to_object[cha] } \n'
                                 f'Characteristics: {spe.get_characteristics()}, '
                                  f'{ref_characteristics_to_object[cha].get_characteristics()} \n')

@@ -33,7 +33,8 @@ class __Operator_Base:
                     reactant['characteristics'].add('all$')
                 return item
         except AttributeError:
-            simlog.error('All can only be used on species, reacting species and strings under set_count')
+            simlog.error('All can only be used on species, reacting species and strings under set_count',
+                         stack_index=2)
 
     # Transform product function
     @staticmethod
@@ -152,7 +153,8 @@ class __Operator_Base:
                         species_is_referenced_by.append(spe_obe)
 
                 if len(species_is_referenced_by) == 0:
-                    simlog.error(f'{species} or inheritors are not in the model. Please add at least one')
+                    simlog.error(f'Species {species} was used in a reaction '
+                                 f'but itself or any inheritors are not in the model. Please add at least one')
 
                 if all_reactions:
                     # Find all the species that reference the one in the reaction
@@ -252,8 +254,11 @@ class __Set_Reversible_Rate:
 
             :param both_rates: (rate functions) rate function from the direct and reverse reaction
         """
-        if len(both_rates) != 2:
-            simlog.error('The reversible reaction must receive 2 rates')
+        try:
+            if len(both_rates) != 2:
+                simlog.error('The reversible reaction must receive 2 rates', stack_index=2)
+        except TypeError:
+            simlog.error('The reversible reaction must receive 2 rates', stack_index=2)
 
         self.reaction_direct.rate = both_rates[0]
         self.reaction_reverse.rate = both_rates[1]

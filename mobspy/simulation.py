@@ -91,6 +91,14 @@ class Simulation:
     @contextmanager
     def event_condition(self, trigger, delay=0):
         try:
+            code_line = inspect.stack()[2].code_context[0][:-1]
+            if '==' in code_line:
+                simlog.error('Equality comparison operator (==) not allowed for MobsPy events \n' +
+                             'Please use (A <= n) & (A >= n) if necessary', stack_index=3)
+            if type(trigger) == bool or type(trigger) == float or type(trigger) == int:
+                simlog.error(f'MobsPy has received an invalid trigger type: {type(trigger)} \n' +
+                             f'Please make sure you are not using the operator == for creating event conditions \n'
+                             , stack_index=3)
             self._conditional_event = True
             self._event_handler()
             yield 0
@@ -149,6 +157,10 @@ class Simulation:
         self.model = model
         self.names = names
 
+        if not isinstance(model, Species) and not isinstance(model, List_Species):
+            simlog.error('Model must be formed only by Species objects or List_Species objects \n'
+                         f'Model type {type(model)} and it is {model}')
+
         # Get all meta - reactions
         self._reactions_set = set()
         for spe_object in self.model:
@@ -161,9 +173,6 @@ class Simulation:
                 self._species_counts.append({'object': spe_object, 'characteristics': count['characteristics'],
                                              'quantity': count['quantity']})
             spe_object.reset_counts()
-
-        if not isinstance(model, Species) and not isinstance(model, List_Species):
-            simlog.error('Model must be formed by Species objects')
 
         if not parameters:
             self.parameters = get_default_parameters()
@@ -364,6 +373,13 @@ class Simulation:
         if not plotted_flag:
             example_parameters = get_example_parameters()
             if name in example_parameters.keys():
+                if name == 'duration':
+                    if type(value) == bool:
+                        simlog.error(f'MobsPy has received an invalid trigger type: {type(value)} \n' +
+                                     f'Please make sure you are not using the operator == for ' +
+                                     f'creating event conditions \n'
+                                     , stack_index=2)
+
                 if name == 'duration' and isinstance(value, MetaSpeciesLogicResolver):
                     self.__dict__['parameters']['_continuous_simulation'] = True
                     self.__dict__['_end_condition'] = value
@@ -374,7 +390,7 @@ class Simulation:
             elif name in white_list:
                 pass
             else:
-                simlog.error(f'Parameter {name} is not supported')
+                simlog.error(f'Parameter {name} is not supported', stack_index=2)
 
     def __getattr__(self, item):
         """
@@ -409,12 +425,12 @@ class Simulation:
         """
         if type(config) == str:
             if os.path.splitext(config)[1] != '.json':
-                simlog.error('Wrong file extension')
+                simlog.error('Wrong file extension', stack_index=3)
             parameters_to_config = pr.read_json(config)
         elif type(config) == dict:
             parameters_to_config = config
         else:
-            simlog.error("Parameters must be python dictionary or json file")
+            simlog.error("Parameters must be python dictionary or json file", stack_index=3)
         return parameters_to_config
 
     # Plotting encapsulation
@@ -441,7 +457,7 @@ class Simulation:
             elif type(spe) == str:
                 species_strings.add(spe)
             else:
-                simlog.error('Only species objects or strings for plotting arguments')
+                simlog.error('Only species objects or strings for plotting arguments', stack_index=4)
         return species_strings, self.results, self.plot_parameters
 
     def plot_stochastic(self, *species):
@@ -507,7 +523,7 @@ class SimulationComposition:
         elif isinstance(S1, SimulationComposition) and isinstance(S2, SimulationComposition):
             self.list_of_simulations = S1.list_of_simulations + S2.list_of_simulations
         else:
-            simlog.error('Simulation compositions can only be performed with other simulations')
+            simlog.error('Simulation compositions can only be performed with other simulations', stack_index=3)
         self.results = None
         self.base_sim = self.list_of_simulations[0]
 

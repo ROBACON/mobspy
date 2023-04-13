@@ -24,6 +24,7 @@ class Bool_Override:
             :param _stocked_characteristics: (str) stocks the characteristics of the queries performed by the user
             :param species_string: (str) string value from an individual species in MobsPY format
     """
+
     def __bool__(self):
         """
             The implementation of the .dot operation for rate function arguments
@@ -104,7 +105,8 @@ class Specific_Species_Operator(Bool_Override):
             else:
                 return False
         else:
-            simlog.error('Concatenation of is_a and dot operator still not supported. Please use them separately')
+            simlog.error('Concatenation of is_a and dot operator not supported. Please use them separately',
+                         stack_index=2)
 
     def add(self, characteristic):
         """
@@ -132,7 +134,8 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
 
-    if type(reaction_rate_function) == int or type(reaction_rate_function) == float or isinstance(reaction_rate_function, Quantity):
+    if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
+            isinstance(reaction_rate_function, Quantity):
         # Function is a constant function number int here
         reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list), dimension)
         if reaction_rate_function == 0:
@@ -145,7 +148,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         # [''] means that it is a function that takes no arguments (empty signature)
         if function_rate_arguments != ['']:
             arguments = prepare_arguments_for_callable(combination_of_reactant_species,
-                                                   reactant_string_list, function_rate_arguments)
+                                                       reactant_string_list, function_rate_arguments)
 
             rate = reaction_rate_function(**arguments)
         else:
@@ -164,13 +167,16 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
             simlog.error('There is a reaction rate missing for the following reactants: \n'
                          + str(reactant_string_list))
         else:
-            simlog.error('The function return a non-valid value')
+            simlog.error(f'The rate function {reaction_rate_function}, returned a non-valid value. \n' +
+                         f'Only int, floats and str are accepted')
     elif reaction_rate_function is None:
         simlog.error('There is a reaction rate missing for the following reactants: \n'
                      + str(reactant_string_list))
+    elif type(reaction_rate_function) == str:
+        return reaction_rate_function
     else:
         simlog.debug(type(reaction_rate_function))
-        simlog.error('The rate type is not supported')
+        simlog.error(f'The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported')
 
     return reaction_rate_string
 
@@ -189,7 +195,8 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model):
     counts = rc.count_string_dictionary(reactants)
 
     if type_of_model.lower() not in ['stochastic', 'deterministic']:
-        simlog.error('Type of model not supported. Only stochastic or deterministic')
+        simlog.error(f'The following method for simulation {type_of_model} is not supported.\n' +
+                     f'Only stochastic or deterministic')
 
     kinetics_string = ""
     for name, number in counts.items():
