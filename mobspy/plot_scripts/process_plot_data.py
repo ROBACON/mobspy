@@ -14,7 +14,7 @@ def query_plot_data(species, data):
     new_data = deepcopy(data)
 
     species_to_plot = set()
-    for time_series in data:
+    for time_series in data.ts_data:
         for key in time_series.keys():
             if key in species:
                 species_to_plot.add(key)

@@ -634,7 +634,7 @@ def test_set_counts():
     B = New(A)
     B.b1, B.b2
 
-    model = set_counts({All['B.a1']: 100, C: 200*u.mols, 'A.a1': 100, A.a2: 50})
+    model = set_counts({All['B.a1']: 100, C:200*u.mols, 'A.a1': 100, A.a2: 50})
     S = Simulation(model)
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_23.txt')
@@ -664,6 +664,35 @@ def test_bool_error():
     assert True
 
 
+def test_event_all():
+    Acka = BaseSpecies()
+    Acka.a1, Acka.a2
+
+    Baka = New(Acka)
+    Baka.b1, Baka.b2
+
+    Baka >> Zero[1]
+
+    S = Simulation(Baka)
+    S.level = -1
+    S.plot_data = False
+    with S.event_time(0):
+        set_counts({All[Baka]: 10, Baka.b1.a2: 20})
+        Baka.a1.b1(30)
+    assert compare_model(S.compile(), 'test_tools/model_24.txt')
+    S.duration = 5
+    S.step_size = 1
+    S.run()
+    for key in S.results:
+        if key == 'Time':
+            continue
+        assert S.results[key][0] > 0
+    for key in S.results:
+        if key == 'Time':
+            continue
+        assert S.results[key][-1] < 1
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -671,7 +700,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_logic_operator_syntax, test_stack_position, test_empty_arguments,
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
-             test_bool_error]
+             test_bool_error, test_event_all]
 
 sub_test = test_list
 

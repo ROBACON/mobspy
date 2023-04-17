@@ -58,13 +58,13 @@ class MobsPyTimeSeries:
             return self.ts_data[item]
         elif type(item) == str:
             try:
-                for ts in self:
+                for ts in self.ts_data:
                     to_return.append(ts[item])
             except KeyError:
                 for i in range(len(self)):
                     to_return.append(self._sum_reacting_species_data(item, i))
         elif isinstance(item, Species):
-            for ts in self:
+            for ts in self.ts_data:
                 to_return.append(ts[item.get_name()])
         elif isinstance(item, Reacting_Species):
             for i in range(len(self)):
@@ -112,8 +112,12 @@ class MobsPyTimeSeries:
         return to_return
 
     def __iter__(self):
-        for ts in self.ts_data:
-            yield ts
+        if len(self.ts_data) > 1:
+            for ts in self.ts_data:
+                yield ts
+        else:
+            for key in self.ts_data[0]:
+                yield key
 
     def get_max_time_for_species(self, species):
         """
@@ -123,7 +127,7 @@ class MobsPyTimeSeries:
             species = species.get_name()
         max_length = 0
         max_ts = None
-        for ts in self:
+        for ts in self.ts_data:
             if species in ts.keys():
                 if len(ts) > max_length:
                     max_length = len(ts)

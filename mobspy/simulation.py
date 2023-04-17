@@ -142,7 +142,6 @@ class Simulation:
         self._conditional_event = False
         self._end_condition = None
 
-
         # HERE FABRICIO
         # Get all names
         #if names is None:
@@ -160,6 +159,8 @@ class Simulation:
         if not isinstance(model, Species) and not isinstance(model, List_Species):
             simlog.error('Model must be formed only by Species objects or List_Species objects \n'
                          f'Model type {type(model)} and it is {model}')
+
+        self.orthogonal_vector_structure = mcu.create_orthogonal_vector_structure(model)
 
         # Get all meta - reactions
         self._reactions_set = set()
@@ -219,12 +220,11 @@ class Simulation:
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
                              species_counts=self._species_counts,
-                             names=self.names,
+                             orthogonal_vector_structure=self.orthogonal_vector_structure,
                              volume=self.parameters['volume'],
                              type_of_model=self.parameters[
                                  "simulation_method"],
                              verbose=verbose,
-                             default_order=self.default_order,
                              event_dictionary=self.total_packed_events,
                              continuous_sim=self.parameters['_continuous_simulation'],
                              ending_condition=self.parameters['_end_condition'])
@@ -359,7 +359,7 @@ class Simulation:
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
-                      '_end_condition']
+                      '_end_condition', 'orthogonal_vector_structure']
 
         plotted_flag = False
         if name in white_list:
@@ -391,6 +391,11 @@ class Simulation:
                 pass
             else:
                 simlog.error(f'Parameter {name} is not supported', stack_index=2)
+
+    def __getattribute__(self, item):
+        if item == 'results' and self.__dict__['results'] == {}:
+            simlog.error('The results were accessed before the execution of the simulation', stack_index=2)
+        return super().__getattribute__(item)
 
     def __getattr__(self, item):
         """
@@ -458,6 +463,7 @@ class Simulation:
                 species_strings.add(spe)
             else:
                 simlog.error('Only species objects or strings for plotting arguments', stack_index=4)
+
         return species_strings, self.results, self.plot_parameters
 
     def plot_stochastic(self, *species):

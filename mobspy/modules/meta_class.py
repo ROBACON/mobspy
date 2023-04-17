@@ -23,13 +23,6 @@ class Compiler:
     """
         The compiler is responsible for constructing the model from the meta-species and meta-reactions given
         and checking if it is a valid MobsPy model
-
-        :param entity_counter: (int) counts the number of defined meta-species (for having a unique placeholder name
-        for species before the user or MobsPy name them)
-        :param  last_rate: (float, callable, Quantity)  due to python operator priority the __getitem__
-        operation executes in the beginning of a reaction definition, so the compiler stores it until it is needed
-        :param ref_characteristics_to_object: (dict)  dictionary where the keys are the characteristics and the value
-         is the meta-species that the characteristic was added directly to (no inheritance)
     """
 
     # Basic storage of defined variables for Compiler
@@ -51,26 +44,26 @@ class Compiler:
         cls.last_rate = item
         return object_to_return
 
-    # @classmethod
-    #def name_all_involved_species(cls, names=None):
-    #    """
-    #        Name species automatically according to their variable names
+    @classmethod
+    def add_phantom_reactions(cls, reactions_for_sbml, species_to_add_phantom_reaction):
+        """
+            This method is here because basico cannot compile species that have been assigned to events but are not
+            present in reactions.
+            Interestingly enough this error does not happen in python 3.10.
+            However, to be compatible with earlier versions we add an extremely slow phantom reaction for each one
+            of those species with a coefficient of 1e-100. The idea is that the reaction is so slow that it should
+            not make any sizable difference in any model. It adds them directly to the reactions for sbml dictionary
 
-    #        :param names: (dict) dictionary with other name options - follows globals() format
-    #    """
-    #    if not names:
-    #        simlog.error('Species must be named' +
-    #                     'Please set ( names == globals() ) in the MobsPy constructor for automatic naming')
-
-    #    for name, key in names.items():
-    #        # If the symbol '$' is in there, the species has not yet been named
-    #        if isinstance(key, Species) and '$' in key.get_name():
-    #            key.name(name)
+            :param reactions_for_sbml: reactions dictionary in python sbml format
+            :param species_to_add_phantom_reaction: species that will be assigned a phantom reaction
+        """
+        for i, spe in enumerate(species_to_add_phantom_reaction):
+            reactions_for_sbml['phantom_reaction_' + str(i)] = {'re': [(1, spe)], 'pr': [],
+                                                                'kin': str(spe) + ' * 1e-100'}
 
     @classmethod
-    def compile(cls, meta_species_to_simulate, reactions_set, species_counts,
-                volume=1, names=None, type_of_model='deterministic', verbose=True,
-                default_order=None, event_dictionary=None,
+    def compile(cls, meta_species_to_simulate, reactions_set, species_counts, orthogonal_vector_structure,
+                volume=1, type_of_model='deterministic', verbose=True, event_dictionary=None,
                 continuous_sim=False, ending_condition=None):
         """
             Here we construct the species for Copasi using their objects
@@ -80,11 +73,15 @@ class Compiler:
             It also performs checks to see if the model is valid
 
             :param meta_species_to_simulate: (List_Species or Species) Species to generate the model
+            :param reactions_set: (set) Set of meta-reactions collected when the simulation objected was constructed
+            :param species_counts: (dict) All counts assigned to species in the model
+             before the simulation object was constructed
+            :param orthogonal_vector_structure: (dict) ref_characteristics_to_objects in other modules. Dictionary
+            with the characteristics as keys and the objects as values. Characteritics pointing to their coordinate
+            in the vector space
             :param volume: (int, flot) Simulation volume
-            :param names: (dict) alternative naming for species - see name_all_involved_species
             :param type_of_model: (str) deterministic or stochastic
             :param verbose: (bool) print or not the model results by generating a model_str
-            :param default_order: (Reaction Operator) Operator that decides the order of the
             meta-reaction ( or Default we have the round-robin) and how MobsPy will handle meta-species in
             the products that are not referenced in the reactants - see order_operators.py
             :param event_dictionary: (dict) dictionary with all the events to be added to the model
@@ -104,7 +101,10 @@ class Compiler:
         names_used = set()
         # Removing repeated elements to ensure only one meta-species in the simulation
         meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
+        black_listed_names = {'Time', 'Rev', 'All'}
         for i, species in enumerate(meta_species_to_simulate):
+            if species.get_name() in black_listed_names:
+                simlog.error(f'The name {species.get_name()} is not allowed for meta-species please change it')
             if '$' in species.get_name():
                 simlog.error('An error has occurred and one of the species was not named')
             if species.get_name() in names_used:
@@ -112,9 +112,6 @@ class Compiler:
                              f'The repeated name is {species.get_name()} in position {i}\n' +
                              f'Another possibility could be a repeated meta-species in the model')
             names_used.add(species.get_name())
-
-        # Construct structures necessary for reactions
-        cls.ref_characteristics_to_object = mcu.create_orthogonal_vector_structure(meta_species_to_simulate)
 
         # Order the species references for later usage
         for species in meta_species_to_simulate:
@@ -131,7 +128,7 @@ class Compiler:
         mappings_for_sbml = {}
         for spe_object in meta_species_to_simulate:
             species_string_list = ssg.construct_all_combinations(spe_object, 'std$',
-                                                                 cls.ref_characteristics_to_object)
+                                                                 orthogonal_vector_structure)
             for x in species_string_list:
                 x[0] = x[0].get_name()
             mappings_for_sbml[spe_object.get_name()] = ['.'.join(x) for x in species_string_list]
@@ -168,7 +165,7 @@ class Compiler:
             temp_set = set(count['characteristics'])
             temp_set.remove('all$')
             species_strings = ssg.construct_all_combinations(count['object'], temp_set,
-                                                             cls.ref_characteristics_to_object,
+                                                             orthogonal_vector_structure,
                                                              symbol='_dot_')
 
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
@@ -189,7 +186,7 @@ class Compiler:
                 continue
 
             species_string = ssg.construct_species_char_list(count['object'], count['characteristics'],
-                                                             cls.ref_characteristics_to_object,
+                                                             orthogonal_vector_structure,
                                                              symbol='_dot_')
 
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
@@ -206,7 +203,7 @@ class Compiler:
         # Species_String_Dict and a set of reaction objects in Reactions_Set
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
                                                                           meta_species_to_simulate,
-                                                                          cls.ref_characteristics_to_object,
+                                                                          orthogonal_vector_structure,
                                                                           type_of_model, dimension)
         parameters_for_sbml['volume'] = (volume, f'dimensionless')
 
@@ -224,17 +221,27 @@ class Compiler:
                                    'Is doubled. Was that intentional? \n')
 
         # Event implementation here
-        events_for_sbml = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
-                                                              cls.ref_characteristics_to_object,
-                                                              volume, dimension, meta_species_to_simulate)
+        # Basico does not resolve species that have no reactions but were added to events
+        # So we add "phantom" reactions to fix this
+        events_for_sbml, species_in_events = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
+                                                                                 orthogonal_vector_structure,
+                                                                                 volume, dimension,
+                                                                                 meta_species_to_simulate)
+        species_in_reactions = set()
+        for key, reaction in reactions_for_sbml.items():
+            for reactant in reaction['re']:
+                species_in_reactions.add(reactant[1])
+            for product in reaction['pr']:
+                species_in_reactions.add(product[1])
+        cls.add_phantom_reactions(reactions_for_sbml, species_in_events.difference(species_in_reactions))
 
         if continuous_sim:
-            end_event = {'trigger': ending_condition.generate_string(cls.ref_characteristics_to_object),
+            end_event = {'trigger': ending_condition.generate_string(orthogonal_vector_structure),
                          'delay': '0',
                          'assignments': [('End_Flag_MetaSpecies', '1')]}
 
-            reactions_for_sbml['reaction_end'] = {'re': [(10, 'End_Flag_MetaSpecies')], 'pr': [],
-                                                  'kin': 'End_Flag_MetaSpecies * 1e-60'}
+            reactions_for_sbml['phantom_reaction_end'] = {'re': [(10, 'End_Flag_MetaSpecies')], 'pr': [],
+                                                          'kin': 'End_Flag_MetaSpecies * 1e-100'}
             events_for_sbml['end_event'] = end_event
 
         model_str = ''
@@ -261,10 +268,15 @@ class Compiler:
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
-            remove_hack_end_reaction = deepcopy(reactions_for_sbml)
-            remove_hack_end_reaction.pop('reaction_end', None)
+            remove_phantom_reactions = deepcopy(reactions_for_sbml)
+            to_remove = []
+            for reaction in remove_phantom_reactions:
+                if 'phantom' in reaction:
+                    to_remove.append(reaction)
+            for r in to_remove:
+                remove_phantom_reactions.pop(r, None)
             reaction_alpha = [str(x[1]).replace('_dot_', '.') for x in
-                              list(sorted(remove_hack_end_reaction.items(), key=lambda x: str(x[1])))]
+                              list(sorted(remove_phantom_reactions.items(), key=lambda x: str(x[1])))]
 
             for i, reac in enumerate(reaction_alpha):
                 model_str += 'reaction_' + str(i) + ',' + reac + '\n'
@@ -399,13 +411,21 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
             String representation of the list of reactants
         """
+        species_object = self.list_of_reactants[0]['object']
+        characteristics = self.list_of_reactants[0]['characteristics']
         if len(self.list_of_reactants) == 1:
-            to_return = str(self.list_of_reactants[0]['object'])
-            for cha in self.list_of_reactants[0]['characteristics']:
-                to_return += '.' + cha
-            return to_return
+            if species_object._simulation_context is None:
+                to_return = str(species_object)
+                for cha in self.list_of_reactants[0]['characteristics']:
+                    to_return += '.' + cha
+                return to_return
+            else:
+                return Species.str_under_context(species_object, characteristics)
         else:
-            return self.list_of_reactants
+            if species_object._simulation_context is not None:
+                simlog.error('Please separate the species when using string based assignments under event context'
+                             'Ex: str(A) + str(B)', stack_index=2)
+            return str(self.list_of_reactants)
 
     # Labels and value function implementation
     def c(self, item):
@@ -446,7 +466,8 @@ class Reacting_Species(ReactingSpeciesComparator):
             have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
             finally a label if used.
 
-            :param object_reference: (Species) meta-species object reference
+            :param object_reference: (Species) meta-species object reference or (int, float, Quantity) for event
+            assignments with meta-species values
             :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
             :param stoichiometry: (int) stoichiometry value of the meta-species in the reaction
             :param label: (int, float, str) value for the label for matching used in this reaction
@@ -480,8 +501,14 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
         if isinstance(other, Species):
             other = Reacting_Species(other, set())
-        self.list_of_reactants += other.list_of_reactants
+        try:
+            self.list_of_reactants += other.list_of_reactants
+        except AttributeError:
+            simlog.error(f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
         return self
+
+    def __radd__(self, other):
+        return Reacting_Species.__add__(self, other)
 
     def __rshift__(self, other):
         """
@@ -490,11 +517,9 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param other: (Species or Reacting Species) product side of the reaction being added
         """
-        code_line = inspect.stack()[0].code_context[0][:-1]
-        line_number = inspect.stack()[0].lineno
-        if '[' not in code_line or ']' not in code_line:
-            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                         + f'No rate detect for this reaction')
+        code_line = inspect.stack()[1].code_context[0][:-1]
+        line_number = inspect.stack()[1].lineno
+        Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
@@ -511,26 +536,33 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
+        species_object = self.list_of_reactants[0]['object']
+        simulation_under_context = self.list_of_reactants[0]['object']._simulation_context
+
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
-            species_object = self.list_of_reactants[0]['object']
+            species_object = species_object
             characteristics = self.list_of_reactants[0]['characteristics']
             quantity_dict = species_object.add_quantities(characteristics, quantity)
+        elif type(quantity) == Reacting_Species and simulation_under_context is not None:
+            simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
+                         f'simulation context', stack_index=2)
         else:
-            simlog.error(f'Reactant_species count assignment does not support the type {type(quantity)}',
+            simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
 
-        dummy_object = self.list_of_reactants[0]['object']
-        if dummy_object._simulation_context is not None:
+        if simulation_under_context is not None:
             try:
-                dummy_object._simulation_context.current_event_count_data.append({'species': dummy_object,
-                                                                                  'characteristics': quantity_dict[
-                                                                                      'characteristics'],
-                                                                                  'quantity': quantity_dict[
-                                                                                      'quantity']})
-            except:
-                simlog.error('Only species count assignments are allowed in a model context')
+                if type(quantity) == str:
+                    quantity_dict = self.add_quantities('std$', quantity)
+                simulation_under_context.current_event_count_data.append({'species': species_object,
+                                                                          'characteristics': quantity_dict[
+                                                                              'characteristics'],
+                                                                          'quantity': quantity_dict[
+                                                                              'quantity']})
+            except Exception as e:
+                simlog.error(str(e) + '\n Only species count assignments are allowed in a model context')
         else:
             return self
 
@@ -574,6 +606,7 @@ class List_Species:
 
         :param list_of_species: (Species) Meta-species list to store the meta-species
     """
+
     def __init__(self, iterable):
         """
             Constructor not usually used - but a list_of_species is given one can construct the List_Species from it
@@ -654,7 +687,7 @@ class List_Species:
 
     def insert(self, index, item):
         self._list_species.insert(index, item)
-        
+
     def extend(self, other):
         if isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
@@ -686,7 +719,7 @@ def ListSpecies(number_of_elements, inherits_from=None):
 
     temp_list = []
     for i in range(number_of_elements):
-        temp_name = name + '_' + str(i+1)
+        temp_name = name + '_' + str(i + 1)
 
         if inherits_from is None:
             temp_list.append(BaseSpecies([temp_name]))
@@ -716,6 +749,7 @@ class Species(SpeciesComparator):
         :param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
         keys and the counts of values
     """
+
     @classmethod
     def check_if_valid_characteristic(cls, char):
         """
@@ -736,11 +770,35 @@ class Species(SpeciesComparator):
         else:
             return True
 
+    @classmethod
+    def str_under_context(cls, species_object, characteristics):
+        """
+            Returns the str representation of a species under context or not
+
+            :param species_object: Meta-species object to construct the string
+            :param characteristics: Characteristics to filter the strings
+            :return: String in format (A_dot_a1 + A_dot_a2 + ....) with the parenthesis
+        """
+        ref_char_to_spe_obj = species_object._simulation_context.orthogonal_vector_structure
+        all_strings = sorted(ssg.construct_all_combinations(species_object, characteristics,
+                                                            ref_char_to_spe_obj, '_dot_'))
+        to_str = all_strings[0]
+        for i, e in enumerate(all_strings):
+            if i == 0:
+                continue
+            else:
+                to_str = to_str + ' + ' + e
+        to_str = '(' + to_str + ')'
+        return to_str
+
     def __str__(self):
         """
             String representation, just returns the species name
         """
-        return self._name
+        if self._simulation_context is None:
+            return self._name
+        else:
+            return Species.str_under_context(self, 'std$')
 
     # Def c to get the value
     def c(self, item):
@@ -873,7 +931,22 @@ class Species(SpeciesComparator):
         """
             Just making addition symmetric check __add__
         """
-        Species.__add__(self, other)
+        return Species.__add__(self, other)
+
+    @classmethod
+    def _compile_defined_reaction(cls, code_line, line_number):
+        n_all = code_line.count('All')
+        if 'Rev' in code_line:
+            n_all = n_all + 1
+
+        n_key = code_line.count(']')
+        if n_key != n_all + 1:
+            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
+                        + f'The reaction did not compile. Perhaps there is a missing rate?')
+
+        if code_line[-1] != ']':
+            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
+                         + f'There must be a rate in the end of the reaction')
 
     def __rshift__(self, other):
         """
@@ -886,9 +959,7 @@ class Species(SpeciesComparator):
         myself = Reacting_Species(self, set())
         code_line = inspect.stack()[1].code_context[0][:-1]
         line_number = inspect.stack()[1].lineno
-        if '[' not in code_line or ']' not in code_line:
-            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                         + f'No rate detect for this reaction')
+        Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
@@ -942,20 +1013,21 @@ class Species(SpeciesComparator):
                 if cha in self._characteristics:
                     return cha
             simlog.error(f'{quantity} contains no characteristics from {self._name}', stack_index=2)
-        elif type(quantity) == str:
-            for cha in str(quantity).split('.')[1:]:
-                if cha in self._characteristics:
-                    return cha
-            simlog.error(f'{quantity} contains no characteristics from {self._name}', stack_index=2)
+        elif type(quantity) == Reacting_Species:
+            simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
+                         f'simulation context', stack_index=2)
 
         if self._simulation_context is not None:
+
+            if type(quantity) == str:
+                quantity_dict = self.add_quantities('std$', quantity)
             try:
                 self._simulation_context.current_event_count_data.append({'species': self,
                                                                           'characteristics': quantity_dict[
                                                                               'characteristics'],
                                                                           'quantity': quantity_dict['quantity']})
-            except:
-                simlog.error('Only species count assignments are allowed in a model context')
+            except Exception as e:
+                simlog.error(str(e) + '\n Only species count assignments are allowed in a model context')
         else:
             return self
 

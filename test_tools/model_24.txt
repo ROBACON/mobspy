@@ -1,0 +1,25 @@
+
+Species
+Baka.a1.b1,0
+Baka.a1.b2,0
+Baka.a2.b1,0
+Baka.a2.b2,0
+
+Mappings
+Baka :
+Baka.a1.b1
+Baka.a1.b2
+Baka.a2.b1
+Baka.a2.b2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Baka.a1.b1')], 'pr': [], 'kin': 'Baka.a1.b1 * 1'}
+reaction_1,{'re': [(1, 'Baka.a1.b2')], 'pr': [], 'kin': 'Baka.a1.b2 * 1'}
+reaction_2,{'re': [(1, 'Baka.a2.b1')], 'pr': [], 'kin': 'Baka.a2.b1 * 1'}
+reaction_3,{'re': [(1, 'Baka.a2.b2')], 'pr': [], 'kin': 'Baka.a2.b2 * 1'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('Baka.a1.b1', '30'), ('Baka.a1.b2', '10'), ('Baka.a2.b1', '20'), ('Baka.a2.b2', '10')]}

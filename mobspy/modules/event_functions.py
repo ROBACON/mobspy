@@ -20,6 +20,7 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
         :rtype: events = {'e': { 'trigger': 'true', 'delay': '10', 'assignments': [('M','1'),]}}
     """
     reformed_event_list = []
+    species_in_events = set()
 
     # Convert count from triggers
     for ev in event_list:
@@ -32,10 +33,33 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
         if not ev['event_counts']:
             continue
         event_dictionary = {}
+
+        # All assignments never take priority over specific assignments
         for ec in ev['event_counts']:
+            if 'all$' not in ec['characteristics']:
+                continue
+
+            temp_char = set(ec['characteristics'])
+            temp_char.remove('all$')
+            dummy = ssg.construct_all_combinations(ec['species'], temp_char,
+                                                   characteristics_to_object, symbol='_dot_')
+            for d in dummy:
+                if type(ec['quantity']) != str:
+                    event_dictionary[d] = uh.convert_counts(ec['quantity'], volume, dimension)
+                else:
+                    event_dictionary[d] = ec['quantity']
+
+        for ec in ev['event_counts']:
+            if 'all$' in ec['characteristics']:
+                continue
+
             dummy = ssg.construct_species_char_list(ec['species'], ec['characteristics'],
                                                     characteristics_to_object, symbol='_dot_')
-            event_dictionary[dummy] = uh.convert_counts(ec['quantity'], volume, dimension)
+            if type(ec['quantity']) != str:
+                event_dictionary[dummy] = uh.convert_counts(ec['quantity'], volume, dimension)
+            else:
+                event_dictionary[dummy] = ec['quantity']
+
         if type(ev['trigger']) == str:
             reformed_event_list.append({'event_time': ev['event_time'], 'event_counts': event_dictionary,
                                         'trigger': ev['trigger']})
@@ -55,12 +79,13 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
         for key in event['event_counts']:
             if key in species_for_sbml:
                 assignments.append((key, str(event['event_counts'][key])))
+                species_in_events.add(key)
             else:
                 simlog.error(f'Species {key} used in an event assignment but it is not in the model')
 
+        assignments.sort()
         events_for_sbml['e' + str(i)] = {'trigger': event['trigger'],
                                          'delay': str(event['event_time']),
                                          'assignments': assignments}
 
-    return events_for_sbml
-
+    return events_for_sbml, species_in_events
