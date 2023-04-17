@@ -683,14 +683,46 @@ def test_event_all():
     S.duration = 5
     S.step_size = 1
     S.run()
-    for key in S.results:
-        if key == 'Time':
-            continue
-        assert S.results[key][0] > 0
+    assert S.results[Baka.a1.b1][0] == 30
+    assert S.results[Baka.b1.a2][0] == 20
+    assert S.results[Baka.a1.b2][0] == 10
+    assert S.results['Baka.a1.b1'][0] == 30
+    assert S.results['Baka.b1.a2'][0] == 20
+    assert S.results['Baka.a1.b2'][0] == 10
     for key in S.results:
         if key == 'Time':
             continue
         assert S.results[key][-1] < 1
+
+
+def test_one_value_concatenation_sim():
+    A, B = BaseSpecies()
+
+    B(200)
+    S2 = Simulation(A | B)
+    S2.plot_data = False
+    S2.level = -1
+    S2.duration = 5
+    S2.step_size = 1
+    S2.duration = (A <= 0) | (B <= 0)
+    S2.run()
+    assert len(S2.results[A]) == 1
+
+
+def test_crash_after_modification():
+
+    try:
+        A = BaseSpecies()
+        S1 = Simulation(A)
+        A = BaseSpecies()
+        A.a1, A.a2
+
+        S2 = Simulation(A)
+        S = S1 + S2
+        S.run()
+        assert False
+    except SystemExit:
+        assert True
 
 
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -700,7 +732,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_logic_operator_syntax, test_stack_position, test_empty_arguments,
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
-             test_bool_error, test_event_all]
+             test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification]
 
 sub_test = test_list
 

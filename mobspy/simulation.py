@@ -519,6 +519,21 @@ class Simulation:
 
 class SimulationComposition:
 
+    def _compile_multi_simulation(self):
+        for sim1 in self.list_of_simulations:
+            for sim2 in self.list_of_simulations:
+                if sim1 == sim2:
+                    continue
+
+                for spe1 in sim1.model:
+                    for spe2 in sim2.model:
+
+                        if spe1.get_name() == spe2.get_name():
+                            if spe1.get_all_characteristics() != spe2.get_all_characteristics():
+                                simlog.error(f'Species {spe1.get_name()} was modified through simulations. \n' +
+                                             f'Although reactions can be removed, the characteristics inherited must'
+                                             f'remains the same')
+
     def __init__(self, S1, S2):
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
             self.list_of_simulations = [S1] + [S2]
@@ -554,6 +569,7 @@ class SimulationComposition:
         str = ''
         for sim in self.list_of_simulations:
             str += sim.compile(verbose)
+        self._compile_multi_simulation()
         if str != '':
             return str
 
@@ -561,6 +577,7 @@ class SimulationComposition:
         for sim in self.list_of_simulations:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
+        self._compile_multi_simulation()
 
         for sim in self.list_of_simulations:
             if sim == self.base_sim:

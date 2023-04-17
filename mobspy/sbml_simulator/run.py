@@ -229,12 +229,17 @@ def __add_simulations_data(added_data, reformatted_data):
         new_data[key] = added_data[key]
 
     for i, time in enumerate(reformatted_data['Time']):
-
-        if time == 0:
+        # Remove the repeated initial value from following simulations.
+        # The final value of summed simulations is repeated
+        if time == 0 and added_data != {}:
             for key in reformatted_data:
                 reformatted_data[key].pop(0)
 
-        reformatted_data['Time'][i] = reformatted_data['Time'][i] + time_to_add
+        # This is for simulations with only one value. The system did not change at all
+        try:
+            reformatted_data['Time'][i] = reformatted_data['Time'][i] + time_to_add
+        except IndexError:
+            pass
 
     for key in added_data:
         if key == 'Time':
