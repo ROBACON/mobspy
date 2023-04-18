@@ -1,0 +1,12 @@
+
+Species
+A,10.0
+
+Mappings
+A :
+A
+
+Parameters
+volume,199.99999999999997
+
+Reactions

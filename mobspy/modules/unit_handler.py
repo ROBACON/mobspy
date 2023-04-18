@@ -58,20 +58,20 @@ def convert_counts(quantity, volume, dimension):
     """
     converted_quantity = deepcopy(quantity)
     if isinstance(quantity, Quantity):
-        if '[length] ** 3' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
+        if '[length]' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
             simlog.error(f'The assigned quantity {quantity} is neither a count or concentration')
 
         try:
             if '[substance]' in quantity.dimensionality:
                 converted_quantity.ito_base_units()
-                if '[length] ** 3' in str(quantity.dimensionality):
+                if '[length]' in str(quantity.dimensionality):
                     converted_quantity.ito(f'moles/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
 
                 converted_quantity = converted_quantity.magnitude * N_A
             else:
                 converted_quantity.ito_base_units()
-                if '[length] ** 3' in str(quantity.dimensionality):
+                if '[length]' in str(quantity.dimensionality):
                     converted_quantity.ito(f'1/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
                 converted_quantity = converted_quantity.magnitude

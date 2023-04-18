@@ -719,10 +719,20 @@ def test_crash_after_modification():
 
         S2 = Simulation(A)
         S = S1 + S2
+        S.level = -1
         S.run()
         assert False
     except SystemExit:
         assert True
+
+
+def test_unit_bi_dimension():
+    A = BaseSpecies()
+    A(5 / u.m ** 2)
+    S = Simulation(A)
+    S.volume = 2 * u.m ** 2
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_25.txt')
 
 
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -732,7 +742,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_logic_operator_syntax, test_stack_position, test_empty_arguments,
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
-             test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification]
+             test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
+             test_unit_bi_dimension]
 
 sub_test = test_list
 
