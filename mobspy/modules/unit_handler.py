@@ -7,6 +7,7 @@ from scipy.constants import N_A
 from copy import deepcopy
 import os, sys
 import mobspy.simulation_logging.log_scripts as simlog
+import mobspy.modules.unit_handler as uh
 
 
 def convert_rate(quantity, reaction_order, dimension):
@@ -21,28 +22,35 @@ def convert_rate(quantity, reaction_order, dimension):
     """
     volume_power = reaction_order - 1
     converted_quantity = deepcopy(quantity)
+
+    # Dimension arrives as none but there is a rate
+    if dimension is None and isinstance(quantity, Quantity) and reaction_order > 1:
+        dimension = uh.extract_length_dimension(str(quantity.dimensionality), dimension,
+                                                reaction_order)
+
     if isinstance(quantity, Quantity):
         try:
             if volume_power <= 0:
-                converted_quantity.ito_base_units()
-                converted_quantity.ito(f'1/seconds')
-                return converted_quantity.magnitude
-
-            if '[substance]' in quantity.dimensionality:
-                converted_quantity.ito_base_units()
-                converted_quantity.ito(f'decimeters ** {dimension*volume_power}/(moles ** {volume_power} * seconds)')
-                return converted_quantity.magnitude / (N_A ** volume_power)
+                if '[substance]' in str(quantity.dimensionality):
+                    converted_quantity.ito(f'moles/seconds')
+                    return converted_quantity.magnitude, dimension
+                else:
+                    converted_quantity.ito(f'1/seconds')
+                    return converted_quantity.magnitude, dimension
             else:
-                converted_quantity.ito_base_units()
-                converted_quantity.ito(f'decimeters ** {dimension*volume_power}/seconds')
-                return converted_quantity.magnitude
+                if '[substance]' in str(quantity.dimensionality):
+                    converted_quantity.ito(f'decimeters ** {dimension*volume_power}/(moles ** {volume_power} * seconds)')
+                    return converted_quantity.magnitude / (N_A ** volume_power), dimension
+                else:
+                    converted_quantity.ito(f'decimeters ** {dimension*volume_power}/seconds')
+                    return converted_quantity.magnitude, dimension
         except Exception as e:
             simlog.error(str(e) + '\n' +
                          f'Problem converting rate {quantity} \n'
-                         f'Is the rate in the form [volume] ** (order - 1)/[time]?')
+                         f'Is the rate in the form [volume]**{volume_power}/[time]?')
 
     else:
-        return quantity
+        return quantity, dimension
 
 
 def convert_counts(quantity, volume, dimension):
@@ -57,20 +65,19 @@ def convert_counts(quantity, volume, dimension):
         :return: converted_quantity (int, float) = converted unit into MobsPy standard units
     """
     converted_quantity = deepcopy(quantity)
+
     if isinstance(quantity, Quantity):
         if '[length]' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
             simlog.error(f'The assigned quantity {quantity} is neither a count or concentration')
 
         try:
             if '[substance]' in quantity.dimensionality:
-                converted_quantity.ito_base_units()
                 if '[length]' in str(quantity.dimensionality):
                     converted_quantity.ito(f'moles/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
 
                 converted_quantity = converted_quantity.magnitude * N_A
             else:
-                converted_quantity.ito_base_units()
                 if '[length]' in str(quantity.dimensionality):
                     converted_quantity.ito(f'1/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
@@ -102,7 +109,7 @@ def check_dimension(dimension, value):
     return dimension
 
 
-def extract_length_dimension(unit_string, dimension):
+def extract_length_dimension(unit_string, dimension, reaction_order=None):
     """
         Extracts the volume dimension from a Quantity object from Pint
 
@@ -118,7 +125,11 @@ def extract_length_dimension(unit_string, dimension):
     if position == -1:
         return False
     if temp_list[position + 1] == '**':
-        dimension = check_dimension(dimension, temp_list[position + 2])
+        if reaction_order is None:
+            dimension = check_dimension(dimension, temp_list[position + 2])
+        else:
+            temp_int = int(int(temp_list[position + 2])/(reaction_order - 1))
+            dimension = check_dimension(dimension, temp_int)
     else:
         dimension = check_dimension(dimension, 1)
     return dimension

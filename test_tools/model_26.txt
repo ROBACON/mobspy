@@ -1,0 +1,21 @@
+
+Species
+Bacteria,6.02214076e+23
+Ball,20.0
+Child,2.0
+
+Mappings
+Bacteria :
+Bacteria
+Ball :
+Ball
+Child :
+Child
+
+Parameters
+volume,199.99999999999997
+
+Reactions
+reaction_0,{'re': [(1, 'Bacteria')], 'pr': [], 'kin': 'Bacteria * 1.0'}
+reaction_1,{'re': [(1, 'Ball'), (1, 'Child')], 'pr': [(1, 'Ball')], 'kin': 'Ball * Child * 2.7777777777777772e-05 * volume^-1'}
+reaction_2,{'re': [(1, 'Ball'), (2, 'Child')], 'pr': [(1, 'Ball'), (1, 'Child')], 'kin': 'Ball * Child * Child * 0.0027777777777777775 * volume^-2'}

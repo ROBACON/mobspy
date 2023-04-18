@@ -137,7 +137,8 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
             isinstance(reaction_rate_function, Quantity):
         # Function is a constant function number int here
-        reaction_rate_function = uh.convert_rate(reaction_rate_function, len(reactant_string_list), dimension)
+        reaction_rate_function, dimension = uh.convert_rate(reaction_rate_function, len(reactant_string_list),
+                                                            dimension)
         if reaction_rate_function == 0:
             return 0
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
@@ -154,7 +155,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         else:
             rate = reaction_rate_function()
 
-        rate = uh.convert_rate(rate, len(reactant_string_list), dimension)
+        rate, dimension = uh.convert_rate(rate, len(reactant_string_list), dimension)
         if rate == 0:
             return 0
 

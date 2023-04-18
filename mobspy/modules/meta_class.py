@@ -137,17 +137,21 @@ class Compiler:
 
         # Dimension check. Here we check based on the units the area dimension
         dimension = None
-
         for reaction in reactions_set:
+            reaction_order = len(reaction.reactants)
             if isinstance(reaction.rate, Quantity):
-                if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension):
-                    dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension)
+                if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension, reaction_order):
+                    dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension,
+                                                            reaction_order)
 
         for count in species_counts:
             if isinstance(count['quantity'], Quantity):
                 if uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension):
                     dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
 
+        # Check volume:
+        if isinstance(volume, Quantity):
+            uh.extract_length_dimension(str(volume.dimensionality), dimension)
         volume = uh.convert_volume(volume, dimension)
 
         # Add the flag species used for verifying if the simulation is over

@@ -735,6 +735,34 @@ def test_unit_bi_dimension():
     assert compare_model(S.compile(), 'test_tools/model_25.txt')
 
 
+def test_bi_dimensional_rates():
+    Ball, Child, Bacteria = BaseSpecies(3)
+
+    Ball(10 / u.meter ** 2)
+    Child(1 / u.meter ** 2)
+    Bacteria(1 * u.mol)
+
+    Bacteria >> Zero[1 * u.mol / u.second]
+    Ball + Child + Child >> Ball + Child[1e-3 * (u.meter ** 4) / u.hour]
+    Ball + Child >> Ball[1e-3 * (u.meter ** 2) / u.hour]
+
+    S = Simulation(Ball | Child | Bacteria)
+    S.volume = 2 * u.m ** 2
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_26.txt')
+
+
+def test_dimension_in_function_only():
+    A = BaseSpecies()
+
+    A + A >> 3 * A[lambda: 1 * u.milliliter / u.second]
+
+    A(1)
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_27.txt')
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -743,7 +771,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
              test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
-             test_unit_bi_dimension]
+             test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only]
 
 sub_test = test_list
 
