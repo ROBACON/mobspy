@@ -20,7 +20,6 @@ def query_plot_data(species, data):
                 species_to_plot.add(key)
 
     for spe in species:
-
         if spe in species_to_plot:
             continue
 
