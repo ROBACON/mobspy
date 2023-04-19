@@ -149,8 +149,10 @@ def raw_plot(data, parameters_or_file):
     else:
         simlog.error('Raw plot only takes json files or parameters for configuration')
 
-    species = list(data[0].keys())
+    species = list(data.ts_data[0].keys())
     ppd.check_plot_parameters(species, plot_params)
+
+    # Here we add some base data just in case the user has not supplied it
     hp.plot_data(data, plot_params)
 
 

@@ -499,7 +499,7 @@ class Simulation:
             :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot
             parameter configuration
         """
-        dp.raw_plot(self.packed_data, parameters_or_file)
+        dp.raw_plot(self.results, parameters_or_file)
 
     def __add__(self, other):
         return SimulationComposition(self, other)
@@ -554,11 +554,22 @@ class SimulationComposition:
     # FIX THIS
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim']
-        broad_cast_parameters = ['level']
+        broad_cast_parameters = ['level', 'method', 'volume']
+
+        if name == 'duration':
+            simlog.error('The durations are to be defined specifically to each simulation and not for the concatenated'
+                         ' object. \n'
+                         'Please set the durations for each simulation object independently', stack_index=2)
 
         if name in broad_cast_parameters:
-            for sim in self.list_of_simulations:
-                sim.__dict__['parameters'][name] = value
+            if name == 'volume':
+                for sim in self.list_of_simulations:
+                    if sim.__dict__['parameters'][name] != 1:
+                        simlog.error('Volumes must be defined only individually for each simulation or once in the '
+                                     'concatenated simulation', stack_index=2)
+            else:
+                for sim in self.list_of_simulations:
+                    sim.__dict__['parameters'][name] = value
 
         if name in white_list:
             self.__dict__[name] = value
@@ -596,6 +607,9 @@ class SimulationComposition:
 
     def plot(self, *species):
         self.base_sim.plot(*species)
+
+    def plot_raw(self, parameters_or_file):
+        self.base_sim.plot_raw(parameters_or_file)
 
     def generate_sbml(self):
         return self.base_sim.generate_sbml()
