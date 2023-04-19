@@ -3,7 +3,7 @@
 """
 import pandas as pd
 from mobspy.modules.meta_class import *
-
+import inspect
 
 class MobsPyTimeSeries:
 
@@ -53,6 +53,13 @@ class MobsPyTimeSeries:
             Implements run retrieval using a meta-species object. Returns one run if there is only one
             time-series and returns multiple runs if there are multiple time series
         """
+        code_line = inspect.stack()[1].code_context[0][:-1]
+        if '[\'runs\']' in code_line:
+            simlog.error('As of version 2.0.1 MobsPy has changed the data output format. \n'
+                         'Now data can be accessed through the following syntax: \n'
+                         'S.results[Meta-Species Object] or S.results[Meta-Species string name] \n'
+                         'Both can perform queries', stack_index=2)
+
         to_return = []
         if type(item) == int:
             return self.ts_data[item]
