@@ -23,10 +23,13 @@ def query_plot_data(species, data):
         if spe in species_to_plot:
             continue
 
+        temp_list = [0 for _ in range(len(new_data.ts_data))]
         for i, ts in enumerate(new_data.ts_data):
-            new_data.time_series_number = i
-            ts[spe] = new_data[spe]
+            temp_list[i] = new_data[spe, i]
             species_to_plot.add(spe)
+
+        for res, ts in zip(temp_list, new_data.ts_data):
+            ts[spe] = res
 
     return species_to_plot, new_data
 

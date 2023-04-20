@@ -5,6 +5,7 @@ import pandas as pd
 from mobspy.modules.meta_class import *
 import inspect
 
+
 class MobsPyTimeSeries:
 
     def __init__(self, data_dict):
@@ -60,6 +61,13 @@ class MobsPyTimeSeries:
                          'S.results[Meta-Species Object] or S.results[Meta-Species string name] \n'
                          'Both can perform queries', stack_index=2)
 
+        series_index = None
+        if type(item) == tuple:
+            if len(item) > 2 or type(item[1]) != int:
+                simlog.error('Only len 2 and ints allowed in tuple-based assignments', stack_index=2)
+            series_index = item[1]
+            item = item[0]
+
         to_return = []
         if type(item) == int:
             return self.ts_data[item]
@@ -68,14 +76,23 @@ class MobsPyTimeSeries:
                 for ts in self.ts_data:
                     to_return.append(ts[item])
             except KeyError:
+                if series_index is None:
+                    for i in range(len(self)):
+                        to_return.append(self._sum_reacting_species_data(item, i))
+                else:
+                    to_return.append(self._sum_reacting_species_data(item, series_index))
+        elif isinstance(item, Species):
+            if series_index is None:
+                for ts in self.ts_data:
+                    to_return.append(ts[item.get_name()])
+            else:
+                to_return.append(self._sum_reacting_species_data(item, series_index))
+        elif isinstance(item, Reacting_Species):
+            if series_index is None:
                 for i in range(len(self)):
                     to_return.append(self._sum_reacting_species_data(item, i))
-        elif isinstance(item, Species):
-            for ts in self.ts_data:
-                to_return.append(ts[item.get_name()])
-        elif isinstance(item, Reacting_Species):
-            for i in range(len(self)):
-                to_return.append(self._sum_reacting_species_data(item, i))
+            else:
+                to_return.append(self._sum_reacting_species_data(item, series_index))
 
         if len(to_return) == 1:
             return to_return[0]
