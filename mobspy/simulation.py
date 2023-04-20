@@ -156,6 +156,9 @@ class Simulation:
         self.model = model
         self.names = names
 
+        if type(model) == set or type(model) == list:
+            model = List_Species(model)
+
         if not isinstance(model, Species) and not isinstance(model, List_Species):
             simlog.error('Model must be formed only by Species objects or List_Species objects \n'
                          f'Model type {type(model)} and it is {model}')
@@ -516,6 +519,10 @@ class Simulation:
                                                 sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
         return to_return
 
+    @classmethod
+    def is_simulation(cls):
+        return True
+
 
 class SimulationComposition:
 
@@ -613,6 +620,10 @@ class SimulationComposition:
 
     def generate_sbml(self):
         return self.base_sim.generate_sbml()
+
+    @classmethod
+    def is_simulation(cls):
+        return True
 
 
 if __name__ == '__main__':

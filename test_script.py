@@ -763,6 +763,27 @@ def test_dimension_in_function_only():
     assert compare_model(S.compile(), 'test_tools/model_27.txt')
 
 
+def test_multiple_simulation_counts():
+
+    Age, Color, Size = BaseSpecies()
+
+    Age.young, Age.old,
+    Color.blue, Color.red,
+    Size.small, Size.big
+
+    Tree = Age * Color * Size
+
+    Tree(100), Tree.red.big(150), All[Tree](10), All[Tree.big](100)
+    S = Simulation(Tree)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_28.txt')
+
+    model = set_counts({All[Tree]: 30, 'Tree.blue.old': 100})
+    S = Simulation(model)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_29.txt')
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -771,7 +792,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_conditional_between_meta_species, test_conditional_between_meta_species_2,
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
              test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
-             test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only]
+             test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
+             test_multiple_simulation_counts]
 
 sub_test = test_list
 

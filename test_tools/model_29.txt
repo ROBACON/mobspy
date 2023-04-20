@@ -1,0 +1,26 @@
+
+Species
+Tree.big.blue.old,30
+Tree.big.blue.young,30
+Tree.big.red.old,30
+Tree.big.red.young,30
+Tree.small.blue.old,100
+Tree.small.blue.young,30
+Tree.small.red.old,30
+Tree.small.red.young,30
+
+Mappings
+Tree :
+Tree.big.blue.old
+Tree.big.blue.young
+Tree.big.red.old
+Tree.big.red.young
+Tree.small.blue.old
+Tree.small.blue.young
+Tree.small.red.old
+Tree.small.red.young
+
+Parameters
+volume,1
+
+Reactions

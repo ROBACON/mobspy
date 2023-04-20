@@ -1,6 +1,6 @@
 import mobspy.simulation_logging.log_scripts as simlog
 import inspect
-from mobspy.modules.meta_class import List_Species
+from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
 from pint import Quantity
 
 
@@ -33,13 +33,13 @@ def set_counts(count_dic):
             global_names = inspect.stack()[i][0].f_globals
             for key, item in global_names.items():
                 try:
-                    if item.is_species() and type(item) != type:
+                    if isinstance(item, Species) and type(item) != type:
                         found_species.add(item)
                 except AttributeError:
                     pass
             for key, item in local_names.items():
                 try:
-                    if item.is_species() and type(item) != type:
+                    if isinstance(item, Species) and type(item) != type:
                         found_species.add(item)
                 except AttributeError:
                     pass
@@ -73,12 +73,12 @@ def set_counts(count_dic):
                 simlog.error(f'Meta-species with the following name {key} not found', stack_index=2)
         else:
             try:
-                if key.is_spe_or_reac():
-                    if not key.is_species():
+                if isinstance(key, Species) or isinstance(key, Reacting_Species):
+                    if not isinstance(key, Species):
                         if len(key.list_of_reactants) != 1:
                             simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
                         model.add(key.list_of_reactants[0]['object'])
-                    if key.is_species():
+                    if isinstance(key, Species):
                         model.add(key)
                     key(item)
             except AttributeError:
