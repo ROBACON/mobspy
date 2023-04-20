@@ -577,6 +577,9 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param characteristic: (str) characteristic for the query
         """
+        if characteristic == '_ipython_canary_method_should_not_exist_':
+            return 0
+
         Species.check_if_valid_characteristic(characteristic)
 
         for reactant in self.list_of_reactants:
@@ -985,6 +988,11 @@ class Species(SpeciesComparator):
             :param characteristic: (str) characteristic to be added or to be use as a query in the reaction
             :return: Reacting_Species with the characteristic added for querying
         """
+
+        # This is for IPython notebooks compatibility
+        if characteristic == '_ipython_canary_method_should_not_exist_':
+            return 0
+
         Species.check_if_valid_characteristic(characteristic)
 
         characteristics_from_references = mcu.unite_characteristics(self.get_references())
