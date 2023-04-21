@@ -377,7 +377,12 @@ def plot_data(data, plot_params):
         plot_curves(data, figure_hash(figure_index, axis_matrix), figure_index, plot_params)
 
     # Real default case
-    plt.show()
+
+    save_to = find_parameter(plot_params, 'save_to')
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to)
 
 
 if __name__ == "__main__":

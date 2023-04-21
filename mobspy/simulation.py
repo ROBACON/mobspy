@@ -398,13 +398,17 @@ class Simulation:
     def __getattribute__(self, item):
         if item == 'results' and self.__dict__['results'] == {}:
             simlog.error('The results were accessed before the execution of the simulation', stack_index=2)
+
+        if item == 'plot_config':
+            return self.__getattr__(item)
+
         return super().__getattribute__(item)
 
     def __getattr__(self, item):
         """
             __getattr__ override. For the user to be able to set plot parameters as MySim.plot.parameter
         """
-        if item == 'plot':
+        if item == 'plot_config':
             self.__dict__['plot_flag'] = True
         else:
             self.__dict__['plot_flag'] = False

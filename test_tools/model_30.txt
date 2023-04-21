@@ -1,0 +1,21 @@
+
+Species
+A.a1,0
+A.a2,0
+A.a3,0
+
+Mappings
+A :
+A.a1
+A.a2
+A.a3
+
+Parameters
+volume,1
+
+Reactions
+
+Events
+event_0,{'trigger': 'true', 'delay': '10', 'assignments': [('A.a1', '(A.a1 + A.a2 + A.a3) + 1')]}
+event_1,{'trigger': 'true', 'delay': '15', 'assignments': [('A.a1', '(A.a1 + A.a2 + A.a3) + 1')]}
+event_2,{'trigger': 'true', 'delay': '5', 'assignments': [('A.a1', '(A.a1 + A.a2 + A.a3) + 1'), ('A.a2', '(A.a1 + A.a2 + A.a3) + 1'), ('A.a3', '(A.a1 + A.a2 + A.a3) + 1')]}

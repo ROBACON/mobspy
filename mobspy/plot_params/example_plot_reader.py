@@ -24,6 +24,7 @@ def get_example_plot_parameters():
         'dpi':3,
         "plots":False,
         "species_to_plot": None,
+        "save_to": 'example.png',
 
         "figures": [{
             "plots": [{

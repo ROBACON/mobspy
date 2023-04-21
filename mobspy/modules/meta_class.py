@@ -103,10 +103,14 @@ class Compiler:
         meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
         black_listed_names = {'Time', 'Rev', 'All'}
         for i, species in enumerate(meta_species_to_simulate):
+            if '_dot_' in species.get_name():
+                simlog.error(f'In species: {species.get_name()} \n _dot_ cannot be used in meta-species names')
             if species.get_name() in black_listed_names:
                 simlog.error(f'The name {species.get_name()} is not allowed for meta-species please change it')
             if '$' in species.get_name():
-                simlog.error('An error has occurred and one of the species was not named')
+                simlog.error(f'In species: {species.get_name()} \n'
+                             f'An error has occurred and one of the species was either not named or named with the '
+                             f'restricted $ symbol')
             if species.get_name() in names_used:
                 simlog.error(f'Names must be unique for all species\n' +
                              f'The repeated name is {species.get_name()} in position {i}\n' +
@@ -533,6 +537,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         reaction = Reactions(self.list_of_reactants, p.list_of_reactants)
         return reaction
 
+    # Reacting_Species call
     def __call__(self, quantity):
         """
             The call operator here is used to add counts to species non-default state. This stores the characteristics
@@ -541,25 +546,21 @@ class Reacting_Species(ReactingSpeciesComparator):
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
         species_object = self.list_of_reactants[0]['object']
+        characteristics = self.list_of_reactants[0]['characteristics']
         simulation_under_context = self.list_of_reactants[0]['object']._simulation_context
 
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
-            species_object = species_object
-            characteristics = self.list_of_reactants[0]['characteristics']
             quantity_dict = species_object.add_quantities(characteristics, quantity)
-        elif type(quantity) == Reacting_Species and simulation_under_context is not None:
-            simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
-                         f'simulation context', stack_index=2)
-        else:
+        elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
 
         if simulation_under_context is not None:
             try:
                 if type(quantity) == str:
-                    quantity_dict = self.add_quantities('std$', quantity)
+                    quantity_dict = species_object.add_quantities(characteristics, quantity)
                 simulation_under_context.current_event_count_data.append({'species': species_object,
                                                                           'characteristics': quantity_dict[
                                                                               'characteristics'],
@@ -1006,7 +1007,7 @@ class Species(SpeciesComparator):
 
         return Reacting_Species(self, characteristics)
 
-    # Adding counts to species
+    # Species call
     def __call__(self, quantity):
         """
             The __call__ operator handles two things for Species objects
@@ -1028,6 +1029,10 @@ class Species(SpeciesComparator):
         elif type(quantity) == Reacting_Species:
             simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
                          f'simulation context', stack_index=2)
+        elif self._simulation_context is None:
+            simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}'
+                         f' if not under a simulation context',
+                         stack_index=2)
 
         if self._simulation_context is not None:
 

@@ -784,6 +784,60 @@ def test_multiple_simulation_counts():
     assert compare_model(S.compile(), 'test_tools/model_29.txt')
 
 
+def test_string_events_assignment():
+
+    A = BaseSpecies()
+
+    A.a1, A.a2, A.a3
+
+    S = Simulation(A)
+    S.level = -1
+    with S.event_time(5):
+        All[A](f'{A} + 1')
+
+    with S.event_time(10):
+        All[A.a1](f'{A} + 1')
+
+    with S.event_time(15):
+        A.a1(f'{A} + 1')
+
+    compare_model(S.compile(), 'test_tools/model_30.txt')
+
+
+def test_plotting():
+    Color, Disease = BaseSpecies()
+
+    Color.blue, Color.red, Color.yellow
+    Disease.not_sick, Disease.sick
+
+    Disease.not_sick >> Disease.sick[1]
+
+    Tree = Color * Disease
+
+    Tree.yellow(20), Tree.red(20), Tree.blue(20)
+
+    S = Simulation(Tree)
+    S.level = -1
+    S.method = 'stochastic'
+    S.plot_data = False
+    S.repetitions = 3
+    S.step_size = 0.25
+    S.duration = 3
+    S.run()
+    S.plot_config.save_to = 'test_plot_images/stochastic_tree.png'
+    S.plot_stochastic(Tree.not_sick, Tree.sick)
+
+    S.plot_config.save_to = 'test_plot_images/deterministic_tree.png'
+    S.plot(Tree.not_sick, Tree.sick)
+
+    S.plot_config.save_to = 'test_plot_images/constant_tree.png'
+    S.plot()
+
+    assert os.path.exists('test_plot_images/stochastic_tree.png')
+    assert os.path.exists('test_plot_images/deterministic_tree.png')
+    assert os.path.exists('test_plot_images/constant_tree.png')
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -793,7 +847,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
              test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
              test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
-             test_multiple_simulation_counts]
+             test_multiple_simulation_counts, test_string_events_assignment, test_plotting]
 
 sub_test = test_list
 

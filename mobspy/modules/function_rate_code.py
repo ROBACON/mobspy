@@ -117,6 +117,18 @@ class Specific_Species_Operator(Bool_Override):
         """
         self._stocked_characteristics.add(characteristic)
 
+    def get_name(self):
+        """
+            Returns: The name of the species the reactant is in string format
+        """
+        return self._species_object.get_name()
+
+    def get_characteristics(self):
+        """
+            Returns: The characteristics of the species in this given state
+        """
+        return set(self.species_string.split('_dot_')[1:])
+
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                           , reaction_rate_function, type_of_model, dimension, function_rate_arguments=None):
