@@ -838,6 +838,21 @@ def test_plotting():
     assert os.path.exists('test_plot_images/constant_tree.png')
 
 
+def test_volume_after_sim():
+
+    A = BaseSpecies()
+
+    Zero >> A[42]
+    A >> Zero[1]
+
+    S = Simulation(A)
+    S.plot_data = False
+    S.level = -1
+    S.volume = 1 * u.milliliter
+    S.run()
+    assert int(S.results[A][-1]) == 42
+
+
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -847,7 +862,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
              test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
              test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
-             test_multiple_simulation_counts, test_string_events_assignment, test_plotting]
+             test_multiple_simulation_counts, test_string_events_assignment, test_plotting,
+             test_volume_after_sim]
 
 sub_test = test_list
 

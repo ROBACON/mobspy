@@ -275,7 +275,7 @@ class Simulation:
         for updl in unprocessed_data:
             processed_data.append(dh.convert_data_to_desired_unit(updl, self.parameters['unit_x'],
                                                                   self.parameters['unit_y'],
-                                                                  self.output_concentration,
+                                                                  self.parameters['output_concentration'],
                                                                   self.parameters['volume']))
 
         data_dict = {'data': processed_data,
