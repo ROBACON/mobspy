@@ -176,7 +176,6 @@ class Simulation:
             for count in spe_object.get_quantities():
                 self._species_counts.append({'object': spe_object, 'characteristics': count['characteristics'],
                                              'quantity': count['quantity']})
-            spe_object.reset_counts()
 
         if not parameters:
             self.parameters = get_default_parameters()

@@ -191,8 +191,6 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
             continue
         try:
             # Case of species set
-            if sbml_key in model['assigned_species'] and new_model:
-                continue
             if sim_para["simulation_method"].lower() in check_list:
                 species_for_sbml[sbml_key] = int(list(data[key])[-1])
             else:

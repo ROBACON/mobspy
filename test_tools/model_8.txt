@@ -1,13 +1,10 @@
 
 Species
 A,1
-B,0
 
 Mappings
 A :
 A
-B :
-B
 
 Parameters
 volume,1
@@ -16,7 +13,7 @@ Reactions
 reaction_0,{'re': [(1, 'A')], 'pr': [(2, 'A')], 'kin': 'A * 1'}
 
 Species
-A,0
+A,1
 B,50
 End_Flag_MetaSpecies,0
 

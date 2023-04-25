@@ -167,8 +167,8 @@ def test_hybrid_sim():
     A, B = BaseSpecies(2)
     A >> 2 * A[1]
 
-    A(1)
-    S1 = Simulation(A | B)
+    A(1), B(50)
+    S1 = Simulation(A)
     S1.save_data = False
     S1.plot_data = False
     S1.duration = 3
@@ -177,7 +177,6 @@ def test_hybrid_sim():
     A.reset_reactions()
     A + B >> Zero[0.01]
 
-    B(50)
     S2 = Simulation(A | B)
     S2.method = 'stochastic'
     S2.duration = (A <= 0) | (B <= 0)
@@ -287,10 +286,12 @@ def test_reaction_deactivation():
     S1.duration = 1
     S1.plot_data = False
 
-    R(0)
     S2 = Simulation(A | R)
     S2.duration = 1
     S2.level = -1
+
+    with S2.event_time(0):
+        R(0)
 
     Sim = S1 + S2
     Sim.run()
@@ -313,25 +314,6 @@ def test_count_assignment():
     S.run()
     assert compare_model(S.compile(), 'test_tools/model_11.txt') \
            and 150 > S.results[B][-1] > 100 and S.results[A][-1] == 200
-
-
-def test_reaction_deactivation():
-    A, R = BaseSpecies(2)
-    A + R.r1 >> 2 * A + R.r1[1]
-
-    A(1), R(1)
-    S1 = Simulation(A | R)
-    S1.plot_data = False
-    S1.duration = 2
-    S1.level = -1
-
-    R(0)
-    S2 = Simulation(A | R)
-    S2.duration = 2
-    S2.level = -1
-    Sim = S1 + S2
-    Sim.run()
-    assert Sim.results[R][-1] == 0 and Sim.results[R][0] == 1 and Sim.results[A][-2] == Sim.results[A][-1]
 
 
 def test_complex_cell_model():
@@ -778,6 +760,7 @@ def test_multiple_simulation_counts():
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_28.txt')
 
+    Tree.reset_quantities()
     model = set_counts({All[Tree]: 30, 'Tree.blue.old': 100})
     S = Simulation(model)
     S.level = -1
@@ -842,8 +825,8 @@ def test_volume_after_sim():
 
     A = BaseSpecies()
 
-    Zero >> A[42]
-    A >> Zero[1]
+    Zero >> A [42]
+    A >> Zero [1]
 
     S = Simulation(A)
     S.plot_data = False

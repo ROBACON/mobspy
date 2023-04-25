@@ -213,6 +213,7 @@ class Compiler:
                                                                           meta_species_to_simulate,
                                                                           orthogonal_vector_structure,
                                                                           type_of_model, dimension)
+
         parameters_for_sbml['volume'] = (volume, f'dimensionless')
 
         # O(n^2) reaction check for doubles
@@ -944,6 +945,8 @@ class Species(SpeciesComparator):
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
         n_all = code_line.count('All')
+        code_line = code_line.replace(' ', '')
+
         if 'Rev' in code_line:
             n_all = n_all + 1
 
