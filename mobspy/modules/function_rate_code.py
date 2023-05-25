@@ -13,6 +13,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.meta_class as mc
 import mobspy.modules.unit_handler as uh
 from pint import Quantity
+from mobspy.modules.mobspy_parameters import *
 
 
 class Bool_Override:
@@ -131,7 +132,8 @@ class Specific_Species_Operator(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model, dimension, function_rate_arguments=None):
+                          , reaction_rate_function, type_of_model, dimension, function_rate_arguments=None,
+                          parameter_exist=False, parameters_used=set()):
     """
         This function is responsible for returning the reaction rate string for the model construction. To do this it
         does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
@@ -145,17 +147,22 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
+    parameters_found = set()
 
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
             isinstance(reaction_rate_function, Quantity):
         # Function is a constant function number int here
         reaction_rate_function, dimension = uh.convert_rate(reaction_rate_function, len(reactant_string_list),
                                                             dimension)
+
         if reaction_rate_function == 0:
             return 0
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
 
+    elif isinstance(reaction_rate_function, Parameter_Operations):
+        # HERE PARAMETER THINGS
+        pass
     elif function_rate_arguments is not None:
 
         # [''] means that it is a function that takes no arguments (empty signature)

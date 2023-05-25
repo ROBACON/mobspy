@@ -59,7 +59,11 @@ class __Operator_Base:
             obj = ref_characteristics_to_object[characteristic]
             i = species_object.get_index_from_reference_dict(obj)
             species_to_return[i] = characteristic
-        species_to_return = '_dot_'.join(species_to_return)
+
+        if type(species_to_return[-1]) == str:
+            species_to_return = '_dot_'.join(species_to_return)
+        elif type(species_to_return[-1]) == float:
+            species_to_return = ('_dot_'.join(species_to_return[:-1]), species_to_return[-1])
 
         return species_to_return
 

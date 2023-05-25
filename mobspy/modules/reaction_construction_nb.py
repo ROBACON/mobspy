@@ -9,6 +9,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.species_string_generator as ssg
 from inspect import signature
 from mobspy.modules.order_operators import Default
+from mobspy.modules.mobspy_parameters import *
 
 
 def iterator_for_combinations(list_of_lists):
@@ -87,9 +88,12 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
+                        print(cha)
+                        print(ref_characteristics_to_object)
                         simlog.error(
-                            'The characteristic\'s object was not found in the species supplied to the simulator \n'
-                            'Perhaps a species is missing ?')
+                            f'A base object for characteristic {cha} was not found in the species supplied to the '
+                            f'simulator \n'
+                            'Perhaps a species is missing ? ')
 
         for product in reaction.products:
 
@@ -244,7 +248,8 @@ def get_involved_species(reaction, meta_species_in_model):
             for species in meta_species_in_model:
                 if reactant['object'] in species.get_references():
                     species_for_reactant.append({'object': species,
-                                                 'characteristics': reactant['characteristics']})
+                                                 'characteristics': reactant['characteristics'],
+                                                 'stoichiometry': reactant['stoichiometry']})
                     flag_absent_reactant = True
 
             if not flag_absent_reactant:
@@ -275,7 +280,7 @@ def construct_rate_function_arguments(rate_function, reaction):
 
 def create_all_reactions(reactions, meta_species_in_model,
                          ref_characteristics_to_object,
-                         type_of_model, dimension):
+                         type_of_model, dimension, parameter_exist):
     """
         This function creates all reactions
         Returns the reactions_for_sbml and parameters_for_sbml dictionary
@@ -291,7 +296,7 @@ def create_all_reactions(reactions, meta_species_in_model,
         parameters_for_sbml (dict) = parameters for the sbml model file
     """
     reactions_for_sbml = {}
-    parameters_for_sbml = {}
+    parameters_used = set()
 
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
 
@@ -321,18 +326,20 @@ def create_all_reactions(reactions, meta_species_in_model,
 
                 for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
 
-                    reactant_strings = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
-                                        if len(reactant) > 1 else reactant[0].get_name()
-                                        for reactant in reactant_string_list]
-
                     reaction_rate_arguments = None
                     if callable(reaction.rate):
                         reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
 
+                    reactant_strings = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
+                                        if len(reactant) > 1 else reactant[0].get_name()
+                                        for reactant in reactant_string_list]
+
                     rate_string = fr.extract_reaction_rate(combination_of_reactant_species,
                                                            reactant_strings
                                                            , reaction.rate, type_of_model,
-                                                           dimension, reaction_rate_arguments)
+                                                           dimension, reaction_rate_arguments, parameter_exist,
+                                                           parameters_used)
+
                     if rate_string == 0:
                         continue
 
@@ -341,7 +348,7 @@ def create_all_reactions(reactions, meta_species_in_model,
                                                            product_string_list,
                                                            rate_string)
 
-    return reactions_for_sbml, parameters_for_sbml
+    return reactions_for_sbml, parameters_used
 
 
 if __name__ == '__main__':

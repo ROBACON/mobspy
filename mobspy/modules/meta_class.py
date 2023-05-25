@@ -14,6 +14,7 @@ import mobspy.modules.event_functions as eh
 from mobspy.modules.logic_operator_objects import *
 import mobspy.modules.species_string_generator as ssg
 from copy import deepcopy
+from mobspy.modules.mobspy_parameters import *
 import re
 
 
@@ -98,7 +99,15 @@ class Compiler:
             had counts assigned to them during this model execution (used when composing simulations)
         """
         # Check to see if all species are named
+        # Parameter compilation as well
         names_used = set()
+        parameters_used = []
+
+        # Check if there are any MobsPy parameters defined - If there are the compiler will look for parameters
+        parameter_exist = False
+        if Mobspy_Parameter.parameter_stack != {}:
+            parameter_exist = True
+
         # Removing repeated elements to ensure only one meta-species in the simulation
         meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
         black_listed_names = {'Time', 'Rev', 'All'}
@@ -176,6 +185,11 @@ class Compiler:
                                                              orthogonal_vector_structure,
                                                              symbol='_dot_')
 
+            if isinstance(count['quantity'], Mobspy_Parameter):
+                temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
+                        'is_initial_value': True, 'species': species_strings}
+                parameters_used.append(temp)
+
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             for spe_str in species_strings:
                 if type(temp_count) == float and not type_of_model == 'deterministic':
@@ -197,6 +211,11 @@ class Compiler:
                                                              orthogonal_vector_structure,
                                                              symbol='_dot_')
 
+            if isinstance(count['quantity'], Mobspy_Parameter):
+                temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
+                        'is_initial_value': True, 'species': [species_string]}
+                parameters_used.append(temp)
+
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             if type(temp_count) == float and not type_of_model == 'deterministic':
                 simlog.warning('The stochastic simulation rounds floats to integers')
@@ -206,13 +225,16 @@ class Compiler:
                 species_for_sbml[species_string] = temp_count
                 assigned_species.append(species_string)
 
+        exit()
+
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
         reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
                                                                           meta_species_to_simulate,
                                                                           orthogonal_vector_structure,
-                                                                          type_of_model, dimension)
+                                                                          type_of_model, dimension,
+                                                                          parameter_exist)
 
         parameters_for_sbml['volume'] = (volume, f'dimensionless')
 
@@ -550,10 +572,13 @@ class Reacting_Species(ReactingSpeciesComparator):
         characteristics = self.list_of_reactants[0]['characteristics']
         simulation_under_context = self.list_of_reactants[0]['object']._simulation_context
 
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)\
+                or isinstance(quantity, Mobspy_Parameter):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             quantity_dict = species_object.add_quantities(characteristics, quantity)
+        elif isinstance(quantity, Parameter_Operations):
+            simlog.error('Operations with parameters are not allowed for count assignment')
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
@@ -1022,8 +1047,11 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity):
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)\
+                or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
+        elif isinstance(quantity, Parameter_Operations):
+            simlog.error('Parameter operations not allowed for count assignment')
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
@@ -1124,6 +1152,7 @@ class Species(SpeciesComparator):
         self._ordered_references = []
         self._simulation_context = None
         self._reference_index_dictionary = {}
+        self._unit = ''
 
         # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
         self.first_characteristic = None
@@ -1133,6 +1162,9 @@ class Species(SpeciesComparator):
 
         # This will store the quantities relating to the species counts
         self._species_counts = []
+
+    def unit(self, unit):
+        pass
 
     def name(self, name):
         """
