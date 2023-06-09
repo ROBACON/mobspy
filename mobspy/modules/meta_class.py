@@ -32,6 +32,20 @@ class Compiler:
     last_rate = None
 
     @classmethod
+    def add_to_parameters_to_sbml(cls, parameters_used, parameters_for_sbml, parameters_to_add):
+        for parameter in parameters_to_add:
+            if parameter.name in parameters_used:
+                parameters_used[parameter.name]['used_in'].add('$sbml')
+            else:
+                temp = {'name': parameter.name, 'values': parameter.value, 'used_in': {'$sbml'}}
+                parameters_used[parameter.name] = temp
+
+            try:
+                parameters_for_sbml[parameter.name] = (parameter.value[0], f'dimensionless')
+            except:
+                parameters_for_sbml[parameter.name] = (parameter.value, f'dimensionless')
+
+    @classmethod
     def override_get_item(cls, object_to_return, item):
         """
             Due to priority in Python the item is stored before the reaction
@@ -101,12 +115,12 @@ class Compiler:
         # Check to see if all species are named
         # Parameter compilation as well
         names_used = set()
-        parameters_used = []
+        parameters_used = {}
 
         # Check if there are any MobsPy parameters defined - If there are the compiler will look for parameters
-        parameter_exist = False
+        parameter_exist = {}
         if Mobspy_Parameter.parameter_stack != {}:
-            parameter_exist = True
+            parameter_exist = Mobspy_Parameter.parameter_stack
 
         # Removing repeated elements to ensure only one meta-species in the simulation
         meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
@@ -186,9 +200,13 @@ class Compiler:
                                                              symbol='_dot_')
 
             if isinstance(count['quantity'], Mobspy_Parameter):
-                temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
-                        'is_initial_value': True, 'species': species_strings}
-                parameters_used.append(temp)
+                if count['quantity'].name in parameters_used:
+                    parameters_used[count['quantity'].name]['used_in'] \
+                        = parameters_used[count['quantity'].name]['used_in'].union(set(species_strings))
+                else:
+                    temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
+                            'used_in': set(species_strings)}
+                    parameters_used[count['quantity'].name] = temp
 
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             for spe_str in species_strings:
@@ -212,9 +230,12 @@ class Compiler:
                                                              symbol='_dot_')
 
             if isinstance(count['quantity'], Mobspy_Parameter):
-                temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
-                        'is_initial_value': True, 'species': [species_string]}
-                parameters_used.append(temp)
+                if count['quantity'].name in parameters_used:
+                    parameters_used[count['quantity'].name]['used_in'].add(species_string)
+                else:
+                    temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
+                            'used_in': {species_string}}
+                    parameters_used[count['quantity'].name] = temp
 
             temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             if type(temp_count) == float and not type_of_model == 'deterministic':
@@ -225,18 +246,18 @@ class Compiler:
                 species_for_sbml[species_string] = temp_count
                 assigned_species.append(species_string)
 
-        exit()
-
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
-        reactions_for_sbml, parameters_for_sbml = rc.create_all_reactions(reactions_set,
-                                                                          meta_species_to_simulate,
-                                                                          orthogonal_vector_structure,
-                                                                          type_of_model, dimension,
-                                                                          parameter_exist)
+        parameters_in_reaction = set()
+        reactions_for_sbml, parameters_in_reaction = rc.create_all_reactions(reactions_set,
+                                                                             meta_species_to_simulate,
+                                                                             orthogonal_vector_structure,
+                                                                             type_of_model, dimension,
+                                                                             parameter_exist, parameters_in_reaction)
 
-        parameters_for_sbml['volume'] = (volume, f'dimensionless')
+        parameters_for_sbml = {'volume': (volume, f'dimensionless')}
+        cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_reaction)
 
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
@@ -254,10 +275,15 @@ class Compiler:
         # Event implementation here
         # Basico does not resolve species that have no reactions but were added to events
         # So we add "phantom" reactions to fix this
+        parameters_in_events = set()
         events_for_sbml, species_in_events = eh.format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
                                                                                  orthogonal_vector_structure,
                                                                                  volume, dimension,
-                                                                                 meta_species_to_simulate)
+                                                                                 meta_species_to_simulate,
+                                                                                 parameter_exist,
+                                                                                 parameters_in_events)
+        cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_events)
+
         species_in_reactions = set()
         for key, reaction in reactions_for_sbml.items():
             for reactant in reaction['re']:
@@ -321,7 +347,7 @@ class Compiler:
                     model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
-               events_for_sbml, assigned_species
+               events_for_sbml, assigned_species, parameters_used
 
 
 class Reactions:
@@ -572,7 +598,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         characteristics = self.list_of_reactants[0]['characteristics']
         simulation_under_context = self.list_of_reactants[0]['object']._simulation_context
 
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)\
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
@@ -978,7 +1004,7 @@ class Species(SpeciesComparator):
         n_key = code_line.count(']')
         if n_key != n_all + 1:
             simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                        + f'The reaction did not compile. Perhaps there is a missing rate?')
+                         + f'The reaction did not compile. Perhaps there is a missing rate?')
 
         if code_line[-1] != ']':
             simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
@@ -1047,7 +1073,7 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)\
+        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
         elif isinstance(quantity, Parameter_Operations):

@@ -6,6 +6,7 @@
         The construction of mass action kinetics
         Handles the different types of rates supplied by the user
 """
+import re
 
 import mobspy.modules.meta_class as mc
 import mobspy.modules.reaction_construction_nb as rc
@@ -132,8 +133,8 @@ class Specific_Species_Operator(Bool_Override):
 
 
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
-                          , reaction_rate_function, type_of_model, dimension, function_rate_arguments=None,
-                          parameter_exist=False, parameters_used=set()):
+                          , reaction_rate_function, type_of_model, dimension, function_rate_arguments,
+                          parameter_exist, parameters_in_reaction):
     """
         This function is responsible for returning the reaction rate string for the model construction. To do this it
         does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
@@ -147,7 +148,6 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
-    parameters_found = set()
 
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
             isinstance(reaction_rate_function, Quantity):
@@ -160,9 +160,11 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
 
-    elif isinstance(reaction_rate_function, Parameter_Operations):
-        # HERE PARAMETER THINGS
-        pass
+    elif isinstance(reaction_rate_function, Parameter_Operations) and parameter_exist:
+        parameters_in_reaction = parameters_in_reaction.union(reaction_rate_function.parameter_set)
+        reaction_rate_string = basic_kinetics_string(reactant_string_list,
+                                                     reaction_rate_function, type_of_model)
+
     elif function_rate_arguments is not None:
 
         # [''] means that it is a function that takes no arguments (empty signature)
@@ -183,6 +185,11 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                                                          rate, type_of_model)
         elif type(rate) == str:
             reaction_rate_string = rate
+
+            if parameter_exist:
+                parameters_in_reaction = search_for_parameters_in_str(reaction_rate_string,
+                                                               parameter_exist, parameters_in_reaction)
+
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
                          + str(reactant_string_list))
@@ -198,7 +205,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         simlog.debug(type(reaction_rate_function))
         simlog.error(f'The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported')
 
-    return reaction_rate_string
+    return reaction_rate_string, parameters_in_reaction
 
 
 def basic_kinetics_string(reactants, reaction_rate, type_of_model):
@@ -301,6 +308,18 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
             argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
 
     return argument_dict
+
+
+def search_for_parameters_in_str(reaction_rate_string, parameters_exist, parameters_in_reaction):
+
+    split_operation = re.split(', |-|!|\*|\+|/|\)|\(| ', reaction_rate_string)
+    split_operation = [x.replace(' ', '') for x in split_operation if x.replace(' ', '') != '']
+
+    for name in split_operation:
+        if name in parameters_exist:
+            parameters_in_reaction.add(parameters_exist[name])
+
+    return parameters_in_reaction
 
 
 if __name__ == '__main__':

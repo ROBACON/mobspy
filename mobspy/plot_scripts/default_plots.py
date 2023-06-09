@@ -134,6 +134,70 @@ def deterministic_plot(species, data, plot_params):
     hp.plot_data(data, new_plot_params)
 
 
+def parametric_plot(species, data, plot_params):
+
+    max_labels = 15
+    current_labels = 0
+
+    new_plot_params = deepcopy(plot_params)
+    set_plot_units(new_plot_params)
+
+    new_plot_params['frameon'] = False
+    new_plot_params['figures'] = []
+    new_plot_params['pad'] = 1.5
+
+    # color_cycler = hp.Color_cycle()
+    previous_parameter = data.ts_model_parameters[0]
+
+    # Update plot to add new curve
+    def update_plot(spe, temp_ts, i, p, previous_parameter, current_labels):
+        label = str(spe) + ' ' + str(previous_parameter) if current_labels < max_labels else None
+        temp_dict = {'species_to_plot': spe, 'time_series': temp_ts, spe: {'label': label}}
+        return temp_dict, [i], p
+
+    # Extracting time-series per parameter in sweep
+    for spe in species:
+        temp_ts = []
+        plots = []
+        for i, p in enumerate(data.ts_model_parameters):
+            if str(p) == str(previous_parameter):
+                temp_ts.append(i)
+            else:
+                current_labels += 1
+                temp_dict, temp_ts, previous_parameter = update_plot(spe, temp_ts, i, p,
+                                                                     previous_parameter, current_labels)
+                plots.append(temp_dict)
+
+            # For the final value
+            if i == len(data) - 1:
+                if str(p) != str(previous_parameter):
+                    current_labels += 1
+                    temp_dict, temp_ts, previous_parameter = \
+                        update_plot(spe, [len(data) - 1], len(data) - 1, p, previous_parameter,
+                                    current_labels)
+                else:
+                    current_labels += 1
+                    temp_dict, temp_ts, previous_parameter = \
+                        update_plot(spe, temp_ts, len(data) - 1, p, previous_parameter,
+                                    current_labels)
+
+                current_labels = 0
+                plots.append(temp_dict)
+
+        new_plot_params['figures'].append({'plots': plots})
+
+    # Adjusting for label size
+    if len(data.ts_model_parameters) < 5:
+        prop = {'size': 10}
+    elif len(data.ts_model_parameters) < 10:
+        prop = {'size': 8}
+    else:
+        prop = {'size': 6}
+
+    new_plot_params['prop'] = prop
+    hp.plot_data(data, new_plot_params)
+
+
 def raw_plot(data, parameters_or_file):
     """
         Plots data from a json or parameter dictionary configured according to the hierarchical plot structure

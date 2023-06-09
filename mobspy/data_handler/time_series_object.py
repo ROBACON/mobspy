@@ -8,15 +8,34 @@ import inspect
 
 class MobsPyTimeSeries:
 
-    def __init__(self, data_dict):
+    def __init__(self, data_dict, model_parameters=None):
         """Creates the MobsPy timeseries object
 
-            :param data: (dict) resulting dictionary from simulation
+            :param data_dict: (dict) resulting dictionary from simulation
             {'data': ...., 'params':....., 'models':.......}
         """
         self.ts_data = data_dict['data']
         self.ts_parameters = data_dict['params']
         self.ts_models = data_dict['models']
+        if model_parameters is None:
+            self.ts_model_parameters = {}
+        else:
+            self.ts_model_parameters = model_parameters
+
+
+class MobsPyList_of_TS:
+
+    def __init__(self, list_of_mspy_ts, fres=False):
+        """Creates the MobsPy timeseries object
+
+            :param data_dict: (dict) resulting dictionary from simulation
+            {'data': ...., 'params':....., 'models':.......}
+        """
+        self.ts_data = [x.ts_data for x in list_of_mspy_ts]
+        self.ts_parameters = [x.ts_parameters for x in list_of_mspy_ts]
+        self.ts_models = [x.ts_models for x in list_of_mspy_ts]
+        self.ts_model_parameters = [x.ts_model_parameters for x in list_of_mspy_ts]
+        self.fres = fres
 
     def to_dict(self):
         """
@@ -33,10 +52,15 @@ class MobsPyTimeSeries:
         return len(self.ts_data)
 
     def __str__(self):
+
         tr = ''
-        for i, data in enumerate(self.ts_data):
+        for i, (data, params) in enumerate(zip(self.ts_data, self.ts_model_parameters)):
+            if self.ts_model_parameters != {}:
+                tr = tr + f'Model Parameters {params} \n'
+
             tr = tr + f'Time Series {i}: \n'
-            tr = tr + str(pd.DataFrame.from_dict(data)) + '\n\n'
+            tr = tr + str(pd.DataFrame.from_dict(data)) + '\n'
+
         return tr
 
     def add_ts_to_data(self, time_series):
@@ -94,10 +118,10 @@ class MobsPyTimeSeries:
             else:
                 to_return.append(self._sum_reacting_species_data(item, series_index))
 
-        if len(to_return) == 1:
-            return to_return[0]
-        else:
+        if not self.fres:
             return to_return
+        else:
+            return to_return[0]
 
     def _sum_reacting_species_data(self, item, ts_index):
         """
@@ -136,12 +160,8 @@ class MobsPyTimeSeries:
         return to_return
 
     def __iter__(self):
-        if len(self.ts_data) > 1:
-            for ts in self.ts_data:
-                yield ts
-        else:
-            for key in self.ts_data[0]:
-                yield key
+        for ts in self.ts_data:
+            yield ts
 
     def get_max_time_for_species(self, species):
         """
@@ -157,3 +177,11 @@ class MobsPyTimeSeries:
                     max_length = len(ts)
                     max_ts = ts
         return max_ts['Time']
+
+    def return_pandas(self):
+        to_return = []
+
+        for ts in self.ts_data:
+            to_return.append(pd.DataFrame.from_dict(ts))
+
+        return to_return

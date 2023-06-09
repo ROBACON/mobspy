@@ -5,7 +5,8 @@ import mobspy.sbml_simulator.builder as sbml_builder
 from copy import deepcopy
 
 
-def simulate(list_of_params, models):
+# def simulate(list_of_params, models)
+def simulate(jobs, list_of_params, models):
     """
         This function coordinates the simulation by calling the necessary jobs
         In the future we hope to implement parallel cluster computing compatibility
@@ -15,31 +16,12 @@ def simulate(list_of_params, models):
                             'events_for_sbml':, 'species_not_mapped':, 'mappings':}]
         :return: data (dict) = dictionary containing the resulting data from simulation
     """
-    params = list_of_params[0]
 
     # Run in parallel or sequentially
     # If nothing is specified just run it in parallel
-    try:
-        if params["jobs"] == 1:
-            simlog.debug("Running simulation sequentially")
-            jobs = params["jobs"]
-        else:
-            simlog.debug("Running simulation in parallel")
-            jobs = params["jobs"]
-    except KeyError:
-        simlog.debug("Running simulation in parallel")
-        jobs = -1
-
-    # This is necessary to avoid sending meta-species objects to joblib
-
-    dummy_copy = []
-    for p in list_of_params:
-        dummy_copy.append(p['_end_condition'])
-        p['_end_condition'] = None
 
     data = job_execution(list_of_params, models, jobs)
 
-    simlog.debug("Simulation is Over")
     return data
 
 

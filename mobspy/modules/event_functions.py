@@ -3,10 +3,13 @@ import mobspy.modules.unit_handler as uh
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.species_string_generator as ssg
 from pint import Quantity
+from mobspy.modules.mobspy_parameters import *
+from mobspy.modules.function_rate_code import search_for_parameters_in_str
 
 
 def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristics_to_object,
-                                     volume, dimension, meta_species_to_simulate):
+                                     volume, dimension, meta_species_to_simulate,
+                                     parameter_exist,parameters_in_events):
     """
         Creates events_for_sbml dictionary for sbml file construction on the sbml_simulator/SBMLWriter.py
 
@@ -56,8 +59,14 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
             dummy = ssg.construct_species_char_list(ec['species'], ec['characteristics'],
                                                     characteristics_to_object, symbol='_dot_')
             if type(ec['quantity']) != str:
+                if isinstance(ec['quantity'], Parameter_Operations):
+                    parameters_in_events.add(ec['quantity'])
+                    event_dictionary[dummy] = ec['quantity'].name
+
                 event_dictionary[dummy] = uh.convert_counts(ec['quantity'], volume, dimension)
             else:
+                if parameter_exist != {}:
+                    search_for_parameters_in_str(ec['quantity'], parameter_exist, parameters_in_events)
                 event_dictionary[dummy] = ec['quantity']
 
         if type(ev['trigger']) == str:
@@ -84,6 +93,14 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
                 simlog.error(f'Species {key} used in an event assignment but it is not in the model')
 
         assignments.sort()
+
+        if event['event_time']:
+            pass
+
+        if isinstance(event['event_time'], Parameter_Operations):
+            for par in event['event_time'].parameter_set:
+                parameters_in_events.add(par)
+
         events_for_sbml['e' + str(i)] = {'trigger': event['trigger'],
                                          'delay': str(event['event_time']),
                                          'assignments': assignments}

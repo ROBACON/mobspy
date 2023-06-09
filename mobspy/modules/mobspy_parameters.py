@@ -53,7 +53,9 @@ class Mobspy_Parameter(Parameter_Operations):
     parameter_stack = {}
 
     def __init__(self, name, value):
-        super().__init__(name, self)
+        temp_set = set()
+        temp_set.add(self)
+        super().__init__(name, temp_set)
         self.name = name
         self.value = value
         self.parameter_stack[name] = self
@@ -82,9 +84,8 @@ def MSParameters(*args):
 
 if __name__ == '__main__':
     a, b, c = MSParameters(1, [3, 4, 5], 2)
-    r1 = a + b
-    print(r1.parameter_set)
-    # r1 = (a + b + c)/5
-    # print(r1.operation)
+    r1 = (a + b + c)/5
+    print(type(a.parameter_set))
+    print(type(r1.parameter_set))
     # print(Mobspy_Parameter.parameter_stack)
 
