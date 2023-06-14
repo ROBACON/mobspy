@@ -1,6 +1,7 @@
 import mobspy.simulation_logging.log_scripts as simlog
 import inspect
 from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
+from mobspy.modules.mobspy_parameters import *
 from pint import Quantity
 
 
@@ -19,7 +20,8 @@ def set_counts(count_dic):
         as a List_Species which can be passed as a model to the simulation object
     """
     for key, item in count_dic.items():
-        if type(item) == int or type(item) == float or isinstance(item, Quantity):
+        if type(item) == int or type(item) == float or isinstance(item, Quantity) or \
+                isinstance(item, Parameter_Operations):
             continue
         else:
             simlog.error(f'Reactant_species count assignment does not support the type {type(item)}',

@@ -15,8 +15,10 @@ def compare_model(comp_results, file_name):
     with open(file_name, 'r') as file:
         for r, line in zip(comp_results.split('\n'), file.readlines()):
             line = line.replace('\n', '')
+
             if r != line:
-                print(line)
+                print('file: ' + line)
+                print('test: ' + r)
                 return False
     return True
 
@@ -184,8 +186,9 @@ def test_hybrid_sim():
 
     Sim = S1 + S2
     Sim.run()
+
     assert compare_model(Sim.compile(), 'test_tools/model_8.txt')
-    assert Sim.results[A][-1] == 0 or Sim.results[B][-1] == 0
+    assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0
 
 
 def test_concatenated_simulation():
@@ -214,7 +217,7 @@ def test_concatenated_simulation():
 
     S = S1 + S2 + S3
     S.run()
-    assert S.results[A][-1] < 1 and S.results[B][-1] < 1 and S.results[C][-1] < 1
+    assert S.fres[A][-1] < 1 and S.fres[B][-1] < 1 and S.fres[C][-1] < 1
 
 
 def test_event_type():
@@ -295,7 +298,7 @@ def test_reaction_deactivation():
 
     Sim = S1 + S2
     Sim.run()
-    assert Sim.results[A][0] < Sim.results[A][-1] and Sim.results[R][0] == 1 and Sim.results[R][-1] == 0
+    assert Sim.fres[A][0] < Sim.fres[A][-1] and Sim.fres[R][0] == 1 and Sim.fres[R][-1] == 0
 
 
 def test_count_assignment():
@@ -313,7 +316,7 @@ def test_count_assignment():
     S.duration = 5
     S.run()
     assert compare_model(S.compile(), 'test_tools/model_11.txt') \
-           and 150 > S.results[B][-1] > 100 and S.results[A][-1] == 200
+           and 150 > S.fres[B][-1] > 100 and S.fres[A][-1] == 200
 
 
 def test_complex_cell_model():
@@ -349,19 +352,19 @@ def test_complex_cell_model():
     S.plot_data = False
     S.run()
 
-    for i, c in enumerate(S.results['Cell.t1.not_infected']):
+    for i, c in enumerate(S.fres['Cell.t1.not_infected']):
         if c > 0:
             continue
         else:
             change_index = i
             break
 
-    boll_1 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.results[Cell.t1.infected][-1], 2)
-    boll_2 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.results[Cell.t1.infected][-1], 2)
-    boll_3 = round(S.results[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.results[Cell.t1.infected][-1], 2)
+    boll_1 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.fres[Cell.t1.infected][-1], 2)
+    boll_2 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.fres[Cell.t1.infected][-1], 2)
+    boll_3 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+             == round(S.fres[Cell.t1.infected][-1], 2)
     assert boll_1 and boll_2 and boll_3
 
 
@@ -435,7 +438,7 @@ def test_stochastic_event_duration():
     S1.duration = (A <= 0) | (B <= 0)
     S1.level = -1
     S1.run()
-    R = S1.results
+    R = S1.fres
     assert R[A][0] > 0 and R[B][0] > 0 and R[A][-1] == 0 and R[B][-1] == 0
 
 
@@ -538,7 +541,7 @@ def test_conditional_between_meta_species():
     assert compare_model(S.compile(), 'test_tools/model_19.txt')
     S.run()
     for i in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
-        assert S.results[Azi][i] > S.results[Byy][i]
+        assert S.fres[Azi][i] > S.fres[Byy][i]
 
 
 def test_conditional_between_meta_species_2():
@@ -665,16 +668,16 @@ def test_event_all():
     S.duration = 5
     S.step_size = 1
     S.run()
-    assert S.results[Baka.a1.b1][0] == 30
-    assert S.results[Baka.b1.a2][0] == 20
-    assert S.results[Baka.a1.b2][0] == 10
-    assert S.results['Baka.a1.b1'][0] == 30
-    assert S.results['Baka.b1.a2'][0] == 20
-    assert S.results['Baka.a1.b2'][0] == 10
-    for key in S.results:
+    assert S.fres[Baka.a1.b1][0] == 30
+    assert S.fres[Baka.b1.a2][0] == 20
+    assert S.fres[Baka.a1.b2][0] == 10
+    assert S.fres['Baka.a1.b1'][0] == 30
+    assert S.fres['Baka.b1.a2'][0] == 20
+    assert S.fres['Baka.a1.b2'][0] == 10
+    for key in S.fres:
         if key == 'Time':
             continue
-        assert S.results[key][-1] < 1
+        assert S.fres[key][-1] < 1
 
 
 def test_one_value_concatenation_sim():
@@ -688,7 +691,7 @@ def test_one_value_concatenation_sim():
     S2.step_size = 1
     S2.duration = (A <= 0) | (B <= 0)
     S2.run()
-    assert len(S2.results[A]) == 1
+    assert len(S2.fres[A]) == 1
 
 
 def test_crash_after_modification():
@@ -833,7 +836,165 @@ def test_volume_after_sim():
     S.level = -1
     S.volume = 1 * u.milliliter
     S.run()
-    assert int(S.results[A][-1]) == 42
+    assert int(S.fres[A][-1]) == 42
+
+
+def order_model_str(data_for_sbml):
+    species_for_sbml = data_for_sbml['species_for_sbml']
+    mappings_for_sbml = data_for_sbml['mappings']
+    parameters_for_sbml = data_for_sbml['parameters_for_sbml']
+    reactions_for_sbml = data_for_sbml['reactions_for_sbml']
+    events_for_sbml = data_for_sbml['events_for_sbml']
+
+    model_str = '\n'
+    model_str += 'Species' + '\n'
+    species_alpha = list(sorted(species_for_sbml.keys()))
+    for spe in species_alpha:
+        model_str += spe.replace('_dot_', '.') + ',' + str(species_for_sbml[spe]) + '\n'
+
+    model_str += '\n'
+    model_str += 'Mappings' + '\n'
+    mappings_alpha = list(sorted(mappings_for_sbml.keys()))
+    for map in mappings_alpha:
+        model_str += map + ' :' + '\n'
+        for element in sorted(mappings_for_sbml[map]):
+            model_str += element + '\n'
+
+    model_str += '\n'
+    model_str += 'Parameters' + '\n'
+    parameters_alpha = list(sorted(parameters_for_sbml.keys()))
+    for par in parameters_alpha:
+        model_str += par + ',' + str(parameters_for_sbml[par][0]) + '\n'
+
+    model_str += '\n'
+    model_str += 'Reactions' + '\n'
+    remove_phantom_reactions = deepcopy(reactions_for_sbml)
+    to_remove = []
+    for reaction in remove_phantom_reactions:
+        if 'phantom' in reaction:
+            to_remove.append(reaction)
+    for r in to_remove:
+        remove_phantom_reactions.pop(r, None)
+    reaction_alpha = [str(x[1]).replace('_dot_', '.') for x in
+                      list(sorted(remove_phantom_reactions.items(), key=lambda x: str(x[1])))]
+
+    for i, reac in enumerate(reaction_alpha):
+        model_str += 'reaction_' + str(i) + ',' + reac + '\n'
+
+    if events_for_sbml != {}:
+        model_str += '\n'
+        model_str += 'Events' + '\n'
+        list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
+        list_to_sort = sorted(list_to_sort)
+        for i in range(len(list_to_sort)):
+            model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
+
+    return model_str
+
+
+def test_parameters_with_sbml():
+
+    A = BaseSpecies()
+    A.a1, A.a2
+    a, b, c, d, f, h = ModelParameters([1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2])
+
+    A >> 2 * A[lambda: f'5*(b + c)/10']
+
+    All[A](a)
+    S1 = Simulation(A)
+
+    with S1.event_time(0):
+        A.a2(d)
+
+    with S1.event_time(2):
+        A.a1('a + b')
+
+    with S1.event_time(f):
+        A.a1(d)
+
+    S1.duration = 3
+
+    B = BaseSpecies()
+
+    B >> 2 * B[h]
+
+    B(a)
+    S2 = Simulation(A | B)
+    S2.duration = 2
+
+    S = S1 + S2
+    S.plot_data = False
+    S.level = -1
+    S.run()
+
+    model_str = ''
+    for parameter_sweep in S1.sbml_data_list:
+        for data_for_sbml in parameter_sweep:
+            model_str += order_model_str(data_for_sbml)
+
+    assert compare_model(model_str, 'test_tools/model_31.txt')
+
+
+def test_shared_parameter_name():
+    try:
+        A = BaseSpecies()
+        a = ModelParameters([1, 2])
+        a.rename('A')
+
+        A >> 2 * A[a]
+
+        set_counts({'A': a})
+        S = Simulation(A)
+        S.level = -1
+        S.plot_data = False
+        S.run()
+        assert False
+    except:
+        assert True
+
+
+def test_set_counts_parameters():
+    A = BaseSpecies()
+    a = ModelParameters([1, 2])
+
+    A >> 2 * A[a]
+
+    set_counts({'A': a})
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_32.txt')
+
+
+def test_repeated_parameters():
+
+    try:
+        A = BaseSpecies()
+        A.a1, A.a2
+        a = ModelParameters([1, 2])
+
+        A >> 2 * A[a]
+
+        All[A](1)
+        S1 = Simulation(A)
+
+        S1.duration = 3
+
+        B = BaseSpecies()
+        a = ModelParameters([3, 4])
+
+        B >> 2 * B[a]
+
+        B(1)
+        S2 = Simulation(A | B)
+        S2.duration = 2
+
+        S = S1 + S2
+        S.plot_data = False
+        S.level = -1
+        S.compile()
+        assert False
+    except SystemExit:
+        assert True
 
 
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -846,7 +1007,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
              test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
              test_multiple_simulation_counts, test_string_events_assignment, test_plotting,
-             test_volume_after_sim]
+             test_volume_after_sim, test_parameters_with_sbml, test_shared_parameter_name,
+             test_set_counts_parameters, test_repeated_parameters]
 
 sub_test = test_list
 

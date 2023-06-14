@@ -84,19 +84,17 @@ def stochastic_plot(species, data, plot_params):
             key_average = spe + '$' + 'average'
             key_dev = spe + '$' + 'deviation'
 
-            average_and_deviation_ts = {'Time': data_to_plot.get_max_time_for_species(spe),
-                                        key_average: processed_runs[0],
-                                        key_dev: [processed_runs[1], processed_runs[2]]}
-            data_to_plot.add_ts_to_data(average_and_deviation_ts)
+            data_to_plot[0][key_average] = processed_runs[0]
+            data_to_plot[0][key_dev] = [processed_runs[1], processed_runs[2]]
 
             # We define the standard plot for the average and deviation
             color = color_cycler(1)
             plots_for_spe_i.append({'species_to_plot': [spe],
                                     spe: {'color': color, 'label': spe}})
 
-            plots_for_spe_i_sta.append({'species_to_plot': [key_average],
+            plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': [0],
                                         key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
-            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True,
+            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True, 'time_series': [0],
                                         key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
         except ValueError:
             simlog.error(f'{spe} species not found in data')
@@ -131,6 +129,70 @@ def deterministic_plot(species, data, plot_params):
     color_cycler = hp.Color_cycle()
     for spe in species:
         new_plot_params[spe] = {'label': spe, 'color': color_cycler(1)}
+    hp.plot_data(data, new_plot_params)
+
+
+def parametric_plot(species, data, plot_params):
+
+    max_labels = 15
+    current_labels = 0
+
+    new_plot_params = deepcopy(plot_params)
+    set_plot_units(new_plot_params)
+
+    new_plot_params['frameon'] = False
+    new_plot_params['figures'] = []
+    new_plot_params['pad'] = 1.5
+
+    # color_cycler = hp.Color_cycle()
+    previous_parameter = data.ts_model_parameters[0]
+
+    # Update plot to add new curve
+    def update_plot(spe, temp_ts, i, p, previous_parameter, current_labels):
+        label = str(spe) + ' ' + str(previous_parameter) if current_labels < max_labels else None
+        temp_dict = {'species_to_plot': spe, 'time_series': temp_ts, spe: {'label': label}}
+        return temp_dict, [i], p
+
+    # Extracting time-series per parameter in sweep
+    for spe in species:
+        temp_ts = []
+        plots = []
+        for i, p in enumerate(data.ts_model_parameters):
+            if str(p) == str(previous_parameter):
+                temp_ts.append(i)
+            else:
+                current_labels += 1
+                temp_dict, temp_ts, previous_parameter = update_plot(spe, temp_ts, i, p,
+                                                                     previous_parameter, current_labels)
+                plots.append(temp_dict)
+
+            # For the final value
+            if i == len(data) - 1:
+                if str(p) != str(previous_parameter):
+                    current_labels += 1
+                    temp_dict, temp_ts, previous_parameter = \
+                        update_plot(spe, [len(data) - 1], len(data) - 1, p, previous_parameter,
+                                    current_labels)
+                else:
+                    current_labels += 1
+                    temp_dict, temp_ts, previous_parameter = \
+                        update_plot(spe, temp_ts, len(data) - 1, p, previous_parameter,
+                                    current_labels)
+
+                current_labels = 0
+                plots.append(temp_dict)
+
+        new_plot_params['figures'].append({'plots': plots})
+
+    # Adjusting for label size
+    if len(data.ts_model_parameters) < 5:
+        prop = {'size': 10}
+    elif len(data.ts_model_parameters) < 10:
+        prop = {'size': 8}
+    else:
+        prop = {'size': 6}
+
+    new_plot_params['prop'] = prop
     hp.plot_data(data, new_plot_params)
 
 

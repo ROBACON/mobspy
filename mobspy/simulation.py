@@ -1,28 +1,24 @@
 """
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
-from copy import deepcopy
 from contextlib import contextmanager
-from mobspy.modules import meta_class
-from mobspy.modules import event_functions
-from mobspy.sbml_simulator import run
-import mobspy.simulation_logging.log_scripts as simlog
-from mobspy.modules.meta_class import *
 from mobspy.parameter_scripts import parameter_reader as pr
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
+import mobspy.parameter_scripts.parametric_sweeps as ps
 from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
 import mobspy.sbml_simulator.builder as sbml_builder
 import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
+from mobspy.data_handler.time_series_object import *
 from mobspy.modules.set_counts_module import set_counts
-from mobspy.data_handler.time_series_object import MobsPyTimeSeries
 import json
 import os
 import inspect
 import mobspy.modules.unit_handler as uh
 from pint import UnitRegistry
+from joblib import Parallel, delayed
 
 # u is reserved for units
 u = UnitRegistry()
@@ -141,10 +137,12 @@ class Simulation:
         self._assigned_species_list = []
         self._conditional_event = False
         self._end_condition = None
+        self.model_parameters = {}
+        self.sbml_data_list = []
 
         # HERE FABRICIO
         # Get all names
-        #if names is None:
+        # if names is None:
         #    local_names = inspect.stack()[1][0].f_locals
         #    global_names = inspect.stack()[1][0].f_globals
         #    names = {}
@@ -185,6 +183,7 @@ class Simulation:
 
         # Other needed things for simulating
         self.results = {}
+        self.fres = {}
         self.default_order = Default
 
         self._species_for_sbml = None
@@ -218,7 +217,8 @@ class Simulation:
 
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
-        self.model_string, self._events_for_sbml, self._assigned_species_list = \
+        self.model_string, self._events_for_sbml, self._assigned_species_list, \
+        self.model_parameters = \
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
                              species_counts=self._species_counts,
@@ -266,28 +266,71 @@ class Simulation:
         if self._species_for_sbml is None:
             self.compile(verbose=False)
 
+        # Sweep Models Here
+        data_for_sbml_construction, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
+                                                                                        self._list_of_models)
+        self.sbml_data_list = data_for_sbml_construction
+
         simlog.debug('Starting Simulator')
+        jobs = self.set_job_number(self.parameters)
+        simulation_function = lambda x: sbml_run.simulate(jobs, self._list_of_parameters, x)
 
-        unprocessed_data = sbml_run.simulate(self._list_of_parameters, self._list_of_models)
+        results = Parallel(n_jobs=jobs, prefer="threads")(delayed(simulation_function)(sbml)
+                                                          for sbml in data_for_sbml_construction)
 
-        processed_data = []
-        for updl in unprocessed_data:
-            processed_data.append(dh.convert_data_to_desired_unit(updl, self.parameters['unit_x'],
-                                                                  self.parameters['unit_y'],
-                                                                  self.parameters['output_concentration'],
-                                                                  self.parameters['volume']))
+        simlog.debug("Simulation is Over")
 
-        data_dict = {'data': processed_data,
-                     'params': self.parameters,
-                     'models': self._list_of_models}
+        def convert_one_ts_to_desired_unit(unconverted_data):
+            # Convert all the data from a single ts to desired unit
+            return dh.convert_data_to_desired_unit(unconverted_data, self.parameters['unit_x'],
+                                                   self.parameters['unit_y'],
+                                                   self.parameters['output_concentration'],
+                                                   self.parameters['volume'])
 
-        self.results = MobsPyTimeSeries(data_dict)
+        def convert_all_ts_to_correct_format(single_ts, parameters, unit_convert=False):
+            # Convert multiple ts_data into correct format
+            if unit_convert:
+                data_dict = {'data': convert_one_ts_to_desired_unit(single_ts),
+                             'params': self.parameters,
+                             'models': self._list_of_models}
+            else:
+                data_dict = {'data': single_ts,
+                             'params': self.parameters,
+                             'models': self._list_of_models}
+            return MobsPyTimeSeries(data_dict, parameters)
+
+        flatt_ts = []
+        if parameter_list_of_dic:
+            for r, params in zip(results, parameter_list_of_dic):
+                for ts in r:
+                    flatt_ts.append((ts, params))
+        else:
+            for r in results:
+                for ts in r:
+                    flatt_ts.append((ts, {}))
+
+        ta = self.parameters['unit_x'] is not None
+        tb = self.parameters['unit_y'] is not None
+        tc = self.parameters['output_concentration']
+        if ta or tb or tc:
+            all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
+                (delayed(convert_all_ts_to_correct_format)(ts, params, True) for ts, params in flatt_ts)
+        else:
+            all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
+                (delayed(convert_all_ts_to_correct_format)(ts, params, False) for ts, params in flatt_ts)
+
+        self.results = MobsPyList_of_TS(all_processed_data)
+        self.fres = MobsPyList_of_TS([all_processed_data[0]], True)
 
         if self.parameters['save_data']:
             self.save_data()
 
         if self.parameters['plot_data']:
             methods_list = [x['simulation_method'] for x in self._list_of_parameters]
+
+            if len(parameter_list_of_dic) > 1:
+                self.plot_parametric()
+                return 0
 
             if ('stochastic' in methods_list or 'directedMethod' in methods_list) \
                     and self.parameters['repetitions'] > 1:
@@ -361,7 +404,8 @@ class Simulation:
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
-                      '_end_condition', 'orthogonal_vector_structure']
+                      '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
+                      'sbml_data_list']
 
         plotted_flag = False
         if name in white_list:
@@ -395,7 +439,9 @@ class Simulation:
                 simlog.error(f'Parameter {name} is not supported', stack_index=2)
 
     def __getattribute__(self, item):
-        if item == 'results' and self.__dict__['results'] == {}:
+        ta = item == 'results' and self.__dict__['results'] == {}
+        tb = item == 'fres' and self.__dict__['fres'] == {}
+        if ta or tb:
             simlog.error('The results were accessed before the execution of the simulation', stack_index=2)
 
         if item == 'plot_config':
@@ -490,6 +536,10 @@ class Simulation:
         plot_essentials = self.extract_plot_essentials(*species)
         dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
+    def plot_parametric(self, *species):
+        plot_essentials = self.extract_plot_essentials(*species)
+        dp.parametric_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+
     def plot(self, *species):
         """
             Another way of calling plot_deterministic for simplicity
@@ -517,14 +567,31 @@ class Simulation:
             "return: to_return (list of str) list of sbml files from all the simulations stored
         """
         to_return = []
-        for sbml_data in self._list_of_models:
-            to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
-                                                sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
+        for parameter_sweep in self.sbml_data_list:
+            for sbml_data in parameter_sweep:
+                to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
+                                                    sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
         return to_return
 
     @classmethod
     def is_simulation(cls):
         return True
+
+    @classmethod
+    def set_job_number(cls, params):
+        # Run in parallel or sequentially
+        # If nothing is specified just run it in parallel
+        try:
+            if params["jobs"] == 1:
+                simlog.debug("Running simulation sequentially")
+                jobs = params["jobs"]
+            else:
+                simlog.debug("Running simulation in parallel")
+                jobs = params["jobs"]
+        except KeyError:
+            simlog.debug("Running simulation in parallel")
+            jobs = -1
+        return jobs
 
 
 class SimulationComposition:
@@ -556,6 +623,7 @@ class SimulationComposition:
         else:
             simlog.error('Simulation compositions can only be performed with other simulations', stack_index=3)
         self.results = None
+        self.fres = None
         self.base_sim = self.list_of_simulations[0]
 
     def __add__(self, other):
@@ -563,7 +631,7 @@ class SimulationComposition:
 
     # FIX THIS
     def __setattr__(self, name, value):
-        white_list = ['list_of_simulations', 'results', 'base_sim']
+        white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         broad_cast_parameters = ['level', 'method', 'volume']
 
         if name == 'duration':
@@ -598,7 +666,16 @@ class SimulationComposition:
         for sim in self.list_of_simulations:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
+
         self._compile_multi_simulation()
+
+        multi_parameter_dictionary = {}
+
+        for sim in self.list_of_simulations:
+            multi_parameter_dictionary = ps.unite_parameter_dictionaries(multi_parameter_dictionary,
+                                                                         sim.model_parameters)
+
+        self.base_sim.model_parameters = multi_parameter_dictionary
 
         for sim in self.list_of_simulations:
             if sim == self.base_sim:
@@ -608,6 +685,7 @@ class SimulationComposition:
             self.base_sim._list_of_parameters += sim._list_of_parameters
         self.base_sim.run()
         self.results = self.base_sim.results
+        self.fres = self.base_sim.fres
 
     def plot_deterministic(self, *species):
         self.base_sim.plot_deterministic(*species)

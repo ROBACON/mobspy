@@ -193,7 +193,6 @@ def find_parameter(params, key, index=None):
 
 
 ####################### PLOTING FUNCTIONS
-
 def plot_curves(data, axs, figure_index, plot_params):
     """
         This function plots the programmed curves in the assigned figure
@@ -246,8 +245,7 @@ def plot_curves(data, axs, figure_index, plot_params):
             if find_parameter(species_characteristics, key='color') is not None:
                 curve_color = find_parameter(species_characteristics, key='color')
             else:
-                color_index = (color_index + 1) % len(Color_cycle().color_list)
-                curve_color = Color_cycle()(color_index)
+                curve_color = None
 
             if find_parameter(species_characteristics, key='linestyle') is not None:
                 linestyle = find_parameter(species_characteristics, key='linestyle')
@@ -277,18 +275,27 @@ def plot_curves(data, axs, figure_index, plot_params):
                         except IndexError:
                             simlog.error('Fill_between must only have two or less runs referring to it')
                     else:
-                        axs.plot(ts['Time'], ts[spe], color=curve_color,
-                                 linestyle=linestyle, linewidth=linewidth, label=label)
+                        if curve_color is not None:
+                            axs.plot(ts['Time'], ts[spe], color=curve_color,
+                                     linestyle=linestyle, linewidth=linewidth, label=label)
+                        else:
+                            axs.plot(ts['Time'], ts[spe],
+                                     linestyle=linestyle, linewidth=linewidth, label=label)
                         label = None
                 except KeyError:
                     pass
 
     if legend_flag:
+        if find_parameter(plot_params, key='prop', index=figure_index) is not None:
+            prop = find_parameter(plot_params, key='prop', index=figure_index)
+        else:
+            prop = {'size': 10}
+
         if find_parameter(plot_params, key='frameon', index=figure_index) is not None:
             frameon = find_parameter(plot_params, key='frameon', index=figure_index)
         else:
             frameon = True
-        axs.legend(frameon=frameon)
+        axs.legend(frameon=frameon, prop=prop)
 
 
 def set_figure_characteristics(axis_matrix, plot_params):

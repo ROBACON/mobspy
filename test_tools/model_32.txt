@@ -1,0 +1,14 @@
+
+Species
+A,a
+
+Mappings
+A :
+A
+
+Parameters
+a,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A')], 'pr': [(2, 'A')], 'kin': 'A * a'}
