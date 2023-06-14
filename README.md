@@ -108,6 +108,7 @@ user-friendly. Now MySim.results["data"]["runs"]["MetaSpeciesName"] has been dep
 MySim.results["MetaSpeciesName"] or MySim.results[MetaSpeciesObject]. It will return only one run if there are no 
 repetitions and multiple runs with several repetitions.
 
+Version 2.1 - Added model parameters. Now MySim.results returns a list of all resulting time series no matter the number of repetitions. However, now a MySim.fres attribute was released that returns only the first time series in each simulation (thus, it is equal to MySim results with only one repetition in the previous version).
 
 	
 
