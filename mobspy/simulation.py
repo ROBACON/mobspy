@@ -1,24 +1,18 @@
 """
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
-from copy import deepcopy
 from contextlib import contextmanager
-from mobspy.modules import meta_class
-from mobspy.modules import event_functions
-from mobspy.sbml_simulator import run
-import mobspy.simulation_logging.log_scripts as simlog
-from mobspy.modules.meta_class import *
 from mobspy.parameter_scripts import parameter_reader as pr
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
-import mobspy.parameters.parametric_sweeps as ps
+import mobspy.parameter_scripts.parametric_sweeps as ps
 from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
 import mobspy.sbml_simulator.builder as sbml_builder
 import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
-from mobspy.modules.set_counts_module import set_counts
 from mobspy.data_handler.time_series_object import *
+from mobspy.modules.set_counts_module import set_counts
 import json
 import os
 import inspect
@@ -144,6 +138,7 @@ class Simulation:
         self._conditional_event = False
         self._end_condition = None
         self.model_parameters = {}
+        self.sbml_data_list = []
 
         # HERE FABRICIO
         # Get all names
@@ -272,15 +267,16 @@ class Simulation:
             self.compile(verbose=False)
 
         # Sweep Models Here
-        sbmls_for_sweep, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
-                                                                             self._list_of_models)
+        data_for_sbml_construction, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
+                                                                                        self._list_of_models)
+        self.sbml_data_list = data_for_sbml_construction
 
         simlog.debug('Starting Simulator')
         jobs = self.set_job_number(self.parameters)
         simulation_function = lambda x: sbml_run.simulate(jobs, self._list_of_parameters, x)
 
         results = Parallel(n_jobs=jobs, prefer="threads")(delayed(simulation_function)(sbml)
-                                                          for sbml in sbmls_for_sweep)
+                                                          for sbml in data_for_sbml_construction)
 
         simlog.debug("Simulation is Over")
 
@@ -408,7 +404,8 @@ class Simulation:
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
-                      '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres']
+                      '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
+                      'sbml_data_list']
 
         plotted_flag = False
         if name in white_list:
@@ -570,9 +567,10 @@ class Simulation:
             "return: to_return (list of str) list of sbml files from all the simulations stored
         """
         to_return = []
-        for sbml_data in self._list_of_models:
-            to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
-                                                sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
+        for parameter_sweep in self.sbml_data_list:
+            for sbml_data in parameter_sweep:
+                to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
+                                                    sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
         return to_return
 
     @classmethod
@@ -625,6 +623,7 @@ class SimulationComposition:
         else:
             simlog.error('Simulation compositions can only be performed with other simulations', stack_index=3)
         self.results = None
+        self.fres = None
         self.base_sim = self.list_of_simulations[0]
 
     def __add__(self, other):
@@ -632,7 +631,7 @@ class SimulationComposition:
 
     # FIX THIS
     def __setattr__(self, name, value):
-        white_list = ['list_of_simulations', 'results', 'base_sim']
+        white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         broad_cast_parameters = ['level', 'method', 'volume']
 
         if name == 'duration':
@@ -671,6 +670,7 @@ class SimulationComposition:
         self._compile_multi_simulation()
 
         multi_parameter_dictionary = {}
+
         for sim in self.list_of_simulations:
             multi_parameter_dictionary = ps.unite_parameter_dictionaries(multi_parameter_dictionary,
                                                                          sim.model_parameters)
@@ -685,6 +685,7 @@ class SimulationComposition:
             self.base_sim._list_of_parameters += sim._list_of_parameters
         self.base_sim.run()
         self.results = self.base_sim.results
+        self.fres = self.base_sim.fres
 
     def plot_deterministic(self, *species):
         self.base_sim.plot_deterministic(*species)

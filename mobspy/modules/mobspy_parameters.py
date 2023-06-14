@@ -63,9 +63,10 @@ class Mobspy_Parameter(Parameter_Operations):
     def rename(self, new_name):
         del self.parameter_stack[self.name]
         self.parameter_stack[new_name] = self
+        self.name = new_name
 
 
-def MSParameters(*args):
+def ModelParameters(*args):
 
     code_line = inspect.stack()[1].code_context[0][:-1]
     separated_line = code_line.split('=')[-2].replace(" ", "")
@@ -83,7 +84,7 @@ def MSParameters(*args):
 
 
 if __name__ == '__main__':
-    a, b, c = MSParameters(1, [3, 4, 5], 2)
+    a, b, c = ModelParameters(1, [3, 4, 5], 2)
     r1 = (a + b + c)/5
     print(type(a.parameter_set))
     print(type(r1.parameter_set))

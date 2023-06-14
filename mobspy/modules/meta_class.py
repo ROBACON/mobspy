@@ -115,12 +115,6 @@ class Compiler:
         # Check to see if all species are named
         # Parameter compilation as well
         names_used = set()
-        parameters_used = {}
-
-        # Check if there are any MobsPy parameters defined - If there are the compiler will look for parameters
-        parameter_exist = {}
-        if Mobspy_Parameter.parameter_stack != {}:
-            parameter_exist = Mobspy_Parameter.parameter_stack
 
         # Removing repeated elements to ensure only one meta-species in the simulation
         meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
@@ -139,6 +133,12 @@ class Compiler:
                              f'The repeated name is {species.get_name()} in position {i}\n' +
                              f'Another possibility could be a repeated meta-species in the model')
             names_used.add(species.get_name())
+
+        # Define parameter dictionary and get parameter stack
+        parameters_used = {}
+        parameter_exist = {}
+        if Mobspy_Parameter.parameter_stack != {}:
+            parameter_exist = Mobspy_Parameter.parameter_stack
 
         # Order the species references for later usage
         for species in meta_species_to_simulate:
@@ -188,6 +188,7 @@ class Compiler:
         # Assignments with all do not take priority
         # This allows specific assignments to override All assignments
         assigned_species = []
+        parameters_in_counts = set()
         for count in species_counts:
 
             if 'all$' not in count['characteristics']:
@@ -200,6 +201,7 @@ class Compiler:
                                                              symbol='_dot_')
 
             if isinstance(count['quantity'], Mobspy_Parameter):
+                parameters_in_counts.add(count['quantity'])
                 if count['quantity'].name in parameters_used:
                     parameters_used[count['quantity'].name]['used_in'] \
                         = parameters_used[count['quantity'].name]['used_in'].union(set(species_strings))
@@ -230,6 +232,7 @@ class Compiler:
                                                              symbol='_dot_')
 
             if isinstance(count['quantity'], Mobspy_Parameter):
+                parameters_in_counts.add(count['quantity'])
                 if count['quantity'].name in parameters_used:
                     parameters_used[count['quantity'].name]['used_in'].add(species_string)
                 else:
@@ -284,6 +287,12 @@ class Compiler:
                                                                                  parameters_in_events)
         cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_events)
 
+        # Check to see if parameters are names are repeated or used as meta-species
+        for p in parameters_for_sbml:
+            if p in names_used:
+                simlog.error('Parameters names must be unique and they must not share a name with a species')
+            names_used.add(p)
+
         species_in_reactions = set()
         for key, reaction in reactions_for_sbml.items():
             for reactant in reaction['re']:
@@ -300,6 +309,16 @@ class Compiler:
             reactions_for_sbml['phantom_reaction_end'] = {'re': [(10, 'End_Flag_MetaSpecies')], 'pr': [],
                                                           'kin': 'End_Flag_MetaSpecies * 1e-100'}
             events_for_sbml['end_event'] = end_event
+
+        set_to_double_parameter = \
+            set().union(parameters_in_counts).union(parameters_in_reaction).union(parameters_in_events)
+        for p1 in set_to_double_parameter:
+            for p2 in set_to_double_parameter:
+                if p1 == p2:
+                    continue
+                else:
+                    if p1.name == p2.name:
+                        simlog.error('There are two different Parameter Objects with the same name')
 
         model_str = ''
         if verbose:

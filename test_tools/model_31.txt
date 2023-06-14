@@ -1,0 +1,3522 @@
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,4.0
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,4.0
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,1.9999999999999996
+A.a2,4.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,1.9999999999999996
+A.a2,4.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,5.5
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,5.5
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.5
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.5
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,1
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,5.499999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,5.499999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,6.499999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,6.499999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.0
+A.a2,6.999999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.0
+A.a2,6.999999999999998
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.999999999999999
+A.a2,7.0
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.999999999999999
+A.a2,7.0
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.000000000000002
+A.a2,8.000000000000002
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.000000000000002
+A.a2,8.000000000000002
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.999999999999999
+A.a2,8.000000000000002
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,1
+A.a2,1
+B,1
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.999999999999999
+A.a2,8.000000000000002
+B,1
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,1
+b,2
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.0
+A.a2,4.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.0
+A.a2,4.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,1.9999999999999996
+A.a2,4.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,1.9999999999999996
+A.a2,4.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.0
+A.a2,5.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.0
+A.a2,5.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.0
+A.a2,5.000000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,5.499999999999998
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,5.499999999999998
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,6.499999999999998
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,4.499999999999999
+A.a2,6.499999999999998
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,1
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.5
+A.a2,5.5
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.5
+A.a2,5.5
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.500000000000001
+A.a2,5.499999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.5
+A.a2,6.5
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,5.5
+A.a2,6.5
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.5
+A.a2,6.500000000000001
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,1
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,6.0
+A.a2,6.999999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,6.0
+A.a2,6.999999999999999
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.999999999999999
+A.a2,7.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,2.999999999999999
+A.a2,7.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,1
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,6.0
+A.a2,8.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,1
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,6.0
+A.a2,8.0
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,1
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.999999999999999
+A.a2,8.000000000000002
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,2
+h,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+Species
+A.a1,2
+A.a2,2
+B,2
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+
+Events
+event_0,{'trigger': 'true', 'delay': '0', 'assignments': [('A.a2', 'd')]}
+event_1,{'trigger': 'true', 'delay': '2', 'assignments': [('A.a1', 'a + b')]}
+event_2,{'trigger': 'true', 'delay': 'f', 'assignments': [('A.a1', 'd')]}
+
+Species
+A.a1,3.999999999999999
+A.a2,8.000000000000002
+B,2
+End_Flag_MetaSpecies,0
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B
+
+Parameters
+a,2
+b,2
+c,2
+d,2
+f,2
+h,2
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A.a1')], 'pr': [(2, 'A.a1')], 'kin': '5*(b + c)/10'}
+reaction_1,{'re': [(1, 'A.a2')], 'pr': [(2, 'A.a2')], 'kin': '5*(b + c)/10'}
+reaction_2,{'re': [(1, 'B')], 'pr': [(2, 'B')], 'kin': 'B * h'}
+
+

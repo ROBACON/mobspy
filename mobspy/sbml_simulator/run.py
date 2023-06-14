@@ -19,7 +19,6 @@ def simulate(jobs, list_of_params, models):
 
     # Run in parallel or sequentially
     # If nothing is specified just run it in parallel
-
     data = job_execution(list_of_params, models, jobs)
 
     return data

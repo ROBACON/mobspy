@@ -84,19 +84,17 @@ def stochastic_plot(species, data, plot_params):
             key_average = spe + '$' + 'average'
             key_dev = spe + '$' + 'deviation'
 
-            average_and_deviation_ts = {'Time': data_to_plot.get_max_time_for_species(spe),
-                                        key_average: processed_runs[0],
-                                        key_dev: [processed_runs[1], processed_runs[2]]}
-            data_to_plot.add_ts_to_data(average_and_deviation_ts)
+            data_to_plot[0][key_average] = processed_runs[0]
+            data_to_plot[0][key_dev] = [processed_runs[1], processed_runs[2]]
 
             # We define the standard plot for the average and deviation
             color = color_cycler(1)
             plots_for_spe_i.append({'species_to_plot': [spe],
                                     spe: {'color': color, 'label': spe}})
 
-            plots_for_spe_i_sta.append({'species_to_plot': [key_average],
+            plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': [0],
                                         key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
-            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True,
+            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True, 'time_series': [0],
                                         key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
         except ValueError:
             simlog.error(f'{spe} species not found in data')

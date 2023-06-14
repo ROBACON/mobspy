@@ -29,9 +29,12 @@ def generate_all_sbml_models(model_parameters, list_of_models):
     to_return = []
 
     if model_parameters == {}:
-        return list_of_models, []
+        return [list_of_models], []
 
-    for key, item in model_parameters.items():
+    keys = sorted(model_parameters.keys())
+    for key in keys:
+        item = model_parameters[key]
+
         names.append(item['name'])
         used_in.append(item['used_in'])
         try:

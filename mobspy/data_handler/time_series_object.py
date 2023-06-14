@@ -160,8 +160,12 @@ class MobsPyList_of_TS:
         return to_return
 
     def __iter__(self):
-        for ts in self.ts_data:
-            yield ts
+        if not self.fres:
+            for ts in self.ts_data:
+                yield ts
+        else:
+            for key in self.ts_data[0]:
+                yield key
 
     def get_max_time_for_species(self, species):
         """

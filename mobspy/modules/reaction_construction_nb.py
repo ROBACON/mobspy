@@ -73,7 +73,6 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                 if cha == 'all$':
                     continue
 
-                # Ok I love try catches for checking if something is in a dict. Don't judge me
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     simlog.error(f'Illegal reaction: {reaction}. \n'
@@ -100,7 +99,6 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
             check_for_duplicates = {}
             for cha in product['characteristics']:
 
-                # Ok I love try catches for checking if something is in a dict. Don't judge me
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     simlog.error(f'Illegal reaction: {reaction}. \n'
