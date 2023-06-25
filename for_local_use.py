@@ -7,17 +7,23 @@ from mobspy.sbml_simulator.builder import build
 
 if __name__ == '__main__':
 
-    Age, Color, Mortal = BaseSpecies()
+    A, B = BaseSpecies()
+    a, b, c, d = ModelParameters([1, 2, 3], 1, 10, 1)
 
-    Age.young >> Age.old [1]
-    Color.red >> Color.blue [1]
-    Color.blue >> Color.yellow [1]
-    Mortal >> Zero [1]
+    A >> 2*A ['a + b']
 
-    Cell = Age*Color*Mortal
-    C1, C2  = New(Cell)
-    S = Simulation(C1 | C2)
+    A(b)
+    S = Simulation(A | B)
+
+    with S.event_time(c):
+        B(d)
+
+    S.duration = 5
     S.compile()
+
+
+
+
 
 
 

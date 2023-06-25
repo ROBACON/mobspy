@@ -1,69 +1,43 @@
 import inspect
 import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.modules.mobspy_expressions import *
+from pint import Quantity, UnitRegistry
 
 
-class Parameter_Operations:
-
-    def __init__(self, operation, parameter_set):
-        self.operation = operation
-        self.parameter_set = parameter_set
-
-    def process_other_operator(self, other):
-        if isinstance(other, Parameter_Operations):
-            self.parameter_set = self.parameter_set.union(other.parameter_set)
-
-    def __add__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + self.operation + ' + ' + str(other) + ')', self.parameter_set)
-
-    def __radd__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + self.operation + ' + ' + str(other) + ')', self.parameter_set)
-
-    def __sub__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + self.operation + ' - ' + str(other) + ')', self.parameter_set)
-
-    def __rsub__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + str(other) + ' - ' + self.operation + ')', self.parameter_set)
-
-    def __mul__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + self.operation + '*' + str(other) + ')', self.parameter_set)
-
-    def __rmul__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + str(other) + '*' + self.operation + ')', self.parameter_set)
-
-    def __truediv__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + self.operation + '/' + str(other) + ')', self.parameter_set)
-
-    def __rtruediv__(self, other):
-        self.process_other_operator(other)
-        return Parameter_Operations('(' + str(other) + '/' + self.operation + ')', self.parameter_set)
-
-    def __str__(self):
-        return str(self.operation)
-
-
-class Mobspy_Parameter(Parameter_Operations):
+class Mobspy_Parameter(ExpressionDefiner):
 
     parameter_stack = {}
 
     def __init__(self, name, value):
         temp_set = set()
         temp_set.add(self)
-        super().__init__(name, temp_set)
         self.name = name
         self.value = value
         self.parameter_stack[name] = self
+
+        self._ms_active = True
+
+        self._operation = str(name)
+        self._parameter_set = set()
+        self._parameter_set.add(self)
+
+        self._expression_variables = set()
+
+        if isinstance(value, Quantity):
+            # _has_units must be a string to avoid __getattr__ bugs with other objects
+            self._unit_operation = str(value.units)
+            self._has_units = 'True'
+        else:
+            self._unit_operation = '1'
+            self._has_units = False
 
     def rename(self, new_name):
         del self.parameter_stack[self.name]
         self.parameter_stack[new_name] = self
         self.name = new_name
+
+    def __str__(self):
+        return str(self._operation)
 
 
 def ModelParameters(*args):
@@ -84,9 +58,10 @@ def ModelParameters(*args):
 
 
 if __name__ == '__main__':
+    u = UnitRegistry()
     a, b, c = ModelParameters(1, [3, 4, 5], 2)
     r1 = (a + b + c)/5
-    print(type(a.parameter_set))
-    print(type(r1.parameter_set))
+    print(r1._operation)
+    # print(type(r1._parameter_set))
     # print(Mobspy_Parameter.parameter_stack)
 

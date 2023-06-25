@@ -15,6 +15,7 @@ from mobspy.modules.logic_operator_objects import *
 import mobspy.modules.species_string_generator as ssg
 from copy import deepcopy
 from mobspy.modules.mobspy_parameters import *
+from mobspy.modules.mobspy_expressions import *
 import re
 
 
@@ -622,8 +623,8 @@ class Reacting_Species(ReactingSpeciesComparator):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             quantity_dict = species_object.add_quantities(characteristics, quantity)
-        elif isinstance(quantity, Parameter_Operations):
-            simlog.error('Operations with parameters are not allowed for count assignment')
+        elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
+            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
@@ -1095,8 +1096,8 @@ class Species(SpeciesComparator):
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
-        elif isinstance(quantity, Parameter_Operations):
-            simlog.error('Parameter operations not allowed for count assignment')
+        elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
+            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:

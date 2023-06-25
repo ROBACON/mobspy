@@ -21,7 +21,7 @@ def set_counts(count_dic):
     """
     for key, item in count_dic.items():
         if type(item) == int or type(item) == float or isinstance(item, Quantity) or \
-                isinstance(item, Parameter_Operations):
+                isinstance(item, Mobspy_Parameter):
             continue
         else:
             simlog.error(f'Reactant_species count assignment does not support the type {type(item)}',

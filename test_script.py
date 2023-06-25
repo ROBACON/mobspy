@@ -298,6 +298,7 @@ def test_reaction_deactivation():
 
     Sim = S1 + S2
     Sim.run()
+
     assert Sim.fres[A][0] < Sim.fres[A][-1] and Sim.fres[R][0] == 1 and Sim.fres[R][-1] == 0
 
 

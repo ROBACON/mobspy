@@ -59,7 +59,7 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
             dummy = ssg.construct_species_char_list(ec['species'], ec['characteristics'],
                                                     characteristics_to_object, symbol='_dot_')
             if type(ec['quantity']) != str:
-                if isinstance(ec['quantity'], Parameter_Operations):
+                if isinstance(ec['quantity'], Mobspy_Parameter):
                     parameters_in_events.add(ec['quantity'])
                     event_dictionary[dummy] = ec['quantity'].name
 
@@ -97,8 +97,8 @@ def format_event_dictionary_for_sbml(species_for_sbml, event_list, characteristi
         if event['event_time']:
             pass
 
-        if isinstance(event['event_time'], Parameter_Operations):
-            for par in event['event_time'].parameter_set:
+        if isinstance(event['event_time'], Mobspy_Parameter):
+            for par in event['event_time']._parameter_set:
                 parameters_in_events.add(par)
 
         events_for_sbml['e' + str(i)] = {'trigger': event['trigger'],

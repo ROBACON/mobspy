@@ -148,7 +148,6 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
-
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
             isinstance(reaction_rate_function, Quantity):
         # Function is a constant function number int here
@@ -160,8 +159,8 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
 
-    elif isinstance(reaction_rate_function, Parameter_Operations) and parameter_exist:
-        parameters_in_reaction = parameters_in_reaction.union(reaction_rate_function.parameter_set)
+    elif isinstance(reaction_rate_function, ExpressionDefiner) and parameter_exist:
+        parameters_in_reaction = parameters_in_reaction.union(reaction_rate_function._parameter_set)
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model)
 
@@ -188,7 +187,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
             if parameter_exist:
                 parameters_in_reaction = search_for_parameters_in_str(reaction_rate_string,
-                                                               parameter_exist, parameters_in_reaction)
+                                                                      parameter_exist, parameters_in_reaction)
 
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
@@ -200,7 +199,9 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         simlog.error('There is a reaction rate missing for the following reactants: \n'
                      + str(reactant_string_list))
     elif type(reaction_rate_function) == str:
-        return reaction_rate_function
+        parameters_in_reaction = search_for_parameters_in_str(reaction_rate_function,
+                                                              parameter_exist, parameters_in_reaction)
+        reaction_rate_string = reaction_rate_function
     else:
         simlog.debug(type(reaction_rate_function))
         simlog.error(f'The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported')
@@ -311,7 +312,6 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
 
 
 def search_for_parameters_in_str(reaction_rate_string, parameters_exist, parameters_in_reaction):
-
     split_operation = re.split(', |-|!|\*|\+|/|\)|\(| ', reaction_rate_string)
     split_operation = [x.replace(' ', '') for x in split_operation if x.replace(' ', '') != '']
 
