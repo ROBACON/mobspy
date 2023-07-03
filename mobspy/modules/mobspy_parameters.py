@@ -4,31 +4,39 @@ from mobspy.modules.mobspy_expressions import *
 from pint import Quantity, UnitRegistry
 
 
-class Mobspy_Parameter(ExpressionDefiner):
+class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
+
+    # convert_received_unit
 
     parameter_stack = {}
 
     def __init__(self, name, value):
+        self._generate_necessary_attributes()
+
         temp_set = set()
         temp_set.add(self)
         self.name = name
-        self.value = value
+        self.original_value = value
         self.parameter_stack[name] = self
 
         self._ms_active = True
 
         self._operation = str(name)
-        self._parameter_set = set()
         self._parameter_set.add(self)
 
-        self._expression_variables = set()
-
         if isinstance(value, Quantity):
-            # _has_units must be a string to avoid __getattr__ bugs with other objects
-            self._unit_operation = str(value.units)
-            self._has_units = 'True'
+            # We convert into MobsPy units already during the definition of a parameter
+            self.value = self.convert_received_unit(value)
+
+            self._unit_count_op = value
+            self._unit_conc_op = value
+            self._unit_operation = value
+            self._has_units = 'T'
         else:
-            self._unit_operation = '1'
+            self.value = value
+
+            self._unit_count_op = 1
+            self._unit_conc_op = 1
             self._has_units = False
 
     def rename(self, new_name):

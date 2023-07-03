@@ -33,4 +33,5 @@ reaction_8,{'re': [(1, 'mRNA.m2')], 'pr': [(1, 'mRNA.m2'), (1, 'Protein.x2')], '
 reaction_9,{'re': [(1, 'mRNA.m2')], 'pr': [], 'kin': 'mRNA.m2 * 1'}
 reaction_10,{'re': [(1, 'mRNA.m3')], 'pr': [(1, 'mRNA.m3'), (1, 'Protein.x3')], 'kin': 'mRNA.m3 * 10'}
 reaction_11,{'re': [(1, 'mRNA.m3')], 'pr': [], 'kin': 'mRNA.m3 * 1'}
-reaction_12,{'re': [], 'pr': [(1, 'mRNA.m1')], 'kin': '0.0001'}
+reaction_12,{'re': [], 'pr': [(1, 'mRNA.m1')], 'kin': '0.0001 * volume'}
+

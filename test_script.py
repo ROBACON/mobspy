@@ -829,7 +829,7 @@ def test_volume_after_sim():
 
     A = BaseSpecies()
 
-    Zero >> A [42]
+    Zero >> A [42*1/(u.s*u.milliliter)]
     A >> Zero [1]
 
     S = Simulation(A)

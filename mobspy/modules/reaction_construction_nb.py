@@ -87,8 +87,6 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
-                        print(cha)
-                        print(ref_characteristics_to_object)
                         simlog.error(
                             f'A base object for characteristic {cha} was not found in the species supplied to the '
                             f'simulator \n'
@@ -276,6 +274,41 @@ def construct_rate_function_arguments(rate_function, reaction):
     return rate_function_arguments
 
 
+def expression_compilation_initiation():
+    """
+        First find all ExpressionDefiner objects in the stack.
+        Then, sets _ms_active to True to change the behavior of quantities and units in expressions
+    """
+    u._ms_active = True
+
+    expressions_in_stack = []
+
+    for i in range(len(inspect.stack())):
+        local_names = inspect.stack()[i][0].f_locals
+        global_names = inspect.stack()[i][0].f_globals
+        for key, item in global_names.items():
+            if isinstance(item, ExpressionDefiner):
+                expressions_in_stack.append(item)
+        for key, item in local_names.items():
+            if isinstance(item, ExpressionDefiner):
+                expressions_in_stack.append(item)
+
+    for expression in expressions_in_stack:
+        expression._ms_active = True
+
+    return expressions_in_stack
+
+
+def expression_compilation_finish(expressions):
+    """
+        Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()
+    """
+    u._ms_active = False
+
+    for expression in expressions:
+        expression._ms_active = False
+
+
 def create_all_reactions(reactions, meta_species_in_model,
                          ref_characteristics_to_object,
                          type_of_model, dimension, parameter_exist, parameters_in_reaction):
@@ -296,6 +329,9 @@ def create_all_reactions(reactions, meta_species_in_model,
     reactions_for_sbml = {}
 
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
+
+    # Initiate expressions
+    expressions_in_stack = expression_compilation_initiation()
 
     for reaction in reactions:
 
@@ -331,12 +367,17 @@ def create_all_reactions(reactions, meta_species_in_model,
                                         if len(reactant) > 1 else reactant[0].get_name()
                                         for reactant in reactant_string_list]
 
-                    rate_string, parameters_in_reaction = fr.extract_reaction_rate(combination_of_reactant_species,
-                                                                                   reactant_strings
-                                                                                   , reaction.rate, type_of_model,
-                                                                                   dimension, reaction_rate_arguments,
-                                                                                   parameter_exist,
-                                                                                   parameters_in_reaction)
+                    try:
+                        rate_string, parameters_in_reaction = fr.extract_reaction_rate(combination_of_reactant_species,
+                                                                                       reactant_strings
+                                                                                       , reaction.rate, type_of_model,
+                                                                                       dimension,
+                                                                                       reaction_rate_arguments,
+                                                                                       parameter_exist,
+                                                                                       parameters_in_reaction)
+                    except TypeError as e:
+                        # raise e # For debug
+                        simlog.error(f'On reaction {reaction} \n' + str(e))
 
                     if rate_string == 0:
                         continue
@@ -345,6 +386,8 @@ def create_all_reactions(reactions, meta_species_in_model,
                         construct_single_reaction_for_sbml(reactant_strings,
                                                            product_string_list,
                                                            rate_string)
+
+    expression_compilation_finish(expressions_in_stack)
 
     return reactions_for_sbml, parameters_in_reaction
 

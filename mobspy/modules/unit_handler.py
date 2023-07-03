@@ -21,36 +21,38 @@ def convert_rate(quantity, reaction_order, dimension):
         :param quantity: (int, float) converted unit into MobsPy standard units
     """
     volume_power = reaction_order - 1
-    converted_quantity = deepcopy(quantity)
+    # For objects that cannot be deep copied
+    try:
+        converted_quantity = deepcopy(quantity)
+    except:
+        converted_quantity = quantity
 
-    # Dimension arrives as none but there is a rate
+    # Check to see if rate dimension is valid
     if dimension is None and isinstance(quantity, Quantity) and reaction_order > 1:
         dimension = uh.extract_length_dimension(str(quantity.dimensionality), dimension,
                                                 reaction_order)
 
     if isinstance(quantity, Quantity):
         try:
-            if volume_power <= 0:
-                if '[substance]' in str(quantity.dimensionality):
-                    converted_quantity.ito(f'moles/seconds')
-                    return converted_quantity.magnitude, dimension
-                else:
-                    converted_quantity.ito(f'1/seconds')
-                    return converted_quantity.magnitude, dimension
+            if str(quantity.dimensionality) == '1 / [time]':
+                converted_quantity = converted_quantity.convert(f'1/seconds')
+                return converted_quantity.magnitude, dimension, True
+            elif str(quantity.dimensionality) == '[substance] / [time]':
+                converted_quantity = converted_quantity.convert(f'moles/seconds')
+                return converted_quantity.magnitude*N_A, dimension, True
+            elif '[substance]' in str(quantity.dimensionality):
+                converted_quantity = converted_quantity.convert(
+                f'decimeters ** {dimension * volume_power}/(moles ** {volume_power} * seconds)')
+                return converted_quantity.magnitude / (N_A ** volume_power), dimension, False
             else:
-                if '[substance]' in str(quantity.dimensionality):
-                    converted_quantity.ito(f'decimeters ** {dimension*volume_power}/(moles ** {volume_power} * seconds)')
-                    return converted_quantity.magnitude / (N_A ** volume_power), dimension
-                else:
-                    converted_quantity.ito(f'decimeters ** {dimension*volume_power}/seconds')
-                    return converted_quantity.magnitude, dimension
+                converted_quantity = converted_quantity.convert(f'decimeters ** {dimension * volume_power}/seconds')
+                return converted_quantity.magnitude, dimension, False
         except Exception as e:
             simlog.error(str(e) + '\n' +
                          f'Problem converting rate {quantity} \n'
                          f'Is the rate in the form [volume]**{volume_power}/[time]?')
-
     else:
-        return quantity, dimension
+        return quantity, dimension, False
 
 
 def convert_counts(quantity, volume, dimension):
@@ -64,7 +66,10 @@ def convert_counts(quantity, volume, dimension):
 
         :return: converted_quantity (int, float) = converted unit into MobsPy standard units
     """
-    converted_quantity = deepcopy(quantity)
+    try:
+        converted_quantity = deepcopy(quantity)
+    except:
+        converted_quantity = quantity
 
     if isinstance(quantity, Quantity):
         if '[length]' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
@@ -73,13 +78,13 @@ def convert_counts(quantity, volume, dimension):
         try:
             if '[substance]' in quantity.dimensionality:
                 if '[length]' in str(quantity.dimensionality):
-                    converted_quantity.ito(f'moles/(decimeter ** {dimension})')
+                    converted_quantity = converted_quantity.convert(f'moles/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
 
                 converted_quantity = converted_quantity.magnitude * N_A
             else:
                 if '[length]' in str(quantity.dimensionality):
-                    converted_quantity.ito(f'1/(decimeter ** {dimension})')
+                    converted_quantity = converted_quantity.convert(f'1/(decimeter ** {dimension})')
                     converted_quantity = converted_quantity*volume
                 converted_quantity = converted_quantity.magnitude
         except Exception as e:
@@ -132,6 +137,7 @@ def extract_length_dimension(unit_string, dimension, reaction_order=None):
             dimension = check_dimension(dimension, temp_int)
     else:
         dimension = check_dimension(dimension, 1)
+
     return dimension
 
 
@@ -145,7 +151,7 @@ def convert_volume(volume, dimension):
     """
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
-        volume = volume.to(f'decimeter ** {dimension}').magnitude
+        volume = volume.convert(f'decimeter ** {dimension}').magnitude
         return volume
     else:
         return volume
@@ -159,7 +165,7 @@ def convert_time(time):
     """
     if isinstance(time, Quantity):
         if str(time.dimensionality) == '[time]':
-            return time.to('second').magnitude
+            return time.convert('second').magnitude
     else:
         return time
 

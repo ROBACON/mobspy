@@ -20,9 +20,6 @@ import mobspy.modules.unit_handler as uh
 from pint import UnitRegistry
 from joblib import Parallel, delayed
 
-# u is reserved for units
-u = UnitRegistry()
-
 
 class Simulation:
 

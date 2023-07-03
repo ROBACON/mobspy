@@ -163,14 +163,12 @@ class Compiler:
             for species_string in species_string_list:
                 species_for_sbml['_dot_'.join(species_string)] = 0
 
-        # Dimension check. Here we check based on the units the area dimension
+        # Default dimension equal to three after update
         dimension = None
-        for reaction in reactions_set:
-            reaction_order = len(reaction.reactants)
-            if isinstance(reaction.rate, Quantity):
-                if uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension, reaction_order):
-                    dimension = uh.extract_length_dimension(str(reaction.rate.dimensionality), dimension,
-                                                            reaction_order)
+        if isinstance(volume, Quantity):
+            dimension = uh.extract_length_dimension(str(volume.dimensionality), dimension)
+        else:
+            dimension = 3
 
         for count in species_counts:
             if isinstance(count['quantity'], Quantity):
@@ -178,8 +176,6 @@ class Compiler:
                     dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
 
         # Check volume:
-        if isinstance(volume, Quantity):
-            uh.extract_length_dimension(str(volume.dimensionality), dimension)
         volume = uh.convert_volume(volume, dimension)
 
         # Add the flag species used for verifying if the simulation is over
@@ -1388,6 +1384,9 @@ __S1.name('S1')
 __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
+
+# u is reserved for units
+# u = OverrideUnitRegistry()
 
 
 def New(species, number_or_names=None):

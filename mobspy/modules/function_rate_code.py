@@ -15,6 +15,7 @@ import mobspy.modules.meta_class as mc
 import mobspy.modules.unit_handler as uh
 from pint import Quantity
 from mobspy.modules.mobspy_parameters import *
+import timeit
 
 
 class Bool_Override:
@@ -148,47 +149,72 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
         :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
+    is_count = False
     if type(reaction_rate_function) == int or type(reaction_rate_function) == float or \
             isinstance(reaction_rate_function, Quantity):
         # Function is a constant function number int here
-        reaction_rate_function, dimension = uh.convert_rate(reaction_rate_function, len(reactant_string_list),
-                                                            dimension)
+        reaction_rate_function, dimension, is_count = uh.convert_rate(reaction_rate_function,
+                                                                      len(reactant_string_list),
+                                                                      dimension)
 
         if reaction_rate_function == 0:
             return 0
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                     reaction_rate_function, type_of_model)
+                                                     reaction_rate_function, type_of_model, is_count)
 
     elif isinstance(reaction_rate_function, ExpressionDefiner) and parameter_exist:
         parameters_in_reaction = parameters_in_reaction.union(reaction_rate_function._parameter_set)
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                     reaction_rate_function, type_of_model)
+                                                     reaction_rate_function, type_of_model, is_count)
 
     elif function_rate_arguments is not None:
 
         # [''] means that it is a function that takes no arguments (empty signature)
         if function_rate_arguments != ['']:
             arguments = prepare_arguments_for_callable(combination_of_reactant_species,
-                                                       reactant_string_list, function_rate_arguments)
+                                                       reactant_string_list, function_rate_arguments, dimension)
 
             rate = reaction_rate_function(**arguments)
+
         else:
             rate = reaction_rate_function()
 
-        rate, dimension = uh.convert_rate(rate, len(reactant_string_list), dimension)
+        rate, dimension, is_count = uh.convert_rate(rate, len(reactant_string_list), dimension)
+
         if rate == 0:
             return 0
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
-                                                         rate, type_of_model)
+                                                         rate, type_of_model, is_count)
         elif type(rate) == str:
             reaction_rate_string = rate
+            # Remove dollar sign symbols from expression object
+            reaction_rate_string = reaction_rate_string.replace('$', '')
 
             if parameter_exist:
                 parameters_in_reaction = search_for_parameters_in_str(reaction_rate_string,
                                                                       parameter_exist, parameters_in_reaction)
+        elif isinstance(rate, MobsPyExpression):
 
+            # Having an expression variable implies it is a constructed expression - not mass action
+            if len(rate._expression_variables) > 0:
+                reaction_rate_string, _ = rate.generate_string_operation()
+            # Having no expression variables implies it is a constant for mass - action kinetics.
+            elif len(rate._expression_variables) == 0:
+                rate_for_mass_action, is_count = \
+                    rate.generate_string_operation(reaction_order=len(reactant_string_list))
+                parameters_in_rate = rate._parameter_set
+                parameters_in_reaction = parameters_in_reaction.union(parameters_in_rate)
+
+                reaction_rate_string = basic_kinetics_string(reactant_string_list,
+                                                             rate_for_mass_action, type_of_model, is_count)
+
+        elif isinstance(rate, Mobspy_Parameter):
+            # Fix here @TODO
+            parameters_in_reaction.add(rate)
+            reaction_rate_string = basic_kinetics_string(reactant_string_list,
+                                                         str(rate), type_of_model)
         elif rate is None:
             simlog.error('There is a reaction rate missing for the following reactants: \n'
                          + str(reactant_string_list))
@@ -209,7 +235,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
     return reaction_rate_string, parameters_in_reaction
 
 
-def basic_kinetics_string(reactants, reaction_rate, type_of_model):
+def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=False):
     """
         This constructs the bases for mass-action kinetics. Both for stochastic and deterministic depending on the type
         of model
@@ -236,9 +262,18 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model):
 
     kinetics_string += str(reaction_rate)
 
-    n = kinetics_string.count('*') - 1
-    if n > 0:
+    n = 0
+    for key, item in counts.items():
+        n += item
+    n = n - 1
+
+    if n > 0 and not is_count:
         kinetics_string += f' * volume^{-n}'
+    # n == -1 is the lowest possible value
+    elif n < 0 and not is_count:
+        kinetics_string += f' * volume'
+    else:
+        pass
 
     return kinetics_string
 
@@ -284,7 +319,8 @@ def deterministic_string(reactant_name, number):
     return to_return_string
 
 
-def prepare_arguments_for_callable(combination_of_reactant_species, reactant_string_list, rate_function_arguments):
+def prepare_arguments_for_callable(combination_of_reactant_species, reactant_string_list, rate_function_arguments,
+                                   dimension):
     """
         This function prepares the requested arguments to the rate function for a given reaction by creating objects
         of the Specific_Species_Operator class
@@ -299,8 +335,12 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
         for i, (species, reactant_string) in enumerate(zip(combination_of_reactant_species, reactant_string_list)):
             try:
                 species = species['object']
-                argument_dict[rate_function_arguments[i]] = Specific_Species_Operator(species_string=reactant_string,
-                                                                                      species_object=species)
+                argument_dict[rate_function_arguments[i]] = MobsPyExpression(reactant_string, species,
+                                                                             dimension=dimension,
+                                                                             count_in_model=True,
+                                                                             concentration_in_model=False,
+                                                                             count_in_expression=False,
+                                                                             concentration_in_expression=False)
             except IndexError:
                 continue
 

@@ -10,7 +10,7 @@ Parameters
 volume,1
 
 Reactions
-reaction_0,{'re': [(1, 'A')], 'pr': [], 'kin': 'A * 1'}
+reaction_0,{'re': [(1, 'A')], 'pr': [], 'kin': 'A * 1.0'}
 
 Events
 event_0,{'trigger': '(A) < 3.01107038e+23 ', 'delay': '0', 'assignments': [('A', '6.02214076e+23')]}
