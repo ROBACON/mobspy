@@ -11,29 +11,10 @@ if __name__ == '__main__':
 
     A = BaseSpecies()
 
-    Zero >> A[42*1/(u.s*u.milliliter)]
-    A >> Zero[1]
+    Zero >> A[lambda r1, r2, r3: 20]
 
     S = Simulation(A)
-    # S.plot_data = False
-    S.volume = 1 * u.milliliter
-    S.run()
-    assert int(S.fres[A][-1]) == 42
-    exit()
-
-    A, B = BaseSpecies()
-    a = 5/u.s
-
-    # A + B >> 3 * A [lambda: 1 * u.milliliter / u.second]
-    # Zero >> A [10/(u.h*u.meter**3)]
-    # Zero >> A [1*u.mol/(u.s*u.meter**3)]
-    Zero >> A[1 * u.molar/u.s]
-
-
-    A(1)
-    S = Simulation(A | B)
-    S.volume = 1*u.liter
-    print(S.compile())
+    S.compile()
     exit()
 
     '''

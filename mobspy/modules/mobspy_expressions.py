@@ -429,7 +429,12 @@ class QuantityConverter:
     def convert_received_unit(cls, quantity):
         ur = u.unit_registry_object
 
-        copied_quantity = deepcopy(quantity)
+        is_override = False
+        if isinstance(quantity, OverrideQuantity):
+            is_override = True
+            copied_quantity = deepcopy(quantity.q_object)
+        else:
+            copied_quantity = deepcopy(quantity)
 
         to_convert_into = str(copied_quantity.dimensionality)
 
@@ -465,7 +470,10 @@ class QuantityConverter:
 
         copied_quantity.ito(to_convert_into)
 
-        return copied_quantity
+        if not is_override:
+            return copied_quantity
+        else:
+            return OverrideQuantity(copied_quantity)
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):

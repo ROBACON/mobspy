@@ -998,6 +998,61 @@ def test_repeated_parameters():
         assert True
 
 
+def initial_expression_test():
+
+    A, B, Hey = BaseSpecies()
+    D = New(A)
+
+    A >> 2 * A[lambda r: 1 / u.h * (1 + 10 / r)]
+    A + B >> Zero[lambda r1, r2: (1 * u.millimolar / u.h) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
+    Hey >> Zero[lambda r: 1 / u.h * (20 * r + 30 * r + 40 * r)]
+    D >> 2 * D[lambda r: 20 / u.h * r]
+
+    S = Simulation(A | B | Hey | D)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_33.txt')
+
+
+def test_wrong_dimension_error():
+
+    try:
+        A, B = BaseSpecies()
+
+        A >> 2*A [lambda r: 1/u.h*(1 + 10/u.decimeter**3/r)]
+
+        S = Simulation(A)
+        S.level = -1
+        S.compile()
+        assert False
+    except SystemExit:
+        assert True
+
+    try:
+        A, B = BaseSpecies()
+
+        A >> 2*A [lambda r: (1/(u.h*u.decimeter**3))*(1 + 10/r)]
+
+        S = Simulation(A)
+        S.level = -1
+        S.compile()
+        assert False
+    except SystemExit:
+        assert True
+
+
+def test_more_than_used():
+
+    A = BaseSpecies()
+
+    Zero >> A[lambda r1: 20]
+
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_34.txt')
+
+
+# This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
+# python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
@@ -1009,7 +1064,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
              test_multiple_simulation_counts, test_string_events_assignment, test_plotting,
              test_volume_after_sim, test_parameters_with_sbml, test_shared_parameter_name,
-             test_set_counts_parameters, test_repeated_parameters]
+             test_set_counts_parameters, test_repeated_parameters, initial_expression_test,
+             test_wrong_dimension_error, test_more_than_used]
 
 sub_test = test_list
 

@@ -211,7 +211,6 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                                                              rate_for_mass_action, type_of_model, is_count)
 
         elif isinstance(rate, Mobspy_Parameter):
-            # Fix here @TODO
             parameters_in_reaction.add(rate)
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                          str(rate), type_of_model)
@@ -330,6 +329,7 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
         :params rate_function_arguments: arguments received by the rate function
     """
     argument_dict = {}
+
     if rate_function_arguments is not None:
         i = 0
         for i, (species, reactant_string) in enumerate(zip(combination_of_reactant_species, reactant_string_list)):
@@ -344,9 +344,14 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
             except IndexError:
                 continue
 
-        while len(argument_dict) < len(rate_function_arguments):
-            i += 1
-            argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
+        if i != 0:
+            while len(argument_dict) < len(rate_function_arguments):
+                i += 1
+                argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
+        elif i == 0:
+            while len(argument_dict) < len(rate_function_arguments):
+                argument_dict[rate_function_arguments[i]] = Specific_Species_Operator('$Null', mc.Zero)
+                i += 1
 
     return argument_dict
 
