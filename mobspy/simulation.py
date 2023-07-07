@@ -19,6 +19,7 @@ import inspect
 import mobspy.modules.unit_handler as uh
 from pint import UnitRegistry
 from joblib import Parallel, delayed
+import time
 
 
 class Simulation:
@@ -309,6 +310,7 @@ class Simulation:
         ta = self.parameters['unit_x'] is not None
         tb = self.parameters['unit_y'] is not None
         tc = self.parameters['output_concentration']
+
         if ta or tb or tc:
             all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
                 (delayed(convert_all_ts_to_correct_format)(ts, params, True) for ts, params in flatt_ts)

@@ -3,11 +3,9 @@
 
     Handles converting the output data from a simulation into desired-units or concentration
 """
-from pint import UnitRegistry, Quantity
+from mobspy.modules.mobspy_expressions import u
 from scipy.constants import N_A
 from copy import deepcopy
-
-u = UnitRegistry()
 
 
 def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentration=False, volume=1):
@@ -22,13 +20,13 @@ def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentr
     :return: converted_data - input data converted to the desired units
     :rtype: (dict) Dictionary meta-species as key and run as value
     """
-    u = UnitRegistry()
+    ur = u.unit_registry_object
     converted_data = deepcopy(data)
 
     if unit_x is not None:
         new_time = []
         for time in data['Time']:
-            quantity = time*u.seconds
+            quantity = time*ur.seconds
             new_time.append(quantity.to(unit_x).magnitude)
         converted_data['Time'] = new_time
 
@@ -53,9 +51,9 @@ def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentr
         if 'mol' in unit_y:
             multiply_data_by_factor(converted_data, N_A ** -1)
             if output_concentration:
-                convert_data(converted_data, u.molar, unit_y)
+                convert_data(converted_data, ur.molar, unit_y)
             else:
-                convert_data(converted_data, u.moles, unit_y)
+                convert_data(converted_data, ur.moles, unit_y)
 
     return converted_data
 

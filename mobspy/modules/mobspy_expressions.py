@@ -316,7 +316,7 @@ class ExpressionDefiner:
         # Dimension
         self._dimension = None
 
-    def create_from_new_operation(self, other, symbol, count_op, conc_op, direct_sense=False,
+    def create_from_new_operation(self, other, symbol, count_op, conc_op, direct_sense=True,
                                   operation=None):
 
         if isinstance(count_op, Quantity):
@@ -374,7 +374,7 @@ class ExpressionDefiner:
             simlog.error('A meta-species in an expression cannot be both a count and a concentration')
 
         for variable in self._expression_variables:
-            variable._operation = '$' + variable.species_string
+            variable._operation = variable.species_string
 
         dimension_1 = None
         if isinstance(self, MobsPyExpression):
@@ -592,7 +592,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._expression_variables = expression_variables
 
         if operation is None:
-            self._operation = '$' + self.species_string
+            self._operation = self.species_string
         else:
             self._operation = operation
 
@@ -618,15 +618,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         self._has_units = has_units
 
     def __getattr__(self, item):
-        if item not in ['count', 'concentration']:
-            return super().__getattr__(item)
-
-        if item == 'count':
-            self._operation = '$' + 'count' + self._operation
-        elif item == 'concentration':
-            self._operation = '$' + 'concentration' + self._operation
-
-        return self
+        return super().__getattr__(item)
 
     # Write string operation return and unit
     def generate_string_operation(self, skip_check=False, reaction_order=None):
@@ -639,10 +631,13 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
         operation = str(self._operation)
 
-        if skip_check or self._has_units != 'T':
+        if skip_check:
             return operation, True
 
-        if self._expression_variables == set() and reaction_order is not None:
+        if self._has_units != 'T':
+            self._count_in_expression = True
+
+        if self._has_units == 'T' and self._expression_variables == set() and reaction_order is not None:
             if self._unit_count_op.units == (1 / ur.second):
                 return operation, True
             elif self._unit_conc_op.units == (1*ur.decimeter**(3*reaction_order)/(ur.second*ur.decimeter**dimension)):
@@ -680,7 +675,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             count_name = '$count$' + variable.species_string
             concentration_name = '$concentration$' + variable.species_string
 
-            default_name = '$' + variable.species_string
+            default_name = variable.species_string
             replace_name = variable.species_string
 
             if self._count_in_model:
@@ -689,12 +684,12 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
                 # Add unit check!!!
                 if self._count_in_expression:
-                    convert_operation = convert_operation.replace(default_name, replace_name)
+                    pass
                 elif self._concentration_in_expression:
                     convert_operation = convert_operation.replace(default_name, '(' + replace_name + '/volume)')
                     convert_operation = '(' + convert_operation + ')' + '*volume'
                 else:
-                    simlog.error('Placeholder Error')
+                    raise ValueError('The expression did not resolve for lack of concentration/count specifications')
             elif self._concentration_in_model:
                 convert_operation = convert_operation.replace(concentration_name, replace_name)
                 convert_operation = convert_operation.replace(count_name, '(' + replace_name + '*volume)')
@@ -703,12 +698,41 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                     convert_operation = convert_operation.replace(default_name, '(' + replace_name + '*volume)')
                     convert_operation = '(' + convert_operation + ')' + '/volume'
                 elif self._concentration_in_expression:
-                    convert_operation = convert_operation.replace(default_name, replace_name)
+                    pass
                 else:
-                    simlog.error('Placeholder Error')
+                    raise ValueError('The expression did not resolve for lack of concentration/count specifications')
 
         return convert_operation, self._count_in_expression
 
+
+class _Count_Base:
+
+    'self.species_string'
+    def __getitem__(self, item):
+        try:
+            for v in item._expression_variables:
+                item._operation = item._operation.replace(v.species_string, '$count$' + v.species_string)
+            return item
+        except AttributeError:
+            simlog.error('Count[] operator can only be used in MobsPy expressions')
+
+
+Count = _Count_Base()
+
+
+class _Conc_Base:
+
+    def __getitem__(self, item):
+        try:
+            for v in item._expression_variables:
+                item._operation = item._operation.replace(v.species_string, '$concentration$' + v.species_string)
+            return item
+        except AttributeError:
+            simlog.error('Concentration[] operator can only be used in MobsPy expressions')
+        pass
+
+
+Concentration = _Conc_Base()
 
 if __name__ == '__main__':
 
@@ -720,15 +744,19 @@ if __name__ == '__main__':
     # Quantity Object
     # To much unit registry
 
-    x = MobsPyExpression('a_dot_alive', None, dimension=3,
+    x = MobsPyExpression('A', None, dimension=3,
                          count_in_model=True,
                          concentration_in_model=False,
                          count_in_expression=False,
                          concentration_in_expression=False)
-    u._ms_active = True
 
-    r = (1/(u.h*u.liter))*(1 / (1 + 10 * u.molar / x))
+    r = Concentration[1/(1 + 10/x)]*Count[1/(1 + 10/x)]
     print(r.generate_string_operation())
+    exit()
+
+    print(r.generate_string_operation())
+    print()
+
     exit()
 
     # r = (10 / u.liter)

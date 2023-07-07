@@ -200,6 +200,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
                 reaction_rate_string, _ = rate.generate_string_operation()
+
             # Having no expression variables implies it is a constant for mass - action kinetics.
             elif len(rate._expression_variables) == 0:
                 rate_for_mass_action, is_count = \

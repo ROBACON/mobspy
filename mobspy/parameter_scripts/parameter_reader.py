@@ -66,7 +66,7 @@ def __convert_parameters_for_COPASI(params):
     for key, p in params.items():
         if isinstance(p, Quantity):
             if str(p.dimensionality) == '[time]':
-                params[key] = p.to('second').magnitude
+                params[key] = p.convert('second').magnitude
                 continue
 
 
