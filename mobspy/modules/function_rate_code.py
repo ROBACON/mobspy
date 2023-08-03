@@ -18,124 +18,9 @@ from mobspy.modules.mobspy_parameters import *
 import timeit
 
 
-class Bool_Override:
-    """
-            Just a base class for implementing the . operation in the rate function arguments
-            through boolean overriding. It is responsible for returning true when the reactant
-            has the specified characteristic when using the dot notation
-
-            :param _stocked_characteristics: (str) stocks the characteristics of the queries performed by the user
-            :param species_string: (str) string value from an individual species in MobsPY format
-    """
-
-    def __bool__(self):
-        """
-            The implementation of the .dot operation for rate function arguments
-            Returns true when the argument possesses the characteristics
-            Bool is called after the .dot operations
-
-            Parameters:
-                self
-
-            Returns:
-                True if the object contains all the characteristics queried
-                False otherwise
-        """
-        if self.species_string == '$Null':
-            return False
-
-        species_string_split = self.species_string.split('_dot_')[1:]
-        if all([char in species_string_split for char in self._stocked_characteristics]):
-            to_return_boolean = True
-        else:
-            to_return_boolean = False
-
-        self._stocked_characteristics = set()
-        return to_return_boolean
-
-
-class Specific_Species_Operator(Bool_Override):
-    """
-        This class creates objects from the species strings from the meta-species to pass them to the rate functions
-        as arguments. It uses the Bool_Override class to return true or false to the .dot operation inside the rate
-        functions
-
-
-        :param _stocked_characteristics: (str) stocks the characteristics of the queries performed by the user
-        :param species_string: (str) string value from an individual species in MobsPY format
-        :param species_object: (Species) Meta-species object which originated the meta-species str
-    """
-
-    def __init__(self, species_string, species_object):
-        """
-            Constructs the object from the species strings from the meta-species to pass them to the rate functions
-            as arguments.
-
-            :param species_string: (str) A string from MobsPy meta-species format
-            :param species_object: (Species) = Meta-species set for which the species_string is contained in
-        """
-        self.species_string = species_string
-        self._stocked_characteristics = set()
-        self._species_object = species_object
-
-    def __getattr__(self, characteristic):
-        """
-            Stores the characteristics for the boolean query inside the rate function by adding them to the set
-
-            :param characteristic: (str) characteristic being queried
-        """
-        self._stocked_characteristics.add(characteristic)
-        return self
-
-    def __str__(self):
-        """
-            Returns the species_string from the MobsPy meta-species used in the object construction
-        """
-        return self.species_string
-
-    def is_a(self, reference):
-        """
-            This function checks to see if the meta-species the species_string belong to has inherited from the
-            parameter reference (reminder: every meta-species inherits from itself)
-
-            :param reference: (Species) Meta-species object
-            :return: (bool) True if the meta-species in Specific_Species_Operator has inherited from the reference
-            False otherwise
-        """
-        if not self._stocked_characteristics:
-            if reference in self._species_object.get_references():
-                return True
-            else:
-                return False
-        else:
-            simlog.error('Concatenation of is_a and dot operator not supported. Please use them separately',
-                         stack_index=2)
-
-    def add(self, characteristic):
-        """
-            Adds characteristic to the set of characteristics when checking for all
-            referred characteristics by the user
-
-            :param characteristic: (str) characteristic to add to the set
-        """
-        self._stocked_characteristics.add(characteristic)
-
-    def get_name(self):
-        """
-            Returns: The name of the species the reactant is in string format
-        """
-        return self._species_object.get_name()
-
-    def get_characteristics(self):
-        """
-            Returns: The characteristics of the species in this given state
-        """
-        return set(self.species_string.split('_dot_')[1:])
-
-
 def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                           , reaction_rate_function, type_of_model, dimension, function_rate_arguments,
-                          parameter_exist, parameters_in_reaction):
+                          parameter_exist, parameters_in_reaction, skip_check):
     """
         This function is responsible for returning the reaction rate string for the model construction. To do this it
         does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
@@ -158,7 +43,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                                                                       dimension)
 
         if reaction_rate_function == 0:
-            return 0
+            return 0, parameters_in_reaction
         reaction_rate_string = basic_kinetics_string(reactant_string_list,
                                                      reaction_rate_function, type_of_model, is_count)
 
@@ -182,7 +67,7 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         rate, dimension, is_count = uh.convert_rate(rate, len(reactant_string_list), dimension)
 
         if rate == 0:
-            return 0
+            return 0, parameters_in_reaction
 
         if type(rate) == int or type(rate) == float:
             reaction_rate_string = basic_kinetics_string(reactant_string_list,
@@ -199,12 +84,12 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
-                reaction_rate_string, _ = rate.generate_string_operation()
+                reaction_rate_string, _ = rate.generate_string_operation(skip_check=skip_check)
 
             # Having no expression variables implies it is a constant for mass - action kinetics.
             elif len(rate._expression_variables) == 0:
                 rate_for_mass_action, is_count = \
-                    rate.generate_string_operation(reaction_order=len(reactant_string_list))
+                    rate.generate_string_operation(reaction_order=len(reactant_string_list), skip_check=skip_check)
                 parameters_in_rate = rate._parameter_set
                 parameters_in_reaction = parameters_in_reaction.union(parameters_in_rate)
 

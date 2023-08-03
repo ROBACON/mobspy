@@ -1,0 +1,12 @@
+
+Species
+A,0
+
+Mappings
+A :
+A
+
+Parameters
+volume,1
+
+Reactions

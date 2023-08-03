@@ -29,6 +29,7 @@ def get_default_parameters():
         "output_event": False,
         "unit_x": None,
         "unit_y": None,
+        "skip_expression_check": False,
         "output_concentration": False,
         "save_data": False,
         "plot_data": True,

@@ -12,6 +12,7 @@ import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
 from mobspy.data_handler.time_series_object import *
+from mobspy.modules.user_functions import *
 from mobspy.modules.set_counts_module import set_counts
 import json
 import os
@@ -227,7 +228,8 @@ class Simulation:
                              verbose=verbose,
                              event_dictionary=self.total_packed_events,
                              continuous_sim=self.parameters['_continuous_simulation'],
-                             ending_condition=self.parameters['_end_condition'])
+                             ending_condition=self.parameters['_end_condition'],
+                             skip_expression_check=self.parameters['skip_expression_check'])
 
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
@@ -331,7 +333,7 @@ class Simulation:
                 self.plot_parametric()
                 return 0
 
-            if ('stochastic' in methods_list or 'directedMethod' in methods_list) \
+            if ('stochastic' in methods_list or 'directmethod' in methods_list) \
                     and self.parameters['repetitions'] > 1:
                 self.plot_stochastic()
             else:

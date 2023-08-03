@@ -311,7 +311,8 @@ def expression_compilation_finish(expressions):
 
 def create_all_reactions(reactions, meta_species_in_model,
                          ref_characteristics_to_object,
-                         type_of_model, dimension, parameter_exist, parameters_in_reaction):
+                         type_of_model, dimension, parameter_exist, parameters_in_reaction,
+                         skip_check):
     """
         This function creates all reactions
         Returns the reactions_for_sbml and parameters_for_sbml dictionary
@@ -374,9 +375,9 @@ def create_all_reactions(reactions, meta_species_in_model,
                                                                                        dimension,
                                                                                        reaction_rate_arguments,
                                                                                        parameter_exist,
-                                                                                       parameters_in_reaction)
+                                                                                       parameters_in_reaction,
+                                                                                       skip_check)
                     except TypeError as e:
-                        # raise e # For debug
                         simlog.error(f'On reaction {reaction} \n' + str(e))
 
                     if rate_string == 0:

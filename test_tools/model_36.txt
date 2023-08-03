@@ -1,0 +1,13 @@
+
+Species
+Cell,0
+
+Mappings
+Cell :
+Cell
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Cell')], 'pr': [(2, 'Cell')], 'kin': '((5.555555555555556e-05*Cell)*(10-Cell))'}

@@ -319,10 +319,22 @@ class ExpressionDefiner:
     def create_from_new_operation(self, other, symbol, count_op, conc_op, direct_sense=True,
                                   operation=None):
 
-        if isinstance(count_op, Quantity):
-            count_op = QuantityConverter.convert_received_unit(count_op)
-        if isinstance(conc_op, Quantity):
-            conc_op = QuantityConverter.convert_received_unit(conc_op)
+        if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):
+            self = QuantityConverter.convert_received_unit(self)
+        if isinstance(other, Quantity) or isinstance(other, OverrideQuantity):
+            other = QuantityConverter.convert_received_unit(other)
+
+        try:
+            if isinstance(count_op, Quantity):
+                count_op = QuantityConverter.convert_received_unit(count_op)
+        except Exception as e:
+            count_op = e
+
+        try:
+            if isinstance(conc_op, Quantity):
+                conc_op = QuantityConverter.convert_received_unit(conc_op)
+        except Exception as e:
+            conc_op = e
 
         if type(self._operation) == str or (isinstance(other, ExpressionDefiner) and type(other._operation)) == str:
             if direct_sense:
@@ -466,14 +478,14 @@ class QuantityConverter:
 
             to_convert_into = to_convert_into.replace('[substance]', '1')
 
-        # When to is called in a OverrideQuantity object it does not work. So convert is the replacement
-
         copied_quantity.ito(to_convert_into)
 
         if not is_override:
             return copied_quantity
         else:
-            return OverrideQuantity(copied_quantity)
+            temp = OverrideQuantity(copied_quantity)
+            temp.set_ms_active(quantity._ms_active)
+            return temp
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
@@ -540,11 +552,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         for key, item in quantity_object.__dict__.items():
             self.__dict__[key] = item
 
-        # Here: Convert Received Quantity
-        # self.q_object = self.convert_received_unit(self.q_object)
-
         self._operation = self.q_object.magnitude
-
         self._expression_variables = set()
         self._parameter_set = set()
         self._has_units = 'T'
@@ -554,6 +562,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             return str(self._operation)
         else:
             return str(self.q_object)
+
+    def set_ms_active(self, ms_active):
+        self._ms_active = ms_active
 
     # Had to propose new functions for conversion as Pint is doing something strange and checking the returned object
     def convert(self, unit):
@@ -750,24 +761,5 @@ if __name__ == '__main__':
                          count_in_expression=False,
                          concentration_in_expression=False)
 
-    r = Concentration[1/(1 + 10/x)]*Count[1/(1 + 10/x)]
+    r = x**2.8
     print(r.generate_string_operation())
-    exit()
-
-    print(r.generate_string_operation())
-    print()
-
-    exit()
-
-    # r = (10 / u.liter)
-    r = (10/u.liter)/x
-    r.generate_string_operation()
-    exit()
-
-    r = 10*u.mol*5*u.s/(1 + 10/x)
-    print(r)
-    exit()
-
-    r = (5/ u.h) * 1 / (1 + 10 / x)
-    print(r.generate_string_operation())
-    exit()

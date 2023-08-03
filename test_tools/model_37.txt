@@ -1,0 +1,19 @@
+
+Species
+B.at_1.something,1
+B.at_2.something,0
+B.at_3.something,0
+
+Mappings
+B :
+B.at_1.something
+B.at_2.something
+B.at_3.something
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [], 'pr': [(1, 'B.at_1.something')], 'kin': '1 * volume'}
+reaction_1,{'re': [], 'pr': [(1, 'B.at_2.something')], 'kin': '1 * volume'}
+reaction_2,{'re': [], 'pr': [(1, 'B.at_3.something')], 'kin': '1 * volume'}

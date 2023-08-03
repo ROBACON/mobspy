@@ -1051,6 +1051,58 @@ def test_more_than_used():
     assert compare_model(S.compile(), 'test_tools/model_34.txt')
 
 
+def zero_rate_test():
+
+    A = BaseSpecies()
+
+    Zero >> A[0]
+
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_35.txt')
+
+
+def test_wrong_rate():
+
+    try:
+        Ara, aTc = BaseSpecies()
+
+        Ara >> 2 * Ara[aTc]
+
+        S = Simulation(aTc | Ara)
+        S.compile()
+        assert False
+    except SystemExit:
+        assert True
+
+
+def test_conversion_outside():
+    n_0 = 10
+    mu_g = 0.2 / u.h
+
+    Cell, Lysis, AHL, LuxI = BaseSpecies()
+
+    Cell >> 2 * Cell[lambda cell: mu_g * cell * (n_0 - cell)]
+
+    MySim = Simulation(Cell)
+    MySim.level = -1
+    assert compare_model(MySim.compile(), 'test_tools/model_36.txt')
+
+
+def test_first_characteristic_in_reacting_species():
+    A = BaseSpecies()
+    A.something
+    B = New(A)
+
+    for a in [1, 2, 3]:
+        Zero >> B.something.c('at_' + str(a))[1]
+
+    B(1)
+    S = Simulation(B)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_37.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1065,7 +1117,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_multiple_simulation_counts, test_string_events_assignment, test_plotting,
              test_volume_after_sim, test_parameters_with_sbml, test_shared_parameter_name,
              test_set_counts_parameters, test_repeated_parameters, initial_expression_test,
-             test_wrong_dimension_error, test_more_than_used]
+             test_wrong_dimension_error, test_more_than_used, zero_rate_test, test_wrong_rate,
+             test_conversion_outside, test_first_characteristic_in_reacting_species]
 
 sub_test = test_list
 

@@ -30,6 +30,7 @@ def get_example_parameters():
 
         "unit_x": "year",
         "unit_y": "nanomolar",
+        "skip_expression_check": True,
         "output_concentration": True,
         "output_dir": "",
         "output_event": False,

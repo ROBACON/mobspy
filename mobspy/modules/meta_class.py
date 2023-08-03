@@ -80,7 +80,7 @@ class Compiler:
     @classmethod
     def compile(cls, meta_species_to_simulate, reactions_set, species_counts, orthogonal_vector_structure,
                 volume=1, type_of_model='deterministic', verbose=True, event_dictionary=None,
-                continuous_sim=False, ending_condition=None):
+                continuous_sim=False, ending_condition=None, skip_expression_check=False):
         """
             Here we construct the species for Copasi using their objects
 
@@ -254,7 +254,8 @@ class Compiler:
                                                                              meta_species_to_simulate,
                                                                              orthogonal_vector_structure,
                                                                              type_of_model, dimension,
-                                                                             parameter_exist, parameters_in_reaction)
+                                                                             parameter_exist, parameters_in_reaction,
+                                                                             skip_expression_check)
 
         parameters_for_sbml = {'volume': (volume, f'dimensionless')}
         cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_reaction)
@@ -444,6 +445,16 @@ class Reactions:
 
         # Assign default order
         self.order = None
+
+        if isinstance(Compiler.last_rate, Species) \
+                or isinstance(Compiler.last_rate, Reacting_Species) or isinstance(Compiler.last_rate, Reactions):
+            simlog.error('Reaction rate of type ' + str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
+
+        if not (type(Compiler.last_rate) == int or type(Compiler.last_rate) == float
+                or callable(Compiler.last_rate) or type(Compiler.last_rate) == str
+                or isinstance(Compiler.last_rate, OverrideQuantity) or isinstance(Compiler.last_rate, Quantity)
+                or isinstance(Compiler.last_rate, Mobspy_Parameter) or Compiler.last_rate is None):
+            simlog.error('Reaction rate of type ' + str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
 
         self.rate = Compiler.last_rate
         if Compiler.last_rate is not None:
@@ -657,6 +668,9 @@ class Reacting_Species(ReactingSpeciesComparator):
             characteristics_from_references = mcu.unite_characteristics(species_object.get_references())
 
             if characteristic not in characteristics_from_references and '$' not in characteristic:
+                if len(species_object.get_characteristics()) == 0:
+                    species_object.first_characteristic = characteristic
+
                 species_object.add_characteristic(characteristic)
 
             reactant['characteristics'].add(characteristic)
@@ -1011,18 +1025,9 @@ class Species(SpeciesComparator):
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
-        n_all = code_line.count('All')
-        code_line = code_line.replace(' ', '')
+        new_code_line = code_line.replace(' ', '')
 
-        if 'Rev' in code_line:
-            n_all = n_all + 1
-
-        n_key = code_line.count(']')
-        if n_key != n_all + 1:
-            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                         + f'The reaction did not compile. Perhaps there is a missing rate?')
-
-        if code_line[-1] != ']':
+        if new_code_line[-1] != ']':
             simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
                          + f'There must be a rate in the end of the reaction')
 
@@ -1384,6 +1389,7 @@ __S1.name('S1')
 __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
+
 
 # u is reserved for units
 # u = OverrideUnitRegistry()
