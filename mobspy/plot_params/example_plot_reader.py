@@ -15,13 +15,22 @@ def get_example_plot_parameters():
         'linestyle':'-',
         'linewidth':0.1,
         'label':'test_label',
-        'runs':[0],
-        'fill_between':False,
-        'frameon':False,
-        'title':'Test_Plot',
-        'annotations':['Test_note', 0, 0],
-        'pad':1,
-        'dpi':3,
+        'runs': [0],
+        'fill_between': False,
+        'frameon': False,
+
+        'xlabel': 'Something',
+        'ylabal': 'Something Else',
+        'xlabel_fontsize': 14,
+        'ylabel_fontsize': 14,
+        'title': 'Test_Plot',
+        'title_fontsize': 16,
+        'suptitle': 'Test_Sup_Title',
+        'suptitle_fontsize': 18,
+
+        'annotations': ['Test_note', 0, 0],
+        'pad': 1,
+        'dpi': 3,
         "plots":False,
         "species_to_plot": None,
         "save_to": 'example.png',
@@ -38,7 +47,7 @@ def get_example_plot_parameters():
         "unit_x": '',
         "unit_y": '',
         "output_concentration": False,
-        'simulation_method':'stochastic'
+        'simulation_method': 'stochastic'
     }
     return example_parameters
 

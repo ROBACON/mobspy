@@ -28,6 +28,7 @@ def query_plot_data(species, data):
 
         species_to_plot.add(spe)
 
+    species_to_plot = sorted([spe for spe in species])
     return species_to_plot, new_data
 
 

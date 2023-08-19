@@ -1103,6 +1103,57 @@ def test_first_characteristic_in_reacting_species():
     assert compare_model(S.compile(), 'test_tools/model_37.txt')
 
 
+def test_model_reference():
+
+    Mortal = BaseSpecies()
+    A, B = New(Mortal)
+
+    A(100), B(200)
+    S1 = Simulation(A | B)
+    assert str(S1.model) == '[\'A\', \'B\']'
+
+    S1.duration = 0.5
+
+    C = New(Mortal)
+    C(50)
+    S2 = Simulation(A | B | C)
+    assert str(S1.model) == '[\'A\', \'B\']'
+    assert str(S2.model) == '[\'A\', \'B\', \'C\']'
+
+
+def test_sbml_generation():
+
+    A = BaseSpecies()
+
+    A >> Zero[1]
+
+    A(100)
+    S = Simulation(A)
+    S.level = -1
+    text = ''
+    for sbml in S.generate_sbml():
+        text += sbml
+    assert compare_model(text, 'test_tools/model_38.txt')
+
+
+def test_multi_sim_sbml():
+
+    A = BaseSpecies()
+
+    A >> Zero[1]
+
+    A(100)
+    S1 = Simulation(A)
+    S2 = Simulation(A)
+    S = S1 + S2
+    S.level = -1
+
+    text = ''
+    for sbml in S.generate_sbml():
+        text += sbml
+    assert compare_model(text, 'test_tools/model_39.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1118,7 +1169,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_volume_after_sim, test_parameters_with_sbml, test_shared_parameter_name,
              test_set_counts_parameters, test_repeated_parameters, initial_expression_test,
              test_wrong_dimension_error, test_more_than_used, zero_rate_test, test_wrong_rate,
-             test_conversion_outside, test_first_characteristic_in_reacting_species]
+             test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
+             test_sbml_generation, test_multi_sim_sbml]
 
 sub_test = test_list
 

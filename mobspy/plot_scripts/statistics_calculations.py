@@ -16,16 +16,22 @@ def time_series_average(species_string, mobspy_ts):
         if species_string in series.keys():
             list_series.append(series)
 
+    war_1, war_2 = (True, True)
     for s1 in list_series:
         for s2 in list_series:
             if s1 == s2:
                 continue
-            # if len(s1['Time']) != len(s2['Time']):
-            #    simlog.warning('The time length vectors sizes are different \n')
+
+            if len(s1) != len(s2) and war_1:
+                simlog.warning('Time Series length is different. \n'
+                               'MobsPy disregards time-series that have already finished during calculations')
+                war_1 = False
 
             for t1, t2 in zip(s1['Time'], s2['Time']):
-                if t1 != t2:
-                    simlog.error('Time vectors are different')
+                if t1 != t2 and war_2:
+                    simlog.warning('Times in Time Series Objects are different. \n'
+                                   'MobsPy calculates the average by index position. Please be careful.')
+                war_2 = False
 
     average_series = []
     for j in range(len(mobspy_ts.get_max_time_for_species(species_string))):

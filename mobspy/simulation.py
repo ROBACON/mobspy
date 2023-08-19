@@ -138,23 +138,11 @@ class Simulation:
         self._end_condition = None
         self.model_parameters = {}
         self.sbml_data_list = []
+        self._parameter_list_of_dic = []
 
-        # HERE FABRICIO
-        # Get all names
-        # if names is None:
-        #    local_names = inspect.stack()[1][0].f_locals
-        #    global_names = inspect.stack()[1][0].f_globals
-        #    names = {}
-        #    for key, item in global_names.items():
-        #        names[key] = item
-        #    for key, item in local_names.items():
-        #        names[key] = item
-
-        self.model = model
+        # Must copy to avoid reference assignment
+        self.model = List_Species(model)
         self.names = names
-
-        if type(model) == set or type(model) == list:
-            model = List_Species(model)
 
         if not isinstance(model, Species) and not isinstance(model, List_Species):
             simlog.error('Model must be formed only by Species objects or List_Species objects \n'
@@ -257,6 +245,14 @@ class Simulation:
         if self.model_string != '':
             return self.model_string
 
+    def _assemble_multi_simulation_structure(self):
+
+        if not self.sbml_data_list:
+            data_for_sbml_construction, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
+                                                                                            self._list_of_models)
+            self.sbml_data_list = data_for_sbml_construction
+            self._parameter_list_of_dic = parameter_list_of_dic
+
     def run(self):
         """
             Runs the simulation by colling the models in the sbml_simulator directory.
@@ -266,17 +262,13 @@ class Simulation:
         if self._species_for_sbml is None:
             self.compile(verbose=False)
 
-        # Sweep Models Here
-        data_for_sbml_construction, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
-                                                                                        self._list_of_models)
-        self.sbml_data_list = data_for_sbml_construction
+        self._assemble_multi_simulation_structure()
 
         simlog.debug('Starting Simulator')
         jobs = self.set_job_number(self.parameters)
         simulation_function = lambda x: sbml_run.simulate(jobs, self._list_of_parameters, x)
-
         results = Parallel(n_jobs=jobs, prefer="threads")(delayed(simulation_function)(sbml)
-                                                          for sbml in data_for_sbml_construction)
+                                                          for sbml in self.sbml_data_list)
 
         simlog.debug("Simulation is Over")
 
@@ -300,8 +292,8 @@ class Simulation:
             return MobsPyTimeSeries(data_dict, parameters)
 
         flatt_ts = []
-        if parameter_list_of_dic:
-            for r, params in zip(results, parameter_list_of_dic):
+        if self._parameter_list_of_dic:
+            for r, params in zip(results, self._parameter_list_of_dic):
                 for ts in r:
                     flatt_ts.append((ts, params))
         else:
@@ -329,7 +321,7 @@ class Simulation:
         if self.parameters['plot_data']:
             methods_list = [x['simulation_method'] for x in self._list_of_parameters]
 
-            if len(parameter_list_of_dic) > 1:
+            if len(self._parameter_list_of_dic) > 1:
                 self.plot_parametric()
                 return 0
 
@@ -406,7 +398,7 @@ class Simulation:
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
-                      'sbml_data_list']
+                      'sbml_data_list', '_parameter_list_of_dic']
 
         plotted_flag = False
         if name in white_list:
@@ -568,6 +560,10 @@ class Simulation:
             "return: to_return (list of str) list of sbml files from all the simulations stored
         """
         to_return = []
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
+        self._assemble_multi_simulation_structure()
+
         for parameter_sweep in self.sbml_data_list:
             for sbml_data in parameter_sweep:
                 to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
@@ -655,19 +651,30 @@ class SimulationComposition:
         else:
             self.base_sim.__setattr__(name, value)
 
+    def __getattr__(self, item):
+        if item == 'plot_config':
+            self.base_sim.__dict__['plot_flag'] = True
+            return self.base_sim
+
     def compile(self, verbose=True):
         str = ''
         for sim in self.list_of_simulations:
             str += sim.compile(verbose)
+
         self._compile_multi_simulation()
+        self.base_sim._assemble_multi_simulation_structure()
         if str != '':
             return str
 
-    def run(self):
+    def _check_all_sims_compilation(self):
+
         for sim in self.list_of_simulations:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
 
+    def run(self):
+
+        self._check_all_sims_compilation()
         self._compile_multi_simulation()
 
         multi_parameter_dictionary = {}
@@ -679,11 +686,13 @@ class SimulationComposition:
         self.base_sim.model_parameters = multi_parameter_dictionary
 
         for sim in self.list_of_simulations:
+
             if sim == self.base_sim:
                 continue
 
             self.base_sim._list_of_models += sim._list_of_models
             self.base_sim._list_of_parameters += sim._list_of_parameters
+
         self.base_sim.run()
         self.results = self.base_sim.results
         self.fres = self.base_sim.fres
@@ -701,6 +710,18 @@ class SimulationComposition:
         self.base_sim.plot_raw(parameters_or_file)
 
     def generate_sbml(self):
+
+        self._check_all_sims_compilation()
+        self._compile_multi_simulation()
+
+        for sim in self.list_of_simulations:
+
+            if sim == self.base_sim:
+                continue
+
+            self.base_sim._list_of_models += sim._list_of_models
+            self.base_sim._list_of_parameters += sim._list_of_parameters
+
         return self.base_sim.generate_sbml()
 
     @classmethod

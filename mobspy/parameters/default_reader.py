@@ -22,7 +22,11 @@ def get_default_parameters():
         "r_tol": 1e-8,
         "a_tol": 1e-10,
 
-        "__comment_3": "OUTPUT",
+        "__comment_3": "Core number",
+
+        "jobs": -1,
+
+        "__comment_4": "OUTPUT",
 
         "output_dir": "outputs/",
         "output_file": None,

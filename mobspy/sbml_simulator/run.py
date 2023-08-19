@@ -53,11 +53,13 @@ def job_execution(params, models, jobs):
 
             end_condition_not_satisfied = True
             if sim_par['_continuous_simulation']:
-                sim_par['duration'] = sim_par['initial_conditional_duration']
+                duration = float(sim_par['initial_conditional_duration'])
+            else:
+                duration = float(sim_par['duration'])
 
             while end_condition_not_satisfied:
                 basico_model = basico.model_io.load_model_from_string(sbml_str)
-                data = __run_time_course(basico_model, sim_par['duration'], sim_par, i)
+                data = __run_time_course(basico_model, duration, sim_par, i)
 
                 reformatted_data = reformat_time_series(data)
 
@@ -67,7 +69,7 @@ def job_execution(params, models, jobs):
                         end_condition_not_satisfied = False
                     else:
                         sbml_str = __sbml_new_initial_values(reformatted_data, model, sim_par)
-                        sim_par['duration'] = 2 * sim_par['duration']
+                        duration = 2 * duration
                 else:
                     end_condition_not_satisfied = False
 

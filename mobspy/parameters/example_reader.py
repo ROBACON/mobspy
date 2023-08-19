@@ -26,7 +26,11 @@ def get_example_parameters():
         "seeds": [1, 2, 3],
         "step_size": 1,
 
-        "__comment_3": "OUTPUT",
+        "__comment_3": "Core number",
+
+        "jobs": 1,
+
+        "__comment_4": "OUTPUT",
 
         "unit_x": "year",
         "unit_y": "nanomolar",

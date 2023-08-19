@@ -223,6 +223,8 @@ def plot_curves(data, axs, figure_index, plot_params):
         else:
             simlog.error('No species found for plotting in one of the curves or figures')
 
+        species = sorted([spe for spe in species])
+
         # Get the time series to plot
         if find_parameter(plot_params, key='time_series', index=(figure_index, plot_index)) is not None:
             time_series = find_parameter(plot_params, key='time_series', index=(figure_index, plot_index))
@@ -322,13 +324,25 @@ def set_figure_characteristics(axis_matrix, plot_params):
             figure_hash(i, axis_matrix).set_yscale('log')
 
         if find_parameter(plot_params, 'title', i) is not None:
-            figure_hash(i, axis_matrix).set_title(find_parameter(plot_params, 'title', i))
+            if find_parameter(plot_params, 'title_fontsize', i) is not None:
+                figure_hash(i, axis_matrix).set_title(find_parameter(plot_params, 'title', i),
+                                                      fontsize=plot_params['title_fontsize'])
+            else:
+                figure_hash(i, axis_matrix).set_title(find_parameter(plot_params, 'title', i))
 
         if find_parameter(plot_params, 'xlabel', i) is not None:
-            figure_hash(i, axis_matrix).set_xlabel(find_parameter(plot_params, 'xlabel', i))
+            if find_parameter(plot_params, 'xlabel_fontsize', i) is not None:
+                figure_hash(i, axis_matrix).set_xlabel(find_parameter(plot_params, 'xlabel', i),
+                                                       fontsize=plot_params['xlabel_fontsize'])
+            else:
+                figure_hash(i, axis_matrix).set_xlabel(find_parameter(plot_params, 'xlabel', i))
 
         if find_parameter(plot_params, 'ylabel', i) is not None:
-            figure_hash(i, axis_matrix).set_ylabel(find_parameter(plot_params, 'ylabel', i))
+            if find_parameter(plot_params, 'ylabel_fontsize', i) is not None:
+                figure_hash(i, axis_matrix).set_ylabel(find_parameter(plot_params, 'ylabel', i),
+                                                       fontsize=plot_params['ylabel_fontsize'])
+            else:
+                figure_hash(i, axis_matrix).set_ylabel(find_parameter(plot_params, 'ylabel', i))
 
         if find_parameter(plot_params, 'annotations', i) is not None:
             for annotations in find_parameter(plot_params, 'annotations', i):
@@ -350,6 +364,12 @@ def set_global_parameters(fig, plot_params):
 
     if find_parameter(plot_params, 'dpi') is not None:
         fig.set_dpi(plot_params['dpi'])
+
+    if find_parameter(plot_params, 'suptitle') is not None:
+        if find_parameter(plot_params, 'suptitle_fontsize') is not None:
+            fig.suptitle(plot_params['suptitle'], fontsize=plot_params['suptitle_fontsize'])
+        else:
+            fig.suptitle(plot_params['suptitle'])
 
 
 def plot_data(data, plot_params):

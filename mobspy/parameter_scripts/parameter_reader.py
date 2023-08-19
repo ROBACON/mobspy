@@ -70,7 +70,18 @@ def __convert_parameters_for_COPASI(params):
                 continue
 
 
+def __convert_unit_parameters(params):
+    units = ['unit_x', 'unit_y']
+    for u in units:
+        if u in params and params[u] is not None:
+            if isinstance(params[u], Quantity):
+                params[u] = str(params[u].units)
+            else:
+                params[u] = str(params[u])
+
+
 def parameter_process(params):
+    __convert_unit_parameters(params)
     __name_output_file(params)
     __check_stochastic_repetitions_seeds(params)
     __convert_parameters_for_COPASI(params)
