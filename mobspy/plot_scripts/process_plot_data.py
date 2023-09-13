@@ -48,9 +48,38 @@ def check_plot_parameters(species, plot_params):
         if spe in dictionary.keys():
             simlog.error(f'Plotting is impossible, species {spe} is a parameter name')
 
+    # Check if parameters are valid
+    validated_keys = set()
     for key in plot_params:
         if key not in dictionary and key not in species:
-            simlog.warning(f'Parameter {key} not supported')
+            continue
+        else:
+            validated_keys.add(key)
 
+    # Check if query is present
+    for key in plot_params:
+        if key in validated_keys:
+            continue
+        else:
+            spe_name = key.split('.')[0]
+            if spe_name not in species:
+                simlog.warning(f'Parameter {key} not supported')
+            validated_keys.add(key)
+
+
+def time_filter_operation(low, high, time_data, data):
+    new_time_data = []
+    new_data = []
+
+    for t, d in zip(time_data, data):
+        if t < low:
+            continue
+        elif low < t < high:
+            new_time_data.append(t)
+            new_data.append(d)
+        elif t > high:
+            break
+
+    return new_time_data, new_data
 
 

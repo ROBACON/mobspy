@@ -20,7 +20,7 @@ def get_example_plot_parameters():
         'frameon': False,
 
         'xlabel': 'Something',
-        'ylabal': 'Something Else',
+        'ylabel': 'Something Else',
         'xlabel_fontsize': 14,
         'ylabel_fontsize': 14,
         'title': 'Test_Plot',
@@ -47,7 +47,8 @@ def get_example_plot_parameters():
         "unit_x": '',
         "unit_y": '',
         "output_concentration": False,
-        'simulation_method': 'stochastic'
+        'simulation_method': 'stochastic',
+        "time_filter": [0, 100000]
     }
     return example_parameters
 

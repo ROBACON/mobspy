@@ -7,8 +7,6 @@ from mobspy import *
 import sys
 import matplotlib.pyplot as plt
 
-# TODO Plot has random order for species names
-
 
 # Compare results with expected file
 def compare_model(comp_results, file_name):
@@ -282,6 +280,9 @@ def test_unit_event_test():
 def test_reaction_deactivation():
     A, R = BaseSpecies(2)
     A + R >> 2 * A + R[1]
+
+    # Adding this reaction for compatibility reasons with python versions lower than 3.10
+    R >> Zero[1e-100]
 
     A(1), R(1)
     S1 = Simulation(A | R)

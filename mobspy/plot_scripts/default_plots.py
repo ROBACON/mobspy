@@ -17,8 +17,9 @@ def read_plot_json(plot_json_filename):
     with open(plot_json_filename, 'r') as file:
         try:
             json_data = json.load(file)
-        except Exception:
-            simlog.error(f'Error while decoding json file "{plot_json_filename}".')
+        except Exception as e:
+            simlog.error(f'The following error happened while decoding json file "{plot_json_filename}":\n' +
+                         str(e))
 
     return json_data
 

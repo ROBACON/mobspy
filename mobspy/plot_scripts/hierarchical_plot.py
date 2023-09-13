@@ -3,7 +3,7 @@ import os.path
 import math
 import mobspy.plot_scripts.statistics_calculations as spd
 import mobspy.simulation_logging.log_scripts as simlog
-
+import mobspy.plot_scripts.process_plot_data as ppd
 import numpy as np
 import pickle as pkl
 from pathlib import Path
@@ -170,10 +170,7 @@ def find_parameter(params, key, index=None):
                 return params[key]
             except (KeyError, IndexError):
                 return None
-    # If two indexes are given
-    # Look inside the plot
-    # Than figure
-    # Than global
+    # If two indexes are given, look inside the plot, than figure, than global
     elif type(index) == tuple:
 
         try:
@@ -233,9 +230,12 @@ def plot_curves(data, axs, figure_index, plot_params):
         else:
             time_series = list(range(len(data)))
 
-        for spe in species:
+        if find_parameter(plot_params, key='time_filter', index=(figure_index, plot_index)) is not None:
+            low, high = find_parameter(plot_params, key='time_filter', index=(figure_index, plot_index))
+        else:
+            low, high = None, None
 
-            color_index = 0
+        for spe in species:
 
             # Get the parameters assigned to the species, if not assign empty for None returns
             if find_parameter(plot_params, key=spe, index=(figure_index, plot_index)) is not None:
@@ -266,22 +266,29 @@ def plot_curves(data, axs, figure_index, plot_params):
                 label = None
 
             for ts in time_series:
-                ts = data[ts]
+                ts_time = data['Time'][ts]
+                if '$' not in spe:
+                    ts_data = data[spe][ts]
+                else:
+                    ts_data = data[ts][spe]
+
+                if low is not None or high is not None:
+                    ts_time, ts_data = ppd.time_filter_operation(low, high, ts_time, ts_data)
 
                 try:
                     if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None \
                             and find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)):
                         try:
-                            axs.fill_between(ts['Time'], ts[spe][0], ts[spe][1], color=curve_color,
+                            axs.fill_between(ts_time, ts_data[0], ts_data[1], color=curve_color,
                                              label=label)
                         except IndexError:
                             simlog.error('Fill_between must only have two or less runs referring to it')
                     else:
                         if curve_color is not None:
-                            axs.plot(ts['Time'], ts[spe], color=curve_color,
+                            axs.plot(ts_time, ts_data, color=curve_color,
                                      linestyle=linestyle, linewidth=linewidth, label=label)
                         else:
-                            axs.plot(ts['Time'], ts[spe],
+                            axs.plot(ts_time, ts_data,
                                      linestyle=linestyle, linewidth=linewidth, label=label)
                         label = None
                 except KeyError:
