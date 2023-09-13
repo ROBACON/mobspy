@@ -64,6 +64,10 @@ def __convert_parameters_for_COPASI(params):
         :param params: (dict) = Dictionary with simulation parameters
     """
     for key, p in params.items():
+        if key == 'duration' and isinstance(p, Quantity):
+            if p.dimensionality != '[time]':
+                simlog.error('The duration of the simulation is not in units of time')
+
         if isinstance(p, Quantity):
             if str(p.dimensionality) == '[time]':
                 params[key] = p.convert('second').magnitude
