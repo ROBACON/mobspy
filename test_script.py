@@ -789,7 +789,7 @@ def test_string_events_assignment():
     with S.event_time(15):
         A.a1(f'{A} + 1')
 
-    compare_model(S.compile(), 'test_tools/model_30.txt')
+    assert compare_model(S.compile(), 'test_tools/model_30.txt')
 
 
 def test_plotting():

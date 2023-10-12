@@ -37,8 +37,7 @@ class Simulation:
 
     def event_context_finish(self):
         self._event_time = 0
-        for meta_species in self._species_to_set:
-            meta_species.reset_simulation_context()
+        Species.reset_simulation_context()
         self._species_to_set = set()
         self._context_not_active = True
 
@@ -60,18 +59,7 @@ class Simulation:
 
         # Set context in all meta-species
         if len(self._species_to_set) == 0:
-            for i in range(len(inspect.stack())):
-                local_names = inspect.stack()[i][0].f_locals
-                global_names = inspect.stack()[i][0].f_globals
-                for key, item in global_names.items():
-                    if isinstance(item, Species):
-                        self._species_to_set.add(item)
-                for key, item in local_names.items():
-                    if isinstance(item, Species):
-                        self._species_to_set.add(item)
-
-            for meta_species in self._species_to_set:
-                meta_species.set_simulation_context(self)
+            Species.set_simulation_context(self)
         else:
             pass
 

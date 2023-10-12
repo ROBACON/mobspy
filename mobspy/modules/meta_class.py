@@ -437,7 +437,7 @@ class Reactions:
             except IndexError:
                 simlog.error('No Meta-Species detected in the reaction', stack_index=3)
 
-        if to_test_context_object._simulation_context is not None:
+        if Species.get_simulation_context() is not None:
             simlog.error('Reactions cannot be defined under event context. Only species counts', stack_index=3)
 
         self.reactants = reactants
@@ -498,15 +498,17 @@ class Reacting_Species(ReactingSpeciesComparator):
         species_object = self.list_of_reactants[0]['object']
         characteristics = self.list_of_reactants[0]['characteristics']
         if len(self.list_of_reactants) == 1:
-            if species_object._simulation_context is None:
+            if Species.get_simulation_context() is None:
                 to_return = str(species_object)
                 for cha in self.list_of_reactants[0]['characteristics']:
                     to_return += '.' + cha
                 return to_return
             else:
+                print(Species.str_under_context(species_object, characteristics))
+                exit()
                 return Species.str_under_context(species_object, characteristics)
         else:
-            if species_object._simulation_context is not None:
+            if Species.get_simulation_context() is not None:
                 simlog.error('Please separate the species when using string based assignments under event context'
                              'Ex: str(A) + str(B)', stack_index=2)
             return str(self.list_of_reactants)
@@ -623,7 +625,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
         species_object = self.list_of_reactants[0]['object']
         characteristics = self.list_of_reactants[0]['characteristics']
-        simulation_under_context = self.list_of_reactants[0]['object']._simulation_context
+        simulation_under_context = self.list_of_reactants[0]['object'].get_simulation_context()
 
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
@@ -869,7 +871,7 @@ class Species(SpeciesComparator):
             :param characteristics: Characteristics to filter the strings
             :return: String in format (A_dot_a1 + A_dot_a2 + ....) with the parenthesis
         """
-        ref_char_to_spe_obj = species_object._simulation_context.orthogonal_vector_structure
+        ref_char_to_spe_obj = Species.get_simulation_context().orthogonal_vector_structure
         all_strings = sorted(ssg.construct_all_combinations(species_object, characteristics,
                                                             ref_char_to_spe_obj, '_dot_'))
         to_str = all_strings[0]
@@ -885,7 +887,7 @@ class Species(SpeciesComparator):
         """
             String representation, just returns the species name
         """
-        if self._simulation_context is None:
+        if Species.get_simulation_context() is None:
             return self._name
         else:
             return Species.str_under_context(self, 'std$')
@@ -1107,20 +1109,21 @@ class Species(SpeciesComparator):
         elif type(quantity) == Reacting_Species:
             simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
                          f'simulation context', stack_index=2)
-        elif self._simulation_context is None:
+        elif Species.get_simulation_context() is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}'
                          f' if not under a simulation context',
                          stack_index=2)
 
-        if self._simulation_context is not None:
+        if self.get_simulation_context() is not None:
+            sim_under_context = self.get_simulation_context()
 
             if type(quantity) == str:
                 quantity_dict = self.add_quantities('std$', quantity)
             try:
-                self._simulation_context.current_event_count_data.append({'species': self,
-                                                                          'characteristics': quantity_dict[
-                                                                              'characteristics'],
-                                                                          'quantity': quantity_dict['quantity']})
+                sim_under_context.current_event_count_data.append({'species': self,
+                                                                   'characteristics': quantity_dict[
+                                                                       'characteristics'],
+                                                                   'quantity': quantity_dict['quantity']})
             except Exception as e:
                 simlog.error(str(e) + '\n Only species count assignments are allowed in a model context')
         else:
@@ -1134,7 +1137,7 @@ class Species(SpeciesComparator):
             :param characteristics: (str) characteristics of the species to be set
             :param quantity: (int, float, Quantity) counts of that specific species
         """
-        if self._simulation_context is None:
+        if self.get_simulation_context() is None:
             already_in = False
             for e in self._species_counts:
                 if characteristics == e['characteristics']:
@@ -1197,7 +1200,6 @@ class Species(SpeciesComparator):
         self._characteristics = set()
         self._references = {self}
         self._ordered_references = []
-        self._simulation_context = None
         self._reference_index_dictionary = {}
         self._unit = ''
 
@@ -1274,15 +1276,23 @@ class Species(SpeciesComparator):
     def reset_counts(self):
         self._species_counts = []
 
-    def set_simulation_context(self, sim):
-        if self._simulation_context is None:
-            self._simulation_context = sim
+    _simulation_context = None
+
+    @classmethod
+    def set_simulation_context(cls, sim):
+        if cls._simulation_context is None:
+            cls._simulation_context = sim
         else:
             simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
                          'Please use only one Simulation Object per context assignment', stack_index=6)
 
-    def reset_simulation_context(self):
-        self._simulation_context = None
+    @classmethod
+    def reset_simulation_context(cls):
+        cls._simulation_context = None
+
+    @classmethod
+    def get_simulation_context(cls):
+        return cls._simulation_context
 
     def order_references(self):
         cleaned_references = [x for x in self.get_references() if x.get_characteristics() != set()]
