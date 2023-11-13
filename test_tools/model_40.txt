@@ -1,0 +1,65 @@
+
+Species
+Grass.blue.dense.old,0
+Grass.blue.dense.young,0
+Grass.blue.sparse.old,1
+Grass.blue.sparse.young,0
+Grass.green.dense.old,0
+Grass.green.dense.young,0
+Grass.green.sparse.old,1
+Grass.green.sparse.young,0
+Grass.red.dense.old,0
+Grass.red.dense.young,0
+Grass.red.sparse.old,1
+Grass.red.sparse.young,0
+Tree.blue.dense.old,0
+Tree.blue.dense.young,0
+Tree.blue.sparse.old,10
+Tree.blue.sparse.young,0
+Tree.green.dense.old,0
+Tree.green.dense.young,0
+Tree.green.sparse.old,0
+Tree.green.sparse.young,0
+Tree.red.dense.old,0
+Tree.red.dense.young,0
+Tree.red.sparse.old,9
+Tree.red.sparse.young,0
+
+Mappings
+Grass :
+Grass.blue.dense.old
+Grass.blue.dense.young
+Grass.blue.sparse.old
+Grass.blue.sparse.young
+Grass.green.dense.old
+Grass.green.dense.young
+Grass.green.sparse.old
+Grass.green.sparse.young
+Grass.red.dense.old
+Grass.red.dense.young
+Grass.red.sparse.old
+Grass.red.sparse.young
+Tree :
+Tree.blue.dense.old
+Tree.blue.dense.young
+Tree.blue.sparse.old
+Tree.blue.sparse.young
+Tree.green.dense.old
+Tree.green.dense.young
+Tree.green.sparse.old
+Tree.green.sparse.young
+Tree.red.dense.old
+Tree.red.dense.young
+Tree.red.sparse.old
+Tree.red.sparse.young
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Tree.blue.sparse.old')], 'pr': [(1, 'Grass.blue.sparse.old')], 'kin': 'Tree.blue.sparse.old * 1'}
+reaction_1,{'re': [(1, 'Tree.green.dense.young'), (1, 'Grass.green.dense.young')], 'pr': [(2, 'Tree.green.dense.young')], 'kin': 'Tree.green.dense.young * Grass.green.dense.young * 2 * volume^-1'}
+reaction_2,{'re': [(1, 'Tree.green.dense.young'), (1, 'Grass.green.sparse.young')], 'pr': [(2, 'Tree.green.dense.young')], 'kin': 'Tree.green.dense.young * Grass.green.sparse.young * 2 * volume^-1'}
+reaction_3,{'re': [(1, 'Tree.green.sparse.young'), (1, 'Grass.green.dense.young')], 'pr': [(2, 'Tree.green.sparse.young')], 'kin': 'Tree.green.sparse.young * Grass.green.dense.young * 2 * volume^-1'}
+reaction_4,{'re': [(1, 'Tree.green.sparse.young'), (1, 'Grass.green.sparse.young')], 'pr': [(2, 'Tree.green.sparse.young')], 'kin': 'Tree.green.sparse.young * Grass.green.sparse.young * 2 * volume^-1'}
+reaction_5,{'re': [(1, 'Tree.red.sparse.old')], 'pr': [(1, 'Grass.red.sparse.old')], 'kin': 'Tree.red.sparse.old * 1'}
