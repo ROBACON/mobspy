@@ -36,12 +36,20 @@ class Simulation:
                      'Please include the parentheses')
 
     def event_context_finish(self):
+        """
+            Removes the context in all meta-species and resets some varaiables. Called each time an event context is finished. 
+        """
         self._event_time = 0
         Species.reset_simulation_context()
-        self._species_to_set = set()
         self._context_not_active = True
 
     def event_context_add(self, time, trigger):
+        """
+            Adds an event to the event context
+
+            :param trigger: () condition that triggers the event when fulfilled
+            :param time: (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled
+        """
 
         event_data = {'event_time': time, 'event_counts': list(self.current_event_count_data),
                       'trigger': trigger}
@@ -56,14 +64,17 @@ class Simulation:
         self.event_context_finish()
 
     def event_context_initiator(self):
-
-        # Set context in all meta-species
-        if len(self._species_to_set) == 0:
-            Species.set_simulation_context(self)
-        else:
-            pass
+        """
+            Sets the context in all meta-species. Called each time an event context is initiated.
+        """
+        Species.set_simulation_context(self)
 
     def _event_handler(self):
+        """
+            Handles the event context by activating the current context and checking it is the only one active. It is called in every event context manager.
+
+            :raise simlog.error: if the event context is called although another event is already active
+        """
         if self._context_not_active:
             self._context_not_active = False
             self.__dict__['parameters']['_with_event'] = True
@@ -73,6 +84,12 @@ class Simulation:
 
     @contextmanager
     def event_condition(self, trigger, delay=0):
+        """
+            Context manager for condition events. Called in "with Simulation.event_condition(trigger) :" format. 
+
+            :param trigger: () condition that triggers the event when fulfilled
+            :param delay: (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled
+        """
         try:
             code_line = inspect.stack()[2].code_context[0][:-1]
             if '==' in code_line:
@@ -92,12 +109,19 @@ class Simulation:
 
     @contextmanager
     def event_time(self, time):
+        """
+            Context manager for time events. Called in "with Simulation.event_time(time) :" format. 
+
+            :param time: (int, float, Quantity) any time used
+        """
         try:
             self._event_handler()
             yield 0
         finally:
             time = uh.convert_time(time)
             self.event_context_add(time, 'true')
+
+    
 
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
@@ -111,7 +135,6 @@ class Simulation:
         """
 
         # Event Variable Definitions
-        self._species_to_set = set()
         self._event_time = 0
         self.previous_trigger = None
         self.current_event_count_data = []
@@ -379,7 +402,7 @@ class Simulation:
                       'all_species_not_mapped', 'self._species_for_sbml', 'self._reactions_for_sbml',
                       'self._parameters_for_sbml', 'self._mappings_for_sbml', 'self.model_string',
                       'event_times', 'event_models', 'event_count_dics', '_events_for_sbml',
-                      'total_packed_events', 'species_initial_counts', '_species_to_set',
+                      'total_packed_events', 'species_initial_counts',
                       '_event_time', 'previous_trigger', 'current_event_count_data',
                       'current_condition', 'current_event_trigger_data',
                       'number_of_context_comparisons', 'pre_number_of_context_comparisons', '_continuous_simulation',
@@ -539,6 +562,9 @@ class Simulation:
         dp.raw_plot(self.results, parameters_or_file)
 
     def __add__(self, other):
+        """
+            The add operator is used to concatenate simulations.
+        """
         return SimulationComposition(self, other)
 
     def generate_sbml(self):

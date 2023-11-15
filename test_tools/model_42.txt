@@ -1,0 +1,17 @@
+
+Species
+A.a1,0
+A.a2,0
+
+Mappings
+A :
+A.a1
+A.a2
+
+Parameters
+volume,1
+
+Reactions
+
+Events
+event_0,{'trigger': '(A.a1 + A.a2) <= 0 ', 'delay': '0', 'assignments': [('A.a2', '100')]}

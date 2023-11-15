@@ -19,6 +19,9 @@ from mobspy.modules.mobspy_expressions import *
 import re
 
 
+
+
+
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
 # If anyone is reading this, I highly recommend you study there, it is quite a nice place
 class Compiler:
@@ -429,6 +432,22 @@ class Reactions:
             :raise simlog.error: if a reaction is defined under a simulation context
             :raise simlog.error: if was called from Zero to Zero
         """
+        # Make sure the any context is not used in reactions
+        for p in products:
+            if p['object'].get_name() == 'Context_MetaSpecies':
+                simlog.error('The any specie cannot be used in reactions')
+
+
+        # Add characteristics in Cts_context to each reactant and product
+        if len(Species.meta_specie_named_any_context) != 0 : 
+            for j in Species.meta_specie_named_any_context:
+                    for r in reactants:
+                        r['object'].c(j)
+                        r['characteristics'].add(j)
+                    for p in products:
+                        p['object'].c(j)
+                        p['characteristics'].add(j)
+                
         try:
             to_test_context_object = reactants[0]['object']
         except IndexError:
@@ -490,7 +509,19 @@ class Reacting_Species(ReactingSpeciesComparator):
         'characteristics': the characteristics queried, 'stoichiometry': stoichiometry value,
         'label': label if used (None)}
     """
+    def __enter__(self):
+        """
+            Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when entering. 
+        """
+        self.context_initiator_for_reacting_specie()
+        return 0
 
+    def __exit__(self, *args):
+        """
+            Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when exiting. 
+        """
+        self.context_finish_for_reacting_specie()
+  
     def __str__(self):
         """
             String representation of the list of reactants
@@ -504,8 +535,6 @@ class Reacting_Species(ReactingSpeciesComparator):
                     to_return += '.' + cha
                 return to_return
             else:
-                print(Species.str_under_context(species_object, characteristics))
-                exit()
                 return Species.str_under_context(species_object, characteristics)
         else:
             if Species.get_simulation_context() is not None:
@@ -616,6 +645,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         return reaction
 
     # Reacting_Species call
+    
     def __call__(self, quantity):
         """
             The call operator here is used to add counts to species non-default state. This stores the characteristics
@@ -623,10 +653,15 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
+        #If called within a Any context, add the characteristics of the Any context to the reacting specie called 
+        if len(Species.meta_specie_named_any_context) > 0 : 
+            for i in Species.meta_specie_named_any_context:
+                self = self.c(i)
+
+        # Check if the quantity is a valid type and add the new count to the reacting specie
         species_object = self.list_of_reactants[0]['object']
         characteristics = self.list_of_reactants[0]['characteristics']
         simulation_under_context = self.list_of_reactants[0]['object'].get_simulation_context()
-
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             if len(self.list_of_reactants) != 1:
@@ -637,7 +672,8 @@ class Reacting_Species(ReactingSpeciesComparator):
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
-
+            
+        #If called within an event context, make sure that the call is a count assignment only
         if simulation_under_context is not None:
             try:
                 if type(quantity) == str:
@@ -679,6 +715,8 @@ class Reacting_Species(ReactingSpeciesComparator):
 
         return self
 
+
+
     @classmethod
     def is_species(cls):
         return False
@@ -686,6 +724,27 @@ class Reacting_Species(ReactingSpeciesComparator):
     @classmethod
     def is_spe_or_reac(cls):
         return True
+    
+    # Context management for reacting species
+    old_context = set()
+
+    def context_initiator_for_reacting_specie(self):
+        """
+            This adds the current context in _list_of_nested_any_contexts and then updates the Cts context in all meta-species.
+        """
+        if len(self.list_of_reactants) == 1:
+            self.old_context = Species.meta_specie_named_any_context
+            new_context = Species.meta_specie_named_any_context.union(self.list_of_reactants[0]['characteristics'])
+            Species.update_meta_specie_named_any_context(new_context)
+        else :
+            simlog.error('Contexts can only be used on basic Reacting meta species')
+
+    def context_finish_for_reacting_specie(self):
+        """
+            This removes the context which is ending from _list_of_nested_any_contexts and updates the current Cts context.
+            Then, it updates the Cts context in all meta-species.
+        """
+        Species.update_meta_specie_named_any_context(self.old_context)
 
 
 _methods_Reacting_Species = set(dir(Reacting_Species))
@@ -950,7 +1009,7 @@ class Species(SpeciesComparator):
         """
             Shows the species counts stored in this object
         """
-        simlog.debug(self._species_counts)
+        print(self._species_counts)
 
     # Creation of List_Species For Simulation ##################
     def __or__(self, other):
@@ -1028,10 +1087,12 @@ class Species(SpeciesComparator):
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
         new_code_line = code_line.replace(' ', '')
+        if '#' in new_code_line:
+            new_code_line = new_code_line[:(new_code_line.find("#"))]
 
         if new_code_line[-1] != ']':
             simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                         + f'There must be a rate in the end of the reaction')
+                         + f'There must be a rate in the end of the reaction. Avoid comments in the same line as the reaction.')
 
     def __rshift__(self, other):
         """
@@ -1066,7 +1127,6 @@ class Species(SpeciesComparator):
             :param characteristic: (str) characteristic to be added or to be use as a query in the reaction
             :return: Reacting_Species with the characteristic added for querying
         """
-
         # This is for IPython notebooks compatibility
         if characteristic == '_ipython_canary_method_should_not_exist_':
             return 0
@@ -1079,9 +1139,7 @@ class Species(SpeciesComparator):
         if characteristic not in characteristics_from_references and '$' not in characteristic:
             if len(self.get_characteristics()) == 0:
                 self.first_characteristic = characteristic
-
             self.add_characteristic(characteristic)
-
         return Reacting_Species(self, characteristics)
 
     # Species call
@@ -1096,7 +1154,14 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
+        #If called within a Any context, add the characteristics of the Any context to the specie called. The specie becomes a reacting specie.
+        if len(Species.meta_specie_named_any_context) != 0 :
+            for i in Species.meta_specie_named_any_context:
+                self.c(i)
+            quantity_dict = self.add_quantities(Species.meta_specie_named_any_context.copy(), quantity)
+
+        # Check if the quantity is a valid type and add the new count to the specie
+        elif type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
         elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
@@ -1114,6 +1179,7 @@ class Species(SpeciesComparator):
                          f' if not under a simulation context',
                          stack_index=2)
 
+        #If called within an event context, make sure that the call is a count assignment only
         if self.get_simulation_context() is not None:
             sim_under_context = self.get_simulation_context()
 
@@ -1277,6 +1343,7 @@ class Species(SpeciesComparator):
         self._species_counts = []
 
     _simulation_context = None
+    meta_specie_named_any_context = set()
 
     @classmethod
     def set_simulation_context(cls, sim):
@@ -1285,6 +1352,15 @@ class Species(SpeciesComparator):
         else:
             simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
                          'Please use only one Simulation Object per context assignment', stack_index=6)
+    
+    @classmethod
+    def update_meta_specie_named_any_context(cls, meta_specie_named_any_characteristics):
+        """
+            This updates the class variable meta_specie_named_any_context with the characteristics of the current any context.    
+        
+            :param meta_specie_named_any_characteristics: (set) set of characteristics of the currently active any context.
+        """
+        cls.meta_specie_named_any_context = meta_specie_named_any_characteristics
 
     @classmethod
     def reset_simulation_context(cls):
@@ -1315,7 +1391,6 @@ class Species(SpeciesComparator):
     @classmethod
     def is_spe_or_reac(cls):
         return True
-
 
 _methods_Species = set(dir(Species))
 
@@ -1392,13 +1467,13 @@ def BaseSpecies(number_or_names=None):
     code_line = inspect.stack()[1].code_context[0][:-1]
     return _Create_Species(None, code_line, number_or_names)
 
-
 __S0, __S1, __SF = BaseSpecies(3)
 __S0.name('S0')
 __S1.name('S1')
 __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
+
 
 
 # u is reserved for units
