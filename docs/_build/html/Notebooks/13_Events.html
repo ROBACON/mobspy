@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Events &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Concatenated simulations" href="14_Concatenating_Simulations.html" />
+    <link rel="prev" title="Born Species" href="12_Born_Species.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Events</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/13_Events.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Events">
+<h1>Events<a class="headerlink" href="#Events" title="Link to this heading"></a></h1>
+<p>Events are sudden changes to counts in the simulation happening at specific times or due to the fulfilement of certain conditions. In this example we set the count of the meta-species A to 200 at every 5 seconds.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">A</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">S</span><span class="o">.</span><span class="n">output_event</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">with</span> <span class="n">S</span><span class="o">.</span><span class="n">event_time</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">A</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">S</span><span class="o">.</span><span class="n">event_time</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">set_counts</span><span class="p">({</span><span class="n">A</span><span class="p">:</span> <span class="mi">200</span><span class="p">})</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+A,200
+
+Mappings
+A :
+A
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;A&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;A * 1&#39;}
+
+Events
+event_0,{&#39;trigger&#39;: &#39;true&#39;, &#39;delay&#39;: &#39;10&#39;, &#39;assignments&#39;: [(&#39;A&#39;, &#39;200&#39;)]}
+event_1,{&#39;trigger&#39;: &#39;true&#39;, &#39;delay&#39;: &#39;5&#39;, &#39;assignments&#39;: [(&#39;A&#39;, &#39;200&#39;)]}
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_13_Events_1_2.png" src="../_images/Notebooks_13_Events_1_2.png" />
+</div>
+</div>
+<p>As one can see, one can assign counts to events by putting the simulation under context. Once the simulation is under context every count assign to a meta-species will be assigned as an event. The count assignment is equal to the one presented in the Initial Conditions with both the queries and All operator working in similar maner. The set_count operator is also accepted for events.</p>
+<p>Besides timed events, one has access to conditional events. Conditional events trigger once a specific logic expression has been satisfied. In the following model, we desing two meta-species, A and B with two characteristics each and we set their counts to 200 if they both go bellow 50.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span><span class="o">.</span><span class="n">a1</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">a2</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">b1</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">b2</span>
+
+<span class="n">A</span><span class="o">.</span><span class="n">a1</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">b1</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span>
+<span class="n">A</span><span class="o">.</span><span class="n">a2</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">b2</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mf">0.02</span><span class="p">]</span>
+
+<span class="n">All</span><span class="p">[</span><span class="n">A</span><span class="p">](</span><span class="mi">100</span><span class="p">),</span> <span class="n">All</span><span class="p">[</span><span class="n">B</span><span class="p">](</span><span class="mi">120</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">S</span><span class="o">.</span><span class="n">output_event</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="n">logic_expression</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">B</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">S</span><span class="o">.</span><span class="n">event_condition</span><span class="p">(</span><span class="n">logic_expression</span><span class="p">):</span>
+    <span class="n">All</span><span class="p">[</span><span class="n">A</span><span class="p">](</span><span class="mi">100</span><span class="p">),</span> <span class="n">All</span><span class="p">[</span><span class="n">B</span><span class="p">](</span><span class="mi">120</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+A.a1,100
+A.a2,100
+B.b1,120
+B.b2,120
+
+Mappings
+A :
+A.a1
+A.a2
+B :
+B.b1
+B.b2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;A.a1&#39;), (1, &#39;B.b1&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;A.a1 * B.b1 * 0.01 * volume^-1&#39;}
+reaction_1,{&#39;re&#39;: [(1, &#39;A.a2&#39;), (1, &#39;B.b2&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;A.a2 * B.b2 * 0.02 * volume^-1&#39;}
+
+Events
+event_0,{&#39;trigger&#39;: &#39;( ( (A.a1 + A.a2) &lt;= 50 ) &amp;&amp; ( (B.b1 + B.b2) &lt;= 50 ) ) &#39;, &#39;delay&#39;: &#39;0&#39;, &#39;assignments&#39;: [(&#39;A.a1&#39;, &#39;100&#39;), (&#39;A.a2&#39;, &#39;100&#39;), (&#39;B.b1&#39;, &#39;120&#39;), (&#39;B.b2&#39;, &#39;120&#39;)]}
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_13_Events_4_3.png" src="../_images/Notebooks_13_Events_4_3.png" />
+</div>
+</div>
+<p>Like in the results, MobsPy automatically maps A = A.a1 + A.a2 and B = B.b1 + B.b2. Once the counts of the species in all states go bellow the defined thresholds the event trigger and set the counts back up.</p>
+<p>Logical clauses in MobsPy must be isolated in parenthesis when combined to respect Python operator precedence other. As if the parenthesis where not there, Python would try to resolve the operator ‘&amp;’ (and) before the inequalities. The operator ‘|’ symbolises or and the operator ‘&amp;’ simbolises and. Finally, the equality operator is not allowed as it can create compatibility issues with python. In the code bellow, there are some examples of MobsPy logical clauses.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Perform a query</span>
+<span class="n">c1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">a1</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+<span class="c1"># Combine clauses</span>
+<span class="n">c2</span> <span class="o">=</span> <span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">a1</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">B</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">a2</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># EQUALITY IS NOT ALLOWED AND WILL PRODUCE ERRORS</span>
+<span class="c1"># The alternative is them</span>
+<span class="n">c3</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">A</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Another aspect is to create simulations with a conditional duration by passing a logical clause. For instance, the simulation bellow runs until either A or B reach zero.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span>
+
+<span class="n">A</span><span class="p">(</span><span class="mi">110</span><span class="p">),</span> <span class="n">B</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">B</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_13_Events_8_1.png" src="../_images/Notebooks_13_Events_8_1.png" />
+</div>
+</div>
+<p>As a important note, reactions CANNOT be added as events.</p>
+<p>If one wishes to desing event assignments based around the value of meta-species, one can pass strings in the count assignment under an event context. For instance, the model bellow uses the meta-species I to count the number of times A reaches zero in an windown of time:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">A</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">I</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">I</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">S</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+<span class="k">with</span> <span class="n">S</span><span class="o">.</span><span class="n">event_condition</span><span class="p">(</span><span class="n">A</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="n">A</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">I</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">I</span><span class="si">}</span><span class="s1"> + 1&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+A,10
+I,0
+
+Mappings
+A :
+A
+I :
+I
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;A&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;A * 1&#39;}
+
+Events
+event_0,{&#39;trigger&#39;: &#39;(A) &lt;= 0 &#39;, &#39;delay&#39;: &#39;0&#39;, &#39;assignments&#39;: [(&#39;A&#39;, &#39;10&#39;), (&#39;I&#39;, &#39;(I) + 1&#39;)]}
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_13_Events_11_2.png" src="../_images/Notebooks_13_Events_11_2.png" />
+</div>
+</div>
+<p>Again queries can be performed inside the string assignment. If a meta-species is used under this type of assignment the resulting string will be the sum of all the states.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span><span class="o">.</span><span class="n">a1</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">a2</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">a3</span>
+
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+<span class="n">A</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">S</span><span class="o">.</span><span class="n">event_time</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">All</span><span class="p">[</span><span class="n">A</span><span class="p">](</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s1"> + 1&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg">ERROR: At:     All[A](f&#39;{A} + 1&#39;)
+Line number: 9
+Reactant_Species count assignment does not support the type &lt;class &#39;str&#39;&gt;</span>
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+An exception has occurred, use %tb to see the full traceback.
+
+<span class="ansi-red-fg">SystemExit</span><span class="ansi-red-fg">:</span> 1
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/fabriciocravo/opt/anaconda3/lib/python3.8/site-packages/IPython/core/interactiveshell.py:3445: UserWarning: To exit: use &#39;exit&#39;, &#39;quit&#39;, or Ctrl-D.
+  warn(&#34;To exit: use &#39;exit&#39;, &#39;quit&#39;, or Ctrl-D.&#34;, stacklevel=1)
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="12_Born_Species.html" class="btn btn-neutral float-left" title="Born Species" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="14_Concatenating_Simulations.html" class="btn btn-neutral float-right" title="Concatenated simulations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

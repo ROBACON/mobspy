@@ -912,7 +912,7 @@ class Species(SpeciesComparator):
             :return: True if characteristic is allowed false if not
         """
         black_list = {'list_of_reactants', 'first_characteristic'}
-        if char[0] == '_':
+        if char[0] == '_' and char!="__sphinx_mock__":
             simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
 
         if char in _methods_Reacting_Species or char in _methods_Species or char in black_list:

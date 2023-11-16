@@ -1,0 +1,183 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "b9393853-5359-4ab2-991c-4e8b07e842de",
+   "metadata": {},
+   "source": [
+    "# For Loops\n",
+    "\n",
+    "Here we discuss the proper way of using MobsPy to perform queries inside for loops.\n",
+    "\n",
+    "We start by giving an example of what not to do. Here we wish to define a model that cycles through different colors."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "09b7f076-20c3-4dd2-83fa-a6abeeb25ebb",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Species\n",
+      "Color.c1,0\n",
+      "Color.c2,0\n",
+      "\n",
+      "Mappings\n",
+      "Color :\n",
+      "Color.c1\n",
+      "Color.c2\n",
+      "\n",
+      "Parameters\n",
+      "volume,1\n",
+      "\n",
+      "Reactions\n",
+      "reaction_0,{'re': [(1, 'Color.c1')], 'pr': [(1, 'Color.c2')], 'kin': 'Color.c1 * 1'}\n",
+      "reaction_1,{'re': [(1, 'Color.c1')], 'pr': [(1, 'Color.c2')], 'kin': 'Color.c1 * 1'}\n",
+      "reaction_2,{'re': [(1, 'Color.c1')], 'pr': [(1, 'Color.c2')], 'kin': 'Color.c1 * 1'}\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Compiling model\n",
+      "\u001b[91mWARNING: Automatic data-saving setup failed. Please save manually\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n",
+      "\u001b[91mWARNING: The following reaction: \n",
+      "{'re': [(1, 'Color_dot_c1')], 'pr': [(1, 'Color_dot_c2')], 'kin': 'Color_dot_c1 * 1'} \n",
+      "Is doubled. Was that intentional? \n",
+      "\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "from mobspy import *\n",
+    "\n",
+    "Color = BaseSpecies()\n",
+    "\n",
+    "color = ['red', 'yellow', 'blue']\n",
+    "for c1, c2 in zip(color, color[1:] + [color[0]]):\n",
+    "    Color.c1 >> Color.c2 [1]\n",
+    "    \n",
+    "S = Simulation(Color)\n",
+    "print(S.compile())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "76c9e058-6801-489f-8788-ad8d8f57efe4",
+   "metadata": {},
+   "source": [
+    "Since Python resolves Color.c1 by adding the characteristic c1 to Color, this loop adds the same reaction three times to the Color meta-species. Furthermore, the characteristics added are wrong. We wish to add the actual colors, not c1 and c2, which have been used for looping over the colors list. \n",
+    "\n",
+    "To perform a query over the value of a stored variable and not it's name, one can use the .c() method. The corrected version of the model follows:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "f189db7a-b3fd-4175-b9c1-6ad69e393698",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Species\n",
+      "Color.blue,0\n",
+      "Color.red,0\n",
+      "Color.yellow,0\n",
+      "\n",
+      "Mappings\n",
+      "Color :\n",
+      "Color.blue\n",
+      "Color.red\n",
+      "Color.yellow\n",
+      "\n",
+      "Parameters\n",
+      "volume,1\n",
+      "\n",
+      "Reactions\n",
+      "reaction_0,{'re': [(1, 'Color.blue')], 'pr': [(1, 'Color.red')], 'kin': 'Color.blue * 1'}\n",
+      "reaction_1,{'re': [(1, 'Color.red')], 'pr': [(1, 'Color.yellow')], 'kin': 'Color.red * 1'}\n",
+      "reaction_2,{'re': [(1, 'Color.yellow')], 'pr': [(1, 'Color.blue')], 'kin': 'Color.yellow * 1'}\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Compiling model\n",
+      "\u001b[91mWARNING: Automatic data-saving setup failed. Please save manually\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "Color = BaseSpecies()\n",
+    "\n",
+    "color = ['red', 'yellow', 'blue']\n",
+    "for c1, c2 in zip(color, color[1:] + [color[0]]):\n",
+    "    Color.c(c1) >> Color.c(c2) [1]\n",
+    "    \n",
+    "S = Simulation(Color)\n",
+    "print(S.compile())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ba29121f-064e-48f3-b28f-62fe2e9ffda3",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

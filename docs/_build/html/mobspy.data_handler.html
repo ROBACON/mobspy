@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mobspy.data_handler package &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f35be339"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mobspy.data_handler package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mobspy.data_handler.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mobspy-data-handler-package">
+<h1>mobspy.data_handler package<a class="headerlink" href="#mobspy-data-handler-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-mobspy.data_handler.process_result_data">
+<span id="mobspy-data-handler-process-result-data-module"></span><h2>mobspy.data_handler.process_result_data module<a class="headerlink" href="#module-mobspy.data_handler.process_result_data" title="Link to this heading"></a></h2>
+<p>mobspy.data_handler.process_result_data.py</p>
+<p>Handles converting the output data from a simulation into desired-units or concentration</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.data_handler.process_result_data.convert_data_to_desired_unit">
+<span class="sig-prename descclassname"><span class="pre">mobspy.data_handler.process_result_data.</span></span><span class="sig-name descname"><span class="pre">convert_data_to_desired_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_concentration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.process_result_data.convert_data_to_desired_unit" title="Link to this definition"></a></dt>
+<dd><p>Converts the simulation output data from the MobsPy standard units
+to the desired units specified by the user</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – (dict) resulting data from a MobsPy simulation execution</p></li>
+<li><p><strong>unit_x</strong> – (str) unit that the user desires the time in, defaults to dimensionless (None)</p></li>
+<li><p><strong>unit_y</strong> – (str) unit that the user desires the y axis to be in (Concentration or counts)</p></li>
+<li><p><strong>output_concentration</strong> – (bool) decide if output should be a concentration or count</p></li>
+<li><p><strong>volume</strong> – (float) - volume set as parameter to the simulation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>converted_data - input data converted to the desired units</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict) Dictionary meta-species as key and run as value</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.data_handler.time_series_object">
+<span id="mobspy-data-handler-time-series-object-module"></span><h2>mobspy.data_handler.time_series_object module<a class="headerlink" href="#module-mobspy.data_handler.time_series_object" title="Link to this heading"></a></h2>
+<p>This module implements the class that stores the results from a MobsPy simulation</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyList_of_TS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.data_handler.time_series_object.</span></span><span class="sig-name descname"><span class="pre">MobsPyList_of_TS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_mspy_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyList_of_TS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyList_of_TS.add_ts_to_data">
+<span class="sig-name descname"><span class="pre">add_ts_to_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyList_of_TS.add_ts_to_data" title="Link to this definition"></a></dt>
+<dd><p>Add a new time series to the TS data. Used for stochastic plotting
+the average and standard deviation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_series</strong> – (dict) dictionary with species strings as keys and run as value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyList_of_TS.get_max_time_for_species">
+<span class="sig-name descname"><span class="pre">get_max_time_for_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyList_of_TS.get_max_time_for_species" title="Link to this definition"></a></dt>
+<dd><p>Returns the maximum time in all the time-series stored for a given species</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyList_of_TS.return_pandas">
+<span class="sig-name descname"><span class="pre">return_pandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyList_of_TS.return_pandas" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyList_of_TS.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyList_of_TS.to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>data in dict format {‘data’: …., ‘params’:….., ‘models’:…….}</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.data_handler.time_series_object.MobsPyTimeSeries">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.data_handler.time_series_object.</span></span><span class="sig-name descname"><span class="pre">MobsPyTimeSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.data_handler.time_series_object.MobsPyTimeSeries" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.data_handler">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy.data_handler" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

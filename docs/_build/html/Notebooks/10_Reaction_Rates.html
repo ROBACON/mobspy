@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reaction Rates &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Models" href="11_Looping_Through_Species.html" />
+    <link rel="prev" title="Simulation Results" href="09_Result_Data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reaction Rates</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/10_Reaction_Rates.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Reaction-Rates">
+<h1>Reaction Rates<a class="headerlink" href="#Reaction-Rates" title="Link to this heading"></a></h1>
+<p>In this notebook, we will teach how to assign custom rates based on the meta-species states. Let us start with the basic definitions.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Age</span><span class="p">,</span> <span class="n">Mortal</span><span class="p">,</span> <span class="n">Infectable</span><span class="p">,</span> <span class="n">Virus</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+<span class="n">Replicator</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">Age</span><span class="p">)</span>
+
+<span class="n">Age</span><span class="o">.</span><span class="n">young</span> <span class="o">&gt;&gt;</span> <span class="n">Age</span><span class="o">.</span><span class="n">old</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f8af8b7ec40&gt;
+</pre></div></div>
+</div>
+<p>For any meta-reaction if a number is returned MobsPy will automatically construct the reaction rate using mass-action kinetics if the model is deterministic and propensity expressions if the model is stochastic. The number returned will be the rate constant used to construct this reaction.</p>
+<p>We now define a replication reaction with a higher rate for old individuals. To archive this, one can pass a function as a rate instead of a number. One can also query for the characteristics of the reactants inside the function.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Replicator</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">Replicator</span><span class="o">.</span><span class="n">young</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">r1</span><span class="p">:</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">r1</span><span class="o">.</span><span class="n">old</span> <span class="k">else</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f8af8bb7640&gt;
+</pre></div></div>
+</div>
+<p>If a function is passed as a rate MobsPy will pass the meta-species states to the arguments of this function. In the replicator reaction above, the first argument of the function r1 will receive the first meta-species and if it is in the young state it will return the rate 2.</p>
+<p>To continue we will define three tipes of Cells - C1, C2, and C3 - and two types of viruses - V1, V2.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Cell</span> <span class="o">=</span> <span class="n">Infectable</span><span class="o">*</span><span class="n">Age</span><span class="o">*</span><span class="n">Mortal</span>
+<span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">C3</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">Cell</span><span class="p">)</span>
+<span class="n">V1</span><span class="p">,</span> <span class="n">V2</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">Virus</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We now wish to define infection reaction with rates that depend on the type of Cell and Virus used. In this case the user has two options and we will list both here. The first one uses the method .is_a(meta species) which returns true if the reactant is or inherits from the given meta-species passed as an argument.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">infection_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C1&#39;</span><span class="p">:{</span><span class="s1">&#39;V1&#39;</span><span class="p">:</span><span class="mf">1.1</span> <span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">:</span><span class="mf">1.3</span> <span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">:</span><span class="mf">1.7</span><span class="p">},</span>
+                  <span class="s1">&#39;C2&#39;</span><span class="p">:{</span><span class="s1">&#39;V1&#39;</span><span class="p">:</span><span class="mf">1.4</span> <span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">:</span><span class="mf">1.1</span> <span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">:</span><span class="mf">1.9</span><span class="p">},</span>
+                  <span class="s1">&#39;C3&#39;</span><span class="p">:{</span><span class="s1">&#39;V1&#39;</span><span class="p">:</span><span class="mf">1.9</span> <span class="p">,</span> <span class="s1">&#39;V2&#39;</span><span class="p">:</span><span class="mf">1.2</span> <span class="p">,</span> <span class="s1">&#39;V3&#39;</span><span class="p">:</span><span class="mf">1.6</span><span class="p">}}</span>
+
+<span class="k">def</span> <span class="nf">infection_rate_1</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">):</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">r1</span><span class="o">.</span><span class="n">is_a</span><span class="p">(</span><span class="n">C1</span><span class="p">):</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">factor</span>
+
+    <span class="k">if</span> <span class="n">r2</span><span class="o">.</span><span class="n">is_a</span><span class="p">(</span><span class="n">V1</span><span class="p">):</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="mf">0.8</span><span class="o">*</span><span class="n">factor</span>
+    <span class="k">elif</span> <span class="n">r2</span><span class="o">.</span><span class="n">is_a</span><span class="p">(</span><span class="n">V2</span><span class="p">):</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">factor</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The reactants </span><span class="si">{</span><span class="n">r1</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">r2</span><span class="si">}</span><span class="s1"> yield a rate constant of: </span><span class="si">{</span><span class="n">factor</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">factor</span>
+
+
+<span class="n">Infectable</span><span class="o">.</span><span class="n">not_infect</span> <span class="o">+</span> <span class="n">Virus</span> <span class="o">&gt;&gt;</span> <span class="n">Infectable</span><span class="o">.</span><span class="n">infected</span> <span class="p">[</span><span class="n">infection_rate_1</span><span class="p">]</span>
+
+<span class="n">S_test</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">C1</span> <span class="o">|</span> <span class="n">C2</span> <span class="o">|</span> <span class="n">C3</span> <span class="o">|</span> <span class="n">V1</span> <span class="o">|</span> <span class="n">V2</span><span class="p">)</span>
+<span class="n">S_test</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The reactants C1_dot_not_infect_dot_old and V2 yield a rate constant of: 1.2100000000000002
+The reactants C1_dot_not_infect_dot_young and V2 yield a rate constant of: 1.2100000000000002
+The reactants C1_dot_not_infect_dot_old and V1 yield a rate constant of: 0.8800000000000001
+The reactants C1_dot_not_infect_dot_young and V1 yield a rate constant of: 0.8800000000000001
+The reactants C2_dot_not_infect_dot_old and V2 yield a rate constant of: 1.32
+The reactants C2_dot_not_infect_dot_young and V2 yield a rate constant of: 1.32
+The reactants C2_dot_not_infect_dot_old and V1 yield a rate constant of: 0.96
+The reactants C2_dot_not_infect_dot_young and V1 yield a rate constant of: 0.96
+The reactants C3_dot_not_infect_dot_old and V2 yield a rate constant of: 1.32
+The reactants C3_dot_not_infect_dot_young and V2 yield a rate constant of: 1.32
+The reactants C3_dot_not_infect_dot_old and V1 yield a rate constant of: 0.96
+The reactants C3_dot_not_infect_dot_young and V1 yield a rate constant of: 0.96
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+</pre></div></div>
+</div>
+<p>Note that ‘dot’ replaces ‘.’ in the provided names as sbml files do not accept ‘.’ in the species names.</p>
+<p>Another method is to use the string form of the reactant states. As you might have seen from the provious code, the reactants take the form of Name_dot_characteristic1_dot_characteristic2. This is due to sbml syntax incompatibility with dots in the</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reset reactions to remove previously added reaction</span>
+<span class="c1">#Infectable.reset_reactions()</span>
+<span class="c1">#Virus.reset_reactions()</span>
+
+<span class="c1">#infection_dict = {&#39;C1&#39;:{&#39;V1&#39;:1.1 , &#39;V2&#39;:1.3 , &#39;V3&#39;:1.7},</span>
+<span class="c1">#                  &#39;C2&#39;:{&#39;V1&#39;:1.4 , &#39;V2&#39;:1.1 , &#39;V3&#39;:1.9},</span>
+<span class="c1">#                  &#39;C3&#39;:{&#39;V1&#39;:1.9 , &#39;V2&#39;:1.2 , &#39;V3&#39;:1.6}}</span>
+
+
+<span class="c1"># def infection_rate_2(r1, r2):</span>
+<span class="c1">#    rate = infection_dict[r1.get_name()][r2.get_name()]</span>
+<span class="c1">#    print(f&#39;Reactants {r1} and {r2} yielded a rate of {rate}&#39;)</span>
+<span class="c1">#    return rate</span>
+
+
+<span class="c1">#Infectable.not_infect + Virus &gt;&gt; Infectable.infected [infection_rate_2]</span>
+
+<span class="c1">#S_test = Simulation(C1 | C2 | C3 | V1 | V2)</span>
+<span class="c1">#S_test.compile(verbose=False)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>If one wishes to assign rates other than mass action kinetics, one can pass a function that returns a string containing the rate expression to be used. For instance, in the model bellow we use the hill function as an activatior for the production of a meta-species P.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">Zero</span> <span class="o">&gt;&gt;</span> <span class="n">A</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">A</span> <span class="o">&gt;&gt;</span> <span class="n">A</span> <span class="o">+</span> <span class="n">P</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">r1</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">r1</span><span class="si">}</span><span class="s1">/(1 + (10/</span><span class="si">{</span><span class="n">r1</span><span class="si">}</span><span class="s1">)^4)&#39;</span><span class="p">]</span>
+
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">P</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_10_Reaction_Rates_11_1.png" src="../_images/Notebooks_10_Reaction_Rates_11_1.png" />
+</div>
+</div>
+<p>As a final note, for custom string rates, MobsPy, like COPASI, only accepts meta-species which are part of the reactants of a reaction for the construction of the rate expression. If there is a species which is not a reactant in the rate expression the model will produce a compilation error.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="09_Result_Data.html" class="btn btn-neutral float-left" title="Simulation Results" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="11_Looping_Through_Species.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

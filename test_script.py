@@ -1227,7 +1227,7 @@ def test_with_statement_on_any_and_event():
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
-test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
+test_list = ["""test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
              test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
@@ -1242,7 +1242,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_wrong_dimension_error, test_more_than_used, zero_rate_test, test_wrong_rate,
              test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
-             test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event]
+             test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event"""]
 
 sub_test = test_list
 

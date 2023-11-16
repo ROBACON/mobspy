@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mobspy.plot_scripts package &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f35be339"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mobspy.plot_scripts package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mobspy.plot_scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mobspy-plot-scripts-package">
+<h1>mobspy.plot_scripts package<a class="headerlink" href="#mobspy-plot-scripts-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-mobspy.plot_scripts.default_plots">
+<span id="mobspy-plot-scripts-default-plots-module"></span><h2>mobspy.plot_scripts.default_plots module<a class="headerlink" href="#module-mobspy.plot_scripts.default_plots" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.deterministic_plot">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">deterministic_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.deterministic_plot" title="Link to this definition"></a></dt>
+<dd><p>Design default deterministic plot using MobsPy plotting hierarchy. It them passes the parameters for plotting
+in the hierarchical plot module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed</p>
+</dd>
+</dl>
+<p>with the query plot data function)
+:param data: (dict) data in MobsPy format Simulation.results[‘data’]
+:param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
+from this function</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.parametric_plot">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">parametric_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.parametric_plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.raw_plot">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">raw_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_or_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.raw_plot" title="Link to this definition"></a></dt>
+<dd><p>Plots data from a json or parameter dictionary configured according to the hierarchical plot structure
+Does not accept parameters from a Simulation object, it must be given the parameters in it’s entirety</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – (dict) data in MobsPy format Simulation.results[‘data’]</p></li>
+<li><p><strong>parameters_or_file</strong> – (dict, str) Dictionary originated from a JSON or JSON file name</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.read_plot_json">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">read_plot_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_json_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.read_plot_json" title="Link to this definition"></a></dt>
+<dd><p>This function converts a plot_json file into a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>plot_json_filename</strong> – (str) JSON file name</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>json_data (dict) converted JSON as dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.set_plot_units">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">set_plot_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.set_plot_units" title="Link to this definition"></a></dt>
+<dd><p>Sets the plot labels to the unit names by adding to the xlabel and ylabel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>new_plot_params</strong> – (dict) plot parameters after some changes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.default_plots.stochastic_plot">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.default_plots.</span></span><span class="sig-name descname"><span class="pre">stochastic_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.default_plots.stochastic_plot" title="Link to this definition"></a></dt>
+<dd><p>Design default stochastic plot using MobsPy plotting hierarchy. It them passes the parameters for plotting
+in the hierarchical plot module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed with the</p>
+</dd>
+</dl>
+<p>query plot data function)
+:param data: (dict) data in MobsPy format Simulation.results[‘data’]
+:param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
+from this function</p>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.plot_scripts.hierarchical_plot">
+<span id="mobspy-plot-scripts-hierarchical-plot-module"></span><h2>mobspy.plot_scripts.hierarchical_plot module<a class="headerlink" href="#module-mobspy.plot_scripts.hierarchical_plot" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.Color_cycle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">Color_cycle</span></span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.Color_cycle" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is responsible for cycling through the different colors for different curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – (int) Current position in the color cycle</p></li>
+<li><p><strong>color_list</strong> – (list) = list of available colors</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.figure_hash">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">figure_hash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_figure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.figure_hash" title="Link to this definition"></a></dt>
+<dd><p>This function allows one to acess the figure grid with a linear input
+For instance one can access a 2x2 grid using 0, 1, 2, 3
+0 becomes 0,0
+1 becomes 1,0
+2 becomes 0,1
+3 becomes 1,1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current_figure</strong> – (int) linear number of the figure</p></li>
+<li><p><strong>axis_matrix</strong> – (1D or 2D numpy array) a list with all the created axis on the multiple figure subplot</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the correct axis based on the number provided</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.figure_hash_creation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">figure_hash_creation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_figure_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.figure_hash_creation" title="Link to this definition"></a></dt>
+<dd><p>This is hash used to create the figure grid automatically according to the number of figures desired by the
+user and the maximum number of lines</p>
+<p>For instance 4 figures with 2 as max_lines creates a 2x2 figure grid automatically</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>total_figure_number</strong> – (int) Number of total figures to create</p></li>
+<li><p><strong>max_lines</strong> – (int) Maximum number of lines in the grid</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>fig and axs = Figures grid will all the respective axis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.find_parameter">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">find_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.find_parameter" title="Link to this definition"></a></dt>
+<dd><p>This is the hearth of the plotting structure, this functions allows one to simply set multiple characteristics
+for only one figure</p>
+<p>The priority for parameter search is plots =&gt; figures =&gt; global, with plot overriding others and so on</p>
+<p>If a parameter is defined globally it will be applied to all figures, if it defined inside a figure element
+it will only apply to that figure, if it is defined in a plot element it will only apply to that curve</p>
+<p>Check the readme or the tutorials for more details on the plotting structure. It is simple and versatile</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – (dict) Plot parameters from python dictionary (after json conversion)</p></li>
+<li><p><strong>key</strong> – (str) Key necessary to access the parameters</p></li>
+<li><p><strong>index</strong> – (int) None for global search, one index for figure search, and two for figure curve search</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The parameter if found, and None if nothing is found</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.find_species_time_series">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">find_species_time_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.find_species_time_series" title="Link to this definition"></a></dt>
+<dd><p>There can be different time-series in MobsPy data (even experimental data, as long as it is in MobPy format)
+This function finds all the time-series the species is present in and returns it for looping thorugh all of
+them
+This function is implemented to allow for the comparison of models with experimental data or other models</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spe</strong> – (str) Species name</p>
+</dd>
+<dt class="field-even">Pram data<span class="colon">:</span></dt>
+<dd class="field-even"><p>(dict) Data in MobsPy format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.get_total_figure_number">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">get_total_figure_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.get_total_figure_number" title="Link to this definition"></a></dt>
+<dd><p>Gets the number of figures from an axis_matrix generated by pyplot. Used by the hash to place configs in the
+correct part of the axis_matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>axis_matrix</strong> – (1D or 2D numpy array) Array returned by pyplot once multiple figures are introduced into</p>
+</dd>
+</dl>
+<p>a single plot</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>total_figure_number (int) Total number of figures</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.plot_curves">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">plot_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.plot_curves" title="Link to this definition"></a></dt>
+<dd><p>This function plots the programmed curves in the assigned figure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axs</strong> – (pyplot axe) axs to plot the data in</p></li>
+<li><p><strong>data</strong> – (dict) data given in MobsPy format results[‘data’]</p></li>
+<li><p><strong>figure_index</strong> – (int) index of the current figure to plot curves in</p></li>
+<li><p><strong>plot_params</strong> – parameters for plotting</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.plot_data">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.plot_data" title="Link to this definition"></a></dt>
+<dd><p>This function plots the simulation results according to the specifications</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – (dict) Data in MobsPy format</p></li>
+<li><p><strong>plot_params</strong> – (dict) Plot parameters received</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.set_figure_characteristics">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">set_figure_characteristics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.set_figure_characteristics" title="Link to this definition"></a></dt>
+<dd><p>Sets the characteristics for each figure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axis_matrix</strong> – (axis from pyplot subplot) Array of all axis in the grid</p></li>
+<li><p><strong>plot_params</strong> – (dict) Plot parameters received</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.hierarchical_plot.set_global_parameters">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.hierarchical_plot.</span></span><span class="sig-name descname"><span class="pre">set_global_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.hierarchical_plot.set_global_parameters" title="Link to this definition"></a></dt>
+<dd><p>Sets the characteristics the plot window</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> – (fig from pyplot subplot) Array of all axis in the grid</p></li>
+<li><p><strong>plot_params</strong> – (dict) Plot parameters received</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.plot_scripts.process_plot_data">
+<span id="mobspy-plot-scripts-process-plot-data-module"></span><h2>mobspy.plot_scripts.process_plot_data module<a class="headerlink" href="#module-mobspy.plot_scripts.process_plot_data" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.process_plot_data.check_plot_parameters">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.process_plot_data.</span></span><span class="sig-name descname"><span class="pre">check_plot_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.process_plot_data.check_plot_parameters" title="Link to this definition"></a></dt>
+<dd><p>Performs a check of the plot_parameters given. To see if the parameters are correctly named</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – (str) Species in str format</p></li>
+<li><p><strong>plot_params</strong> – (dict) Plot parameter dictionary</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.process_plot_data.query_plot_data">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.process_plot_data.</span></span><span class="sig-name descname"><span class="pre">query_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.process_plot_data.query_plot_data" title="Link to this definition"></a></dt>
+<dd><p>Performs a query of the plot data, when one wishes to plot species with characteristics
+It creates a new data structure with the results from the query added to it for the plotting structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – (str) Species name in string format</p></li>
+<li><p><strong>data</strong> – (dict) Data in MobsPy dictionary format</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.process_plot_data.time_filter_operation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.process_plot_data.</span></span><span class="sig-name descname"><span class="pre">time_filter_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.process_plot_data.time_filter_operation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-mobspy.plot_scripts.statistics_calculations">
+<span id="mobspy-plot-scripts-statistics-calculations-module"></span><h2>mobspy.plot_scripts.statistics_calculations module<a class="headerlink" href="#module-mobspy.plot_scripts.statistics_calculations" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.statistics_calculations.average_plus_standard_deviation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.statistics_calculations.</span></span><span class="sig-name descname"><span class="pre">average_plus_standard_deviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobspy_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average_series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviation_series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.statistics_calculations.average_plus_standard_deviation" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation between all RUNS inside a single time-series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species_string</strong> – (str) Species string</p></li>
+<li><p><strong>mobspy_ts</strong> – (MobsPy TimeSeries) MobsPy time series object</p></li>
+<li><p><strong>average_series</strong> – (list) if the average series is given it is not recalculated</p></li>
+<li><p><strong>deviation_series</strong> – (list) if the deviation is given it is not recalculated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>series_average (list) = average value of the run,  plus (list) = average + deviation,</p>
+</dd>
+</dl>
+<p>minus (list) = average - deviation,</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.statistics_calculations.standard_deviation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.statistics_calculations.</span></span><span class="sig-name descname"><span class="pre">standard_deviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobspy_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average_series</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.statistics_calculations.standard_deviation" title="Link to this definition"></a></dt>
+<dd><p>Standard deviation between all RUNS inside a single time-series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species_string</strong> – (str) Species string</p></li>
+<li><p><strong>mobspy_ts</strong> – (MobsPy TimeSeries) MobsPy time series object</p></li>
+<li><p><strong>average_series</strong> – (list) if the average series is given it is not recalculated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>deviation_series (list) a list with the standard deviation values from all runs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.plot_scripts.statistics_calculations.time_series_average">
+<span class="sig-prename descclassname"><span class="pre">mobspy.plot_scripts.statistics_calculations.</span></span><span class="sig-name descname"><span class="pre">time_series_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobspy_ts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.plot_scripts.statistics_calculations.time_series_average" title="Link to this definition"></a></dt>
+<dd><p>Badly named function - Average between all RUNS inside a single time-series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species_string</strong> – (str) species string to perform the average upon</p></li>
+<li><p><strong>mobspy_ts</strong> – (MobsPy TimeSeries) MobsPy time series object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>average_series (list) a list with the average values from all runs</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.plot_scripts">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy.plot_scripts" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

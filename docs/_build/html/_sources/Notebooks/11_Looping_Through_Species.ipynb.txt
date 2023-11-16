@@ -1,0 +1,171 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "7c7b4173-43bb-4bc3-9ff7-c51b9b3ecb70",
+   "metadata": {},
+   "source": [
+    "# Models\n",
+    "\n",
+    "The models created used the '|' operator can be iterated through"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "e5f6c4ee-cfa2-49f8-9713-762f9ad80e05",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "A\n",
+      "B\n",
+      "C\n",
+      "D\n"
+     ]
+    }
+   ],
+   "source": [
+    "from mobspy import *\n",
+    "\n",
+    "A, B, C, D = BaseSpecies()\n",
+    "\n",
+    "iterator = A | B | C | D\n",
+    "\n",
+    "for spe in iterator:\n",
+    "    print(spe)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c9615979-1e34-471e-9d06-eb57f04b8b5d",
+   "metadata": {},
+   "source": [
+    "# Characteristics\n",
+    "\n",
+    "One can loop through characteristics by keeping them in a list and using the .c operator. Futhermore, the method get_characteristics() returns the set of characteristics directly added to that species."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "5391b29f-5a1d-42c7-94f5-90d83a53d75c",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'a3', 'a2', 'a1'}\n",
+      "{\"['b1', 'b2', 'b3']\"}\n",
+      "\n",
+      "Species\n",
+      "A.a1,0\n",
+      "A.a2,0\n",
+      "A.a3,0\n",
+      "B.['b1', 'b2', 'b3'],0\n",
+      "\n",
+      "Mappings\n",
+      "A :\n",
+      "A.a1\n",
+      "A.a2\n",
+      "A.a3\n",
+      "B :\n",
+      "B.['b1', 'b2', 'b3']\n",
+      "\n",
+      "Parameters\n",
+      "volume,1\n",
+      "\n",
+      "Reactions\n",
+      "reaction_0,{'re': [(1, 'A.a1'), (1, \"B.['b1', 'b2', 'b3']\")], 'pr': [], 'kin': \"A.a1 * B.['b1', 'b2', 'b3'] * 1 * volume^-1\"}\n",
+      "reaction_1,{'re': [(1, 'A.a2'), (1, \"B.['b1', 'b2', 'b3']\")], 'pr': [], 'kin': \"A.a2 * B.['b1', 'b2', 'b3'] * 1 * volume^-1\"}\n",
+      "reaction_2,{'re': [(1, 'A.a3'), (1, \"B.['b1', 'b2', 'b3']\")], 'pr': [], 'kin': \"A.a3 * B.['b1', 'b2', 'b3'] * 1 * volume^-1\"}\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Compiling model\n"
+     ]
+    }
+   ],
+   "source": [
+    "from mobspy import *\n",
+    "\n",
+    "A, B = BaseSpecies()\n",
+    "\n",
+    "l_a = ['a1', 'a2', 'a3']\n",
+    "l_b = ['b1', 'b2', 'b3']\n",
+    "\n",
+    "for a, b in zip(l_a, l_b):\n",
+    "    A.c(a) + B.c(l_b) >> Zero [1]\n",
+    "\n",
+    "print(A.get_characteristics())\n",
+    "print(B.get_characteristics())\n",
+    "\n",
+    "S = Simulation(A | B)\n",
+    "print(S.compile())\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0a1e2d9c-0c0c-4073-843e-f8b2f14bb24c",
+   "metadata": {},
+   "source": [
+    "# List Species\n",
+    "\n",
+    "Futhermore, MobsPy provides a ListSpecies constructor. This constructor creates a list of meta-species automatically named with the variable used to construct the ListSpecies plus _ and the number of the species in the list."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "1ff4212d-f20d-48ea-92cf-5dd0578b56ac",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "A_1\n",
+      "A_2\n",
+      "A_3\n",
+      "A_4\n",
+      "A_5\n"
+     ]
+    }
+   ],
+   "source": [
+    "A = ListSpecies(5)\n",
+    "\n",
+    "for a in A:\n",
+    "    print(a.get_name())"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

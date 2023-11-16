@@ -30,7 +30,7 @@ class Context_specie_named_any(Species) :
         code_line = inspect.stack()[1].code_context[0][:-1]
         code_line = code_line.split(' ')
         is_with = [x for x in code_line if x != ''][0]
-        if is_with == 'with':
+        if is_with == 'with' or item == "__sphinx_mock__":
             pass
         else:
             simlog.error('Characteristics cannot be added to the Any specie outside of a context')

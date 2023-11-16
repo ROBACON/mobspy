@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reaction Inheritance" href="02_Reaction_Inheritance.html" />
+    <link rel="prev" title="Welcome to MobsPy’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/01_Basic_Intro.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Welcome">
+<h1>Welcome<a class="headerlink" href="#Welcome" title="Link to this heading"></a></h1>
+<p>Welcome to MobsPy tutorial notebooks. These notebooks will teach you the basics of using MobsPy, a language designed to simplifying the construction of chemical reaction networks. This tutorial will teach you how to define species, reactions, counts and rates. Afterwards, we will discuss the inner structure of MobsPy and how it simplifies modeling.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># !pip install mobspy==2.0.2</span>
+
+<span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">PIL</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Meta-Reaction-Syntax">
+<h1>Meta-Reaction Syntax<a class="headerlink" href="#Meta-Reaction-Syntax" title="Link to this heading"></a></h1>
+<p>In MobsPy, meta-reactions are used to define reactions and are constructed using Python operators and Base Species objects. The + operator sums reactants and products, while the * operator defines stoichiometry. The &gt;&gt; operator indicates the transformation of reactants to products, and the [] operator assigns a rate to the reaction. Species are assigned counts or concentrations using the species variable and the call operator ():</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="c1"># One molecule of A and one molecule of B becomes two molecules of C and one of D at a rate of 0.01</span>
+<span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">C</span> <span class="o">+</span> <span class="n">D</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span>
+
+<span class="c1"># We start with 200 units of A and 100 units of B</span>
+<span class="n">A</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span> <span class="n">B</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="c1"># Define the simulation using the given meta-species</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span> <span class="o">|</span> <span class="n">C</span> <span class="o">|</span> <span class="n">D</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_01_Basic_Intro_3_1.png" src="../_images/Notebooks_01_Basic_Intro_3_1.png" />
+</div>
+</div>
+</section>
+<section id="How-MobsPy-works?">
+<h1>How MobsPy works?<a class="headerlink" href="#How-MobsPy-works?" title="Link to this heading"></a></h1>
+<p>MobsPy uses meta-species and meta-reactions to simplify models. Meta-species are simply set of species constructed with all possible states of a specie. Meta-reactions define multiple reactions by using sets or subsets of these meta-species. Moreover, MobsPy simplifies the definition of chemical reaction networks with a bottom-up approach. Base meta-species representing simple tasks are defined and then combined to form more complex meta-species. For example, to model the aging process, we can
+define a base meta-species, “Ager” and use the &gt;&gt; operator to represent the transformation from “young” to “old” with a given reaction constant rate. The variable “u” is used to assign units to the given reaction constant rate.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Ager</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">Ager</span><span class="o">.</span><span class="n">young</span> <span class="o">&gt;&gt;</span> <span class="n">Ager</span><span class="o">.</span><span class="n">old</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">10</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">year</span><span class="p">]</span>
+<span class="c1">#Note that the characteristics young and old are automatically added to Ager when used with the . operator</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f7ad819b0d0&gt;
+</pre></div></div>
+</div>
+<p>To add characteristics to meta-species, we can use the dot operator. Characteristics can be added both inside and outside reactions. In the example above, the “young” and “old” characteristics are added to the “Ager” meta-species using the dot operator while defining the aging reaction.</p>
+<p>As an example of how to use the dot operator, we can create two new base species, “Colored” and “Location,” and assign characteristics to them:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Colored</span><span class="p">,</span> <span class="n">Location</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">Colored</span><span class="o">.</span><span class="n">green</span><span class="p">,</span> <span class="n">Colored</span><span class="o">.</span><span class="n">yellow</span><span class="p">,</span> <span class="n">Colored</span><span class="o">.</span><span class="n">brown</span>
+<span class="n">Location</span><span class="o">.</span><span class="n">dense</span><span class="p">,</span> <span class="n">Location</span><span class="o">.</span><span class="n">sparse</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;mobspy.modules.meta_class.Reacting_Species at 0x7f7ade7be970&gt;,
+ &lt;mobspy.modules.meta_class.Reacting_Species at 0x7f7ad8176f40&gt;)
+</pre></div></div>
+</div>
+<p>With MobsPy, it’s possible to create meta-species and assign reactions to them without assigning characteristics. In this example, we use the provided meta-species Zero to define the Mortal meta-species, which represents death. Zero represents the absence of reactants or products in a reaction. To model a death rate higher for beings in the old state, we pass a function as a rate that returns reaction constant rates based on the state of the meta-species.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Mortal</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Functions can be rates. Reactants will be passed to the function which will return a higher rate if it contains the</span>
+<span class="c1"># charcteristic old</span>
+<span class="n">Mortal</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">r1</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">year</span> <span class="k">if</span> <span class="n">r1</span><span class="o">.</span><span class="n">old</span> <span class="k">else</span> <span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f7ade7bee80&gt;
+</pre></div></div>
+</div>
+<p>We can combine the previously defined base meta-species to construct a more complex one with all desired characteristics and reactions by multiplying the previously defined meta-species. For example, we can create a “Tree” meta-species that has both the characteristics and reactions of Ager, Colored, and Location, and Mortal:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Tree</span> <span class="o">=</span> <span class="n">Ager</span><span class="o">*</span><span class="n">Colored</span><span class="o">*</span><span class="n">Mortal</span><span class="o">*</span><span class="n">Location</span>
+</pre></div>
+</div>
+</div>
+<p>The Tree meta-species is a model that incorporates the Mortal reaction for death and the Ager reaction for aging, as well as the Colored, Location and Ager characteristics. Therefore, the Tree meta-species can be in the following states:</p>
+<p><strong>Tree.young.brown.dense, Tree.young.brown.sparse,   Tree.young.green.dense, Tree.young.green.sparse,
+Tree.young.yellow.dense, Tree.young.yellow.sparse,
+Tree.old.brown.dense, Tree.old.brown.sparse,
+Tree.old.green.dense, Tree.old.green.sparse,
+Tree.old.yellow.dense, Tree.old.yellow.sparse.</strong></p>
+<p>MobsPy created these states through a vectorial representation. In this vector space, the species Ager, Location, and Colored represent the axes, and the characteristics define the coordinate markings on those axes. The characteristics are position according to the axes of the first meta-species they have been directly added in. So the young and old characteristic bellong to the Ager axis, the brown, green and yellow belong to the Colored axis, and finally the sparce and dense belong to the
+Location axis. The vector space of Tree can be seen below:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;images/vectorial_space.png&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7f7ade8cd0d0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_01_Basic_Intro_13_1.png" src="../_images/Notebooks_01_Basic_Intro_13_1.png" />
+</div>
+</div>
+<p>All states partake in the meta-reactions from the base meta-species used to construct Tree to define reactions. For instance, the Ager meta-reaction yields the following six reactions:</p>
+<p><strong>Tree.young.brown.dense -&gt; Tree.old.brown.dense
+Tree.young.brown.sparse -&gt; Tree.old.brown.sparse
+Tree.young.green.dense -&gt; Tree.old.green.dense
+Tree.young.green.sparse -&gt; Tree.old.green.sparse
+Tree.young.yellow.dense -&gt; Tree.old.yellow.dense
+Tree.young.yellow.sparse -&gt; Tree.old.yellow.sparse</strong></p>
+<p>When using the dot notation in the reactants, MobsPy performs a query and filters the states that do not contain the specified characteristics. When using the dot notation in the products, one specifies the coordinate on the vector space where the transformation should occur. Thus, the Ager reaction transforms young to old as those are the characteritics in the Ager vector axis.</p>
+<p>To continue building upon this model, we add two more reactions to the new Tree meta-species. A competition reaction between Trees in the dense location where the older Trees kill the young threes and a replication reaction where old Trees generate new Trees.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># competition</span>
+<span class="n">Tree</span><span class="o">.</span><span class="n">dense</span><span class="o">.</span><span class="n">old</span> <span class="o">+</span> <span class="n">Tree</span><span class="o">.</span><span class="n">dense</span><span class="o">.</span><span class="n">young</span> <span class="o">&gt;&gt;</span> <span class="n">Tree</span><span class="o">.</span><span class="n">dense</span><span class="o">.</span><span class="n">old</span> <span class="p">[</span><span class="mf">1e-10</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">decimeter</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">year</span><span class="p">]</span>
+<span class="c1"># replication</span>
+<span class="n">Tree</span><span class="o">.</span><span class="n">old</span> <span class="o">&gt;&gt;</span> <span class="n">Tree</span> <span class="o">+</span> <span class="n">Tree</span><span class="o">.</span><span class="n">young</span> <span class="p">[</span><span class="mf">0.1</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">year</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f7ad8139100&gt;
+</pre></div></div>
+</div>
+<p>In MobsPy, the order of reactants and products has meaning. The order of reactants and products is used to generate the reactions from meta-reactions. The state of the first meta-species in the reactants will be used to generate the first product of the same meta-species. Further, the second reactant becomes the second product unless there are more products than reactants. In that case, if the products run out of corresponding reactants, MobsPy will cycle through the reactants and pick the first
+one again.</p>
+<p>For exemple, we show a diagram bellow for the reaction 2 * Meta_Species_1 + Meta_Species_2 &gt;&gt; Meta_Species_2 + 3 * Meta_Species_1. Here the first and second Meta_Species_1 from the product are assigned the states of the first and second Meta_Species_1 from the reactants, then the third Meta_Species_1 from the product will be assigned the state of the first Meta_Species_1 from the reactant. Meta_Species_2 is not matched with Meta_Species one since they are different Meta_Species. The diagram
+follows:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;images/Matching_Meta.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_01_Basic_Intro_18_0.png" src="../_images/Notebooks_01_Basic_Intro_18_0.png" />
+</div>
+</div>
+<p>Consider the competition reaction Tree.dense.old + Tree.dense.young &gt;&gt; Tree.dense.old. Here, the order of the reactants indicates that the old Tree survives the competition and kills the young Tree, thus we preserve the state of the first Tree meta-species in the reaction. Thus, this meta-reaction yields the following reactions:</p>
+<p><strong>Tree.brown.dense.old + Tree.brown.dense.young -&gt; Tree.brown.dense.old
+Tree.brown.dense.old + Tree.green.dense.young -&gt; Tree.brown.dense.old
+Tree.brown.dense.old + Tree.yellow.dense.young -&gt; Tree.brown.dense.old
+Tree.green.dense.old + Tree.brown.dense.young -&gt; Tree.green.dense.old
+Tree.green.dense.old + Tree.green.dense.young -&gt; Tree.green.dense.old
+Tree.green.dense.old + Tree.yellow.dense.young -&gt; Tree.green.dense.old
+Tree.yellow.dense.old + Tree.brown.dense.young -&gt; Tree.yellow.dense.old
+Tree.yellow.dense.old + Tree.green.dense.young -&gt; Tree.yellow.dense.old
+Tree.yellow.dense.old + Tree.yellow.dense.young -&gt; Tree.yellow.dense.old</strong></p>
+<p>On the other hand, in the replication reaction Tree.old &gt;&gt; Tree + Tree.young, the state of the first Tree is used to construct both products due to the round-robin cycle. As a result, the Trees of the products will retain the state of the first reactant. However, since a transformation is specified for the second Tree in the products, it will maintain its location and color, but its age will change to young, yielding the reactions:</p>
+<p><strong>Tree.brown.dense.old -&gt; Tree.brown.dense.old + Tree.brown.dense.young
+Tree.brown.sparse.old -&gt; Tree.brown.sparse.old + Tree.brown.sparse.young
+Tree.green.dense.old -&gt; Tree.green.dense.old + Tree.green.dense.young
+Tree.green.sparse.old -&gt; Tree.green.sparse.old + Tree.green.sparse.young
+Tree.yellow.sparse.old -&gt; Tree.yellow.sparse.old + Tree.yellow.sparse.young
+Tree.yellow.dense.old -&gt; Tree.yellow.dense.old + Tree.yellow.dense.young</strong></p>
+<p>Finally, although the order of reactants has meaning, the queries can be performed in any order.</p>
+<p>It is necessary to specify the meta-species used in the simulation. As the Ager, Location, Mortal, and Color were defined only to construct the Tree meta-species, they must not be considered in the simulation. Once the simulation object has been defined, one can configure the simulation using the dot operator. Below, we define and simulate the model:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># initial conditions, in this model version we only have green trees</span>
+<span class="n">Tree</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">Tree</span><span class="o">.</span><span class="n">dense</span><span class="o">.</span><span class="n">old</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">Tree</span><span class="o">.</span><span class="n">sparse</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">Tree</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">old</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Tree</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">simulation_method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">repetitions</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">20</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">years</span>
+<span class="n">S</span><span class="o">.</span><span class="n">unit_x</span> <span class="o">=</span> <span class="s1">&#39;year&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_01_Basic_Intro_21_1.png" src="../_images/Notebooks_01_Basic_Intro_21_1.png" />
+</div>
+</div>
+<p>The counts of resulting states are automatically mapped to the Three meta-species. MobsPy also provides in it’s results the counts of the individual states. The results can be accessed in the following manner:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">Tree</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[[100.0, 90.0, 83.0, 74.0, 72.0, 66.0, 64.0, 61.0, 57.0, 51.0, 50.0, 50.0, 48.0, 47.0, 47.0, 45.0, 41.0, 39.0, 38.0, 38.0, 36.0, 36.0, 35.0, 35.0, 32.0, 32.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 30.0, 30.0, 29.0, 29.0, 29.0, 30.0, 29.0, 29.0, 27.0, 27.0, 27.0, 25.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 24.0, 23.0, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0, 21.0, 20.0, 20.0, 19.0, 18.0, 18.0, 16.0, 16.0, 16.0, 16.0, 15.0, 15.0, 14.0, 14.0, 14.0, 14.0, 13.0, 13.0, 13.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0], [100.0, 95.0, 86.0, 75.0, 71.0, 61.0, 59.0, 57.0, 58.0, 60.0, 59.0, 58.0, 55.0, 54.0, 52.0, 50.0, 48.0, 46.0, 46.0, 44.0, 44.0, 44.0, 44.0, 42.0, 42.0, 41.0, 40.0, 40.0, 41.0, 40.0, 40.0, 39.0, 38.0, 37.0, 36.0, 37.0, 36.0, 35.0, 36.0, 36.0, 35.0, 35.0, 34.0, 31.0, 31.0, 30.0, 29.0, 29.0, 29.0, 29.0, 29.0, 27.0, 26.0, 26.0, 26.0, 26.0, 26.0, 26.0, 25.0, 25.0, 24.0, 24.0, 22.0, 20.0, 20.0, 20.0, 20.0, 20.0, 19.0, 19.0, 17.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 15.0, 15.0, 15.0, 14.0, 14.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 10.0, 10.0, 10.0, 9.0, 9.0, 9.0, 8.0, 8.0, 8.0], [100.0, 93.0, 88.0, 85.0, 78.0, 73.0, 65.0, 64.0, 63.0, 60.0, 61.0, 60.0, 58.0, 58.0, 54.0, 51.0, 49.0, 49.0, 48.0, 46.0, 43.0, 41.0, 40.0, 39.0, 38.0, 36.0, 36.0, 35.0, 33.0, 32.0, 31.0, 30.0, 29.0, 29.0, 29.0, 29.0, 29.0, 28.0, 28.0, 28.0, 27.0, 27.0, 28.0, 28.0, 27.0, 26.0, 26.0, 25.0, 25.0, 25.0, 25.0, 24.0, 24.0, 24.0, 23.0, 23.0, 22.0, 21.0, 20.0, 17.0, 17.0, 17.0, 16.0, 16.0, 16.0, 16.0, 15.0, 15.0, 14.0, 14.0, 14.0, 14.0, 15.0, 15.0, 15.0, 15.0, 15.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 11.0, 11.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 9.0, 9.0]]
+</pre></div></div>
+</div>
+<p>We also compile the model to show it in detail:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+Tree.brown.dense.old,0
+Tree.brown.dense.young,0
+Tree.brown.sparse.old,0
+Tree.brown.sparse.young,0
+Tree.green.dense.old,25
+Tree.green.dense.young,25
+Tree.green.sparse.old,25
+Tree.green.sparse.young,25
+Tree.yellow.dense.old,0
+Tree.yellow.dense.young,0
+Tree.yellow.sparse.old,0
+Tree.yellow.sparse.young,0
+
+Mappings
+Tree :
+Tree.brown.dense.old
+Tree.brown.dense.young
+Tree.brown.sparse.old
+Tree.brown.sparse.young
+Tree.green.dense.old
+Tree.green.dense.young
+Tree.green.sparse.old
+Tree.green.sparse.young
+Tree.yellow.dense.old
+Tree.yellow.dense.young
+Tree.yellow.sparse.old
+Tree.yellow.sparse.young
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.old&#39;), (1, &#39;Tree.brown.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.brown.dense.old * Tree.brown.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_1,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.old&#39;), (1, &#39;Tree.green.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.brown.dense.old * Tree.green.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_2,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.old&#39;), (1, &#39;Tree.yellow.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.brown.dense.old * Tree.yellow.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_3,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.dense.old&#39;), (1, &#39;Tree.brown.dense.young&#39;)], &#39;kin&#39;: &#39;Tree.brown.dense.old * 3.168808781402895e-09&#39;}
+reaction_4,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.brown.dense.old * 3.168808781402895e-08&#39;}
+reaction_5,{&#39;re&#39;: [(1, &#39;Tree.brown.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.brown.dense.young * 3.168808781402895e-09&#39;}
+reaction_6,{&#39;re&#39;: [(1, &#39;Tree.brown.sparse.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.sparse.old&#39;), (1, &#39;Tree.brown.sparse.young&#39;)], &#39;kin&#39;: &#39;Tree.brown.sparse.old * 3.168808781402895e-09&#39;}
+reaction_7,{&#39;re&#39;: [(1, &#39;Tree.brown.sparse.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.brown.sparse.old * 3.168808781402895e-08&#39;}
+reaction_8,{&#39;re&#39;: [(1, &#39;Tree.brown.sparse.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.brown.sparse.old&#39;)], &#39;kin&#39;: &#39;Tree.brown.sparse.young * 3.168808781402895e-09&#39;}
+reaction_9,{&#39;re&#39;: [(1, &#39;Tree.green.dense.old&#39;), (1, &#39;Tree.brown.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.green.dense.old * Tree.brown.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_10,{&#39;re&#39;: [(1, &#39;Tree.green.dense.old&#39;), (1, &#39;Tree.green.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.green.dense.old * Tree.green.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_11,{&#39;re&#39;: [(1, &#39;Tree.green.dense.old&#39;), (1, &#39;Tree.yellow.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.green.dense.old * Tree.yellow.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_12,{&#39;re&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.dense.old&#39;), (1, &#39;Tree.green.dense.young&#39;)], &#39;kin&#39;: &#39;Tree.green.dense.old * 3.168808781402895e-09&#39;}
+reaction_13,{&#39;re&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.green.dense.old * 3.168808781402895e-08&#39;}
+reaction_14,{&#39;re&#39;: [(1, &#39;Tree.green.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.green.dense.young * 3.168808781402895e-09&#39;}
+reaction_15,{&#39;re&#39;: [(1, &#39;Tree.green.sparse.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.sparse.old&#39;), (1, &#39;Tree.green.sparse.young&#39;)], &#39;kin&#39;: &#39;Tree.green.sparse.old * 3.168808781402895e-09&#39;}
+reaction_16,{&#39;re&#39;: [(1, &#39;Tree.green.sparse.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.green.sparse.old * 3.168808781402895e-08&#39;}
+reaction_17,{&#39;re&#39;: [(1, &#39;Tree.green.sparse.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.green.sparse.old&#39;)], &#39;kin&#39;: &#39;Tree.green.sparse.young * 3.168808781402895e-09&#39;}
+reaction_18,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.old&#39;), (1, &#39;Tree.brown.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.yellow.dense.old * Tree.brown.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_19,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.old&#39;), (1, &#39;Tree.green.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.yellow.dense.old * Tree.green.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_20,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.old&#39;), (1, &#39;Tree.yellow.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.yellow.dense.old * Tree.yellow.dense.young * 3.1688087814028948e-18 * volume^-1&#39;}
+reaction_21,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.dense.old&#39;), (1, &#39;Tree.yellow.dense.young&#39;)], &#39;kin&#39;: &#39;Tree.yellow.dense.old * 3.168808781402895e-09&#39;}
+reaction_22,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.yellow.dense.old * 3.168808781402895e-08&#39;}
+reaction_23,{&#39;re&#39;: [(1, &#39;Tree.yellow.dense.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.dense.old&#39;)], &#39;kin&#39;: &#39;Tree.yellow.dense.young * 3.168808781402895e-09&#39;}
+reaction_24,{&#39;re&#39;: [(1, &#39;Tree.yellow.sparse.old&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.sparse.old&#39;), (1, &#39;Tree.yellow.sparse.young&#39;)], &#39;kin&#39;: &#39;Tree.yellow.sparse.old * 3.168808781402895e-09&#39;}
+reaction_25,{&#39;re&#39;: [(1, &#39;Tree.yellow.sparse.old&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Tree.yellow.sparse.old * 3.168808781402895e-08&#39;}
+reaction_26,{&#39;re&#39;: [(1, &#39;Tree.yellow.sparse.young&#39;)], &#39;pr&#39;: [(1, &#39;Tree.yellow.sparse.old&#39;)], &#39;kin&#39;: &#39;Tree.yellow.sparse.young * 3.168808781402895e-09&#39;}
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+</pre></div></div>
+</div>
+<p>One can see how MobsPy was able to reduce a 27 reaction model into three meta-reactions. Finally, one can acess the results inside the simulation object</p>
+</section>
+<section id="Following-Notebooks">
+<h1>Following Notebooks<a class="headerlink" href="#Following-Notebooks" title="Link to this heading"></a></h1>
+<p>In the following tutorials, we will revise in more detail some of the tools used here and explain other resources that can be further used to simplify models.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to MobsPy’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="02_Reaction_Inheritance.html" class="btn btn-neutral float-right" title="Reaction Inheritance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
