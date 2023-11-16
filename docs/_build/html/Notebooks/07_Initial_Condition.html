@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Count/Concentration Assignment &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Units" href="08_Units.html" />
+    <link rel="prev" title="Order of Reactants and Products" href="06_Order_Matters.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Count/Concentration Assignment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/07_Initial_Condition.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Count/Concentration-Assignment">
+<h1>Count/Concentration Assignment<a class="headerlink" href="#Count/Concentration-Assignment" title="Link to this heading"></a></h1>
+<p>In this section, we will explain how to add counts or concentrations to species in order to simulate them. We start by defining some base species and giving them some characteristics and combining them.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Age</span><span class="p">,</span> <span class="n">Color</span><span class="p">,</span> <span class="n">Size</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">Age</span><span class="o">.</span><span class="n">young</span><span class="p">,</span> <span class="n">Age</span><span class="o">.</span><span class="n">old</span><span class="p">,</span>
+<span class="n">Color</span><span class="o">.</span><span class="n">blue</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">red</span><span class="p">,</span>
+<span class="n">Size</span><span class="o">.</span><span class="n">small</span><span class="p">,</span> <span class="n">Size</span><span class="o">.</span><span class="n">big</span>
+
+<span class="n">Tree</span> <span class="o">=</span> <span class="n">Age</span><span class="o">*</span><span class="n">Color</span><span class="o">*</span><span class="n">Size</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">set_counts</span><span class="p">({</span><span class="n">All</span><span class="p">[</span><span class="n">Tree</span><span class="p">]:</span><span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;Tree.blue.old&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">})</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Tree</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+Tree.big.blue.old,30
+Tree.big.blue.young,30
+Tree.big.red.old,30
+Tree.big.red.young,30
+Tree.small.blue.old,100
+Tree.small.blue.young,30
+Tree.small.red.old,30
+Tree.small.red.young,30
+
+Mappings
+Tree :
+Tree.big.blue.old
+Tree.big.blue.young
+Tree.big.red.old
+Tree.big.red.young
+Tree.small.blue.old
+Tree.small.blue.young
+Tree.small.red.old
+Tree.small.red.young
+
+Parameters
+volume,1
+
+Reactions
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+</pre></div></div>
+</div>
+<p>To assign counts to the Tree species we use the <strong>call</strong> operator:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Tree</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">_species_counts</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;characteristics&#39;: &#39;std$&#39;, &#39;quantity&#39;: 100}]
+</pre></div></div>
+</div>
+<p>Mobspy will assign this count to the default state of Tree. The default state is constructed by taking the first characteristics that was added to each of it’s inheritors. So in this case the state that is assigned the count of 100 is the following:</p>
+<p>Tree.young.blue.small = 100</p>
+<p>To assign counts to different states one must perform a query:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Tree</span><span class="o">.</span><span class="n">red</span><span class="o">.</span><span class="n">big</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">_species_counts</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;characteristics&#39;: &#39;std$&#39;, &#39;quantity&#39;: 100}, {&#39;characteristics&#39;: {&#39;red&#39;, &#39;big&#39;}, &#39;quantity&#39;: 150}]
+</pre></div></div>
+</div>
+<p>In this case all the coordinates in the meta-species vector space that have not been specified will be replaced by the default. The only missing coordinate missing refers to the Age meta-species for which the default value is young. Thus the count Tree.red.big(150) will be assigned to:</p>
+<p>Tree.young.red.big = 150</p>
+<p>MobsPy also allows for the usage of a operator called All. This operator allows one to assing counts to all the characteristics of a meta-species at the same time.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">All</span><span class="p">[</span><span class="n">Tree</span><span class="p">](</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">_species_counts</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;characteristics&#39;: &#39;std$&#39;, &#39;quantity&#39;: 100}, {&#39;characteristics&#39;: {&#39;red&#39;, &#39;big&#39;}, &#39;quantity&#39;: 150}, {&#39;characteristics&#39;: {&#39;all$&#39;}, &#39;quantity&#39;: 10}]
+</pre></div></div>
+</div>
+<p>The All operator assignment is not prioritazed when compared to specific assignments, so here the states Tree.young.red.big and Tree.young.red.big will retain the old counts which have been assigned to them individualy.</p>
+<p>Finally, one can also perform queries using the All assignment:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">All</span><span class="p">[</span><span class="n">Tree</span><span class="o">.</span><span class="n">big</span><span class="p">](</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">_species_counts</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;characteristics&#39;: &#39;std$&#39;, &#39;quantity&#39;: 100}, {&#39;characteristics&#39;: {&#39;red&#39;, &#39;big&#39;}, &#39;quantity&#39;: 150}, {&#39;characteristics&#39;: {&#39;all$&#39;}, &#39;quantity&#39;: 10}, {&#39;characteristics&#39;: {&#39;big&#39;, &#39;all$&#39;}, &#39;quantity&#39;: 100}]
+</pre></div></div>
+</div>
+<p>Now the compilation:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Tree</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+Tree.big.blue.old,100
+Tree.big.blue.young,100
+Tree.big.red.old,100
+Tree.big.red.young,150
+Tree.small.blue.old,10
+Tree.small.blue.young,100
+Tree.small.red.old,10
+Tree.small.red.young,10
+
+Mappings
+Tree :
+Tree.big.blue.old
+Tree.big.blue.young
+Tree.big.red.old
+Tree.big.red.young
+Tree.small.blue.old
+Tree.small.blue.young
+Tree.small.red.old
+Tree.small.red.young
+
+Parameters
+volume,1
+
+Reactions
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+</pre></div></div>
+</div>
+</section>
+<section id="Set-count-function">
+<h1>Set count function<a class="headerlink" href="#Set-count-function" title="Link to this heading"></a></h1>
+<p>Another way of adding counts to species is by using the set_count function. The set count function receives a argument a dictionary. The keys for this dictionary are either meta-species or strings and the items are values. The set_count function is compatible with the All operator. Also, the set count function returns a model with all the meta-species used in the keys, allowing for easy simulation after count assignment.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">set_counts</span><span class="p">({</span><span class="n">All</span><span class="p">[</span><span class="n">Tree</span><span class="p">]:</span><span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;Tree.blue.old&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">})</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-8-511b38f65f86&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model <span class="ansi-blue-fg">=</span> set_counts<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">{</span>All<span class="ansi-blue-fg">[</span>Tree<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">30</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;Tree.blue.old&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">100</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      2</span> S <span class="ansi-blue-fg">=</span> Simulation<span class="ansi-blue-fg">(</span>model<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      3</span> print<span class="ansi-blue-fg">(</span>S<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/opt/anaconda3/lib/python3.8/site-packages/mobspy/modules/set_counts_module.py</span> in <span class="ansi-cyan-fg">set_counts</span><span class="ansi-blue-fg">(count_dic)</span>
+<span class="ansi-green-intense-fg ansi-bold">     49</span>     <span class="ansi-green-fg">for</span> key <span class="ansi-green-fg">in</span> count_dic<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     50</span>         <span class="ansi-green-fg">if</span> type<span class="ansi-blue-fg">(</span>key<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">==</span> str<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">---&gt; 51</span><span class="ansi-red-fg">             </span>all_found_species <span class="ansi-blue-fg">=</span> find_species<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     52</span>
+<span class="ansi-green-intense-fg ansi-bold">     53</span>     model <span class="ansi-blue-fg">=</span> set<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/opt/anaconda3/lib/python3.8/site-packages/mobspy/modules/set_counts_module.py</span> in <span class="ansi-cyan-fg">find_species</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">     34</span>             <span class="ansi-green-fg">for</span> key<span class="ansi-blue-fg">,</span> item <span class="ansi-green-fg">in</span> global_names<span class="ansi-blue-fg">.</span>items<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     35</span>                 <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">---&gt; 36</span><span class="ansi-red-fg">                     </span><span class="ansi-green-fg">if</span> item<span class="ansi-blue-fg">.</span>is_species<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> type<span class="ansi-blue-fg">(</span>item<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">!=</span> type<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     37</span>                         found_species<span class="ansi-blue-fg">.</span>add<span class="ansi-blue-fg">(</span>item<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     38</span>                 <span class="ansi-green-fg">except</span> AttributeError<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">TypeError</span>: &#39;Simulation&#39; object is not callable
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="06_Order_Matters.html" class="btn btn-neutral float-left" title="Order of Reactants and Products" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="08_Units.html" class="btn btn-neutral float-right" title="Units" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

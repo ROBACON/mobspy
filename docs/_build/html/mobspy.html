@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mobspy package &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f35be339"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mobspy package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mobspy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mobspy-package">
+<h1>mobspy package<a class="headerlink" href="#mobspy-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.data_handler.html">mobspy.data_handler package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.data_handler.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.data_handler.html#module-mobspy.data_handler.process_result_data">mobspy.data_handler.process_result_data module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.process_result_data.convert_data_to_desired_unit"><code class="docutils literal notranslate"><span class="pre">convert_data_to_desired_unit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.data_handler.html#module-mobspy.data_handler.time_series_object">mobspy.data_handler.time_series_object module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyList_of_TS"><code class="docutils literal notranslate"><span class="pre">MobsPyList_of_TS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyList_of_TS.add_ts_to_data"><code class="docutils literal notranslate"><span class="pre">MobsPyList_of_TS.add_ts_to_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyList_of_TS.get_max_time_for_species"><code class="docutils literal notranslate"><span class="pre">MobsPyList_of_TS.get_max_time_for_species()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyList_of_TS.return_pandas"><code class="docutils literal notranslate"><span class="pre">MobsPyList_of_TS.return_pandas()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyList_of_TS.to_dict"><code class="docutils literal notranslate"><span class="pre">MobsPyList_of_TS.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.data_handler.html#mobspy.data_handler.time_series_object.MobsPyTimeSeries"><code class="docutils literal notranslate"><span class="pre">MobsPyTimeSeries</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.data_handler.html#module-mobspy.data_handler">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.modules.html">mobspy.modules package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.class_of_meta_specie_named_any">mobspy.modules.class_of_meta_specie_named_any module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any"><code class="docutils literal notranslate"><span class="pre">Context_specie_named_any</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_finish_for_meta_specie_named_any"><code class="docutils literal notranslate"><span class="pre">Context_specie_named_any.context_finish_for_meta_specie_named_any()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_initiator_for_meta_specie_named_any"><code class="docutils literal notranslate"><span class="pre">Context_specie_named_any.context_initiator_for_meta_specie_named_any()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.event_functions">mobspy.modules.event_functions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.event_functions.format_event_dictionary_for_sbml"><code class="docutils literal notranslate"><span class="pre">format_event_dictionary_for_sbml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.function_rate_code">mobspy.modules.function_rate_code module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.basic_kinetics_string"><code class="docutils literal notranslate"><span class="pre">basic_kinetics_string()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.deterministic_string"><code class="docutils literal notranslate"><span class="pre">deterministic_string()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.extract_reaction_rate"><code class="docutils literal notranslate"><span class="pre">extract_reaction_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.prepare_arguments_for_callable"><code class="docutils literal notranslate"><span class="pre">prepare_arguments_for_callable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.search_for_parameters_in_str"><code class="docutils literal notranslate"><span class="pre">search_for_parameters_in_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.function_rate_code.stochastic_string"><code class="docutils literal notranslate"><span class="pre">stochastic_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.logic_operator_objects">mobspy.modules.logic_operator_objects module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver"><code class="docutils literal notranslate"><span class="pre">MetaSpeciesLogicResolver</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.add_double_symbol"><code class="docutils literal notranslate"><span class="pre">MetaSpeciesLogicResolver.add_double_symbol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.find_all_species_strings"><code class="docutils literal notranslate"><span class="pre">MetaSpeciesLogicResolver.find_all_species_strings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.generate_string"><code class="docutils literal notranslate"><span class="pre">MetaSpeciesLogicResolver.generate_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator"><code class="docutils literal notranslate"><span class="pre">ReactingSpeciesComparator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.add_operation_and_number"><code class="docutils literal notranslate"><span class="pre">ReactingSpeciesComparator.add_operation_and_number()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.check_context"><code class="docutils literal notranslate"><span class="pre">ReactingSpeciesComparator.check_context()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.add_operation_and_number"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.add_operation_and_number()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.check_parenthesis"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.check_parenthesis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.compile_code_line"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.compile_code_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_reacting_species"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.logical_add_reacting_species()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_species"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.logical_add_species()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.logic_operator_objects.SpeciesComparator.reformat_number_and_species"><code class="docutils literal notranslate"><span class="pre">SpeciesComparator.reformat_number_and_species()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.meta_class">mobspy.modules.meta_class module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.BaseSpecies"><code class="docutils literal notranslate"><span class="pre">BaseSpecies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler"><code class="docutils literal notranslate"><span class="pre">Compiler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.add_phantom_reactions"><code class="docutils literal notranslate"><span class="pre">Compiler.add_phantom_reactions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.add_to_parameters_to_sbml"><code class="docutils literal notranslate"><span class="pre">Compiler.add_to_parameters_to_sbml()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.compile"><code class="docutils literal notranslate"><span class="pre">Compiler.compile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.entity_counter"><code class="docutils literal notranslate"><span class="pre">Compiler.entity_counter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.last_rate"><code class="docutils literal notranslate"><span class="pre">Compiler.last_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.override_get_item"><code class="docutils literal notranslate"><span class="pre">Compiler.override_get_item()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Compiler.ref_characteristics_to_object"><code class="docutils literal notranslate"><span class="pre">Compiler.ref_characteristics_to_object</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.ListSpecies"><code class="docutils literal notranslate"><span class="pre">ListSpecies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species"><code class="docutils literal notranslate"><span class="pre">List_Species</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.append"><code class="docutils literal notranslate"><span class="pre">List_Species.append()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.extend"><code class="docutils literal notranslate"><span class="pre">List_Species.extend()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.insert"><code class="docutils literal notranslate"><span class="pre">List_Species.insert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.is_in"><code class="docutils literal notranslate"><span class="pre">List_Species.is_in()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.remove"><code class="docutils literal notranslate"><span class="pre">List_Species.remove()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.List_Species.remove_repeated_elements"><code class="docutils literal notranslate"><span class="pre">List_Species.remove_repeated_elements()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.New"><code class="docutils literal notranslate"><span class="pre">New()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species"><code class="docutils literal notranslate"><span class="pre">Reacting_Species</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.c"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.c()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.context_finish_for_reacting_specie"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.context_finish_for_reacting_specie()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.context_initiator_for_reacting_specie"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.context_initiator_for_reacting_specie()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.is_spe_or_reac"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.is_spe_or_reac()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.is_species"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.is_species()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.label"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.label()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reacting_Species.old_context"><code class="docutils literal notranslate"><span class="pre">Reacting_Species.old_context</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reactions"><code class="docutils literal notranslate"><span class="pre">Reactions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Reactions.set_rate"><code class="docutils literal notranslate"><span class="pre">Reactions.set_rate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species"><code class="docutils literal notranslate"><span class="pre">Species</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.add_characteristic"><code class="docutils literal notranslate"><span class="pre">Species.add_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.add_quantities"><code class="docutils literal notranslate"><span class="pre">Species.add_quantities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.add_reaction"><code class="docutils literal notranslate"><span class="pre">Species.add_reaction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.add_reference"><code class="docutils literal notranslate"><span class="pre">Species.add_reference()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.c"><code class="docutils literal notranslate"><span class="pre">Species.c()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.check_if_valid_characteristic"><code class="docutils literal notranslate"><span class="pre">Species.check_if_valid_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_all_characteristics"><code class="docutils literal notranslate"><span class="pre">Species.get_all_characteristics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_characteristics"><code class="docutils literal notranslate"><span class="pre">Species.get_characteristics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_index_from_reference_dict"><code class="docutils literal notranslate"><span class="pre">Species.get_index_from_reference_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_name"><code class="docutils literal notranslate"><span class="pre">Species.get_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_ordered_references"><code class="docutils literal notranslate"><span class="pre">Species.get_ordered_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_quantities"><code class="docutils literal notranslate"><span class="pre">Species.get_quantities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_reactions"><code class="docutils literal notranslate"><span class="pre">Species.get_reactions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_references"><code class="docutils literal notranslate"><span class="pre">Species.get_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.get_simulation_context"><code class="docutils literal notranslate"><span class="pre">Species.get_simulation_context()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.is_spe_or_reac"><code class="docutils literal notranslate"><span class="pre">Species.is_spe_or_reac()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.is_species"><code class="docutils literal notranslate"><span class="pre">Species.is_species()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.label"><code class="docutils literal notranslate"><span class="pre">Species.label()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.meta_specie_named_any_context"><code class="docutils literal notranslate"><span class="pre">Species.meta_specie_named_any_context</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.name"><code class="docutils literal notranslate"><span class="pre">Species.name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.order_references"><code class="docutils literal notranslate"><span class="pre">Species.order_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.print_characteristics"><code class="docutils literal notranslate"><span class="pre">Species.print_characteristics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.remove_characteristic"><code class="docutils literal notranslate"><span class="pre">Species.remove_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.remove_repeated_elements"><code class="docutils literal notranslate"><span class="pre">Species.remove_repeated_elements()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.reset_counts"><code class="docutils literal notranslate"><span class="pre">Species.reset_counts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.reset_quantities"><code class="docutils literal notranslate"><span class="pre">Species.reset_quantities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.reset_reactions"><code class="docutils literal notranslate"><span class="pre">Species.reset_reactions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.reset_references"><code class="docutils literal notranslate"><span class="pre">Species.reset_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.reset_simulation_context"><code class="docutils literal notranslate"><span class="pre">Species.reset_simulation_context()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.set_reactions"><code class="docutils literal notranslate"><span class="pre">Species.set_reactions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.set_references"><code class="docutils literal notranslate"><span class="pre">Species.set_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.set_simulation_context"><code class="docutils literal notranslate"><span class="pre">Species.set_simulation_context()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.show_characteristics"><code class="docutils literal notranslate"><span class="pre">Species.show_characteristics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.show_quantities"><code class="docutils literal notranslate"><span class="pre">Species.show_quantities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.show_reactions"><code class="docutils literal notranslate"><span class="pre">Species.show_reactions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.show_references"><code class="docutils literal notranslate"><span class="pre">Species.show_references()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.str_under_context"><code class="docutils literal notranslate"><span class="pre">Species.str_under_context()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.unit"><code class="docutils literal notranslate"><span class="pre">Species.unit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.Species.update_meta_specie_named_any_context"><code class="docutils literal notranslate"><span class="pre">Species.update_meta_specie_named_any_context()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class.compile_species_number_line"><code class="docutils literal notranslate"><span class="pre">compile_species_number_line()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.meta_class_utils">mobspy.modules.meta_class_utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class_utils.check_orthogonality_between_references"><code class="docutils literal notranslate"><span class="pre">check_orthogonality_between_references()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class_utils.combine_references"><code class="docutils literal notranslate"><span class="pre">combine_references()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class_utils.complete_characteristics_with_first_values"><code class="docutils literal notranslate"><span class="pre">complete_characteristics_with_first_values()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class_utils.create_orthogonal_vector_structure"><code class="docutils literal notranslate"><span class="pre">create_orthogonal_vector_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.meta_class_utils.unite_characteristics"><code class="docutils literal notranslate"><span class="pre">unite_characteristics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.mobspy_expressions">mobspy.modules.mobspy_expressions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Bool_Override"><code class="docutils literal notranslate"><span class="pre">Bool_Override</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.ExpressionDefiner"><code class="docutils literal notranslate"><span class="pre">ExpressionDefiner</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.ExpressionDefiner.combine_binary_attributes"><code class="docutils literal notranslate"><span class="pre">ExpressionDefiner.combine_binary_attributes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.ExpressionDefiner.create_from_new_operation"><code class="docutils literal notranslate"><span class="pre">ExpressionDefiner.create_from_new_operation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_op"><code class="docutils literal notranslate"><span class="pre">ExpressionDefiner.execute_op()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_quantity_op"><code class="docutils literal notranslate"><span class="pre">ExpressionDefiner.execute_quantity_op()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.MobsPyExpression"><code class="docutils literal notranslate"><span class="pre">MobsPyExpression</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.MobsPyExpression.generate_string_operation"><code class="docutils literal notranslate"><span class="pre">MobsPyExpression.generate_string_operation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.convert"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.convert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.convert_into"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.convert_into()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_add"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_add()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_mul"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_mul()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_pow"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_pow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_radd"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_radd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rmul"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_rmul()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rsub"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_rsub()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rtruediv"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_rtruediv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_sub"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_sub()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_truediv"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.non_expression_truediv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideQuantity.set_ms_active"><code class="docutils literal notranslate"><span class="pre">OverrideQuantity.set_ms_active()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.OverrideUnitRegistry"><code class="docutils literal notranslate"><span class="pre">OverrideUnitRegistry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.QuantityConverter"><code class="docutils literal notranslate"><span class="pre">QuantityConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.QuantityConverter.convert_received_unit"><code class="docutils literal notranslate"><span class="pre">QuantityConverter.convert_received_unit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Specific_Species_Operator"><code class="docutils literal notranslate"><span class="pre">Specific_Species_Operator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Specific_Species_Operator.add"><code class="docutils literal notranslate"><span class="pre">Specific_Species_Operator.add()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_characteristics"><code class="docutils literal notranslate"><span class="pre">Specific_Species_Operator.get_characteristics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_name"><code class="docutils literal notranslate"><span class="pre">Specific_Species_Operator.get_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_expressions.Specific_Species_Operator.is_a"><code class="docutils literal notranslate"><span class="pre">Specific_Species_Operator.is_a()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.mobspy_parameters">mobspy.modules.mobspy_parameters module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_parameters.Mobspy_Parameter"><code class="docutils literal notranslate"><span class="pre">Mobspy_Parameter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_parameters.Mobspy_Parameter.parameter_stack"><code class="docutils literal notranslate"><span class="pre">Mobspy_Parameter.parameter_stack</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_parameters.Mobspy_Parameter.rename"><code class="docutils literal notranslate"><span class="pre">Mobspy_Parameter.rename()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.mobspy_parameters.ModelParameters"><code class="docutils literal notranslate"><span class="pre">ModelParameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.order_operators">mobspy.modules.order_operators module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.reaction_construction_nb">mobspy.modules.reaction_construction_nb module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.check_for_invalid_reactions"><code class="docutils literal notranslate"><span class="pre">check_for_invalid_reactions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.construct_order_structure"><code class="docutils literal notranslate"><span class="pre">construct_order_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.construct_product_structure"><code class="docutils literal notranslate"><span class="pre">construct_product_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.construct_rate_function_arguments"><code class="docutils literal notranslate"><span class="pre">construct_rate_function_arguments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.construct_reactant_structures"><code class="docutils literal notranslate"><span class="pre">construct_reactant_structures()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.construct_single_reaction_for_sbml"><code class="docutils literal notranslate"><span class="pre">construct_single_reaction_for_sbml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.copy_reaction"><code class="docutils literal notranslate"><span class="pre">copy_reaction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.count_string_dictionary"><code class="docutils literal notranslate"><span class="pre">count_string_dictionary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.create_all_reactions"><code class="docutils literal notranslate"><span class="pre">create_all_reactions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.expression_compilation_finish"><code class="docutils literal notranslate"><span class="pre">expression_compilation_finish()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.expression_compilation_initiation"><code class="docutils literal notranslate"><span class="pre">expression_compilation_initiation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.get_involved_species"><code class="docutils literal notranslate"><span class="pre">get_involved_species()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb.iterator_for_combinations"><code class="docutils literal notranslate"><span class="pre">iterator_for_combinations()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.reaction_construction_nb_parallel">mobspy.modules.reaction_construction_nb_parallel module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.check_for_invalid_reactions"><code class="docutils literal notranslate"><span class="pre">check_for_invalid_reactions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.construct_order_structure"><code class="docutils literal notranslate"><span class="pre">construct_order_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.construct_product_structure"><code class="docutils literal notranslate"><span class="pre">construct_product_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.construct_rate_function_arguments"><code class="docutils literal notranslate"><span class="pre">construct_rate_function_arguments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.construct_reactant_structures"><code class="docutils literal notranslate"><span class="pre">construct_reactant_structures()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.construct_single_reaction_for_sbml"><code class="docutils literal notranslate"><span class="pre">construct_single_reaction_for_sbml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.copy_reaction"><code class="docutils literal notranslate"><span class="pre">copy_reaction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.count_string_dictionary"><code class="docutils literal notranslate"><span class="pre">count_string_dictionary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.create_all_reactions"><code class="docutils literal notranslate"><span class="pre">create_all_reactions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.get_involved_species"><code class="docutils literal notranslate"><span class="pre">get_involved_species()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.reaction_construction_nb_parallel.iterator_for_combinations"><code class="docutils literal notranslate"><span class="pre">iterator_for_combinations()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.set_counts_module">mobspy.modules.set_counts_module module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.set_counts_module.set_counts"><code class="docutils literal notranslate"><span class="pre">set_counts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.species_string_generator">mobspy.modules.species_string_generator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.species_string_generator.characteristics_dictionary"><code class="docutils literal notranslate"><span class="pre">characteristics_dictionary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.species_string_generator.construct_all_combinations"><code class="docutils literal notranslate"><span class="pre">construct_all_combinations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.species_string_generator.construct_species_char_list"><code class="docutils literal notranslate"><span class="pre">construct_species_char_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.unit_handler">mobspy.modules.unit_handler module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.check_dimension"><code class="docutils literal notranslate"><span class="pre">check_dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.convert_counts"><code class="docutils literal notranslate"><span class="pre">convert_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.convert_rate"><code class="docutils literal notranslate"><span class="pre">convert_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.convert_time"><code class="docutils literal notranslate"><span class="pre">convert_time()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.convert_volume"><code class="docutils literal notranslate"><span class="pre">convert_volume()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.unit_handler.extract_length_dimension"><code class="docutils literal notranslate"><span class="pre">extract_length_dimension()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules.user_functions">mobspy.modules.user_functions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html#mobspy.modules.user_functions.Apply"><code class="docutils literal notranslate"><span class="pre">Apply()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.modules.html#module-mobspy.modules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.parameter_scripts.html">mobspy.parameter_scripts package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameter_scripts.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameter_scripts.html#module-mobspy.parameter_scripts.parameter_reader">mobspy.parameter_scripts.parameter_reader module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameter_scripts.html#mobspy.parameter_scripts.parameter_reader.parameter_process"><code class="docutils literal notranslate"><span class="pre">parameter_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameter_scripts.html#mobspy.parameter_scripts.parameter_reader.read_json"><code class="docutils literal notranslate"><span class="pre">read_json()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameter_scripts.html#module-mobspy.parameter_scripts.parametric_sweeps">mobspy.parameter_scripts.parametric_sweeps module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameter_scripts.html#mobspy.parameter_scripts.parametric_sweeps.assign_values_to_model"><code class="docutils literal notranslate"><span class="pre">assign_values_to_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameter_scripts.html#mobspy.parameter_scripts.parametric_sweeps.generate_all_sbml_models"><code class="docutils literal notranslate"><span class="pre">generate_all_sbml_models()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameter_scripts.html#mobspy.parameter_scripts.parametric_sweeps.unite_parameter_dictionaries"><code class="docutils literal notranslate"><span class="pre">unite_parameter_dictionaries()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameter_scripts.html#module-mobspy.parameter_scripts">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.parameters.html">mobspy.parameters package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameters.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameters.html#module-mobspy.parameters.default_reader">mobspy.parameters.default_reader module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameters.html#mobspy.parameters.default_reader.get_default_parameters"><code class="docutils literal notranslate"><span class="pre">get_default_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameters.html#module-mobspy.parameters.example_reader">mobspy.parameters.example_reader module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.parameters.html#mobspy.parameters.example_reader.get_example_parameters"><code class="docutils literal notranslate"><span class="pre">get_example_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.parameters.html#module-mobspy.parameters">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.plot_params.html">mobspy.plot_params package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_params.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_params.html#module-mobspy.plot_params.default_plot_reader">mobspy.plot_params.default_plot_reader module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_params.html#mobspy.plot_params.default_plot_reader.get_default_plot_parameters"><code class="docutils literal notranslate"><span class="pre">get_default_plot_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_params.html#module-mobspy.plot_params.example_plot_reader">mobspy.plot_params.example_plot_reader module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_params.html#mobspy.plot_params.example_plot_reader.get_example_plot_parameters"><code class="docutils literal notranslate"><span class="pre">get_example_plot_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_params.html#module-mobspy.plot_params">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.plot_scripts.html">mobspy.plot_scripts package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#module-mobspy.plot_scripts.default_plots">mobspy.plot_scripts.default_plots module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.deterministic_plot"><code class="docutils literal notranslate"><span class="pre">deterministic_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.parametric_plot"><code class="docutils literal notranslate"><span class="pre">parametric_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.raw_plot"><code class="docutils literal notranslate"><span class="pre">raw_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.read_plot_json"><code class="docutils literal notranslate"><span class="pre">read_plot_json()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.set_plot_units"><code class="docutils literal notranslate"><span class="pre">set_plot_units()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.default_plots.stochastic_plot"><code class="docutils literal notranslate"><span class="pre">stochastic_plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#module-mobspy.plot_scripts.hierarchical_plot">mobspy.plot_scripts.hierarchical_plot module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.Color_cycle"><code class="docutils literal notranslate"><span class="pre">Color_cycle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.figure_hash"><code class="docutils literal notranslate"><span class="pre">figure_hash()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.figure_hash_creation"><code class="docutils literal notranslate"><span class="pre">figure_hash_creation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.find_parameter"><code class="docutils literal notranslate"><span class="pre">find_parameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.find_species_time_series"><code class="docutils literal notranslate"><span class="pre">find_species_time_series()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.get_total_figure_number"><code class="docutils literal notranslate"><span class="pre">get_total_figure_number()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.plot_curves"><code class="docutils literal notranslate"><span class="pre">plot_curves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.plot_data"><code class="docutils literal notranslate"><span class="pre">plot_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.set_figure_characteristics"><code class="docutils literal notranslate"><span class="pre">set_figure_characteristics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.hierarchical_plot.set_global_parameters"><code class="docutils literal notranslate"><span class="pre">set_global_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#module-mobspy.plot_scripts.process_plot_data">mobspy.plot_scripts.process_plot_data module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.process_plot_data.check_plot_parameters"><code class="docutils literal notranslate"><span class="pre">check_plot_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.process_plot_data.query_plot_data"><code class="docutils literal notranslate"><span class="pre">query_plot_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.process_plot_data.time_filter_operation"><code class="docutils literal notranslate"><span class="pre">time_filter_operation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#module-mobspy.plot_scripts.statistics_calculations">mobspy.plot_scripts.statistics_calculations module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.statistics_calculations.average_plus_standard_deviation"><code class="docutils literal notranslate"><span class="pre">average_plus_standard_deviation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.statistics_calculations.standard_deviation"><code class="docutils literal notranslate"><span class="pre">standard_deviation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html#mobspy.plot_scripts.statistics_calculations.time_series_average"><code class="docutils literal notranslate"><span class="pre">time_series_average()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.plot_scripts.html#module-mobspy.plot_scripts">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.sbml_simulator.html">mobspy.sbml_simulator package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.sbml_simulator.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.sbml_simulator.html#module-mobspy.sbml_simulator.SBMLWriter">mobspy.sbml_simulator.SBMLWriter module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.SBMLWriter.check"><code class="docutils literal notranslate"><span class="pre">check()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.SBMLWriter.create_model"><code class="docutils literal notranslate"><span class="pre">create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.sbml_simulator.html#module-mobspy.sbml_simulator.builder">mobspy.sbml_simulator.builder module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.builder.build"><code class="docutils literal notranslate"><span class="pre">build()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.sbml_simulator.html#module-mobspy.sbml_simulator.run">mobspy.sbml_simulator.run module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.run.job_execution"><code class="docutils literal notranslate"><span class="pre">job_execution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.run.reformat_time_series"><code class="docutils literal notranslate"><span class="pre">reformat_time_series()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.sbml_simulator.html#mobspy.sbml_simulator.run.simulate"><code class="docutils literal notranslate"><span class="pre">simulate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.sbml_simulator.html#module-mobspy.sbml_simulator">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.simulation_logging.html">mobspy.simulation_logging package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.simulation_logging.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.simulation_logging.html#module-mobspy.simulation_logging.log_scripts">mobspy.simulation_logging.log_scripts module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.simulation_logging.html#mobspy.simulation_logging.log_scripts.debug"><code class="docutils literal notranslate"><span class="pre">debug()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.simulation_logging.html#mobspy.simulation_logging.log_scripts.error"><code class="docutils literal notranslate"><span class="pre">error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.simulation_logging.html#mobspy.simulation_logging.log_scripts.warning"><code class="docutils literal notranslate"><span class="pre">warning()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.simulation_logging.html#module-mobspy.simulation_logging">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-mobspy.simulation">
+<span id="mobspy-simulation-module"></span><h2>mobspy.simulation module<a class="headerlink" href="#module-mobspy.simulation" title="Link to this heading"></a></h2>
+<p>Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.simulation.</span></span><span class="sig-name descname"><span class="pre">Simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.compile" title="Link to this definition"></a></dt>
+<dd><p>Compiler method that calls the Compiler class in the modules directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbose</strong> – (bool) = print or not the results of the compilation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.configure_parameters">
+<span class="sig-name descname"><span class="pre">configure_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.configure_parameters" title="Link to this definition"></a></dt>
+<dd><p>Configure simulation parameters from json file or dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> – (str) name of the json file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.configure_plot_parameters">
+<span class="sig-name descname"><span class="pre">configure_plot_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.configure_plot_parameters" title="Link to this definition"></a></dt>
+<dd><p>Configure plot parameters from json file or dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> – (str) name of the json file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_compilation_error">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event_compilation_error</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_compilation_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_condition">
+<span class="sig-name descname"><span class="pre">event_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trigger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_condition" title="Link to this definition"></a></dt>
+<dd><p>Context manager for condition events. Called in “with Simulation.event_condition(trigger) :” format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trigger</strong> – () condition that triggers the event when fulfilled</p></li>
+<li><p><strong>delay</strong> – (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_context_add">
+<span class="sig-name descname"><span class="pre">event_context_add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_context_add" title="Link to this definition"></a></dt>
+<dd><p>Adds an event to the event context</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trigger</strong> – () condition that triggers the event when fulfilled</p></li>
+<li><p><strong>time</strong> – (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_context_finish">
+<span class="sig-name descname"><span class="pre">event_context_finish</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_context_finish" title="Link to this definition"></a></dt>
+<dd><p>Removes the context in all meta-species and resets some varaiables. Called each time an event context is finished.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_context_initiator">
+<span class="sig-name descname"><span class="pre">event_context_initiator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_context_initiator" title="Link to this definition"></a></dt>
+<dd><p>Sets the context in all meta-species. Called each time an event context is initiated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.event_time">
+<span class="sig-name descname"><span class="pre">event_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.event_time" title="Link to this definition"></a></dt>
+<dd><p>Context manager for time events. Called in “with Simulation.event_time(time) :” format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> – (int, float, Quantity) any time used</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.extract_plot_essentials">
+<span class="sig-name descname"><span class="pre">extract_plot_essentials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.extract_plot_essentials" title="Link to this definition"></a></dt>
+<dd><p>Extract essential information for plotting</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (meta-species objects) meta-species objects to plot</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>species_strings (str) = species strings to be plotted, self.results = data resulting from the</p>
+</dd>
+</dl>
+<p>simulation, self.plot_parameters (dict) = parameters for plotting</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.generate_sbml">
+<span class="sig-name descname"><span class="pre">generate_sbml</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.generate_sbml" title="Link to this definition"></a></dt>
+<dd><p>Generates sbmls strings from the current stored models in the simulation</p>
+<p>“return: to_return (list of str) list of sbml files from all the simulations stored</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.is_simulation">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.is_simulation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.plot" title="Link to this definition"></a></dt>
+<dd><p>Another way of calling plot_deterministic for simplicity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (str or meta-species objects) list of species to be plotted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.plot_deterministic">
+<span class="sig-name descname"><span class="pre">plot_deterministic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.plot_deterministic" title="Link to this definition"></a></dt>
+<dd><p>Calls deterministic plot. See default_plots module in the plot_scripts directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (str or meta-species objects) list of species to be plotted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.plot_parametric">
+<span class="sig-name descname"><span class="pre">plot_parametric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.plot_parametric" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.plot_raw">
+<span class="sig-name descname"><span class="pre">plot_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters_or_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.plot_raw" title="Link to this definition"></a></dt>
+<dd><p>Calls raw plot. See default_plots module in the plot_scripts directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parameters_or_file</strong> – json file name with plot parameter configuration or dictionary with plot</p>
+</dd>
+</dl>
+<p>parameter configuration</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.plot_stochastic">
+<span class="sig-name descname"><span class="pre">plot_stochastic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.plot_stochastic" title="Link to this definition"></a></dt>
+<dd><p>Calls stochastic plot. See default_plots module in the plot_scripts directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (str or meta-species objects) list of species to be plotted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.run" title="Link to this definition"></a></dt>
+<dd><p>Runs the simulation by colling the models in the sbml_simulator directory.
+Compiles the model if it was not yet compiled</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.save_data">
+<span class="sig-name descname"><span class="pre">save_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.save_data" title="Link to this definition"></a></dt>
+<dd><p>Saves the simulation result data to a file in json format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> – (str) name of the file to save the data to. If none a default name is provided</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.set_from_json">
+<span class="sig-name descname"><span class="pre">set_from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.set_from_json" title="Link to this definition"></a></dt>
+<dd><p>Set simulation parameters from json file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_name</strong> – (str) name of the json file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.Simulation.set_job_number">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_job_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.Simulation.set_job_number" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.simulation.</span></span><span class="sig-name descname"><span class="pre">SimulationComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.compile" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.generate_sbml">
+<span class="sig-name descname"><span class="pre">generate_sbml</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.generate_sbml" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.is_simulation">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.is_simulation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.plot_deterministic">
+<span class="sig-name descname"><span class="pre">plot_deterministic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.plot_deterministic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.plot_raw">
+<span class="sig-name descname"><span class="pre">plot_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters_or_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.plot_raw" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.plot_stochastic">
+<span class="sig-name descname"><span class="pre">plot_stochastic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.plot_stochastic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.simulation.SimulationComposition.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.simulation.SimulationComposition.run" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mobspy">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy" title="Link to this heading"></a></h2>
+<p>MobsPy: A Query-Based Language for Chemical Reaction Networks</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

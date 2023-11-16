@@ -4,7 +4,8 @@
 from mobspy.modules.meta_class import *
 from contextlib import contextmanager
 
-class Context_specie_named_any(Species) :
+
+class Context_specie_named_any(Species):
     """
         Class which inherits from Species. It only has one object, Any, which is defined at the end of this script.
         It is used to simplify the syntax of reactions and count setting inside the body of a "with Any.example_characteristic1 :" statement.
@@ -30,10 +31,11 @@ class Context_specie_named_any(Species) :
         code_line = inspect.stack()[1].code_context[0][:-1]
         code_line = code_line.split(' ')
         is_with = [x for x in code_line if x != ''][0]
-        if is_with == 'with':
+        if is_with == 'with' or item == "__sphinx_mock__":
             pass
         else:
-            simlog.error('Characteristics cannot be added to the Any specie outside of a context')
+            simlog.error(
+                'Characteristics cannot be added to the Any specie outside of a context')
         self._set_of_characteristics_currently_under_the_any_context.add(item)
         return self
 
@@ -54,8 +56,10 @@ class Context_specie_named_any(Species) :
         """
             This adds the current context in _list_of_nested_any_contexts and then updates the Any context in all meta-species.
         """
-        self._list_of_nested_any_contexts.append(set(self._set_of_characteristics_currently_under_the_any_context))
-        Species.update_meta_specie_named_any_context(Species.meta_specie_named_any_context.union(self._set_of_characteristics_currently_under_the_any_context))
+        self._list_of_nested_any_contexts.append(
+            set(self._set_of_characteristics_currently_under_the_any_context))
+        Species.update_meta_specie_named_any_context(Species.meta_specie_named_any_context.union(
+            self._set_of_characteristics_currently_under_the_any_context))
 
     def context_finish_for_meta_specie_named_any(self):
         """
@@ -67,28 +71,27 @@ class Context_specie_named_any(Species) :
             self._set_of_characteristics_currently_under_the_any_context = self._list_of_nested_any_contexts[-1]
         else:
             self._set_of_characteristics_currently_under_the_any_context = set()
-        Species.update_meta_specie_named_any_context(Species.meta_specie_named_any_context - self._previous_set_of_characteristics_under_the_any_context)
-
-    
+        Species.update_meta_specie_named_any_context(
+            Species.meta_specie_named_any_context - self._previous_set_of_characteristics_under_the_any_context)
 
     def __call__(self, quantity):
         """
             The call operator is overloaded as the Any specie cannot be called. Thus it raises an error when called.
         """
         simlog.error('The Any specie cannot be called')
-    
+
     def __add__(self, other):
         """
             The add operator is overloaded as the Any specie cannot be added. Thus it raises an error when added.
         """
         simlog.error('The Any specie cannot be added')
-    
+
     def __radd__(self, other):
         """
             The add operator is overloaded as the Any specie cannot be added. Thus it raises an error when added.
         """
         simlog.error('The Any specie cannot be added')
-    
+
     def __rmul__(self, other):
         """
             The multiplication operator is overloaded as the Any specie cannot be multiplied. Thus it raises an error when multiplied.
@@ -101,7 +104,7 @@ class Context_specie_named_any(Species) :
         """
         simlog.error('The >> operator cannot be used on the Any specie')
 
-   
-#Any is the only object of the Any_specie class that will be used. It is defined here.
+
+# Any is the only object of the Any_specie class that will be used. It is defined here.
 __SAny = Context_specie_named_any('Context_Any_MetaSpecies')
 Any = __SAny

@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mobspy.modules package &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f35be339"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Notebooks/14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">mobspy.modules package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mobspy.modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mobspy-modules-package">
+<h1>mobspy.modules package<a class="headerlink" href="#mobspy-modules-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-mobspy.modules.class_of_meta_specie_named_any">
+<span id="mobspy-modules-class-of-meta-specie-named-any-module"></span><h2>mobspy.modules.class_of_meta_specie_named_any module<a class="headerlink" href="#module-mobspy.modules.class_of_meta_specie_named_any" title="Link to this heading"></a></h2>
+<p>The class_of_meta_specie_named_any.py model is responsible for defining the Context_specie_named_any class.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.class_of_meta_specie_named_any.</span></span><span class="sig-name descname"><span class="pre">Context_specie_named_any</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.meta_class.Species" title="mobspy.modules.meta_class.Species"><code class="xref py py-class docutils literal notranslate"><span class="pre">Species</span></code></a></p>
+<p>Class which inherits from Species. It only has one object, Any, which is defined at the end of this script.
+It is used to simplify the syntax of reactions and count setting inside the body of a “with Any.example_characteristic1 :” statement.
+Is is compatible with event_condition and event_time methods of the Simulation class.
+It can be nested and used several time in the same with statement.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_finish_for_meta_specie_named_any">
+<span class="sig-name descname"><span class="pre">context_finish_for_meta_specie_named_any</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_finish_for_meta_specie_named_any" title="Link to this definition"></a></dt>
+<dd><p>This removes the context which is ending from _list_of_nested_any_contexts and updates the current Any context.
+Then, it updates the Any context in all meta-species.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_initiator_for_meta_specie_named_any">
+<span class="sig-name descname"><span class="pre">context_initiator_for_meta_specie_named_any</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.class_of_meta_specie_named_any.Context_specie_named_any.context_initiator_for_meta_specie_named_any" title="Link to this definition"></a></dt>
+<dd><p>This adds the current context in _list_of_nested_any_contexts and then updates the Any context in all meta-species.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.event_functions">
+<span id="mobspy-modules-event-functions-module"></span><h2>mobspy.modules.event_functions module<a class="headerlink" href="#module-mobspy.modules.event_functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.event_functions.format_event_dictionary_for_sbml">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.event_functions.</span></span><span class="sig-name descname"><span class="pre">format_event_dictionary_for_sbml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_for_sbml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_species_to_simulate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_exist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_in_events</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.event_functions.format_event_dictionary_for_sbml" title="Link to this definition"></a></dt>
+<dd><p>Creates events_for_sbml dictionary for sbml file construction on the sbml_simulator/SBMLWriter.py</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species_for_sbml</strong> – (dict) {‘species_string’: count, ….}</p></li>
+<li><p><strong>event_list</strong> – [{‘species’:’meta_species_object’, ‘characteristics’:[‘list of characteristics’],
+‘quantity’: number or pint object}</p></li>
+<li><p><strong>characteristics_to_object</strong> – {‘characteristic’:’meta_species_object’, …..}</p></li>
+<li><p><strong>volume</strong> – Simulation volume for unit conversion</p></li>
+<li><p><strong>dimension</strong> – Dimension of the system 2D, 3D, 4D, e</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>event dictionary for the sbml file construction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>events = {‘e’: { ‘trigger’: ‘true’, ‘delay’: ‘10’, ‘assignments’: [(‘M’,’1’),]}}</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.function_rate_code">
+<span id="mobspy-modules-function-rate-code-module"></span><h2>mobspy.modules.function_rate_code module<a class="headerlink" href="#module-mobspy.modules.function_rate_code" title="Link to this heading"></a></h2>
+<p>mobspy.modules.process_result_data.py</p>
+<dl class="simple">
+<dt>Handles rate_assignment to the reactions:</dt><dd><p>The passing of arguments to be executed by the user supplied rate function
+The construction of mass action kinetics
+Handles the different types of rates supplied by the user</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.basic_kinetics_string">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">basic_kinetics_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.basic_kinetics_string" title="Link to this definition"></a></dt>
+<dd><p>This constructs the bases for mass-action kinetics. Both for stochastic and deterministic depending on the type
+of model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Params reactants<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(list of str) list of reactants in MobsPy str format</p>
+</dd>
+<dt class="field-even">Params reaction_rate<span class="colon">:</span></dt>
+<dd class="field-even"><p>(float) reaction constant</p>
+</dd>
+<dt class="field-odd">Params type_of_model<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) stochastic or deterministic - rate expressions are different depending on each case</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>kinetics_string (str) mass action kinetics expression for the reaction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.deterministic_string">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">deterministic_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.deterministic_string" title="Link to this definition"></a></dt>
+<dd><p>This function returns the deterministic string expression for mass action kinetics
+For instance the reaction 2A -&gt; 3A would imply A*A
+It only does so for one reactant, so it must be called for all reactants in the reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Params reactant_name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) species string involved in the reaction</p>
+</dd>
+<dt class="field-even">Params number<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) stoichiometry (number of times it appears)</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>to_return_string (str) the mass action kinetics string expression for only that species</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.extract_reaction_rate">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">extract_reaction_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combination_of_reactant_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactant_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_rate_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_rate_arguments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_exist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_in_reaction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_check</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.extract_reaction_rate" title="Link to this definition"></a></dt>
+<dd><p>This function is responsible for returning the reaction rate string for the model construction. To do this it
+does a different action depending on the type of the reaction_rate_function (we consider constants as functions)
+It passes the rate as a string expression in MobsPy standard units</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function_rate_arguments</strong> – list of strings of the function rate argument ex:[‘r1’, ‘r2’, ….]</p></li>
+<li><p><strong>combination_of_reactant_species</strong> – (list of Species) Meta-species currently being used in this reaction</p></li>
+<li><p><strong>reactant_string_list</strong> – (list of strings) list of species strings in order they apear in the reaction</p></li>
+<li><p><strong>reaction_rate_function</strong> – (float, callable, Quantity) rate stored in the reaction object</p></li>
+<li><p><strong>dimension</strong> – (int) system dimension (for the rate conversion)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reaction_rate_string (str) the reaction kinetics as a string for SBML</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.prepare_arguments_for_callable">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">prepare_arguments_for_callable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combination_of_reactant_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactant_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_function_arguments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.prepare_arguments_for_callable" title="Link to this definition"></a></dt>
+<dd><p>This function prepares the requested arguments to the rate function for a given reaction by creating objects
+of the Specific_Species_Operator class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Params combination_of_reactant_species<span class="colon">:</span></dt>
+<dd class="field-odd"><p>meta-species involved in the reaction</p>
+</dd>
+<dt class="field-even">Params reactant_string_list<span class="colon">:</span></dt>
+<dd class="field-even"><p>species strings involved in the reaction</p>
+</dd>
+<dt class="field-odd">Params rate_function_arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><p>arguments received by the rate function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.search_for_parameters_in_str">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">search_for_parameters_in_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction_rate_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_exist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_in_reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.search_for_parameters_in_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.function_rate_code.stochastic_string">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.function_rate_code.</span></span><span class="sig-name descname"><span class="pre">stochastic_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.function_rate_code.stochastic_string" title="Link to this definition"></a></dt>
+<dd><p>This function returns the stochastic string expression for mass action kinetics
+For instance the reaction 2A -&gt; 3A would imply A*(A-1)/2
+It only does so for one reactant, so it must be called for all reactants in the reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Params reactant_name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str) species string involved in the reaction</p>
+</dd>
+<dt class="field-even">Params number<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int) stoichiometry (number of times it appears)</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>to_return_string (str) the mass action kinetics string expression for only that species</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.logic_operator_objects">
+<span id="mobspy-modules-logic-operator-objects-module"></span><h2>mobspy.modules.logic_operator_objects module<a class="headerlink" href="#module-mobspy.modules.logic_operator_objects" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.logic_operator_objects.</span></span><span class="sig-name descname"><span class="pre">MetaSpeciesLogicResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This object stores the logical and comparison operations that become the event triggers for conditions
+or the conditional duration for simulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>operation</strong> – (list) the logical operation that will be transformed in a string for copasi. Format ex</p>
+</dd>
+</dl>
+<p>[{object: …, characteristics:…}, ‘&lt;=’, 10]
+:param simulation_context: (Simulation) simulation under context</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.add_double_symbol">
+<span class="sig-name descname"><span class="pre">add_double_symbol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.add_double_symbol" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.find_all_species_strings">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_all_species_strings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_for_sbml</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.find_all_species_strings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.generate_string">
+<span class="sig-name descname"><span class="pre">generate_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.MetaSpeciesLogicResolver.generate_string" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.ReactingSpeciesComparator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.logic_operator_objects.</span></span><span class="sig-name descname"><span class="pre">ReactingSpeciesComparator</span></span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.logic_operator_objects.SpeciesComparator" title="mobspy.modules.logic_operator_objects.SpeciesComparator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpeciesComparator</span></code></a></p>
+<p>This class implements the comparisons necessary for events and conditional durations for Reacting Species
+ex (A.a1 &gt; 5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_simulation_context</strong> – (Simulation) current simulation under context</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.add_operation_and_number">
+<span class="sig-name descname"><span class="pre">add_operation_and_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.add_operation_and_number" title="Link to this definition"></a></dt>
+<dd><p>Adds the symbol and number to create a MetaSpeciesLogicResolver object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>symbol</strong> – Comparative symbols ‘&lt;=’, ‘&lt;’, ‘&gt;=’, or ‘&gt;’</p></li>
+<li><p><strong>number</strong> – (int) if compared to a value, (Species or ReactingSpecies) if compared to the objects</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MetaSpeciesLogicResolver object containing the comparison</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.check_context">
+<span class="sig-name descname"><span class="pre">check_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator.check_context" title="Link to this definition"></a></dt>
+<dd><p>Checks if a reacting species is under context and add it to the attribute self._simulation_context</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.logic_operator_objects.</span></span><span class="sig-name descname"><span class="pre">SpeciesComparator</span></span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class implements the comparisons necessary for events and conditional durations for Species
+ex (A &gt; 5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_simulation_context</strong> – (Simulation) current simulation under context</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.add_operation_and_number">
+<span class="sig-name descname"><span class="pre">add_operation_and_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.add_operation_and_number" title="Link to this definition"></a></dt>
+<dd><p>Creates a MetaSpeciesLogicResolver from the comparison of a meta-species with a value or another
+meta-species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>symbol</strong> – Comparison symbol ‘&gt;=’, ‘&lt;=’, ‘&gt;’ or ‘&lt;’</p></li>
+<li><p><strong>number</strong> – (int) if compared to a value, (Species or ReactingSpecies) if compared to the objects</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.check_parenthesis">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_parenthesis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code_line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_comp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.check_parenthesis" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>This function compiles part of a logic expression for meta-species. It checks to see if an operator ‘&lt;’ or
+‘&gt;’ is properly written inside parenthesis. It only applies if more than one operator is present in the
+code line</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code_line</strong> – (str) line of code to be compiled</p></li>
+<li><p><strong>line_number</strong> – (str) number of the code line currently being compiled</p></li>
+<li><p><strong>pos</strong> – (int) position of the ‘&gt;’ or ‘&lt;’ operator</p></li>
+<li><p><strong>symbol</strong> – ‘(’ or ‘)’, indicates in which direction the string analysis should proceded</p></li>
+<li><p><strong>number_of_comp</strong> – for distinction the default case where only one operator is present</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>simlog.error</strong> – if the code line is not properly written isolating the clauses with parenthesis</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(bool) false if the line compiles, raises a error if it does not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.compile_code_line">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compile_code_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.compile_code_line" title="Link to this definition"></a></dt>
+<dd><p>Compiles the code line executing a logical operation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>simlog.error</strong> – if the code line is not properly written isolating the clauses with parenthesis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_reacting_species">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logical_add_reacting_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">react_spe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_reacting_species" title="Link to this definition"></a></dt>
+<dd><p>Adds a reacting species object to an event trigger operation by summing over all the indicated
+characteristics. It also accepts sums of species multiplied by integers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>react_spe</strong> – (ReactingSpecies) ReactingSpecies object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_species">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logical_add_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.logical_add_species" title="Link to this definition"></a></dt>
+<dd><p>Adds a species object to an event trigger operation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (Species) species object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.logic_operator_objects.SpeciesComparator.reformat_number_and_species">
+<span class="sig-name descname"><span class="pre">reformat_number_and_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.logic_operator_objects.SpeciesComparator.reformat_number_and_species" title="Link to this definition"></a></dt>
+<dd><p>Discovers if the number is a Species, ReactingSpecies or integer and prepares the output accordingly</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>number</strong> – (int) if compared to a value, (Species or ReactingSpecies) if compared to the objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.meta_class">
+<span id="mobspy-modules-meta-class-module"></span><h2>mobspy.modules.meta_class module<a class="headerlink" href="#module-mobspy.modules.meta_class" title="Link to this heading"></a></h2>
+<p>The meta_class.py model is responsible for defining the meta-species, meta-reactions and other “meta-classes”
+It is also responsible for compiling the models into data structures that will be converted into an SBML file later
+Bear in mind that they are not actually Python meta-classes. The first design utilized this feature but know there
+are just regular classes</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.BaseSpecies">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">BaseSpecies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_or_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.BaseSpecies" title="Link to this definition"></a></dt>
+<dd><p>Function that returns a number of base species according to the number_of_properties
+BaseSpecies are just Species with no inheritance attached to it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>number_or_names</strong> – (int) number of base species wanted or (list) list of names of wanted Species</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Species objects according to the number of species requested</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">Compiler</span></span><a class="headerlink" href="#mobspy.modules.meta_class.Compiler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The compiler is responsible for constructing the model from the meta-species and meta-reactions given
+and checking if it is a valid MobsPy model</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.add_phantom_reactions">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_phantom_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions_for_sbml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_to_add_phantom_reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.add_phantom_reactions" title="Link to this definition"></a></dt>
+<dd><p>This method is here because basico cannot compile species that have been assigned to events but are not
+present in reactions.
+Interestingly enough this error does not happen in python 3.10.
+However, to be compatible with earlier versions we add an extremely slow phantom reaction for each one
+of those species with a coefficient of 1e-100. The idea is that the reaction is so slow that it should
+not make any sizable difference in any model. It adds them directly to the reactions for sbml dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactions_for_sbml</strong> – reactions dictionary in python sbml format</p></li>
+<li><p><strong>species_to_add_phantom_reaction</strong> – species that will be assigned a phantom reaction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.add_to_parameters_to_sbml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_to_parameters_to_sbml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters_used</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_for_sbml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_to_add</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.add_to_parameters_to_sbml" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.compile">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_species_to_simulate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orthogonal_vector_structure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'deterministic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous_sim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ending_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_expression_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.compile" title="Link to this definition"></a></dt>
+<dd><p>Here we construct the species for Copasi using their objects</p>
+<p>It handles the construction of species_for_sbml, reactions_for_sbml, parameters_for_sbml,
+mappings_for_sbml, model_str which will be used to write the sbml_string for basiCO
+It also performs checks to see if the model is valid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meta_species_to_simulate</strong> – (List_Species or Species) Species to generate the model</p></li>
+<li><p><strong>reactions_set</strong> – (set) Set of meta-reactions collected when the simulation objected was constructed</p></li>
+<li><p><strong>species_counts</strong> – (dict) All counts assigned to species in the model
+before the simulation object was constructed</p></li>
+<li><p><strong>orthogonal_vector_structure</strong> – (dict) ref_characteristics_to_objects in other modules. Dictionary</p></li>
+</ul>
+</dd>
+</dl>
+<p>with the characteristics as keys and the objects as values. Characteritics pointing to their coordinate
+in the vector space
+:param volume: (int, flot) Simulation volume
+:param type_of_model: (str) deterministic or stochastic
+:param verbose: (bool) print or not the model results by generating a model_str
+meta-reaction ( or Default we have the round-robin) and how MobsPy will handle meta-species in
+the products that are not referenced in the reactants - see order_operators.py
+:param event_dictionary: (dict) dictionary with all the events to be added to the model
+:param continuous_sim: (bool) simulation with conditional duration or not
+:param ending_condition: (MetaSpeciesLogicResolver) trigger for the ending contion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>species_for_sbml (dict) = dictionary where the species strings (in MobsPy format) are the keys and</p>
+</dd>
+</dl>
+<p>the values are their counts inside the model. reactions_for_sbml (dict) = Reaction in dictionary format
+with keys ‘re’, ‘pr’ and ‘rate’. Values are strings parameters_for_sbml (dict) = value with parameter
+name and tuple with quantity and unit. For standard models it only holds the volume mappings_for_sbml
+(dict) = Dictionary that maps a meta-species to the set of species strings that belong to it. model_str
+(str) = str of the variables defined above in a user-readable format. events_for_sbml (dict) = dictionary
+containing the event trigger and count assignments. assigned_species (list) = list of meta-species which
+had counts assigned to them during this model execution (used when composing simulations)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.entity_counter">
+<span class="sig-name descname"><span class="pre">entity_counter</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.entity_counter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.last_rate">
+<span class="sig-name descname"><span class="pre">last_rate</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.last_rate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.override_get_item">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">override_get_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_to_return</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.override_get_item" title="Link to this definition"></a></dt>
+<dd><p>Due to priority in Python the item is stored before the reaction
+So it is stored in the Compiler level and passed to the reaction object in the end
+Important: the rate is used before the compilation level, it’s used when the reaction has been completely
+defined</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>object_to_return</strong> – (Species or Reacting) returns the object that the __getitem__ was performed on</p></li>
+<li><p><strong>item</strong> – (int, float, callable, Quantity) stored reaction rate</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Compiler.ref_characteristics_to_object">
+<span class="sig-name descname"><span class="pre">ref_characteristics_to_object</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#mobspy.modules.meta_class.Compiler.ref_characteristics_to_object" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.ListSpecies">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">ListSpecies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inherits_from</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.ListSpecies" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">List_Species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class just stores species after the | operation. It creates a list of species than can be loop through or
+given to the simulator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>list_of_species</strong> – (Species) Meta-species list to store the meta-species</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.append" title="Link to this definition"></a></dt>
+<dd><p>Add species to the list_of_species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (Species) meta-species to be added to the List_Species</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.extend">
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.extend" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.insert">
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.insert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.is_in">
+<span class="sig-name descname"><span class="pre">is_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.is_in" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.remove" title="Link to this definition"></a></dt>
+<dd><p>Removes all instances of the meta-species in the object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of instances removed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.List_Species.remove_repeated_elements">
+<span class="sig-name descname"><span class="pre">remove_repeated_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.List_Species.remove_repeated_elements" title="Link to this definition"></a></dt>
+<dd><p>This function creates a List_Species with no repetitions. The order of elements is lost</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List_Species with no repeated elements</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.New">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">New</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_or_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.New" title="Link to this definition"></a></dt>
+<dd><p>Function that returns a number of meta-species that inherit from the species supplied</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>number_or_names</strong> – (int) number of meta-species wanted, (list) list of names wanted</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Species objects according to the number of species requested</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">Reacting_Species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stoichiometry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.logic_operator_objects.ReactingSpeciesComparator" title="mobspy.modules.logic_operator_objects.ReactingSpeciesComparator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReactingSpeciesComparator</span></code></a></p>
+<p>This is a intermediary object created when a species is used in a reaction. It is created when a species is
+part of a reaction, so it’s constructor is called by the Species class in several of it’s methods. It
+transforms a Species object into a list packable object to pass to create the reaction
+object. This list format allows for easy concatenation of reactants by summing</p>
+<p>The &gt;&gt; operator calls the Reaction constructor to finally define a reaction object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>list_of_reactants</strong> – (list of dict) used interchangeably for products and reactants.</p>
+</dd>
+</dl>
+<p>A list of dictionaries containing the following {‘object’: meta-species object reference,
+‘characteristics’: the characteristics queried, ‘stoichiometry’: stoichiometry value,
+‘label’: label if used (None)}</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.c">
+<span class="sig-name descname"><span class="pre">c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.c" title="Link to this definition"></a></dt>
+<dd><p>c query implementation, queries by the value inside a variable instead of the name
+it just calls __getattr__ with the value inside the variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> – value to query over</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.context_finish_for_reacting_specie">
+<span class="sig-name descname"><span class="pre">context_finish_for_reacting_specie</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.context_finish_for_reacting_specie" title="Link to this definition"></a></dt>
+<dd><p>This removes the context which is ending from _list_of_nested_any_contexts and updates the current Cts context.
+Then, it updates the Cts context in all meta-species.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.context_initiator_for_reacting_specie">
+<span class="sig-name descname"><span class="pre">context_initiator_for_reacting_specie</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.context_initiator_for_reacting_specie" title="Link to this definition"></a></dt>
+<dd><p>This adds the current context in _list_of_nested_any_contexts and then updates the Cts context in all meta-species.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.is_spe_or_reac">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_spe_or_reac</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.is_spe_or_reac" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.is_species">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_species</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.is_species" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.label">
+<span class="sig-name descname"><span class="pre">label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.label" title="Link to this definition"></a></dt>
+<dd><p>Label function implementation. This function assigns labels to meta-species to be matched by the compiler
+later</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> – (int, float, str) value for the label for matching</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reacting_Species.old_context">
+<span class="sig-name descname"><span class="pre">old_context</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#mobspy.modules.meta_class.Reacting_Species.old_context" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reactions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">Reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">products</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reactions" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This is the Reaction class. It contains the reactants, products, rate and order
+Reactions are created with the &gt;&gt; operator. In each reaction is stored in all involved objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactants</strong> – (list of Species) list of meta-species used as reactants in the meta-reaction</p></li>
+<li><p><strong>products</strong> – (list of Species) list of meta-species used as products in the meta-reaction</p></li>
+<li><p><strong>order</strong> – (Order Operator) reaction order operator - default in a Round-Robin base</p></li>
+<li><p><strong>rate</strong> – (int, float, callable, Quantity) reaction rate</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Reactions.set_rate">
+<span class="sig-name descname"><span class="pre">set_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Reactions.set_rate" title="Link to this definition"></a></dt>
+<dd><p>Sets the stored reaction rate. See Compiler.override_get_item(self, item)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rate</strong> – (int, float, callable, Quantity) = reaction rate</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">Species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.logic_operator_objects.SpeciesComparator" title="mobspy.modules.logic_operator_objects.SpeciesComparator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpeciesComparator</span></code></a></p>
+<p>Fundamental class - The meta-species object
+Contains the characteristics, the species name, the reactions it is involved in
+and finally the other species it references
+Objects store all the basic information necessary to create an SBML file and construct a model
+So we construct the species through reactions and __getattr__ to form a model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_name</strong> – (str) name of the species - named firstly as N$Counter as a placeholder. During compilation it is</p>
+</dd>
+</dl>
+<p>named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
+:param _characteristics: (str) set of characteristics DIRECTLY added to a species, does not contain inherited
+characteristics
+:param _references: (set) set of meta-species a meta-species has inherited from (used in it’s construction).
+Every species contains itself in this set
+:param first_characteristic: (str) first characteristic added to the species
+:param _reactions: (set) Every species stores all reactions is involved in. The compiler performs the union of
+the set with all species and species in the _references set to get the reactions back
+:param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
+keys and the counts of values</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.add_characteristic">
+<span class="sig-name descname"><span class="pre">add_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.add_characteristic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.add_quantities">
+<span class="sig-name descname"><span class="pre">add_quantities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.add_quantities" title="Link to this definition"></a></dt>
+<dd><p>This function was implemented because Python can’t accept sets as dictionary keys
+Set the quantity of an specific string of species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>characteristics</strong> – (str) characteristics of the species to be set</p></li>
+<li><p><strong>quantity</strong> – (int, float, Quantity) counts of that specific species</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.add_reaction">
+<span class="sig-name descname"><span class="pre">add_reaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.add_reaction" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.add_reference">
+<span class="sig-name descname"><span class="pre">add_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.add_reference" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.c">
+<span class="sig-name descname"><span class="pre">c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.c" title="Link to this definition"></a></dt>
+<dd><p>c query implementation, queries by the value inside a variable instead of the name
+it just calls __getattr__ with the value inside the variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> – value to query over</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.check_if_valid_characteristic">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_if_valid_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.check_if_valid_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Checks if the characteristics is valid. If there is any conflict between the methods of the class or
+attributes of the class the user will be asked to rename the characteristic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>char - name of the characteristic to be added:</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p>simlog.error if the characteristic name is not allowed</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if characteristic is allowed false if not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_all_characteristics">
+<span class="sig-name descname"><span class="pre">get_all_characteristics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_all_characteristics" title="Link to this definition"></a></dt>
+<dd><p>Different that get_characteristics. This function the characteristics directly added to it and the
+characteristics of the references. While get_characteristics only returns the characteristics directly
+added to that meta-species.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_characteristics">
+<span class="sig-name descname"><span class="pre">get_characteristics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_characteristics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_index_from_reference_dict">
+<span class="sig-name descname"><span class="pre">get_index_from_reference_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_index_from_reference_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_ordered_references">
+<span class="sig-name descname"><span class="pre">get_ordered_references</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_ordered_references" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_quantities">
+<span class="sig-name descname"><span class="pre">get_quantities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_quantities" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The list of species_counts</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_reactions">
+<span class="sig-name descname"><span class="pre">get_reactions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_reactions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_references">
+<span class="sig-name descname"><span class="pre">get_references</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_references" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.get_simulation_context">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_simulation_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.get_simulation_context" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.is_spe_or_reac">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_spe_or_reac</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.is_spe_or_reac" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.is_species">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_species</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.is_species" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.label">
+<span class="sig-name descname"><span class="pre">label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.label" title="Link to this definition"></a></dt>
+<dd><p>Label function implementation. This function matches equal meta-species if they have equal labels
+Here it returns a Reacting_Species as labels need to be used in reactions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> – (int, float, str) value for the label for matching</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reacting_Species object created with the label in the constructor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.meta_specie_named_any_context">
+<span class="sig-name descname"><span class="pre">meta_specie_named_any_context</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#mobspy.modules.meta_class.Species.meta_specie_named_any_context" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.name" title="Link to this definition"></a></dt>
+<dd><p>Function to name a species. Allows the user to use a name different from the variable’s name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – (str) name of the species</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.order_references">
+<span class="sig-name descname"><span class="pre">order_references</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.order_references" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.print_characteristics">
+<span class="sig-name descname"><span class="pre">print_characteristics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.print_characteristics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.remove_characteristic">
+<span class="sig-name descname"><span class="pre">remove_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.remove_characteristic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.remove_repeated_elements">
+<span class="sig-name descname"><span class="pre">remove_repeated_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.remove_repeated_elements" title="Link to this definition"></a></dt>
+<dd><p>Defined to be consistent with the model behavior from List_Species
+:return: Itself</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.reset_counts">
+<span class="sig-name descname"><span class="pre">reset_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.reset_counts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.reset_quantities">
+<span class="sig-name descname"><span class="pre">reset_quantities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.reset_quantities" title="Link to this definition"></a></dt>
+<dd><p>Just reset the counts inside a species - potentially useful in jupyter environment</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.reset_reactions">
+<span class="sig-name descname"><span class="pre">reset_reactions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.reset_reactions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.reset_references">
+<span class="sig-name descname"><span class="pre">reset_references</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.reset_references" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.reset_simulation_context">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reset_simulation_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.reset_simulation_context" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.set_reactions">
+<span class="sig-name descname"><span class="pre">set_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.set_reactions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.set_references">
+<span class="sig-name descname"><span class="pre">set_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.set_references" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.set_simulation_context">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_simulation_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.set_simulation_context" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.show_characteristics">
+<span class="sig-name descname"><span class="pre">show_characteristics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.show_characteristics" title="Link to this definition"></a></dt>
+<dd><p>Prints the directly characteristics inside the object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.show_quantities">
+<span class="sig-name descname"><span class="pre">show_quantities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.show_quantities" title="Link to this definition"></a></dt>
+<dd><p>Shows the species counts stored in this object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.show_reactions">
+<span class="sig-name descname"><span class="pre">show_reactions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.show_reactions" title="Link to this definition"></a></dt>
+<dd><p>Prints the reactions inside the object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.show_references">
+<span class="sig-name descname"><span class="pre">show_references</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.show_references" title="Link to this definition"></a></dt>
+<dd><p>Prints the objects this object has inherited from (including self)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.str_under_context">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">str_under_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.str_under_context" title="Link to this definition"></a></dt>
+<dd><p>Returns the str representation of a species under context or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species_object</strong> – Meta-species object to construct the string</p></li>
+<li><p><strong>characteristics</strong> – Characteristics to filter the strings</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>String in format (A_dot_a1 + A_dot_a2 + ….) with the parenthesis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.unit">
+<span class="sig-name descname"><span class="pre">unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.unit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.Species.update_meta_specie_named_any_context">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_meta_specie_named_any_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_specie_named_any_characteristics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.Species.update_meta_specie_named_any_context" title="Link to this definition"></a></dt>
+<dd><p>This updates the class variable meta_specie_named_any_context with the characteristics of the current any context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>meta_specie_named_any_characteristics</strong> – (set) set of characteristics of the currently active any context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class.compile_species_number_line">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class.</span></span><span class="sig-name descname"><span class="pre">compile_species_number_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code_line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class.compile_species_number_line" title="Link to this definition"></a></dt>
+<dd><p>Compiles code line for BaseSpecies and New</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code_line</strong> – <ul class="simple">
+<li><p>Line of code where BaseSpecies or New has been called</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>n (int) = number of variables after a coma, names (list) = list of strings with the names of the</p>
+</dd>
+</dl>
+<p>variables</p>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.meta_class_utils">
+<span id="mobspy-modules-meta-class-utils-module"></span><h2>mobspy.modules.meta_class_utils module<a class="headerlink" href="#module-mobspy.modules.meta_class_utils" title="Link to this heading"></a></h2>
+<p>This model stores function used by the meta_class.py module</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class_utils.check_orthogonality_between_references">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class_utils.</span></span><span class="sig-name descname"><span class="pre">check_orthogonality_between_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class_utils.check_orthogonality_between_references" title="Link to this definition"></a></dt>
+<dd><p>Check if meta-species objects inside a reference do not have characteristics in common
+The sets of characteristics directly added to species must be independent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>references</strong> – (set) set of meta-species objects to check for independence</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>simlog.error</strong> – raises error if there are repeated characteristics in different meta-species</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class_utils.combine_references">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class_utils.</span></span><span class="sig-name descname"><span class="pre">combine_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class_utils.combine_references" title="Link to this definition"></a></dt>
+<dd><p>Combine the sets of references of two species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species1</strong> – (Meta-species object)</p></li>
+<li><p><strong>species2</strong> – (Meta-species object)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class_utils.complete_characteristics_with_first_values">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class_utils.</span></span><span class="sig-name descname"><span class="pre">complete_characteristics_with_first_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spe_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class_utils.complete_characteristics_with_first_values" title="Link to this definition"></a></dt>
+<dd><p>This creates a string with the species object name and the set of all first characteristics added
+to it’s base species used to construct it
+It allows us to search for the proper string in the model using the result of this function
+It’s used to set the quantities using the call method in Species and Reacting_Species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spe_object</strong> – (meta-species object) meta-species to generate the species states with the first values</p></li>
+<li><p><strong>characteristics</strong> – (str) if there are characteristics to use instead of the default</p></li>
+<li><p><strong>characteristics_to_object</strong> – (dict) dictionary with characteristics as keys and the meta-species which</p></li>
+</ul>
+</dd>
+</dl>
+<p>they have been added to directly as value (no inheritance or New)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Set with the species name and characteristics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class_utils.create_orthogonal_vector_structure">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class_utils.</span></span><span class="sig-name descname"><span class="pre">create_orthogonal_vector_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class_utils.create_orthogonal_vector_structure" title="Link to this definition"></a></dt>
+<dd><p>This creates the independent state-structure for the model
+It is just a dictionary where the keys are characteristics and the values are meta-species objects that have
+been directly added to that object (no inheritance or New)
+It simplifies the code by allowing to easily keep track of the ‘axis’ of each characteristic. Allowing
+for easy transformation on the products and others</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (meta-species objects) - meta-species objects used in a model</p>
+</dd>
+<dt class="field-even">Return ref_characteristics_to_object<span class="colon">:</span></dt>
+<dd class="field-even"><p>(dict) a dictionary where the keys are characteristics and the</p>
+</dd>
+</dl>
+<p>values are meta-species objects that have been directly added to that object</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.meta_class_utils.unite_characteristics">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.meta_class_utils.</span></span><span class="sig-name descname"><span class="pre">unite_characteristics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.meta_class_utils.unite_characteristics" title="Link to this definition"></a></dt>
+<dd><p>This function unites the characteristics of all the given species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species</strong> – (list of species or List_Species object)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.mobspy_expressions">
+<span id="mobspy-modules-mobspy-expressions-module"></span><h2>mobspy.modules.mobspy_expressions module<a class="headerlink" href="#module-mobspy.modules.mobspy_expressions" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Bool_Override">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">Bool_Override</span></span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Bool_Override" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Just a base class for implementing the . operation in the rate function arguments
+through boolean overriding. It is responsible for returning true when the reactant
+has the specified characteristic when using the dot notation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_stocked_characteristics</strong> – (str) stocks the characteristics of the queries performed by the user</p></li>
+<li><p><strong>species_string</strong> – (str) string value from an individual species in MobsPY format</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.ExpressionDefiner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">ExpressionDefiner</span></span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.ExpressionDefiner.combine_binary_attributes">
+<span class="sig-name descname"><span class="pre">combine_binary_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner.combine_binary_attributes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.ExpressionDefiner.create_from_new_operation">
+<span class="sig-name descname"><span class="pre">create_from_new_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc_op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct_sense</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner.create_from_new_operation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_op">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute_op</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_op" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_quantity_op">
+<span class="sig-name descname"><span class="pre">execute_quantity_op</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner.execute_quantity_op" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.MobsPyExpression">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">MobsPyExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_count_op=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_conc_op=&lt;Quantity(1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'1</span> <span class="pre">/</span> <span class="pre">liter')&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expression_variables=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_set=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_in_model=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concentration_in_model=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_in_expression=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concentration_in_expression=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_units=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.MobsPyExpression" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator" title="mobspy.modules.mobspy_expressions.Specific_Species_Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Specific_Species_Operator</span></code></a>, <a class="reference internal" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner" title="mobspy.modules.mobspy_expressions.ExpressionDefiner"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExpressionDefiner</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.MobsPyExpression.generate_string_operation">
+<span class="sig-name descname"><span class="pre">generate_string_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.MobsPyExpression.generate_string_operation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">OverrideQuantity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MagnitudeT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UnitLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">OverrideQuantity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UnitLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">OverrideQuantity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ScalarT</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UnitLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">OverrideQuantity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PlainQuantity</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UnitLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner" title="mobspy.modules.mobspy_expressions.ExpressionDefiner"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExpressionDefiner</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.convert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.convert_into">
+<span class="sig-name descname"><span class="pre">convert_into</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.convert_into" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_add">
+<span class="sig-name descname"><span class="pre">non_expression_add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_add" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_mul">
+<span class="sig-name descname"><span class="pre">non_expression_mul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_mul" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_pow">
+<span class="sig-name descname"><span class="pre">non_expression_pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_pow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_radd">
+<span class="sig-name descname"><span class="pre">non_expression_radd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_radd" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rmul">
+<span class="sig-name descname"><span class="pre">non_expression_rmul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rmul" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rsub">
+<span class="sig-name descname"><span class="pre">non_expression_rsub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rsub" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rtruediv">
+<span class="sig-name descname"><span class="pre">non_expression_rtruediv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_rtruediv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_sub">
+<span class="sig-name descname"><span class="pre">non_expression_sub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_sub" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_truediv">
+<span class="sig-name descname"><span class="pre">non_expression_truediv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.non_expression_truediv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideQuantity.set_ms_active">
+<span class="sig-name descname"><span class="pre">set_ms_active</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ms_active</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideQuantity.set_ms_active" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.OverrideUnitRegistry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">OverrideUnitRegistry</span></span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.OverrideUnitRegistry" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.QuantityConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">QuantityConverter</span></span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.QuantityConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.QuantityConverter.convert_received_unit">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_received_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.QuantityConverter.convert_received_unit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Specific_Species_Operator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_expressions.</span></span><span class="sig-name descname"><span class="pre">Specific_Species_Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.mobspy_expressions.Bool_Override" title="mobspy.modules.mobspy_expressions.Bool_Override"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bool_Override</span></code></a></p>
+<p>This class creates objects from the species strings from the meta-species to pass them to the rate functions
+as arguments. It uses the Bool_Override class to return true or false to the .dot operation inside the rate
+functions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_stocked_characteristics</strong> – (str) stocks the characteristics of the queries performed by the user</p></li>
+<li><p><strong>species_string</strong> – (str) string value from an individual species in MobsPY format</p></li>
+<li><p><strong>species_object</strong> – (Species) Meta-species object which originated the meta-species str</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Specific_Species_Operator.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator.add" title="Link to this definition"></a></dt>
+<dd><p>Adds characteristic to the set of characteristics when checking for all
+referred characteristics by the user</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>characteristic</strong> – (str) characteristic to add to the set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_characteristics">
+<span class="sig-name descname"><span class="pre">get_characteristics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_characteristics" title="Link to this definition"></a></dt>
+<dd><p>Returns: The characteristics of the species in this given state</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator.get_name" title="Link to this definition"></a></dt>
+<dd><p>Returns: The name of the species the reactant is in string format</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_expressions.Specific_Species_Operator.is_a">
+<span class="sig-name descname"><span class="pre">is_a</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_expressions.Specific_Species_Operator.is_a" title="Link to this definition"></a></dt>
+<dd><p>This function checks to see if the meta-species the species_string belong to has inherited from the
+parameter reference (reminder: every meta-species inherits from itself)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reference</strong> – (Species) Meta-species object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(bool) True if the meta-species in Specific_Species_Operator has inherited from the reference</p>
+</dd>
+</dl>
+<p>False otherwise</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.mobspy_parameters">
+<span id="mobspy-modules-mobspy-parameters-module"></span><h2>mobspy.modules.mobspy_parameters module<a class="headerlink" href="#module-mobspy.modules.mobspy_parameters" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_parameters.Mobspy_Parameter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_parameters.</span></span><span class="sig-name descname"><span class="pre">Mobspy_Parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_parameters.Mobspy_Parameter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mobspy.modules.mobspy_expressions.ExpressionDefiner" title="mobspy.modules.mobspy_expressions.ExpressionDefiner"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExpressionDefiner</span></code></a>, <a class="reference internal" href="#mobspy.modules.mobspy_expressions.QuantityConverter" title="mobspy.modules.mobspy_expressions.QuantityConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantityConverter</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_parameters.Mobspy_Parameter.parameter_stack">
+<span class="sig-name descname"><span class="pre">parameter_stack</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#mobspy.modules.mobspy_parameters.Mobspy_Parameter.parameter_stack" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_parameters.Mobspy_Parameter.rename">
+<span class="sig-name descname"><span class="pre">rename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_parameters.Mobspy_Parameter.rename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.mobspy_parameters.ModelParameters">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.mobspy_parameters.</span></span><span class="sig-name descname"><span class="pre">ModelParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.mobspy_parameters.ModelParameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-mobspy.modules.order_operators">
+<span id="mobspy-modules-order-operators-module"></span><h2>mobspy.modules.order_operators module<a class="headerlink" href="#module-mobspy.modules.order_operators" title="Link to this heading"></a></h2>
+<p>This module deals with order_operators
+Thus it deals with the Round-Robin order assignment and with species in the products that
+are not referenced in the reactants (Born Species)
+It has also the implementation of the Rev operator, since that is a also a reaction operator</p>
+</section>
+<section id="module-mobspy.modules.reaction_construction_nb">
+<span id="mobspy-modules-reaction-construction-nb-module"></span><h2>mobspy.modules.reaction_construction_nb module<a class="headerlink" href="#module-mobspy.modules.reaction_construction_nb" title="Link to this heading"></a></h2>
+<p>This module is responsible for the construction of all individual reactions from a meta-reaction</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.check_for_invalid_reactions">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">check_for_invalid_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.check_for_invalid_reactions" title="Link to this definition"></a></dt>
+<dd><p>If query references two independent characteristics from the in meta-species it would result in an empty set
+Like Ecoli.live.dead - (assuming live and dead belong to the same meta-species characteristics set)
+If that ever happens inside a meta-reaction we just pop an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactions</strong> – (set of meta-reactions) set of meta-reactions inside the model</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) dictionary with the characteristics as keys and their respective</p></li>
+</ul>
+</dd>
+</dl>
+<p>object as values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.construct_order_structure">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">construct_order_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_order_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_species_string_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.construct_order_structure" title="Link to this definition"></a></dt>
+<dd><p>Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
+The meta-species objects are the keys of this dictionary and a lists of species strings currently being used
+in the reaction are the values - Allowing the product to find it’s corresponding species-string in a future
+step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species_order_list</strong> – (list of meta-species objects) list of meta-species objects as they appear in the</p>
+</dd>
+</dl>
+<p>meta-reaction
+:param current_species_string_list: (list of strings) list of strings in MobsPy format of the species
+currently in this specific reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>cyclic_dict (dict) Dictionary where the keys are meta-species objects and the values are</p>
+</dd>
+</dl>
+<p>lists of species</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.construct_product_structure">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">construct_product_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.construct_product_structure" title="Link to this definition"></a></dt>
+<dd><p>This function unpacks the products in a meta-reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reaction meta-reaction currently being analysed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>product_list = A list of dictionaries for each product with the meta-species object, the label and the</p>
+</dd>
+</dl>
+<p>characteristics</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.construct_rate_function_arguments">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">construct_rate_function_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rate_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.construct_rate_function_arguments" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.construct_reactant_structures">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">construct_reactant_structures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.construct_reactant_structures" title="Link to this definition"></a></dt>
+<dd><p>This function finds the corresponding strings according to the reactant meta-species with or without a query
+pack then in a list and return</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactant_species</strong> – (meta-species object) species objects of the involved species</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) dictionary with characteristics as keys and species objects as</p></li>
+</ul>
+</dd>
+</dl>
+<p>values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.construct_single_reaction_for_sbml">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">construct_single_reaction_for_sbml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_species_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_species_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.construct_single_reaction_for_sbml" title="Link to this definition"></a></dt>
+<dd><p>This function constructs the reactions for SBML for the conversion by the model builder script
+It follows the following structure ‘re’:[(‘stoichmetry’, reactantant_string) ….
+The reaction rate must be a string containing the reaction kinetics
+This returns a single reaction to be appended by the reactions_for_sbml dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactant_species_string_list</strong> – (list of strings) list of reactants in MobsPy format</p></li>
+<li><p><strong>product_species_string_list</strong> – (list of strings) list of products in MobsPy format</p></li>
+<li><p><strong>reaction_rate</strong> – (str) reaction rate expression as a string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>to_return (dict) = dictionary that packs the reactants products and rate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.copy_reaction">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">copy_reaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.copy_reaction" title="Link to this definition"></a></dt>
+<dd><p>Just copies a meta-reaction
+Deepcopy is not working because it calls __getattr__ on the species with a private method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reaction</strong> (<em>meta-reaction</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.count_string_dictionary">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">count_string_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_strings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.count_string_dictionary" title="Link to this definition"></a></dt>
+<dd><p>Count the number of instances in a list and return them in a dictionary where the keys are the strings and
+the value the number of times it appeared in the list</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.create_all_reactions">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">create_all_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_species_in_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_exist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_in_reaction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_check</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.create_all_reactions" title="Link to this definition"></a></dt>
+<dd><p>This function creates all reactions
+Returns the reactions_for_sbml and parameters_for_sbml dictionary
+Those will be used by another module to create the SBML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactions</strong> – (meta-reaction objects) reactions objects constructed by the meta_class module</p></li>
+<li><p><strong>meta_species_in_model</strong> – (list) list of meta-species in model</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) Characteristics as keys objects as values</p></li>
+<li><p><strong>type_of_model</strong> – (str) stochastic or deterministic</p></li>
+<li><p><strong>dimension</strong> – (int) model dimension 1D, 2D, 3D, …..</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reactions_for_sbml (dict) = dictionary with all reactions that will be added to the sbml model file,</p>
+</dd>
+</dl>
+<p>parameters_for_sbml (dict) = parameters for the sbml model file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.expression_compilation_finish">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">expression_compilation_finish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expressions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.expression_compilation_finish" title="Link to this definition"></a></dt>
+<dd><p>Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.expression_compilation_initiation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">expression_compilation_initiation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.expression_compilation_initiation" title="Link to this definition"></a></dt>
+<dd><p>First find all ExpressionDefiner objects in the stack.
+Then, sets _ms_active to True to change the behavior of quantities and units in expressions</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.get_involved_species">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">get_involved_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_species_in_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.get_involved_species" title="Link to this definition"></a></dt>
+<dd><p>This extracts all the involved meta-species inside a reaction
+This function is responsible for implementing the inheritance mechanism, by finding within each meta-species
+references set, if they reference the meta-species in the reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reaction</strong> – (meta-reaction object)</p></li>
+<li><p><strong>meta_species_in_model</strong> – (list) list of meta-species used in the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>base_species_order (list of meta-species objects) = order that the meta-species appear in the</p>
+</dd>
+</dl>
+<p>meta-reaction, reactant_species_combination_list (list of lists of meta-species) = list of lists of all
+meta-species that have inherited from the meta-species in the meta-reaction</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb.iterator_for_combinations">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb.</span></span><span class="sig-name descname"><span class="pre">iterator_for_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_lists</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb.iterator_for_combinations" title="Link to this definition"></a></dt>
+<dd><p>Iterate through all the combinations of a list of lists
+[[A,B,C], [D, F, E], [G]] means:
+ADG, AFG, AEG, BDG, BFG, BEG, CDG, CFG, CEG …..</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>list_of_lists (list of lists) = list of all lists to iterate through all combinations</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.reaction_construction_nb_parallel">
+<span id="mobspy-modules-reaction-construction-nb-parallel-module"></span><h2>mobspy.modules.reaction_construction_nb_parallel module<a class="headerlink" href="#module-mobspy.modules.reaction_construction_nb_parallel" title="Link to this heading"></a></h2>
+<p>This module is responsible for the construction of all individual reactions from a meta-reaction</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.check_for_invalid_reactions">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">check_for_invalid_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.check_for_invalid_reactions" title="Link to this definition"></a></dt>
+<dd><p>If query references two independent characteristics from the in meta-species it would result in an empty set
+Like Ecoli.live.dead - (assuming live and dead belong to the same meta-species characteristics set)
+If that ever happens inside a meta-reaction we just pop an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactions</strong> – (set of meta-reactions) set of meta-reactions inside the model</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) dictionary with the characteristics as keys and their respective</p></li>
+</ul>
+</dd>
+</dl>
+<p>object as values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.construct_order_structure">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">construct_order_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species_order_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_species_string_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.construct_order_structure" title="Link to this definition"></a></dt>
+<dd><p>Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
+The meta-species objects are the keys of this dictionary and a lists of species strings currently being used
+in the reaction are the values - Allowing the product to find it’s corresponding species-string in a future
+step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>species_order_list</strong> – (list of meta-species objects) list of meta-species objects as they appear in the</p>
+</dd>
+</dl>
+<p>meta-reaction
+:param current_species_string_list: (list of strings) list of strings in MobsPy format of the species
+currently in this specific reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>cyclic_dict (dict) Dictionary where the keys are meta-species objects and the values are</p>
+</dd>
+</dl>
+<p>lists of species</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.construct_product_structure">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">construct_product_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.construct_product_structure" title="Link to this definition"></a></dt>
+<dd><p>This function unpacks the products in a meta-reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reaction meta-reaction currently being analysed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>product_list = A list of dictionaries for each product with the meta-species object, the label and the</p>
+</dd>
+</dl>
+<p>characteristics</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.construct_rate_function_arguments">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">construct_rate_function_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rate_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.construct_rate_function_arguments" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.construct_reactant_structures">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">construct_reactant_structures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.construct_reactant_structures" title="Link to this definition"></a></dt>
+<dd><p>This function finds the corresponding strings according to the reactant meta-species with or without a query
+pack then in a list and return</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactant_species</strong> – (meta-species object) species objects of the involved species</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) dictionary with characteristics as keys and species objects as</p></li>
+</ul>
+</dd>
+</dl>
+<p>values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.construct_single_reaction_for_sbml">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">construct_single_reaction_for_sbml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactant_species_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_species_string_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.construct_single_reaction_for_sbml" title="Link to this definition"></a></dt>
+<dd><p>This function constructs the reactions for SBML for the conversion by the model builder script
+It follows the following structure ‘re’:[(‘stoichmetry’, reactantant_string) ….
+The reaction rate must be a string containing the reaction kinetics
+This returns a single reaction to be appended by the reactions_for_sbml dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactant_species_string_list</strong> – (list of strings) list of reactants in MobsPy format</p></li>
+<li><p><strong>product_species_string_list</strong> – (list of strings) list of products in MobsPy format</p></li>
+<li><p><strong>reaction_rate</strong> – (str) reaction rate expression as a string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>to_return (dict) = dictionary that packs the reactants products and rate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.copy_reaction">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">copy_reaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.copy_reaction" title="Link to this definition"></a></dt>
+<dd><p>Just copies a meta-reaction
+Deepcopy is not working because it calls __getattr__ on the species with a private method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reaction</strong> (<em>meta-reaction</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.count_string_dictionary">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">count_string_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_strings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.count_string_dictionary" title="Link to this definition"></a></dt>
+<dd><p>Count the number of instances in a list and return them in a dictionary where the keys are the strings and
+the value the number of times it appeared in the list</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.create_all_reactions">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">create_all_reactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_species_in_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_exist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_in_reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.create_all_reactions" title="Link to this definition"></a></dt>
+<dd><p>This function creates all reactions
+Returns the reactions_for_sbml and parameters_for_sbml dictionary
+Those will be used by another module to create the SBML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactions</strong> – (meta-reaction objects) reactions objects constructed by the meta_class module</p></li>
+<li><p><strong>meta_species_in_model</strong> – (list) list of meta-species in model</p></li>
+<li><p><strong>ref_characteristics_to_object</strong> – (dict) Characteristics as keys objects as values</p></li>
+<li><p><strong>type_of_model</strong> – (str) stochastic or deterministic</p></li>
+<li><p><strong>dimension</strong> – (int) model dimension 1D, 2D, 3D, …..</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reactions_for_sbml (dict) = dictionary with all reactions that will be added to the sbml model file,</p>
+</dd>
+</dl>
+<p>parameters_for_sbml (dict) = parameters for the sbml model file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.get_involved_species">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">get_involved_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_species_in_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.get_involved_species" title="Link to this definition"></a></dt>
+<dd><p>This extracts all the involved meta-species inside a reaction
+This function is responsible for implementing the inheritance mechanism, by finding within each meta-species
+references set, if they reference the meta-species in the reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reaction</strong> – (meta-reaction object)</p></li>
+<li><p><strong>meta_species_in_model</strong> – (list) list of meta-species used in the model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>base_species_order (list of meta-species objects) = order that the meta-species appear in the</p>
+</dd>
+</dl>
+<p>meta-reaction, reactant_species_combination_list (list of lists of meta-species) = list of lists of all
+meta-species that have inherited from the meta-species in the meta-reaction</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.reaction_construction_nb_parallel.iterator_for_combinations">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.reaction_construction_nb_parallel.</span></span><span class="sig-name descname"><span class="pre">iterator_for_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_lists</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.reaction_construction_nb_parallel.iterator_for_combinations" title="Link to this definition"></a></dt>
+<dd><p>Iterate through all the combinations of a list of lists
+[[A,B,C], [D, F, E], [G]] means:
+ADG, AFG, AEG, BDG, BFG, BEG, CDG, CFG, CEG …..</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>list_of_lists (list of lists) = list of all lists to iterate through all combinations</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.set_counts_module">
+<span id="mobspy-modules-set-counts-module-module"></span><h2>mobspy.modules.set_counts_module module<a class="headerlink" href="#module-mobspy.modules.set_counts_module" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.set_counts_module.set_counts">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.set_counts_module.</span></span><span class="sig-name descname"><span class="pre">set_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count_dic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.set_counts_module.set_counts" title="Link to this definition"></a></dt>
+<dd><p>Adds counts to meta-species using a given dictionary. Keys from this dictionary can be either meta-species
+objects or strings. Items must be the assign counts to species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>count_dic</strong> – Dictionary where keys can be either meta-species or strings</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>simlog.error</strong> – <ul class="simple">
+<li><p>If a count is assigned to a Reacting_Species with more than one meta-species.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p>If there are two species with the same name and a string assignment is performed.
+If the keys are not strings or meta-species.
+If the counts are not Quantities, Floats or Ints.
+If the species was not found in the stack.
+:return: List_Species object. All meta-species that had a count assigned in this dictionary will be returned
+as a List_Species which can be passed as a model to the simulation object</p>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.species_string_generator">
+<span id="mobspy-modules-species-string-generator-module"></span><h2>mobspy.modules.species_string_generator module<a class="headerlink" href="#module-mobspy.modules.species_string_generator" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.species_string_generator.characteristics_dictionary">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.species_string_generator.</span></span><span class="sig-name descname"><span class="pre">characteristics_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.species_string_generator.characteristics_dictionary" title="Link to this definition"></a></dt>
+<dd><p>This function constructs a dictionary that leads from the species string characteristics to their respective
+object. This structure allows to easily find where the characteristics in a species string are locates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>characteristics</strong> – (set) of characteristics</p></li>
+<li><p><strong>characteristics_to_object</strong> – (dict) with characteristics as keys and their respective base meta-species</p></li>
+</ul>
+</dd>
+</dl>
+<p>object as value</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.species_string_generator.construct_all_combinations">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.species_string_generator.</span></span><span class="sig-name descname"><span class="pre">construct_all_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spe_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.species_string_generator.construct_all_combinations" title="Link to this definition"></a></dt>
+<dd><p>This function constructs all possible list in the format [‘species_name’, ‘char1’, ‘char2’, …] using
+all combinations of characteristics from the vector coordinates not used in the characteristics specified
+in the function argument. If a symbol is given it generates a string from the list using the symbol to join it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spe_object</strong> – meta-species object to be used</p></li>
+<li><p><strong>characteristics</strong> – (set) of characteristics given</p></li>
+<li><p><strong>characteristics_to_object</strong> – (dict) with characteristics as keys and their respective base meta-species</p></li>
+</ul>
+</dd>
+</dl>
+<p>object as value
+:param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.species_string_generator.construct_species_char_list">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.species_string_generator.</span></span><span class="sig-name descname"><span class="pre">construct_species_char_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spe_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characteristics_to_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.species_string_generator.construct_species_char_list" title="Link to this definition"></a></dt>
+<dd><p>This function constructs a list in the format [‘species_name’, ‘char1’, ‘char2’, …]. It generetes this list
+for a given meta-species and the specified characteristics. Values of characteristics not specified in a
+particular position are replaced by their default value. If a symbol is given it generates a string from
+the list using the symbol to join it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spe_object</strong> – meta-species object to be used</p></li>
+<li><p><strong>characteristics</strong> – (set) of characteristics given</p></li>
+<li><p><strong>characteristics_to_object</strong> – (dict) with characteristics as keys and their respective base meta-species</p></li>
+</ul>
+</dd>
+</dl>
+<p>object as value
+:param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol</p>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.unit_handler">
+<span id="mobspy-modules-unit-handler-module"></span><h2>mobspy.modules.unit_handler module<a class="headerlink" href="#module-mobspy.modules.unit_handler" title="Link to this heading"></a></h2>
+<p>This module is responsible for dealing with units in the modules directory level
+MobsPy standard units are Decimeter (Liter) - Second - Count</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.check_dimension">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">check_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.check_dimension" title="Link to this definition"></a></dt>
+<dd><p>Checks for dimension consistency. It “stores” the first dimension it was given by returning it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimension</strong> – (int) model’s dimension (1D, 2D, 3D …)</p></li>
+<li><p><strong>value</strong> – (int) dimension value being analysed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>simlog.error</strong> – If dimensions are not consistent through the given units (units in 1D with 2D mixed)</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dimension (int) = model’s dimension (1D, 2D, 3D …)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.convert_counts">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">convert_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.convert_counts" title="Link to this definition"></a></dt>
+<dd><p>This function converts the counts from the users given unit to MobsPy standard units. It also converts
+concentrations into counts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>quantity</strong> – (int, float, Quantity) If it is a quantity object convert, otherwise it remains the same</p></li>
+<li><p><strong>volume</strong> – (int, float) volume in liters (converted beforehand)</p></li>
+<li><p><strong>dimension</strong> – (int) model’s dimension (1D, 2D, 3D, … )</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>converted_quantity (int, float) = converted unit into MobsPy standard units</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.convert_rate">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">convert_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.convert_rate" title="Link to this definition"></a></dt>
+<dd><p>This function converts the rate from the users given unit to MobsPy standard units</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>quantity</strong> – (int, float, Quantity) If it is a quantity object convert, otherwise it remains the same</p></li>
+<li><p><strong>reaction_order</strong> – (int) number of reactants in the reaction, to check if the rate is in the correct unit</p></li>
+<li><p><strong>dimension</strong> – (int) model’s dimension (1D, 2D, 3D, … )</p></li>
+<li><p><strong>quantity</strong> – (int, float) converted unit into MobsPy standard units</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.convert_time">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">convert_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.convert_time" title="Link to this definition"></a></dt>
+<dd><p>Converts time into seconds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> – (int, float, Quantity) any time used</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.convert_volume">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">convert_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.convert_volume" title="Link to this definition"></a></dt>
+<dd><p>Converts volume to decimetre**dimension</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>volume</strong> – (int, float, Quantity) volume used in simulation</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the converted volume in MobsPy units</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.unit_handler.extract_length_dimension">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.unit_handler.</span></span><span class="sig-name descname"><span class="pre">extract_length_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.unit_handler.extract_length_dimension" title="Link to this definition"></a></dt>
+<dd><p>Extracts the volume dimension from a Quantity object from Pint</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>unit_string</strong> – (str) unit in str format</p></li>
+<li><p><strong>dimension</strong> – (int) model’s dimension (1D, 2D, 3D …)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mobspy.modules.user_functions">
+<span id="mobspy-modules-user-functions-module"></span><h2>mobspy.modules.user_functions module<a class="headerlink" href="#module-mobspy.modules.user_functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.modules.user_functions.Apply">
+<span class="sig-prename descclassname"><span class="pre">mobspy.modules.user_functions.</span></span><span class="sig-name descname"><span class="pre">Apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.modules.user_functions.Apply" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-mobspy.modules">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy.modules" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

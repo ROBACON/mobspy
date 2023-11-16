@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reaction Inheritance &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Characteristics" href="03_Characteristics.html" />
+    <link rel="prev" title="Welcome" href="01_Basic_Intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reaction Inheritance</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/02_Reaction_Inheritance.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Reaction-Inheritance">
+<h1>Reaction Inheritance<a class="headerlink" href="#Reaction-Inheritance" title="Link to this heading"></a></h1>
+<p>MobsPy allows Meta-Species to inherit reactions from other Meta-Species</p>
+<p>We start by defining the BaseSpecies we will use:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Duplicator</span><span class="p">,</span> <span class="n">Mortal</span><span class="p">,</span> <span class="n">Eater</span><span class="p">,</span> <span class="n">Food</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Next, we define the reactions for each of the BaseSpecies. Zero is a meta-species that represents no species.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Duplicator</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">Duplicator</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">Eater</span> <span class="o">+</span> <span class="n">Food</span> <span class="o">&gt;&gt;</span> <span class="n">Eater</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">Mortal</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f9405c6fa30&gt;
+</pre></div></div>
+</div>
+<p>In MobsPy, the multiplication of meta-species allows for the inheritance of reactions from the factor species. For example, we would like to define a Bacteria species that is also a Duplicator, an Eater, and a Mortal. This is done via:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Bacteria</span> <span class="o">=</span> <span class="n">Duplicator</span><span class="o">*</span><span class="n">Eater</span><span class="o">*</span><span class="n">Mortal</span>
+</pre></div>
+</div>
+</div>
+<p>We now create new different types of bacteria from the previous ones, Ecoli and Strepto. As they will also be Bacteria, they inherit all the reactions. We can do this using the New call.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Ecoli</span><span class="p">,</span> <span class="n">Strepto</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">Bacteria</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We also define two types of Food:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Glucose</span><span class="p">,</span> <span class="n">Amino</span> <span class="o">=</span> <span class="n">New</span><span class="p">(</span><span class="n">Food</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>MobsPy will create all possible combinations for inheritance when defining the model, which means that both Ecoli and Strepto will eat Glucose and Amino.</p>
+<p>Finally, we define the species we want to simulate. Since Duplicator, Eater, Mortal, and Food were just defined to construct the other meta-species, we don’t pass them to Simulation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Ecoli</span> <span class="o">|</span> <span class="n">Strepto</span> <span class="o">|</span> <span class="n">Glucose</span> <span class="o">|</span> <span class="n">Amino</span><span class="p">)</span>
+
+<span class="c1"># Adding some counts</span>
+<span class="n">Ecoli</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="n">Strepto</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">Glucose</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">Amino</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;mobspy.modules.meta_class.Species at 0x7f94003403d0&gt;,
+ &lt;mobspy.modules.meta_class.Species at 0x7f94003401f0&gt;,
+ &lt;mobspy.modules.meta_class.Species at 0x7f9400340370&gt;,
+ &lt;mobspy.modules.meta_class.Species at 0x7f9400340550&gt;)
+</pre></div></div>
+</div>
+<p>Now we compile the simulation to show all defined reactions:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+Amino,100
+Ecoli,50
+Glucose,10
+Strepto,25
+
+Mappings
+Amino :
+Amino
+Ecoli :
+Ecoli
+Glucose :
+Glucose
+Strepto :
+Strepto
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;Ecoli&#39;), (1, &#39;Amino&#39;)], &#39;pr&#39;: [(1, &#39;Ecoli&#39;)], &#39;kin&#39;: &#39;Ecoli * Amino * 1 * volume^-1&#39;}
+reaction_1,{&#39;re&#39;: [(1, &#39;Ecoli&#39;), (1, &#39;Glucose&#39;)], &#39;pr&#39;: [(1, &#39;Ecoli&#39;)], &#39;kin&#39;: &#39;Ecoli * Glucose * 1 * volume^-1&#39;}
+reaction_2,{&#39;re&#39;: [(1, &#39;Ecoli&#39;)], &#39;pr&#39;: [(2, &#39;Ecoli&#39;)], &#39;kin&#39;: &#39;Ecoli * 1&#39;}
+reaction_3,{&#39;re&#39;: [(1, &#39;Ecoli&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Ecoli * 1&#39;}
+reaction_4,{&#39;re&#39;: [(1, &#39;Strepto&#39;), (1, &#39;Amino&#39;)], &#39;pr&#39;: [(1, &#39;Strepto&#39;)], &#39;kin&#39;: &#39;Strepto * Amino * 1 * volume^-1&#39;}
+reaction_5,{&#39;re&#39;: [(1, &#39;Strepto&#39;), (1, &#39;Glucose&#39;)], &#39;pr&#39;: [(1, &#39;Strepto&#39;)], &#39;kin&#39;: &#39;Strepto * Glucose * 1 * volume^-1&#39;}
+reaction_6,{&#39;re&#39;: [(1, &#39;Strepto&#39;)], &#39;pr&#39;: [(2, &#39;Strepto&#39;)], &#39;kin&#39;: &#39;Strepto * 1&#39;}
+reaction_7,{&#39;re&#39;: [(1, &#39;Strepto&#39;)], &#39;pr&#39;: [], &#39;kin&#39;: &#39;Strepto * 1&#39;}
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+<span class="ansi-red-intense-fg">WARNING: Automatic data-saving setup failed. Please save manually</span>
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="01_Basic_Intro.html" class="btn btn-neutral float-left" title="Welcome" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="03_Characteristics.html" class="btn btn-neutral float-right" title="Characteristics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
