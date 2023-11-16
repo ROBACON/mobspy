@@ -19,6 +19,9 @@ from mobspy.modules.mobspy_expressions import *
 import re
 
 
+
+
+
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
 # If anyone is reading this, I highly recommend you study there, it is quite a nice place
 class Compiler:
@@ -38,16 +41,13 @@ class Compiler:
             if parameter.name in parameters_used:
                 parameters_used[parameter.name]['used_in'].add('$sbml')
             else:
-                temp = {'name': parameter.name,
-                        'values': parameter.value, 'used_in': {'$sbml'}}
+                temp = {'name': parameter.name, 'values': parameter.value, 'used_in': {'$sbml'}}
                 parameters_used[parameter.name] = temp
 
             try:
-                parameters_for_sbml[parameter.name] = (
-                    parameter.value[0], f'dimensionless')
+                parameters_for_sbml[parameter.name] = (parameter.value[0], f'dimensionless')
             except:
-                parameters_for_sbml[parameter.name] = (
-                    parameter.value, f'dimensionless')
+                parameters_for_sbml[parameter.name] = (parameter.value, f'dimensionless')
 
     @classmethod
     def override_get_item(cls, object_to_return, item):
@@ -125,11 +125,9 @@ class Compiler:
         black_listed_names = {'Time', 'Rev', 'All'}
         for i, species in enumerate(meta_species_to_simulate):
             if '_dot_' in species.get_name():
-                simlog.error(
-                    f'In species: {species.get_name()} \n _dot_ cannot be used in meta-species names')
+                simlog.error(f'In species: {species.get_name()} \n _dot_ cannot be used in meta-species names')
             if species.get_name() in black_listed_names:
-                simlog.error(
-                    f'The name {species.get_name()} is not allowed for meta-species please change it')
+                simlog.error(f'The name {species.get_name()} is not allowed for meta-species please change it')
             if '$' in species.get_name():
                 simlog.error(f'In species: {species.get_name()} \n'
                              f'An error has occurred and one of the species was either not named or named with the '
@@ -164,24 +162,21 @@ class Compiler:
                                                                  orthogonal_vector_structure)
             for x in species_string_list:
                 x[0] = x[0].get_name()
-            mappings_for_sbml[spe_object.get_name()] = ['.'.join(x)
-                                                        for x in species_string_list]
+            mappings_for_sbml[spe_object.get_name()] = ['.'.join(x) for x in species_string_list]
             for species_string in species_string_list:
                 species_for_sbml['_dot_'.join(species_string)] = 0
 
         # Default dimension equal to three after update
         dimension = None
         if isinstance(volume, Quantity):
-            dimension = uh.extract_length_dimension(
-                str(volume.dimensionality), dimension)
+            dimension = uh.extract_length_dimension(str(volume.dimensionality), dimension)
         else:
             dimension = 3
 
         for count in species_counts:
             if isinstance(count['quantity'], Quantity):
                 if uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension):
-                    dimension = uh.extract_length_dimension(
-                        str(count['quantity'].dimensionality), dimension)
+                    dimension = uh.extract_length_dimension(str(count['quantity'].dimensionality), dimension)
 
         # Check volume:
         volume = uh.convert_volume(volume, dimension)
@@ -215,12 +210,10 @@ class Compiler:
                             'used_in': set(species_strings)}
                     parameters_used[count['quantity'].name] = temp
 
-            temp_count = uh.convert_counts(
-                count['quantity'], volume, dimension)
+            temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             for spe_str in species_strings:
                 if type(temp_count) == float and not type_of_model == 'deterministic':
-                    simlog.warning(
-                        'The stochastic simulation rounds floats to integers')
+                    simlog.warning('The stochastic simulation rounds floats to integers')
                     species_for_sbml[spe_str] = int(temp_count)
                     assigned_species.append(spe_str)
                 else:
@@ -241,18 +234,15 @@ class Compiler:
             if isinstance(count['quantity'], Mobspy_Parameter):
                 parameters_in_counts.add(count['quantity'])
                 if count['quantity'].name in parameters_used:
-                    parameters_used[count['quantity'].name]['used_in'].add(
-                        species_string)
+                    parameters_used[count['quantity'].name]['used_in'].add(species_string)
                 else:
                     temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
                             'used_in': {species_string}}
                     parameters_used[count['quantity'].name] = temp
 
-            temp_count = uh.convert_counts(
-                count['quantity'], volume, dimension)
+            temp_count = uh.convert_counts(count['quantity'], volume, dimension)
             if type(temp_count) == float and not type_of_model == 'deterministic':
-                simlog.warning(
-                    'The stochastic simulation rounds floats to integers')
+                simlog.warning('The stochastic simulation rounds floats to integers')
                 species_for_sbml[species_string] = int(temp_count)
                 assigned_species.append(species_string)
             else:
@@ -271,8 +261,7 @@ class Compiler:
                                                                              skip_expression_check)
 
         parameters_for_sbml = {'volume': (volume, f'dimensionless')}
-        cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_reaction)
+        cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_reaction)
 
         # O(n^2) reaction check for doubles
         for i, r1 in enumerate(reactions_for_sbml):
@@ -297,14 +286,12 @@ class Compiler:
                                                                                  meta_species_to_simulate,
                                                                                  parameter_exist,
                                                                                  parameters_in_events)
-        cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_events)
+        cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_events)
 
         # Check to see if parameters are names are repeated or used as meta-species
         for p in parameters_for_sbml:
             if p in names_used:
-                simlog.error(
-                    'Parameters names must be unique and they must not share a name with a species')
+                simlog.error('Parameters names must be unique and they must not share a name with a species')
             names_used.add(p)
 
         species_in_reactions = set()
@@ -313,8 +300,7 @@ class Compiler:
                 species_in_reactions.add(reactant[1])
             for product in reaction['pr']:
                 species_in_reactions.add(product[1])
-        cls.add_phantom_reactions(
-            reactions_for_sbml, species_in_events.difference(species_in_reactions))
+        cls.add_phantom_reactions(reactions_for_sbml, species_in_events.difference(species_in_reactions))
 
         if continuous_sim:
             end_event = {'trigger': ending_condition.generate_string(orthogonal_vector_structure),
@@ -326,16 +312,14 @@ class Compiler:
             events_for_sbml['end_event'] = end_event
 
         set_to_double_parameter = \
-            set().union(parameters_in_counts).union(
-                parameters_in_reaction).union(parameters_in_events)
+            set().union(parameters_in_counts).union(parameters_in_reaction).union(parameters_in_events)
         for p1 in set_to_double_parameter:
             for p2 in set_to_double_parameter:
                 if p1 == p2:
                     continue
                 else:
                     if p1.name == p2.name:
-                        simlog.error(
-                            'There are two different Parameter Objects with the same name')
+                        simlog.error('There are two different Parameter Objects with the same name')
 
         model_str = ''
         if verbose:
@@ -343,8 +327,7 @@ class Compiler:
             model_str += 'Species' + '\n'
             species_alpha = list(sorted(species_for_sbml.keys()))
             for spe in species_alpha:
-                model_str += spe.replace('_dot_', '.') + \
-                    ',' + str(species_for_sbml[spe]) + '\n'
+                model_str += spe.replace('_dot_', '.') + ',' + str(species_for_sbml[spe]) + '\n'
 
             model_str += '\n'
             model_str += 'Mappings' + '\n'
@@ -358,8 +341,7 @@ class Compiler:
             model_str += 'Parameters' + '\n'
             parameters_alpha = list(sorted(parameters_for_sbml.keys()))
             for par in parameters_alpha:
-                model_str += par + ',' + \
-                    str(parameters_for_sbml[par][0]) + '\n'
+                model_str += par + ',' + str(parameters_for_sbml[par][0]) + '\n'
 
             model_str += '\n'
             model_str += 'Reactions' + '\n'
@@ -379,15 +361,13 @@ class Compiler:
             if events_for_sbml != {}:
                 model_str += '\n'
                 model_str += 'Events' + '\n'
-                list_to_sort = [str(events_for_sbml[key])
-                                for key in events_for_sbml]
+                list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
                 list_to_sort = sorted(list_to_sort)
                 for i in range(len(list_to_sort)):
-                    model_str += ('event_' + str(i) + ',' +
-                                  list_to_sort[i] + '\n').replace('_dot_', '.')
+                    model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
-            events_for_sbml, assigned_species, parameters_used
+               events_for_sbml, assigned_species, parameters_used
 
 
 class Reactions:
@@ -413,8 +393,7 @@ class Reactions:
         reaction_string = ''
         for i, r in enumerate(list_of_reactants):
             if r['stoichiometry'] > 1:
-                reaction_string += str(r['stoichiometry']) + \
-                    '*' + str(r['object'])
+                reaction_string += str(r['stoichiometry']) + '*' + str(r['object'])
             else:
                 reaction_string += str(r['object'])
 
@@ -432,7 +411,7 @@ class Reactions:
             Prints the meta-reaction in the format A + B -> C + D
         """
         return self.__create_reactants_string(self.reactants) + \
-            ' -> ' + self.__create_reactants_string(self.products)
+               ' -> ' + self.__create_reactants_string(self.products)
 
     def __getitem__(self, item):
         """
@@ -458,28 +437,27 @@ class Reactions:
             if p['object'].get_name() == 'Context_MetaSpecies':
                 simlog.error('The any specie cannot be used in reactions')
 
-        # Add characteristics in Cts_context to each reactant and product
-        if len(Species.meta_specie_named_any_context) != 0:
-            for j in Species.meta_specie_named_any_context:
-                for r in reactants:
-                    r['object'].c(j)
-                    r['characteristics'].add(j)
-                for p in products:
-                    p['object'].c(j)
-                    p['characteristics'].add(j)
 
+        # Add characteristics in Cts_context to each reactant and product
+        if len(Species.meta_specie_named_any_context) != 0 : 
+            for j in Species.meta_specie_named_any_context:
+                    for r in reactants:
+                        r['object'].c(j)
+                        r['characteristics'].add(j)
+                    for p in products:
+                        p['object'].c(j)
+                        p['characteristics'].add(j)
+                
         try:
             to_test_context_object = reactants[0]['object']
         except IndexError:
             try:
                 to_test_context_object = products[0]['object']
             except IndexError:
-                simlog.error(
-                    'No Meta-Species detected in the reaction', stack_index=3)
+                simlog.error('No Meta-Species detected in the reaction', stack_index=3)
 
         if Species.get_simulation_context() is not None:
-            simlog.error(
-                'Reactions cannot be defined under event context. Only species counts', stack_index=3)
+            simlog.error('Reactions cannot be defined under event context. Only species counts', stack_index=3)
 
         self.reactants = reactants
         self.products = products
@@ -489,15 +467,13 @@ class Reactions:
 
         if isinstance(Compiler.last_rate, Species) \
                 or isinstance(Compiler.last_rate, Reacting_Species) or isinstance(Compiler.last_rate, Reactions):
-            simlog.error('Reaction rate of type ' +
-                         str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
+            simlog.error('Reaction rate of type ' + str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
 
         if not (type(Compiler.last_rate) == int or type(Compiler.last_rate) == float
                 or callable(Compiler.last_rate) or type(Compiler.last_rate) == str
                 or isinstance(Compiler.last_rate, OverrideQuantity) or isinstance(Compiler.last_rate, Quantity)
                 or isinstance(Compiler.last_rate, Mobspy_Parameter) or Compiler.last_rate is None):
-            simlog.error('Reaction rate of type ' +
-                         str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
+            simlog.error('Reaction rate of type ' + str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
 
         self.rate = Compiler.last_rate
         if Compiler.last_rate is not None:
@@ -533,7 +509,6 @@ class Reacting_Species(ReactingSpeciesComparator):
         'characteristics': the characteristics queried, 'stoichiometry': stoichiometry value,
         'label': label if used (None)}
     """
-
     def __enter__(self):
         """
             Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when entering. 
@@ -546,7 +521,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when exiting. 
         """
         self.context_finish_for_reacting_specie()
-
+  
     def __str__(self):
         """
             String representation of the list of reactants
@@ -589,8 +564,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         if len(self.list_of_reactants) == 1:
             self.list_of_reactants[0]['label'] = label
         else:
-            simlog.error(
-                'Labels cannot be assigned to multiple reacting species at the same time.', stack_index=2)
+            simlog.error('Labels cannot be assigned to multiple reacting species at the same time.', stack_index=2)
         return self
 
     def __getitem__(self, item):
@@ -629,8 +603,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         if type(stoichiometry) == int:
             self.list_of_reactants[0]['stoichiometry'] = stoichiometry
         else:
-            simlog.error(
-                f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
+            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
         return self
 
     def __add__(self, other):
@@ -646,8 +619,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         try:
             self.list_of_reactants += other.list_of_reactants
         except AttributeError:
-            simlog.error(
-                f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
+            simlog.error(f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
         return self
 
     def __radd__(self, other):
@@ -673,7 +645,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         return reaction
 
     # Reacting_Species call
-
+    
     def __call__(self, quantity):
         """
             The call operator here is used to add counts to species non-default state. This stores the characteristics
@@ -681,44 +653,38 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
-        # If called within a Any context, add the characteristics of the Any context to the reacting specie called
-        if len(Species.meta_specie_named_any_context) > 0:
+        #If called within a Any context, add the characteristics of the Any context to the reacting specie called 
+        if len(Species.meta_specie_named_any_context) > 0 : 
             for i in Species.meta_specie_named_any_context:
                 self = self.c(i)
 
         # Check if the quantity is a valid type and add the new count to the reacting specie
         species_object = self.list_of_reactants[0]['object']
         characteristics = self.list_of_reactants[0]['characteristics']
-        simulation_under_context = self.list_of_reactants[0]['object'].get_simulation_context(
-        )
+        simulation_under_context = self.list_of_reactants[0]['object'].get_simulation_context()
         if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             if len(self.list_of_reactants) != 1:
-                simlog.error(
-                    'Assignment used incorrectly. Only one species at a time', stack_index=2)
-            quantity_dict = species_object.add_quantities(
-                characteristics, quantity)
+                simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
+            quantity_dict = species_object.add_quantities(characteristics, quantity)
         elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
-            simlog.error(
-                'Operations are not allowed for count assignment. Only individual parameters')
+            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
-
-        # If called within an event context, make sure that the call is a count assignment only
+            
+        #If called within an event context, make sure that the call is a count assignment only
         if simulation_under_context is not None:
             try:
                 if type(quantity) == str:
-                    quantity_dict = species_object.add_quantities(
-                        characteristics, quantity)
+                    quantity_dict = species_object.add_quantities(characteristics, quantity)
                 simulation_under_context.current_event_count_data.append({'species': species_object,
                                                                           'characteristics': quantity_dict[
                                                                               'characteristics'],
                                                                           'quantity': quantity_dict[
                                                                               'quantity']})
             except Exception as e:
-                simlog.error(
-                    str(e) + '\n Only species count assignments are allowed in a model context')
+                simlog.error(str(e) + '\n Only species count assignments are allowed in a model context')
         else:
             return self
 
@@ -737,8 +703,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         for reactant in self.list_of_reactants:
 
             species_object = reactant['object']
-            characteristics_from_references = mcu.unite_characteristics(
-                species_object.get_references())
+            characteristics_from_references = mcu.unite_characteristics(species_object.get_references())
 
             if characteristic not in characteristics_from_references and '$' not in characteristic:
                 if len(species_object.get_characteristics()) == 0:
@@ -750,6 +715,8 @@ class Reacting_Species(ReactingSpeciesComparator):
 
         return self
 
+
+
     @classmethod
     def is_species(cls):
         return False
@@ -757,7 +724,7 @@ class Reacting_Species(ReactingSpeciesComparator):
     @classmethod
     def is_spe_or_reac(cls):
         return True
-
+    
     # Context management for reacting species
     old_context = set()
 
@@ -767,12 +734,10 @@ class Reacting_Species(ReactingSpeciesComparator):
         """
         if len(self.list_of_reactants) == 1:
             self.old_context = Species.meta_specie_named_any_context
-            new_context = Species.meta_specie_named_any_context.union(
-                self.list_of_reactants[0]['characteristics'])
+            new_context = Species.meta_specie_named_any_context.union(self.list_of_reactants[0]['characteristics'])
             Species.update_meta_specie_named_any_context(new_context)
-        else:
-            simlog.error(
-                'Contexts can only be used on basic Reacting meta species')
+        else :
+            simlog.error('Contexts can only be used on basic Reacting meta species')
 
     def context_finish_for_reacting_specie(self):
         """
@@ -805,8 +770,7 @@ class List_Species:
             if isinstance(item, Species):
                 self._list_species.append(item)
             else:
-                simlog.error(
-                    'Only Species can used to construct List_Species', stack_index=2)
+                simlog.error('Only Species can used to construct List_Species', stack_index=2)
 
     def append(self, species):
         """
@@ -840,8 +804,7 @@ class List_Species:
         elif isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
         else:
-            simlog.error(
-                'Operator must only be used in Species on List_Species', stack_index=2)
+            simlog.error('Operator must only be used in Species on List_Species', stack_index=2)
 
         return self
 
@@ -949,13 +912,11 @@ class Species(SpeciesComparator):
             :return: True if characteristic is allowed false if not
         """
         black_list = {'list_of_reactants', 'first_characteristic'}
-        if char[0] == '_' and char != "__sphinx_mock__":
-            simlog.error(
-                f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+        if char[0] == '_':
+            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
 
         if char in _methods_Reacting_Species or char in _methods_Species or char in black_list:
-            simlog.error(
-                f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
             return False
         else:
             return True
@@ -1027,8 +988,7 @@ class Species(SpeciesComparator):
         """
             Prints the directly characteristics inside the object
         """
-        simlog.debug(
-            str(self) + ' has the following characteristics referenced:')
+        simlog.debug(str(self) + ' has the following characteristics referenced:')
         for i, reference in enumerate(self.get_references()):
             if reference.get_characteristics():
                 simlog.debug(str(reference) + ': ', end='')
@@ -1064,8 +1024,7 @@ class Species(SpeciesComparator):
         elif isinstance(other, Species):
             return List_Species([self, other])
         else:
-            simlog.error(
-                'Only Species and List_Species can be concatenated', stack_index=2)
+            simlog.error('Only Species and List_Species can be concatenated', stack_index=2)
 
     # Both are defined bellow to be consistent with List_Species behavior
     def __iter__(self):
@@ -1101,8 +1060,7 @@ class Species(SpeciesComparator):
         if type(stoichiometry) == int:
             r = Reacting_Species(self, set(), stoichiometry)
         else:
-            simlog.error(
-                f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
+            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
         return r
 
     def __add__(self, other):
@@ -1175,8 +1133,7 @@ class Species(SpeciesComparator):
 
         Species.check_if_valid_characteristic(characteristic)
 
-        characteristics_from_references = mcu.unite_characteristics(
-            self.get_references())
+        characteristics_from_references = mcu.unite_characteristics(self.get_references())
         characteristics = {characteristic}
 
         if characteristic not in characteristics_from_references and '$' not in characteristic:
@@ -1197,26 +1154,23 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
-        # If called within a Any context, add the characteristics of the Any context to the specie called. The specie becomes a reacting specie.
-        if len(Species.meta_specie_named_any_context) != 0:
+        #If called within a Any context, add the characteristics of the Any context to the specie called. The specie becomes a reacting specie.
+        if len(Species.meta_specie_named_any_context) != 0 :
             for i in Species.meta_specie_named_any_context:
                 self.c(i)
-            quantity_dict = self.add_quantities(
-                Species.meta_specie_named_any_context.copy(), quantity)
+            quantity_dict = self.add_quantities(Species.meta_specie_named_any_context.copy(), quantity)
 
         # Check if the quantity is a valid type and add the new count to the specie
         elif type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
         elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
-            simlog.error(
-                'Operations are not allowed for count assignment. Only individual parameters')
+            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
                     return cha
-            simlog.error(
-                f'{quantity} contains no characteristics from {self._name}', stack_index=2)
+            simlog.error(f'{quantity} contains no characteristics from {self._name}', stack_index=2)
         elif type(quantity) == Reacting_Species:
             simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
                          f'simulation context', stack_index=2)
@@ -1225,7 +1179,7 @@ class Species(SpeciesComparator):
                          f' if not under a simulation context',
                          stack_index=2)
 
-        # If called within an event context, make sure that the call is a count assignment only
+        #If called within an event context, make sure that the call is a count assignment only
         if self.get_simulation_context() is not None:
             sim_under_context = self.get_simulation_context()
 
@@ -1237,8 +1191,7 @@ class Species(SpeciesComparator):
                                                                        'characteristics'],
                                                                    'quantity': quantity_dict['quantity']})
             except Exception as e:
-                simlog.error(
-                    str(e) + '\n Only species count assignments are allowed in a model context')
+                simlog.error(str(e) + '\n Only species count assignments are allowed in a model context')
         else:
             return self
 
@@ -1257,8 +1210,7 @@ class Species(SpeciesComparator):
                     e['quantity'] = quantity
                     already_in = True
             if not already_in:
-                self._species_counts.append(
-                    {'characteristics': characteristics, 'quantity': quantity})
+                self._species_counts.append({'characteristics': characteristics, 'quantity': quantity})
         else:
             return {'characteristics': characteristics, 'quantity': quantity}
 
@@ -1400,12 +1352,12 @@ class Species(SpeciesComparator):
         else:
             simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
                          'Please use only one Simulation Object per context assignment', stack_index=6)
-
+    
     @classmethod
     def update_meta_specie_named_any_context(cls, meta_specie_named_any_characteristics):
         """
             This updates the class variable meta_specie_named_any_context with the characteristics of the current any context.    
-
+        
             :param meta_specie_named_any_characteristics: (set) set of characteristics of the currently active any context.
         """
         cls.meta_specie_named_any_context = meta_specie_named_any_characteristics
@@ -1419,10 +1371,8 @@ class Species(SpeciesComparator):
         return cls._simulation_context
 
     def order_references(self):
-        cleaned_references = [
-            x for x in self.get_references() if x.get_characteristics() != set()]
-        self._ordered_references = sorted(
-            cleaned_references, key=lambda x: sorted(list(x.get_characteristics())))
+        cleaned_references = [x for x in self.get_references() if x.get_characteristics() != set()]
+        self._ordered_references = sorted(cleaned_references, key=lambda x: sorted(list(x.get_characteristics())))
         i = 1
         for reference in self._ordered_references:
             self._reference_index_dictionary[reference] = i
@@ -1442,7 +1392,6 @@ class Species(SpeciesComparator):
     def is_spe_or_reac(cls):
         return True
 
-
 _methods_Species = set(dir(Species))
 
 
@@ -1456,8 +1405,7 @@ def compile_species_number_line(code_line):
     """
     before_eq, after_eq = code_line.split('=')[0], code_line.split('=')[1]
     if after_eq.count('BaseSpecies') > 1:
-        simlog.error(f'At {after_eq}: \n' +
-                     'BaseSpecies can only be called once at a time')
+        simlog.error(f'At {after_eq}: \n' + 'BaseSpecies can only be called once at a time')
 
     code_line = before_eq
     n = code_line.count(',') + 1
@@ -1471,22 +1419,18 @@ def _Create_Species(species, code_line, number_or_names=None):
     if number_or_names is not None:
         if type(number_or_names) == int:
             if number_or_names < 1:
-                simlog.error(
-                    'Please use strictly positive integers for number of properties', stack_index=3)
+                simlog.error('Please use strictly positive integers for number of properties', stack_index=3)
         elif type(number_or_names) == list:
             pass
         else:
-            simlog.error(
-                'Only numbers or lists of strings accepted', stack_index=3)
+            simlog.error('Only numbers or lists of strings accepted', stack_index=3)
 
     if number_or_names is None or type(number_or_names) == int:
-        number_of_properties, compiled_names = compile_species_number_line(
-            code_line)
+        number_of_properties, compiled_names = compile_species_number_line(code_line)
         names = compiled_names
         if number_or_names is not None:
             if number_of_properties != number_or_names:
-                simlog.error(
-                    f'The number of properties is not equal to the number of variables', stack_index=3)
+                simlog.error(f'The number of properties is not equal to the number of variables', stack_index=3)
     elif type(number_or_names) == list:
         number_of_properties = len(number_or_names)
         names = number_or_names
@@ -1523,13 +1467,13 @@ def BaseSpecies(number_or_names=None):
     code_line = inspect.stack()[1].code_context[0][:-1]
     return _Create_Species(None, code_line, number_or_names)
 
-
 __S0, __S1, __SF = BaseSpecies(3)
 __S0.name('S0')
 __S1.name('S1')
 __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
+
 
 
 # u is reserved for units
