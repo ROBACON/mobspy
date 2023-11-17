@@ -653,7 +653,7 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
-        #If called within a Any context, add the characteristics of the Any context to the reacting specie called 
+        # If called within a Any context, add the characteristics of the Any context to the reacting specie called
         if len(Species.meta_specie_named_any_context) > 0 : 
             for i in Species.meta_specie_named_any_context:
                 self = self.c(i)
@@ -667,13 +667,13 @@ class Reacting_Species(ReactingSpeciesComparator):
             if len(self.list_of_reactants) != 1:
                 simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             quantity_dict = species_object.add_quantities(characteristics, quantity)
-        elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
-            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
+        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
+        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
             
-        #If called within an event context, make sure that the call is a count assignment only
+        # If called within an event context, make sure that the call is a count assignment only
         if simulation_under_context is not None:
             try:
                 if type(quantity) == str:
@@ -1154,8 +1154,9 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
-        #If called within a Any context, add the characteristics of the Any context to the specie called. The specie becomes a reacting specie.
-        if len(Species.meta_specie_named_any_context) != 0 :
+        # If called within a Any context, add the characteristics of the Any context to the specie called.
+        # The specie becomes a reacting specie.
+        if len(Species.meta_specie_named_any_context) != 0:
             for i in Species.meta_specie_named_any_context:
                 self.c(i)
             quantity_dict = self.add_quantities(Species.meta_specie_named_any_context.copy(), quantity)
@@ -1164,8 +1165,8 @@ class Species(SpeciesComparator):
         elif type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
-        elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
-            simlog.error('Operations are not allowed for count assignment. Only individual parameters')
+        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
+        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
         elif isinstance(quantity, frc.Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
@@ -1175,11 +1176,12 @@ class Species(SpeciesComparator):
             simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
                          f'simulation context', stack_index=2)
         elif Species.get_simulation_context() is None:
+            print(quantity, type(quantity))
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}'
                          f' if not under a simulation context',
                          stack_index=2)
 
-        #If called within an event context, make sure that the call is a count assignment only
+        # If called within an event context, make sure that the call is a count assignment only
         if self.get_simulation_context() is not None:
             sim_under_context = self.get_simulation_context()
 

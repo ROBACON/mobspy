@@ -1222,7 +1222,20 @@ def test_with_statement_on_any_and_event():
         
     assert compare_model(S.compile(), 'test_tools/model_42.txt')
 
-    
+
+def test_matching_characteristic_rate():
+
+    A = BaseSpecies()
+    B, C = New(A)
+
+    A.a1, A.a2, A.a3
+
+    B + C >> Zero[lambda r1, r2: 100 if A(r1) == A(r2) else 0]
+
+    S = Simulation(B | C)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_43.txt')
+
 
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
@@ -1242,7 +1255,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_wrong_dimension_error, test_more_than_used, zero_rate_test, test_wrong_rate,
              test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
-             test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event]
+             test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
+             test_matching_characteristic_rate]
 
 sub_test = test_list
 
