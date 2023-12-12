@@ -14,7 +14,7 @@ To get started, you only need to pip install:
 
 	pip install mobspy 
 
-And check out some example [tutorial models](/example_models/Tutorial Notebooks/) in the example_model folder.
+And check out some example [tutorial models](/example_models/Tutorial%20Notebooks/) in the example_model folder.
 
 # How it works
 
