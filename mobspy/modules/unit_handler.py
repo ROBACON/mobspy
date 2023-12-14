@@ -94,12 +94,13 @@ def convert_counts(quantity, volume, dimension):
     return converted_quantity
 
 
-def check_dimension(dimension, value):
+def check_dimension(dimension, value, error_context=False):
     """
         Checks for dimension consistency. It "stores" the first dimension it was given by returning it
 
         :param dimension: (int) model's dimension (1D, 2D, 3D ...)
         :param value: (int) dimension value being analysed
+        :param error_context: (bool or str) context of the error if dimensions are not consistent
 
         :raise simlog.error: If dimensions are not consistent through the given units (units in 1D with 2D mixed)
 
@@ -109,17 +110,22 @@ def check_dimension(dimension, value):
         dimension = int(value)
     else:
         if dimension != int(value):
-            simlog.error('The dimensions are not consistent. There are at least two units given for different '
-                         'dimension models')
+            message = 'The dimensions are not consistent. There are at least two units given for different ' \
+                      'dimension models.'
+            if error_context:
+                message = message + '\n ' + error_context
+            simlog.error(message)
     return dimension
 
 
-def extract_length_dimension(unit_string, dimension, reaction_order=None):
+def extract_length_dimension(unit_string, dimension, reaction_order=None, context=False):
     """
         Extracts the volume dimension from a Quantity object from Pint
 
         :param unit_string: (str) unit in str format
         :param dimension: (int) model's dimension (1D, 2D, 3D ...)
+        :param reaction_order: (int) number of reactants in a reaction (for dimensional consistency in rates)
+        :param context: (bool or str) context of the error if dimensions are not consistent
     """
     temp_list = unit_string.split()
     try:
@@ -131,12 +137,12 @@ def extract_length_dimension(unit_string, dimension, reaction_order=None):
         return False
     if temp_list[position + 1] == '**':
         if reaction_order is None:
-            dimension = check_dimension(dimension, temp_list[position + 2])
+            dimension = check_dimension(dimension, temp_list[position + 2], context)
         else:
             temp_int = int(int(temp_list[position + 2])/(reaction_order - 1))
-            dimension = check_dimension(dimension, temp_int)
+            dimension = check_dimension(dimension, temp_int, context)
     else:
-        dimension = check_dimension(dimension, 1)
+        dimension = check_dimension(dimension, 1, context)
 
     return dimension
 

@@ -9,6 +9,8 @@ from pathlib import Path
 import numpy as np
 import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
+import mobspy.modules.unit_handler as uh
+import inspect
 
 
 def read_json(json_file_name):
@@ -83,6 +85,27 @@ def __convert_unit_parameters(params):
             else:
                 params[u] = str(params[u])
 
+
+def convert_time_parameters_after_compilation(value):
+    """
+        This function converts the duration if the model was already compiled
+    """
+    if isinstance(value, Quantity):
+        if str(value.dimensionality) == '[time]':
+            value = value.convert('second').magnitude
+    return value
+
+def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
+    if isinstance(value, Quantity):
+        message = 'Error at '
+        context = inspect.stack()[2].code_context[0][:-1]
+        message += context + '\n The dimension is set to tree at the moment of the compilation if not specified' \
+                             ' beforehand \n Please set a volume in the correct dimension before compilation'
+        uh.extract_length_dimension(str(value.dimensionality), dimension, context=message)
+
+    value = uh.convert_volume(value, dimension)
+    parameters_for_sbml['volume'] = (value, f'dimensionless')
+    return value
 
 def parameter_process(params):
     __convert_unit_parameters(params)

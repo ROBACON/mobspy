@@ -150,6 +150,8 @@ class Simulation:
         self.model_parameters = {}
         self.sbml_data_list = []
         self._parameter_list_of_dic = []
+        self._is_compiled = False
+        self.dimension = None
 
         # Must copy to avoid reference assignment
         self.model = List_Species(model)
@@ -197,6 +199,9 @@ class Simulation:
 
             :param verbose: (bool) = print or not the results of the compilation
         """
+        if self.dimension is None:
+            self.dimension = 3
+
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
 
@@ -252,6 +257,8 @@ class Simulation:
                                   'assigned_species': self._assigned_species_list}]
 
         self._list_of_parameters = [self.parameters]
+
+        self._is_compiled = True
 
         if self.model_string != '':
             return self.model_string
@@ -409,7 +416,7 @@ class Simulation:
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
-                      'sbml_data_list', '_parameter_list_of_dic']
+                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension']
 
         plotted_flag = False
         if name in white_list:
@@ -423,6 +430,12 @@ class Simulation:
         if not plotted_flag:
             example_parameters = get_example_parameters()
             if name in example_parameters.keys():
+                # If the model is already compiled, the change in parameters should be faster
+                if self._is_compiled:
+                    value = pr.convert_time_parameters_after_compilation(value)
+                if self._is_compiled and name == 'volume':
+                    value = pr.convert_volume_after_compilation(self.dimension, self._parameters_for_sbml, value)
+
                 if name == 'duration':
                     if type(value) == bool:
                         simlog.error(f'MobsPy has received an invalid trigger type: {type(value)} \n' +
@@ -640,7 +653,6 @@ class SimulationComposition:
     def __add__(self, other):
         return SimulationComposition(self, other)
 
-    # FIX THIS
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         broad_cast_parameters = ['level', 'method', 'volume']

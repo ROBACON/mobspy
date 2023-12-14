@@ -1237,6 +1237,23 @@ def test_matching_characteristic_rate():
     assert compare_model(S.compile(), 'test_tools/model_43.txt')
 
 
+def test_changes_after_compilation():
+    A, B = BaseSpecies()
+    A + B >> Zero [1]
+
+    A(200), B(200)
+    Sim = Simulation(A | B)
+    Sim.level = -1
+    descr = Sim.compile()
+    Sim.plot_data = False
+    Sim.duration = 30 * u.hour
+    Sim.volume = 1*u.m**3
+    Sim.run()
+
+    assert Sim._parameters_for_sbml['volume'][0] > 100
+    assert Sim.fres['Time'][-1] > 100
+
+
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
@@ -1256,7 +1273,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
              test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
-             test_matching_characteristic_rate]
+             test_matching_characteristic_rate, test_changes_after_compilation]
 
 sub_test = test_list
 

@@ -1,17 +1,26 @@
+import dateutil.rrule
+
 from mobspy import *
 import numpy as np
 
 if __name__ == '__main__':
 
-    A = BaseSpecies()
-    B, C = New(A)
+    A, B = BaseSpecies()
+    A + B >> Zero [1]
 
-    A.a1, A.a2, A.a3
+    A(200), B(200)
+    Sim = Simulation(A | B)
+    Sim.level = -1
+    descr = Sim.compile()
+    Sim.plot_data = False
+    Sim.duration = 30 * u.hour
+    Sim.volume = 1*u.m**3
+    Sim.run()
 
-    B + C >> Zero [lambda r1, r2: 100 if A(r1) == A(r2) else 0]
+    assert Sim._parameters_for_sbml['volume'][0] > 100
+    assert Sim.fres['Time'][-1] > 100
 
-    S = Simulation(B | C)
-    print(S.compile())
+
 
 
 
