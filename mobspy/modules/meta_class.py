@@ -19,9 +19,6 @@ from mobspy.modules.mobspy_expressions import *
 import re
 
 
-
-
-
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
 # If anyone is reading this, I highly recommend you study there, it is quite a nice place
 class Compiler:

@@ -227,8 +227,7 @@ class Simulation:
                              species_counts=self._species_counts,
                              orthogonal_vector_structure=self.orthogonal_vector_structure,
                              volume=self.parameters['volume'],
-                             type_of_model=self.parameters[
-                                 "simulation_method"],
+                             type_of_model=self.parameters["simulation_method"],
                              verbose=verbose,
                              event_dictionary=self.total_packed_events,
                              continuous_sim=self.parameters['_continuous_simulation'],
