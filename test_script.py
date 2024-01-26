@@ -1254,6 +1254,55 @@ def test_changes_after_compilation():
     assert Sim.fres['Time'][-1] > 100
 
 
+def test_proper_unit_context_exit():
+
+    duration = 40
+    rate = 1
+    init_res = 10000
+    init_bact = 1000
+    init_atp = 0
+
+    Res, Bact, ATP = BaseSpecies()
+
+    Res(init_res / u.ul)
+    Bact(init_bact / u.ul)
+    ATP(init_atp / u.ul)
+
+    Res + Bact >> Bact + Bact + ATP [rate*u.ul/u.hours]
+
+    S = Simulation(Res | Bact | ATP)
+    S.level = -1
+    S.compile()
+
+    try:
+        Res, Bact, ATP = BaseSpecies()
+
+        Res(init_res / u.ul)
+        Bact(init_bact / u.ul)
+        ATP(init_atp / u.ul)
+
+        Res + Bact >> Bact + Bact + ATP [rate*u.ul/u.meters]
+
+        S = Simulation(Res | Bact | ATP)
+        S.level = -1
+        S.compile()
+        assert False
+    except:
+        pass
+
+    Res, Bact, ATP = BaseSpecies()
+
+    Res(init_res / u.ul)
+    Bact(init_bact / u.ul)
+    ATP(init_atp / u.ul)
+
+    Res + Bact >> Bact + Bact + ATP [rate*u.ul/u.hours]
+
+    S = Simulation(Res | Bact | ATP)
+    S.level = -1
+    S.compile()
+    assert True
+
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
@@ -1273,7 +1322,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
              test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
-             test_matching_characteristic_rate, test_changes_after_compilation]
+             test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit]
 
 sub_test = test_list
 

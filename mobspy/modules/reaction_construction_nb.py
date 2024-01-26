@@ -10,6 +10,7 @@ import mobspy.modules.species_string_generator as ssg
 from inspect import signature
 from mobspy.modules.order_operators import Default
 from mobspy.modules.mobspy_parameters import *
+import mobspy.modules.context_related_scripts as crs
 
 
 def iterator_for_combinations(list_of_lists):
@@ -274,41 +275,6 @@ def construct_rate_function_arguments(rate_function, reaction):
     return rate_function_arguments
 
 
-def expression_compilation_initiation():
-    """
-        First find all ExpressionDefiner objects in the stack.
-        Then, sets _ms_active to True to change the behavior of quantities and units in expressions
-    """
-    u._ms_active = True
-
-    expressions_in_stack = []
-
-    for i in range(len(inspect.stack())):
-        local_names = inspect.stack()[i][0].f_locals
-        global_names = inspect.stack()[i][0].f_globals
-        for key, item in global_names.items():
-            if isinstance(item, ExpressionDefiner):
-                expressions_in_stack.append(item)
-        for key, item in local_names.items():
-            if isinstance(item, ExpressionDefiner):
-                expressions_in_stack.append(item)
-
-    for expression in expressions_in_stack:
-        expression._ms_active = True
-
-    return expressions_in_stack
-
-
-def expression_compilation_finish(expressions):
-    """
-        Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()
-    """
-    u._ms_active = False
-
-    for expression in expressions:
-        expression._ms_active = False
-
-
 def create_all_reactions(reactions, meta_species_in_model,
                          ref_characteristics_to_object,
                          type_of_model, dimension, parameter_exist, parameters_in_reaction,
@@ -332,63 +298,61 @@ def create_all_reactions(reactions, meta_species_in_model,
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
 
     # Initiate expressions
-    expressions_in_stack = expression_compilation_initiation()
+    with crs.Unit_Context_Setter():
+        for reaction in reactions:
 
-    for reaction in reactions:
+            base_species_order, reactant_species_combination_list = get_involved_species(reaction, meta_species_in_model)
 
-        base_species_order, reactant_species_combination_list = get_involved_species(reaction, meta_species_in_model)
+            for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
 
-        for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
+                reactant_species_string_combination_list = \
+                    construct_reactant_structures(combination_of_reactant_species, ref_characteristics_to_object)
 
-            reactant_species_string_combination_list = \
-                construct_reactant_structures(combination_of_reactant_species, ref_characteristics_to_object)
+                for reactant_string_list in iterator_for_combinations(reactant_species_string_combination_list):
 
-            for reactant_string_list in iterator_for_combinations(reactant_species_string_combination_list):
+                    product_object_list = construct_product_structure(reaction)
+                    order_structure = construct_order_structure(base_species_order, reactant_string_list)
 
-                product_object_list = construct_product_structure(reaction)
-                order_structure = construct_order_structure(base_species_order, reactant_string_list)
+                    if reaction.order is None:
+                        product_species_species_string_combination_list = Default(order_structure, product_object_list,
+                                                                                  meta_species_in_model,
+                                                                                  ref_characteristics_to_object)
+                    else:
+                        product_species_species_string_combination_list = reaction.order(order_structure,
+                                                                                         product_object_list,
+                                                                                         meta_species_in_model,
+                                                                                         ref_characteristics_to_object)
 
-                if reaction.order is None:
-                    product_species_species_string_combination_list = Default(order_structure, product_object_list,
-                                                                              meta_species_in_model,
-                                                                              ref_characteristics_to_object)
-                else:
-                    product_species_species_string_combination_list = reaction.order(order_structure,
-                                                                                     product_object_list,
-                                                                                     meta_species_in_model,
-                                                                                     ref_characteristics_to_object)
+                    for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
 
-                for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
+                        reaction_rate_arguments = None
+                        if callable(reaction.rate):
+                            reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
 
-                    reaction_rate_arguments = None
-                    if callable(reaction.rate):
-                        reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
+                        reactant_strings = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
+                                            if len(reactant) > 1 else reactant[0].get_name()
+                                            for reactant in reactant_string_list]
 
-                    reactant_strings = ['_dot_'.join([reactant[0].get_name()] + reactant[1:])
-                                        if len(reactant) > 1 else reactant[0].get_name()
-                                        for reactant in reactant_string_list]
+                        try:
+                            rate_string, parameters_in_reaction = fr.extract_reaction_rate(combination_of_reactant_species,
+                                                                                           reactant_strings
+                                                                                           , reaction.rate, type_of_model,
+                                                                                           dimension,
+                                                                                           reaction_rate_arguments,
+                                                                                           parameter_exist,
+                                                                                           parameters_in_reaction,
+                                                                                           skip_check)
+                        except TypeError as e:
+                            simlog.error(f'On reaction {reaction} \n' + str(e))
 
-                    try:
-                        rate_string, parameters_in_reaction = fr.extract_reaction_rate(combination_of_reactant_species,
-                                                                                       reactant_strings
-                                                                                       , reaction.rate, type_of_model,
-                                                                                       dimension,
-                                                                                       reaction_rate_arguments,
-                                                                                       parameter_exist,
-                                                                                       parameters_in_reaction,
-                                                                                       skip_check)
-                    except TypeError as e:
-                        simlog.error(f'On reaction {reaction} \n' + str(e))
+                        if rate_string == 0:
+                            continue
 
-                    if rate_string == 0:
-                        continue
+                        reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
+                            construct_single_reaction_for_sbml(reactant_strings,
+                                                               product_string_list,
+                                                               rate_string)
 
-                    reactions_for_sbml['reaction_' + str(len(reactions_for_sbml))] = \
-                        construct_single_reaction_for_sbml(reactant_strings,
-                                                           product_string_list,
-                                                           rate_string)
-
-    expression_compilation_finish(expressions_in_stack)
 
     return reactions_for_sbml, parameters_in_reaction
 

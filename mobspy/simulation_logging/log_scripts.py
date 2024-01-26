@@ -1,9 +1,9 @@
 from copy import deepcopy
 import inspect
 import sys
+import mobspy.modules.mobspy_expressions as me
 
 global_simlog_level = 3
-
 
 def error(message, stack_index=-1):
     if stack_index > -1:
@@ -13,6 +13,7 @@ def error(message, stack_index=-1):
 
     if global_simlog_level >= 0:
         print('\033[91m' + 'ERROR: ' + message + '\033[0m', file=sys.stderr)
+
     sys.exit(1)
 
 
@@ -33,5 +34,4 @@ def warning(message):
 
 
 if __name__ == '__main__':
-    a = 5
-    error(f'Did not found your {a}')
+    context_reset_exit()

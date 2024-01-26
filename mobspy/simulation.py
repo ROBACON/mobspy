@@ -121,8 +121,6 @@ class Simulation:
             time = uh.convert_time(time)
             self.event_context_add(time, 'true')
 
-    
-
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
             Constructor of the simulation object

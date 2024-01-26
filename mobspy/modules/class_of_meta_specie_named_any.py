@@ -4,7 +4,7 @@
 from mobspy.modules.meta_class import *
 from contextlib import contextmanager
 
-class Context_specie_named_any(Species) :
+class Context_specie_named_any(Species):
     """
         Class which inherits from Species. It only has one object, Any, which is defined at the end of this script.
         It is used to simplify the syntax of reactions and count setting inside the body of a "with Any.example_characteristic1 :" statement.
