@@ -4,7 +4,7 @@ from scipy.constants import N_A
 from copy import deepcopy
 import time
 
-
+# @TODO change _ms_active to context based name
 class Bool_Override:
     """
             Just a base class for implementing the . operation in the rate function arguments

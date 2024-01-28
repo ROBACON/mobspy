@@ -20,8 +20,7 @@ if __name__ == '__main__':
     Tree.old >> Tree + Tree.green.young[0.1/u.year]
 
     # competition
-    Tree.dense.old + Tree.dense.young >> Tree.dense.old \
-        [1e-10 * u.decimeter / u.year]
+    Tree.dense.old + Tree.dense.young >> Tree.dense.old [1e-10 * u.decimeter**2 / u.year]
 
     # color cycling
     colors = ['green', 'yellow', 'brown']
@@ -31,12 +30,11 @@ if __name__ == '__main__':
     # initial conditions
     Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)
     MySim = Simulation(Tree)
-    print(MySim.compile())
-    exit()
     MySim.simulation_method = 'stochastic'
     MySim.save_data = False
     MySim.plot_data = False
     MySim.duration = 100*u.years
     MySim.unit_x = 'year'
+    MySim.volume = 1*u.meter**2
     MySim.run()
     MySim.plot_stochastic(Tree.dense, Tree.sparse, Tree.brown)

@@ -110,8 +110,8 @@ def create_orthogonal_vector_structure(species):
                 else:
                     simlog.error(f'The same characteristic can only be shared through inheritance. ' +
                                  f'There are two characteristics directly added to two meta-species \n'
-                                f'Repetition in: {spe}, {ref_characteristics_to_object[cha] } \n'
-                                f'Characteristics: {spe.get_characteristics()}, '
+                                 f'Repetition in: {spe}, {ref_characteristics_to_object[cha]} \n'
+                                 f'Characteristics: {spe.get_characteristics()}, '
                                  f'{ref_characteristics_to_object[cha].get_characteristics()} \n')
 
     return ref_characteristics_to_object

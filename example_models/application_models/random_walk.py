@@ -16,7 +16,7 @@ import time
 start_time = time.time()
 
 Mesh = BaseSpecies(1)
-n = 10
+n = 5
 for i in range(n):
     for j in range(n):
         coordinate = 'p_' + str(i) + '_' + str(j)
@@ -47,12 +47,12 @@ MySim.run()
 
 
 def grab_position(species_position, list_x, list_y):
-    _, x, y = Mesh(species_position).split('_')
+    _, x, y = species_position.split('_')
     list_x.append(int(x))
     list_y.append(int(y))
 
 
-data = MySim.results['data']
+data = MySim.fres
 
 Bacteria_x = []
 Bacteria_y = []
@@ -66,27 +66,30 @@ for t in range(len(data['Time'])):
     position_flag_phage = False
 
     for key in data:
+
         if key == 'Time' or key == 'Bacteria' or key == 'Phage':
             continue
         species_string = deepcopy(key)
 
-        if data[key]['runs'][0][t] == 1:
+        if data[key][t] == 1:
 
-            if species_string.split('.')[0] == 'Bacteria':
-                if Bacteria(key) == 'infected':
-                    grab_position(key, Meeting_x, Meeting_y)
+            split_key = species_string.split('.')
+
+            if split_key[0] == 'Bacteria':
+                if split_key[1] == 'infected':
+                    grab_position(split_key[-1], Meeting_x, Meeting_y)
                     break_flag = True
                     break
 
                 if not position_flag_bacteria:
-                    grab_position(key, Bacteria_x, Bacteria_y)
+                    grab_position(split_key[-1], Bacteria_x, Bacteria_y)
                     position_flag_bacteria = True
                 else:
                     raise TypeError('Something went wrong')
 
-            if species_string.split('.')[0] == 'Phage':
+            if split_key[0] == 'Phage':
                 if not position_flag_phage:
-                    grab_position(key, Phage_x, Phage_y)
+                    grab_position(split_key[-1], Phage_x, Phage_y)
                     position_flag_phage = True
                 else:
                     raise TypeError('Something went wrong')

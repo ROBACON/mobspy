@@ -25,7 +25,7 @@ def NOR_GATE(A_conc, B_conc):
     MySim.save_data = False
     MySim.plot_data = False
     MySim.run()
-    return MySim.results['data']['Protein']['runs'][0][-1]
+    return MySim.fres['Protein'][-1]
 
 
 heatmap = []

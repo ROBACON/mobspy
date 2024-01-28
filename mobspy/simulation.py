@@ -121,8 +121,6 @@ class Simulation:
             time = uh.convert_time(time)
             self.event_context_add(time, 'true')
 
-    
-
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
         """
             Constructor of the simulation object
@@ -150,6 +148,8 @@ class Simulation:
         self.model_parameters = {}
         self.sbml_data_list = []
         self._parameter_list_of_dic = []
+        self._is_compiled = False
+        self.dimension = None
 
         # Must copy to avoid reference assignment
         self.model = List_Species(model)
@@ -197,6 +197,9 @@ class Simulation:
 
             :param verbose: (bool) = print or not the results of the compilation
         """
+        if self.dimension is None:
+            self.dimension = 3
+
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
 
@@ -222,8 +225,7 @@ class Simulation:
                              species_counts=self._species_counts,
                              orthogonal_vector_structure=self.orthogonal_vector_structure,
                              volume=self.parameters['volume'],
-                             type_of_model=self.parameters[
-                                 "simulation_method"],
+                             type_of_model=self.parameters["simulation_method"],
                              verbose=verbose,
                              event_dictionary=self.total_packed_events,
                              continuous_sim=self.parameters['_continuous_simulation'],
@@ -253,6 +255,8 @@ class Simulation:
 
         self._list_of_parameters = [self.parameters]
 
+        self._is_compiled = True
+
         if self.model_string != '':
             return self.model_string
 
@@ -264,11 +268,41 @@ class Simulation:
             self.sbml_data_list = data_for_sbml_construction
             self._parameter_list_of_dic = parameter_list_of_dic
 
-    def run(self):
+    def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
+            start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
+            jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
+            output_file=None, save_data=None, plot_data=None) -> None:
         """
-            Runs the simulation by colling the models in the sbml_simulator directory.
-            Compiles the model if it was not yet compiled
+            runs the simulation, the arguments for this function can be set using the get item method or this way
+            Parameters not set to run will override the previous parameters, causing the model to recompile
+            Resulting data is found with the query Simulation_object.results
+
+            :param duration: (float) duration of a simulation
+            :param volume: (float) volume of the simulation - if none given 1 - liter is used
+            :param repetitions: (int) number of times to reapeat a simulation
+            :param level: (int) 0 - only error messages, 3 - errors, warnings, compilation info
+            :param simulation_method: (str) stochastic, deterministic, direct_method - simulation method
+            :param start_time: (float) the simulation will only display data after the start time
+            :param r_tol: (float) relative tolerance - basiCO simulation parameter
+            :param a_tol: (float) absolute tolerance  - basiCO simulation parameter
+            :param seeds: (list) list of seeds for stochastic simulation
+            :param step_size: (float) time step-size for simulation
+            :param jobs: (int) number of jobs to execute simulation
+            :param unit_x: (unit) unit of the time x-axis
+            :param unit_y: (unit) unit of the y-axis
+            :param output_concentration: (bool) outputs the concentration instead of counts - to be changed
+            :param output_event: (bool) exactly when an event happens, it adds the data point to the results
+            :param output_file: (str) name of the file
+            :param save_data: (bool) save data or not
+            :param plot_data: (bool) plot data or not
         """
+        # This is only here so the ide gives the users tips about the function argument.
+        # I wish there was a way to loop over all argument without args and kargs
+        pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
+                                           start_time, r_tol, a_tol, seeds, step_size,
+                                           jobs, unit_x, unit_y, output_concentration, output_event,
+                                           output_file, save_data, plot_data)
+
         # Base case - If there are no events we compile the model here
         if self._species_for_sbml is None:
             self.compile(verbose=False)
@@ -409,7 +443,7 @@ class Simulation:
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
-                      'sbml_data_list', '_parameter_list_of_dic']
+                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension']
 
         plotted_flag = False
         if name in white_list:
@@ -423,6 +457,12 @@ class Simulation:
         if not plotted_flag:
             example_parameters = get_example_parameters()
             if name in example_parameters.keys():
+                # If the model is already compiled, the change in parameters should be faster
+                if self._is_compiled:
+                    value = pr.convert_time_parameters_after_compilation(value)
+                if self._is_compiled and name == 'volume':
+                    value = pr.convert_volume_after_compilation(self.dimension, self._parameters_for_sbml, value)
+
                 if name == 'duration':
                     if type(value) == bool:
                         simlog.error(f'MobsPy has received an invalid trigger type: {type(value)} \n' +
@@ -640,7 +680,6 @@ class SimulationComposition:
     def __add__(self, other):
         return SimulationComposition(self, other)
 
-    # FIX THIS
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         broad_cast_parameters = ['level', 'method', 'volume']
@@ -686,7 +725,11 @@ class SimulationComposition:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
 
-    def run(self):
+    def run(self, volume=None, repetitions=None, level=None, simulation_method=None,
+            start_time=None, duration=None, r_tol=None, a_tol=None):
+        """
+
+        """
 
         self._check_all_sims_compilation()
         self._compile_multi_simulation()

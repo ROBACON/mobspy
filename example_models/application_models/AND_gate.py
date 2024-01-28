@@ -26,7 +26,7 @@ def AND_GATE(A_conc, B_conc):
     MySim.save_data = False
     MySim.plot_data = False
     MySim.run()
-    return MySim.results['data']['Protein']['runs'][0][-1]
+    return MySim.results[Protein][0][-1]
 
 
 # Here is a simple heatmap definition to show to get working

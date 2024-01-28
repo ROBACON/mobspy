@@ -9,6 +9,8 @@ from pathlib import Path
 import numpy as np
 import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
+import mobspy.modules.unit_handler as uh
+import inspect
 
 
 def read_json(json_file_name):
@@ -84,10 +86,95 @@ def __convert_unit_parameters(params):
                 params[u] = str(params[u])
 
 
+def convert_time_parameters_after_compilation(value):
+    """
+        This function converts the duration if the model was already compiled
+    """
+    if isinstance(value, Quantity):
+        if str(value.dimensionality) == '[time]':
+            value = value.convert('second').magnitude
+    return value
+
+def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
+    if isinstance(value, Quantity):
+        message = 'Error at '
+        context = inspect.stack()[2].code_context[0][:-1]
+        message += context + '\n The dimension is set to tree at the moment of the compilation if not specified' \
+                             ' beforehand \n Please set a volume in the correct dimension before compilation'
+        uh.extract_length_dimension(str(value.dimensionality), dimension, context=message)
+
+    value = uh.convert_volume(value, dimension)
+    parameters_for_sbml['volume'] = (value, f'dimensionless')
+    return value
+
+
 def parameter_process(params):
     __convert_unit_parameters(params)
     __name_output_file(params)
     __check_stochastic_repetitions_seeds(params)
     __convert_parameters_for_COPASI(params)
+
+
+# I felt like inspect could be to invasive, maybe it would have been better to inspect the function signature
+def manually_process_each_parameter(simulation_object, duration, volume, repetitions, level, simulation_method,
+                                    start_time, r_tol, a_tol, seeds, step_size,
+                                    jobs, unit_x, unit_y, output_concentration, output_event,
+                                    output_file, save_data, plot_data):
+
+    if duration is not None:
+        simulation_object.duration = duration
+
+    if volume is not None:
+        simulation_object.duration = volume
+
+    if repetitions is not None:
+        simulation_object.repetitions = repetitions
+
+    if level is not None:
+        simulation_object.level = level
+
+    if simulation_method is not None:
+        simulation_object.simulation_method = simulation_method
+
+    if start_time is not None:
+        simulation_object.start_time = start_time
+
+    if r_tol is not None:
+        simulation_object.r_tol = r_tol
+
+    if a_tol is not None:
+        simulation_object.a_tol = a_tol
+
+    if seeds is not None:
+        simulation_object.seeds = seeds
+
+    if step_size is not None:
+        simulation_object.step_size = step_size
+
+    if jobs is not None:
+        simulation_object.jobs = step_size
+
+    if unit_x is not None:
+        simulation_object.unit_x = unit_x
+
+    if unit_y is not None:
+        simulation_object.unit_y = unit_y
+
+    if output_concentration is not None:
+        simulation_object.output_concentration = output_concentration
+
+    if output_event is not None:
+        simulation_object.output_event = output_event
+
+    if output_file is not None:
+        simulation_object.output_file = output_file
+
+    if save_data is not None:
+        simulation_object.save_data = save_data
+
+    if plot_data is not None:
+        simulation_object.plot_data = plot_data
+
+
 
 
