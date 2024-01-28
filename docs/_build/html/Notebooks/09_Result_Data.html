@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulation Results &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reaction Rates" href="10_Reaction_Rates.html" />
+    <link rel="prev" title="Units" href="08_Units.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_Order_Matters.html">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Simulation Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Looping-over-data">Looping over data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Simulation Results</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/09_Result_Data.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Simulation-Results">
+<h1>Simulation Results<a class="headerlink" href="#Simulation-Results" title="Link to this heading"></a></h1>
+<p>This notebook will teach how to viasualize and extract results from the MobsPy simulation object.</p>
+<p>We start with a simple model:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Color</span><span class="p">,</span> <span class="n">Disease</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">Color</span><span class="o">.</span><span class="n">blue</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">red</span><span class="p">,</span> <span class="n">Color</span><span class="o">.</span><span class="n">yellow</span>
+<span class="n">Disease</span><span class="o">.</span><span class="n">not_sick</span><span class="p">,</span> <span class="n">Disease</span><span class="o">.</span><span class="n">sick</span>
+
+<span class="n">Disease</span><span class="o">.</span><span class="n">not_sick</span> <span class="o">&gt;&gt;</span> <span class="n">Disease</span><span class="o">.</span><span class="n">sick</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">Tree</span> <span class="o">=</span> <span class="n">Color</span><span class="o">*</span><span class="n">Disease</span>
+
+<span class="n">Tree</span><span class="o">.</span><span class="n">yellow</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">Tree</span><span class="o">.</span><span class="n">red</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">Tree</span><span class="o">.</span><span class="n">blue</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="n">S</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Tree</span><span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S</span><span class="o">.</span><span class="n">repetitions</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">S</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="n">S</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_09_Result_Data_1_1.png" src="../_images/Notebooks_09_Result_Data_1_1.png" />
+</div>
+</div>
+<p>The previous plot did not show much as the number of Trees remains constant throughout the simulation. However, MobsPy provides tools to better viasualize the results. Firstly, one can use the plot_stochastic() function with perform string queries to plot the counts from specific states.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">plot_stochastic</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">not_sick</span><span class="p">,</span> <span class="n">Tree</span><span class="o">.</span><span class="n">sick</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_09_Result_Data_3_0.png" src="../_images/Notebooks_09_Result_Data_3_0.png" />
+</div>
+</div>
+<p>Plot stochastic generates two figures for each species. The figures above refer to the runs, while the figures bellow refer to an average of the runs with the standard deviation.</p>
+<p>If one wishes to see all species together, one can use the plot function.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Tree</span><span class="o">.</span><span class="n">not_sick</span><span class="p">,</span> <span class="n">Tree</span><span class="o">.</span><span class="n">sick</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_09_Result_Data_5_0.png" src="../_images/Notebooks_09_Result_Data_5_0.png" />
+</div>
+</div>
+<p>One can also access the data directly using either the meta-species objects or strings. Similarly to the plotting function you can perform queries in the result data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">R</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tree: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="n">Tree</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tree.not_sick: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="n">Tree</span><span class="o">.</span><span class="n">not_sick</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tree.sick: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="s1">&#39;Tree.sick&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tree.sick.blue: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="s1">&#39;Tree.sick.blue&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Tree:
+ [[60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0]]
+Tree.not_sick:
+ [[60.0, 44.0, 36.0, 26.0, 21.0, 15.0, 10.0, 7.0, 4.0, 3.0, 2.0, 2.0, 2.0], [60.0, 46.0, 37.0, 31.0, 21.0, 16.0, 14.0, 12.0, 9.0, 6.0, 4.0, 4.0, 3.0], [60.0, 43.0, 30.0, 20.0, 16.0, 12.0, 11.0, 10.0, 9.0, 7.0, 4.0, 4.0, 2.0]]
+Tree.sick:
+ [[0.0, 16.0, 24.0, 34.0, 39.0, 45.0, 50.0, 53.0, 56.0, 57.0, 58.0, 58.0, 58.0], [0.0, 14.0, 23.0, 29.0, 39.0, 44.0, 46.0, 48.0, 51.0, 54.0, 56.0, 56.0, 57.0], [0.0, 17.0, 30.0, 40.0, 44.0, 48.0, 49.0, 50.0, 51.0, 53.0, 56.0, 56.0, 58.0]]
+Tree.sick.blue:
+ [[0.0, 6.0, 9.0, 13.0, 15.0, 18.0, 19.0, 19.0, 20.0, 20.0, 20.0, 20.0, 20.0], [0.0, 4.0, 8.0, 9.0, 12.0, 12.0, 14.0, 14.0, 15.0, 17.0, 19.0, 19.0, 20.0], [0.0, 2.0, 5.0, 8.0, 10.0, 13.0, 14.0, 15.0, 15.0, 15.0, 16.0, 16.0, 18.0]]
+</pre></div></div>
+</div>
+<p>If the simulation has more than one repetition the results requested for a species will yield all runs packed in a list. However, if a simulation has only one run it will return a single list.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">()</span>
+
+<span class="n">A</span> <span class="o">&gt;&gt;</span> <span class="n">Zero</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">A</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">S_one_run</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">S_one_run</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+<span class="n">S_one_run</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="n">S_one_run</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">S_one_run</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+Starting Simulator
+Running simulation in parallel
+Simulation is Over
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/Notebooks_09_Result_Data_9_1.png" src="../_images/Notebooks_09_Result_Data_9_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">S_one_run</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">A</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[60.0, 43.0, 32.0, 25.0, 21.0, 15.0, 8.0, 6.0, 6.0, 4.0, 3.0, 3.0, 2.0]
+</pre></div></div>
+</div>
+<section id="Looping-over-data">
+<h2>Looping over data<a class="headerlink" href="#Looping-over-data" title="Link to this heading"></a></h2>
+<p>Looping through results changes for simulations with multiple repetitions and simulations with a single repetition. If there is a single repetition a loop through the results will yield all the meta-species and if there are multiple repetations a loop through the results will yield each time-series.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Single repetition: &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">S_one_run</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Multiple repetitions: &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Single repetition:
+A
+Time
+
+Multiple repetitions:
+{&#39;Tree.red.not_sick&#39;: [20.0, 17.0, 15.0, 10.0, 9.0, 6.0, 2.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0], &#39;Tree.yellow.not_sick&#39;: [20.0, 13.0, 10.0, 9.0, 7.0, 7.0, 7.0, 4.0, 3.0, 3.0, 2.0, 2.0, 2.0], &#39;Tree.blue.not_sick&#39;: [20.0, 14.0, 11.0, 7.0, 5.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], &#39;Tree.yellow.sick&#39;: [0.0, 7.0, 10.0, 11.0, 13.0, 13.0, 13.0, 16.0, 17.0, 17.0, 18.0, 18.0, 18.0], &#39;Tree.red.sick&#39;: [0.0, 3.0, 5.0, 10.0, 11.0, 14.0, 18.0, 18.0, 19.0, 20.0, 20.0, 20.0, 20.0], &#39;Tree.blue.sick&#39;: [0.0, 6.0, 9.0, 13.0, 15.0, 18.0, 19.0, 19.0, 20.0, 20.0, 20.0, 20.0, 20.0], &#39;Tree&#39;: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], &#39;Time&#39;: [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]}
+{&#39;Tree.red.not_sick&#39;: [20.0, 12.0, 10.0, 6.0, 5.0, 4.0, 4.0, 3.0, 2.0, 2.0, 2.0, 2.0, 2.0], &#39;Tree.yellow.not_sick&#39;: [20.0, 18.0, 15.0, 14.0, 8.0, 4.0, 4.0, 3.0, 2.0, 1.0, 1.0, 1.0, 1.0], &#39;Tree.blue.not_sick&#39;: [20.0, 16.0, 12.0, 11.0, 8.0, 8.0, 6.0, 6.0, 5.0, 3.0, 1.0, 1.0, 0.0], &#39;Tree.yellow.sick&#39;: [0.0, 2.0, 5.0, 6.0, 12.0, 16.0, 16.0, 17.0, 18.0, 19.0, 19.0, 19.0, 19.0], &#39;Tree.red.sick&#39;: [0.0, 8.0, 10.0, 14.0, 15.0, 16.0, 16.0, 17.0, 18.0, 18.0, 18.0, 18.0, 18.0], &#39;Tree.blue.sick&#39;: [0.0, 4.0, 8.0, 9.0, 12.0, 12.0, 14.0, 14.0, 15.0, 17.0, 19.0, 19.0, 20.0], &#39;Tree&#39;: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], &#39;Time&#39;: [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]}
+{&#39;Tree.red.not_sick&#39;: [20.0, 13.0, 10.0, 5.0, 3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0], &#39;Tree.yellow.not_sick&#39;: [20.0, 12.0, 5.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 0.0, 0.0, 0.0, 0.0], &#39;Tree.blue.not_sick&#39;: [20.0, 18.0, 15.0, 12.0, 10.0, 7.0, 6.0, 5.0, 5.0, 5.0, 4.0, 4.0, 2.0], &#39;Tree.yellow.sick&#39;: [0.0, 8.0, 15.0, 17.0, 17.0, 17.0, 17.0, 17.0, 18.0, 20.0, 20.0, 20.0, 20.0], &#39;Tree.red.sick&#39;: [0.0, 7.0, 10.0, 15.0, 17.0, 18.0, 18.0, 18.0, 18.0, 18.0, 20.0, 20.0, 20.0], &#39;Tree.blue.sick&#39;: [0.0, 2.0, 5.0, 8.0, 10.0, 13.0, 14.0, 15.0, 15.0, 15.0, 16.0, 16.0, 18.0], &#39;Tree&#39;: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], &#39;Time&#39;: [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]}
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="08_Units.html" class="btn btn-neutral float-left" title="Units" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="10_Reaction_Rates.html" class="btn btn-neutral float-right" title="Reaction Rates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

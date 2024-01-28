@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order of Reactants and Products &mdash; MobsPy 2.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f35be339"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Count/Concentration Assignment" href="07_Initial_Condition.html" />
+    <link rel="prev" title="For Loops" href="05_For_Loops.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MobsPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_Characteristics.html">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_Characteristic_restriction.html">Restraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_For_Loops.html">For Loops</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Order of Reactants and Products</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html">Count/Concentration Assignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_Initial_Condition.html#Set-count-function">Set count function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_Units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_Result_Data.html">Simulation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_Reaction_Rates.html">Reaction Rates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_Looping_Through_Species.html#List-Species">List Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_Born_Species.html">Born Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_Events.html">Events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_Concatenating_Simulations.html">Concatenated simulations</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MobsPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Order of Reactants and Products</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Notebooks/06_Order_Matters.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Order-of-Reactants-and-Products">
+<h1>Order of Reactants and Products<a class="headerlink" href="#Order-of-Reactants-and-Products" title="Link to this heading"></a></h1>
+<p>In this example, we will construct a model of how the order of reactants and products affects a meta-reaction. MobsPy uses a round-robin structure to assign reactant states to product states. In this example, we describe this structure in detail with examples.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mobspy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Age</span> <span class="o">=</span> <span class="n">BaseSpecies</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">Age</span><span class="o">.</span><span class="n">young</span> <span class="o">&gt;&gt;</span> <span class="n">Age</span><span class="o">.</span><span class="n">old</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">Animal</span> <span class="o">=</span> <span class="n">Age</span>
+<span class="n">Animal</span><span class="o">.</span><span class="n">a1</span><span class="p">,</span> <span class="n">Animal</span><span class="o">.</span><span class="n">a2</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;mobspy.modules.meta_class.Reacting_Species at 0x7f942baa3250&gt;,
+ &lt;mobspy.modules.meta_class.Reacting_Species at 0x7f942baa3880&gt;)
+</pre></div></div>
+</div>
+<p>The Round-Robin mechanism is demonstrated with the reaction below:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Animal</span><span class="o">.</span><span class="n">old</span> <span class="o">+</span> <span class="n">Animal</span><span class="o">.</span><span class="n">young</span> <span class="o">&gt;&gt;</span> <span class="n">Animal</span><span class="o">.</span><span class="n">old</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f942baa3970&gt;
+</pre></div></div>
+</div>
+<p>In this reaction, we want to define a competition between young and old animals. We want the old animal to survive the competition. However, how does MobsPy distinguish this case from where the young animal survives and becomes old? Simple, through the reactants order. The first reactant becomes the first species in the product, and it continues cyclically until all products have been mapped to a species.</p>
+<p>If necessary, the .label() can be used to circumvent this default behavior, if required. In the next reaction, the young Animal kills the old and becomes old itself.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Animal.old + Animal.young.label(1) &gt;&gt; Animal.old.label(1) [1]</span>
+</pre></div>
+</div>
+</div>
+<p>While arguably, the fact that once the old animal survives and once the young one does not make a difference in our setting, it does if additional characteristics are added to the Animal, e.g., it having a color.</p>
+<p>The cyclic round-robin style is especially useful in reproduction reactions. Since the assignment cycles in a round-robin fashion, the first product will be assigned the first reactant, and the second product will cycle through the reactants and be assigned the first reactant as well. In the example below, the two products will be generated in the same state as the reactant</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Animal</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">Animal</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;mobspy.modules.meta_class.Reactions at 0x7f9431b4a760&gt;
+</pre></div></div>
+</div>
+<p>Finally, the compilation:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">MySim</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">Animal</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">MySim</span><span class="o">.</span><span class="n">compile</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Species
+Age.a1,0
+Age.a2,0
+Age.old,0
+Age.young,0
+
+Mappings
+Age :
+Age.a1
+Age.a2
+Age.old
+Age.young
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{&#39;re&#39;: [(1, &#39;Age.a1&#39;)], &#39;pr&#39;: [(2, &#39;Age.a1&#39;)], &#39;kin&#39;: &#39;Age.a1 * 1&#39;}
+reaction_1,{&#39;re&#39;: [(1, &#39;Age.a2&#39;)], &#39;pr&#39;: [(2, &#39;Age.a2&#39;)], &#39;kin&#39;: &#39;Age.a2 * 1&#39;}
+reaction_2,{&#39;re&#39;: [(1, &#39;Age.old&#39;), (1, &#39;Age.young&#39;)], &#39;pr&#39;: [(1, &#39;Age.old&#39;)], &#39;kin&#39;: &#39;Age.old * Age.young * 1 * volume^-1&#39;}
+reaction_3,{&#39;re&#39;: [(1, &#39;Age.old&#39;)], &#39;pr&#39;: [(2, &#39;Age.old&#39;)], &#39;kin&#39;: &#39;Age.old * 1&#39;}
+reaction_4,{&#39;re&#39;: [(1, &#39;Age.young&#39;)], &#39;pr&#39;: [(1, &#39;Age.old&#39;)], &#39;kin&#39;: &#39;Age.young * 1&#39;}
+reaction_5,{&#39;re&#39;: [(1, &#39;Age.young&#39;)], &#39;pr&#39;: [(2, &#39;Age.young&#39;)], &#39;kin&#39;: &#39;Age.young * 1&#39;}
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Compiling model
+<span class="ansi-red-intense-fg">WARNING: Automatic data-saving setup failed. Please save manually</span>
+</pre></div></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="05_For_Loops.html" class="btn btn-neutral float-left" title="For Loops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="07_Initial_Condition.html" class="btn btn-neutral float-right" title="Count/Concentration Assignment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rémi Baron, Fabricio Cravo, Matthias Fuegger, Thomas Nowak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
