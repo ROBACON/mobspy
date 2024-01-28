@@ -1306,7 +1306,7 @@ def test_proper_unit_context_exit():
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
-test_list = ["""test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
+test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
              test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
              test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
              test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
