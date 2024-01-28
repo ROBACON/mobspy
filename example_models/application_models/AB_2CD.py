@@ -8,7 +8,7 @@ from mobspy import *
     Species counts are assigned using the call method
     Rates are assigned using the getitem brackets []
 """
-A, B, C, D = BaseSpecies(4)
+A, B, C, D = BaseSpecies()
 A(200) + B(100) >> 2*C + D [0.1]
 My_Sim = Simulation(A | B | C | D)
 My_Sim.save_data = False

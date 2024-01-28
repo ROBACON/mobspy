@@ -9,7 +9,7 @@ if __name__ == '__main__':
         The colors can change randomly from time to time
         All old Trees can reproduce, but the Three is born green and young 
     """
-    Ager, Mortal, Colored, Location = BaseSpecies(4)
+    Ager, Mortal, Colored, Location = BaseSpecies()
     Colored.green, Colored.yellow, Colored.brown
     Location.dense, Location.sparse
     Ager.young >> Ager.old[1 / 10 / u.year]

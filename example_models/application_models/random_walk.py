@@ -15,7 +15,7 @@ import time
 
 start_time = time.time()
 
-Mesh = BaseSpecies(1)
+Mesh = BaseSpecies()
 n = 5
 for i in range(n):
     for j in range(n):
@@ -30,7 +30,7 @@ for i in range(n):
         if j + 1 < n:
             Mesh.c(coordinate) >> Mesh.c(f'p_{i}_{j+1}')[0.1]
 
-Bacteria, Phage = New(Mesh, 2)
+Bacteria, Phage = New(Mesh)
 Bacteria.not_infected + Phage >> Bacteria.infected [lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0]
 Bacteria.p_0_0(1)
 Phage.c(f'p_{n-1}_{n-1}')(1)

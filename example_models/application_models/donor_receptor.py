@@ -8,15 +8,15 @@ from mobspy import *
     Only the Receptor can be infected by the phages
 """
 # Variable declaration
-Resource, Mortal, Infectible = BaseSpecies(3)
+Resource, Mortal, Infectible = BaseSpecies()
 
 # Resource Definition
-AA, Glu = New(Resource, 2)
+AA, Glu = New(Resource)
 AA(100), Glu(100)
 
 # Donor and Phage Creation
 Mortal >> Zero [0.1]
-Donor, Phage = New(Mortal, 2)
+Donor, Phage = New(Mortal)
 Donor(100)
 
 # Here both Resources can react with the Donor due to inheritance

@@ -7,7 +7,7 @@ from mobspy import *
     This model is a simple single repressor
 """
 
-Chemical, Promoter, Protein = BaseSpecies(3)
+Chemical, Promoter, Protein = BaseSpecies()
 
 Rev[Chemical + Promoter.inactive >> Promoter.active][2, 1]
 Promoter >> Promoter + Protein [lambda promoter: 1 if promoter.inactive else 0]

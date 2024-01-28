@@ -9,7 +9,7 @@ from mobspy import *
     It's the classical circle of three compounds repressing each other
 """
 
-Promoter, Chemical = BaseSpecies(2)
+Promoter, Chemical = BaseSpecies()
 Promoter.inactive, Promoter.active
 DNAPromoter = New(Promoter)
 DNAPromoter.PLcl(100), DNAPromoter.PLacl(100), DNAPromoter.PTetR(100)
