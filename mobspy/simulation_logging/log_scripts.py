@@ -33,5 +33,3 @@ def warning(message):
         print('\033[91m' + 'WARNING: ' + message_copy + '\033[0m', file=sys.stderr)
 
 
-if __name__ == '__main__':
-    context_reset_exit()
