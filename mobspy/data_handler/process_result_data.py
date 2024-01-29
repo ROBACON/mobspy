@@ -48,7 +48,7 @@ def convert_data_to_desired_unit(data, unit_x=None, unit_y=None, output_concentr
         multiply_data_by_factor(converted_data, volume ** -1)
 
     if unit_y is not None:
-        if 'mol' in unit_y:
+        if 'mol' in str(unit_y):
             multiply_data_by_factor(converted_data, N_A ** -1)
             if output_concentration:
                 convert_data(converted_data, ur.molar, unit_y)

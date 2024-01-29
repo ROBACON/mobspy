@@ -296,16 +296,20 @@ class Simulation:
             :param save_data: (bool) save data or not
             :param plot_data: (bool) plot data or not
         """
+        # Level needs to be set before compilation
+        if level is not None:
+            self.level = level
+
+        # Base case - If there are no events we compile the model here
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
+
         # This is only here so the ide gives the users tips about the function argument.
         # I wish there was a way to loop over all argument without args and kargs
         pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
                                            output_file, save_data, plot_data)
-
-        # Base case - If there are no events we compile the model here
-        if self._species_for_sbml is None:
-            self.compile(verbose=False)
 
         self._assemble_multi_simulation_structure()
 
@@ -458,7 +462,7 @@ class Simulation:
             example_parameters = get_example_parameters()
             if name in example_parameters.keys():
                 # If the model is already compiled, the change in parameters should be faster
-                if self._is_compiled:
+                if self._is_compiled and name != 'unit_x' and name != 'unit_y':
                     value = pr.convert_time_parameters_after_compilation(value)
                 if self._is_compiled and name == 'volume':
                     value = pr.convert_volume_after_compilation(self.dimension, self._parameters_for_sbml, value)
@@ -660,7 +664,14 @@ class SimulationComposition:
                             if spe1.get_all_characteristics() != spe2.get_all_characteristics():
                                 simlog.error(f'Species {spe1.get_name()} was modified through simulations. \n' +
                                              f'Although reactions can be removed, the characteristics inherited must'
-                                             f'remains the same')
+                                             f' remain the same')
+
+    def __len__(self):
+        return len(self.list_of_simulations)
+
+    def __iter__(self):
+        for sim in self.list_of_simulations:
+            yield sim
 
     def __init__(self, S1, S2):
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
@@ -682,27 +693,36 @@ class SimulationComposition:
 
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
-        broad_cast_parameters = ['level', 'method', 'volume']
+        multi_cast_parameters = ['simulation_method', 'method', 'volume', 'duration']
+        broad_cast_parameters = ['level']
 
-        if name == 'duration':
-            simlog.error('The durations are to be defined specifically to each simulation and not for the concatenated'
-                         ' object. \n'
-                         'Please set the durations for each simulation object independently', stack_index=2)
+        if name in multi_cast_parameters:
 
-        if name in broad_cast_parameters:
-            if name == 'volume':
-                for sim in self.list_of_simulations:
-                    if sim.__dict__['parameters'][name] != 1:
-                        simlog.error('Volumes must be defined only individually for each simulation or once in the '
-                                     'concatenated simulation', stack_index=2)
-            else:
-                for sim in self.list_of_simulations:
-                    sim.__dict__['parameters'][name] = value
+            try:
+                if not len(self) == len(value):
+                    raise SystemExit
+            except:
+                simlog.error('For versions higher than 2.2.2, the parameters simulation_method (or method), volume, '
+                             'and duration must be assigned an iterable for each simulation when using '
+                             'the composition object', stack_index=2)
 
-        if name in white_list:
-            self.__dict__[name] = value
+            for par, sim in zip(value, self):
+                # DON'T ADD DIRECTLY to the object's dict, changes in volume, duration after compilation are
+                # checked in the setattr method in the individual simulations
+                if name == 'volume':
+                    sim.volume = par
+                elif name == 'duration':
+                    sim.duration = par
+                else:
+                    sim.__dict__['parameters'][name] = par
+        elif name in broad_cast_parameters:
+            for sim in self:
+                sim.__dict__['parameters'][name] = value
         else:
-            self.base_sim.__setattr__(name, value)
+            if name in white_list:
+                self.__dict__[name] = value
+            else:
+                self.base_sim.__setattr__(name, value)
 
     def __getattr__(self, item):
         if item == 'plot_config':
@@ -725,14 +745,45 @@ class SimulationComposition:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
 
-    def run(self, volume=None, repetitions=None, level=None, simulation_method=None,
-            start_time=None, duration=None, r_tol=None, a_tol=None):
+    # This run is for the multiple simulations
+    def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
+            start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
+            jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
+            output_file=None, save_data=None, plot_data=None):
         """
+            runs a concatenated simulation with multiple simulation objects summed
+            Some inputs are different here, duration and volume must receive any iterable with the volume for
+            each simulation
 
+            :param duration: (iterable) duration of a simulation
+            :param volume: (iterable) volume of the simulation - if none given 1 - liter is used
+            :param repetitions: (int) number of times to reapeat a simulation
+            :param level: (int) 0 - only error messages, 3 - errors, warnings, compilation info
+            :param simulation_method: (iterable) stochastic, deterministic, direct_method - simulation method
+            :param start_time: (float) the simulation will only display data after the start time
+            :param r_tol: (float) relative tolerance - basiCO simulation parameter
+            :param a_tol: (float) absolute tolerance  - basiCO simulation parameter
+            :param seeds: (list) list of seeds for stochastic simulation
+            :param step_size: (float) time step-size for simulation
+            :param jobs: (int) number of jobs to execute simulation
+            :param unit_x: (unit) unit of the time x-axis
+            :param unit_y: (unit) unit of the y-axis
+            :param output_concentration: (bool) outputs the concentration instead of counts - to be changed
+            :param output_event: (bool) exactly when an event happens, it adds the data point to the results
+            :param output_file: (str) name of the file
+            :param save_data: (bool) save data or not
+            :param plot_data: (bool) plot data or not
         """
+        if level is not None:
+            self.level = level
 
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
+
+        pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
+                                           start_time, r_tol, a_tol, seeds, step_size,
+                                           jobs, unit_x, unit_y, output_concentration, output_event,
+                                           output_file, save_data, plot_data)
 
         multi_parameter_dictionary = {}
 

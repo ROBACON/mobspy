@@ -34,6 +34,14 @@ class MobsPyList_of_TS:
         """
         self.ts_data = [x.ts_data for x in list_of_mspy_ts]
         self.ts_parameters = [x.ts_parameters for x in list_of_mspy_ts]
+
+        # This lines are here to allow the object to be deepcopiable
+        for ts_par in self.ts_parameters:
+            if ts_par['unit_x'] is not None:
+                ts_par['unit_x'] = str(ts_par['unit_x'])
+            if ts_par['unit_y'] is not None:
+                ts_par['unit_y'] = str(ts_par['unit_y'])
+
         self.ts_models = [x.ts_models for x in list_of_mspy_ts]
         self.ts_model_parameters = [x.ts_model_parameters for x in list_of_mspy_ts]
         self.fres = fres

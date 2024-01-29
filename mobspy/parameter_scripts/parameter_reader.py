@@ -125,7 +125,7 @@ def manually_process_each_parameter(simulation_object, duration, volume, repetit
         simulation_object.duration = duration
 
     if volume is not None:
-        simulation_object.duration = volume
+        simulation_object.volume = volume
 
     if repetitions is not None:
         simulation_object.repetitions = repetitions
@@ -152,7 +152,7 @@ def manually_process_each_parameter(simulation_object, duration, volume, repetit
         simulation_object.step_size = step_size
 
     if jobs is not None:
-        simulation_object.jobs = step_size
+        simulation_object.jobs = jobs
 
     if unit_x is not None:
         simulation_object.unit_x = unit_x
