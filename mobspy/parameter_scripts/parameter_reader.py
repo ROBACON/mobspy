@@ -11,6 +11,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
 import mobspy.modules.unit_handler as uh
 import inspect
+from mobspy.modules.meta_class import u
 
 
 def read_json(json_file_name):
@@ -33,7 +34,7 @@ def read_json(json_file_name):
     return json_data
 
 
-def __name_output_file(params):
+def name_output_file(params):
     """
         Gives a name to the output file - just date time in case the user has not specified one
 
@@ -45,7 +46,7 @@ def __name_output_file(params):
     params["absolute_output_file"] = params["output_dir"] + file_name
 
 
-def __check_stochastic_repetitions_seeds(params):
+def check_stochastic_repetitions_seeds(params):
     """
         The list of seeds must be equal to the number of repetitions specified
 
@@ -59,7 +60,7 @@ def __check_stochastic_repetitions_seeds(params):
             simlog.error('Parameter seeds must be a list')
 
 
-def __convert_parameters_for_COPASI(params):
+def convert_parameters_for_COPASI(params):
     """
         Converts parameters units to MobsPy standard units (basiCO needs seconds for simulation duration)
 
@@ -76,14 +77,19 @@ def __convert_parameters_for_COPASI(params):
                 continue
 
 
-def __convert_unit_parameters(params):
+def convert_unit_parameters(params):
     units = ['unit_x', 'unit_y']
-    for u in units:
-        if u in params and params[u] is not None:
-            if isinstance(params[u], Quantity):
-                params[u] = str(params[u].units)
+
+    for un in units:
+        if un in params and params[un] is not None:
+            if isinstance(params[un], Quantity):
+                params[un] = params[un]
             else:
-                params[u] = str(params[u])
+                try:
+                    params[un] = u.unit_registry_object(params[un])
+                except Exception as e:
+                    print(e)
+                    simlog.error(f"The unit in parameter {un} did not parse")
 
 
 def convert_time_parameters_after_compilation(value):
@@ -94,6 +100,7 @@ def convert_time_parameters_after_compilation(value):
         if str(value.dimensionality) == '[time]':
             value = value.convert('second').magnitude
     return value
+
 
 def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
     if isinstance(value, Quantity):
@@ -108,19 +115,65 @@ def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
     return value
 
 
+"""
+all basico methods listed here for future reference - if more need to be added
+methods = {
+        'deterministic': COPASI.CTaskEnum.Method_deterministic,
+        'lsoda': COPASI.CTaskEnum.Method_deterministic,
+        'hybrid': COPASI.CTaskEnum.Method_hybrid,
+        'hybridode45': COPASI.CTaskEnum.Method_hybridODE45,
+        'hybridlsoda': COPASI.CTaskEnum.Method_hybridLSODA,
+        'adaptivesa': COPASI.CTaskEnum.Method_adaptiveSA,
+        'tauleap': COPASI.CTaskEnum.Method_tauLeap,
+        'stochastic': COPASI.CTaskEnum.Method_stochastic,
+        'directmethod': COPASI.CTaskEnum.Method_directMethod,
+        'radau5': COPASI.CTaskEnum.Method_RADAU5,
+        'sde': COPASI.CTaskEnum.Method_stochasticRunkeKuttaRI5,
+    }
+"""
+
+
+def check_method_parameter(params):
+    # Method takes preference from the user assignment, but the code was made for 'simulation_method
+    if params['method'] is not None:
+        params['simulation_method'] = params['method']
+    params['simulation_method'] = params['simulation_method'].lower()
+
+    valid_basiCO_deterministic = ['deterministic', 'lsoda']
+    valid_basiCO_stochastic = ['hybrid', 'hybridode45', 'hybridlsoda', 'tauleap', 'stochastic', 'directmethod', 'sde']
+
+    if params['simulation_method'] not in valid_basiCO_deterministic + valid_basiCO_stochastic:
+        simlog.error(f'The simulation method {params["simulation_method"]} is not compatible with MobsPy')
+
+    if params['simulation_method'] in valid_basiCO_deterministic:
+        if params['rate_type'] is None:
+            params['rate_type'] = 'deterministic'
+
+        if params['plot_type'] is None:
+            params['plot_type'] = 'deterministic'
+    else:
+        if params['rate_type'] is None:
+            params['rate_type'] = 'stochastic'
+
+        if params['plot_type'] is None and params['repetitions'] == 1:
+            params['plot_type'] = 'deterministic'
+        else:
+            params['plot_type'] = 'stochastic'
+
+
 def parameter_process(params):
-    __convert_unit_parameters(params)
-    __name_output_file(params)
-    __check_stochastic_repetitions_seeds(params)
-    __convert_parameters_for_COPASI(params)
+    convert_unit_parameters(params)
+    name_output_file(params)
+    check_stochastic_repetitions_seeds(params)
+    convert_parameters_for_COPASI(params)
+    check_method_parameter(params)
 
 
 # I felt like inspect could be to invasive, maybe it would have been better to inspect the function signature
 def manually_process_each_parameter(simulation_object, duration, volume, repetitions, level, simulation_method,
                                     start_time, r_tol, a_tol, seeds, step_size,
                                     jobs, unit_x, unit_y, output_concentration, output_event,
-                                    output_file, save_data, plot_data):
-
+                                    output_file, save_data, plot_data, rate_type, plot_type):
     if duration is not None:
         simulation_object.duration = duration
 
@@ -175,6 +228,10 @@ def manually_process_each_parameter(simulation_object, duration, volume, repetit
     if plot_data is not None:
         simulation_object.plot_data = plot_data
 
+    if rate_type is not None:
+        simulation_object.rate_type = rate_type
 
+    if plot_type is not None:
+        simulation_object.plot_type = plot_type
 
 

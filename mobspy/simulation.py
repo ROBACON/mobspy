@@ -225,7 +225,7 @@ class Simulation:
                              species_counts=self._species_counts,
                              orthogonal_vector_structure=self.orthogonal_vector_structure,
                              volume=self.parameters['volume'],
-                             type_of_model=self.parameters["simulation_method"],
+                             type_of_model=self.parameters["rate_type"],
                              verbose=verbose,
                              event_dictionary=self.total_packed_events,
                              continuous_sim=self.parameters['_continuous_simulation'],
@@ -269,6 +269,7 @@ class Simulation:
             self._parameter_list_of_dic = parameter_list_of_dic
 
     def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
+            rate_type = None, plot_type = None,
             start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
             jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
             output_file=None, save_data=None, plot_data=None) -> None:
@@ -282,6 +283,8 @@ class Simulation:
             :param repetitions: (int) number of times to reapeat a simulation
             :param level: (int) 0 - only error messages, 3 - errors, warnings, compilation info
             :param simulation_method: (str) stochastic, deterministic, direct_method - simulation method
+            :param rate_type: (str) stochastic or deterministic - mass action kinetics or probability of encounter
+            :param plot_type: (str) stochastic-style MobsPy plot or deterministic-style MobsPy plot
             :param start_time: (float) the simulation will only display data after the start time
             :param r_tol: (float) relative tolerance - basiCO simulation parameter
             :param a_tol: (float) absolute tolerance  - basiCO simulation parameter
@@ -309,7 +312,7 @@ class Simulation:
         pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
-                                           output_file, save_data, plot_data)
+                                           output_file, save_data, plot_data, rate_type, plot_type)
 
         self._assemble_multi_simulation_structure()
 
@@ -701,7 +704,7 @@ class SimulationComposition:
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         multi_cast_parameters = ['simulation_method', 'method', 'volume', 'duration']
-        broad_cast_parameters = ['level']
+        broad_cast_parameters = ['level', 'rate_type', 'plot_type']
 
         if name in multi_cast_parameters:
 
@@ -756,7 +759,7 @@ class SimulationComposition:
     def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
             start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
             jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
-            output_file=None, save_data=None, plot_data=None):
+            output_file=None, save_data=None, plot_data=None, rate_type=None, plot_type=None):
         """
             runs a concatenated simulation with multiple simulation objects summed
             Some inputs are different here, duration and volume must receive any iterable with the volume for
@@ -780,6 +783,8 @@ class SimulationComposition:
             :param output_file: (str) name of the file
             :param save_data: (bool) save data or not
             :param plot_data: (bool) plot data or not
+            :param rate_type: (str) stochastic or deterministic rate expression - mass action kinetic or prob. based
+            :param plot_type: (str) stochastic or deterministic - style of MobsPy plot
         """
         if level is not None:
             self.level = level
@@ -790,7 +795,7 @@ class SimulationComposition:
         pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
-                                           output_file, save_data, plot_data)
+                                           output_file, save_data, plot_data, rate_type, plot_type)
 
         multi_parameter_dictionary = {}
 
@@ -846,3 +851,4 @@ class SimulationComposition:
 
 if __name__ == '__main__':
     pass
+

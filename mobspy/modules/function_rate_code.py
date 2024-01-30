@@ -133,10 +133,6 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=Fals
     """
     counts = rc.count_string_dictionary(reactants)
 
-    if type_of_model.lower() not in ['stochastic', 'deterministic']:
-        simlog.error(f'The following method for simulation {type_of_model} is not supported.\n' +
-                     f'Only stochastic or deterministic')
-
     kinetics_string = ""
     for name, number in counts.items():
         if type_of_model.lower() == 'stochastic':

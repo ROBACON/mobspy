@@ -12,6 +12,7 @@ def get_default_parameters():
         "volume": 1,
         "repetitions": 1,
         "level": 3,
+        "rate_type": None,
 
         "__comment_2": "basiCO parameters",
 
@@ -37,6 +38,7 @@ def get_default_parameters():
         "output_concentration": True,
         "save_data": False,
         "plot_data": True,
+        "plot_type": None,
 
         "_continuous_simulation": False,
         "_end_condition": None,

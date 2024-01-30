@@ -14,6 +14,7 @@ def get_example_parameters():
         "volume": 1,
         "repetitions": 3,
         "level": 0,
+        "rate_type": 'stochastic',
 
         "__comment_2": "basiCO parameters",
 
@@ -40,7 +41,8 @@ def get_example_parameters():
         "output_event": False,
         "output_file": None,
         "save_data": False,
-        "plot_data": True
+        "plot_data": True,
+        "plot_type": 'stochastic'
 
     }
     return example_parameters

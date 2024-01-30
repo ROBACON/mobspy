@@ -301,7 +301,8 @@ def create_all_reactions(reactions, meta_species_in_model,
     with crs.Unit_Context_Setter():
         for reaction in reactions:
 
-            base_species_order, reactant_species_combination_list = get_involved_species(reaction, meta_species_in_model)
+            base_species_order, reactant_species_combination_list = get_involved_species(reaction,
+                                                                                         meta_species_in_model)
 
             for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
 
@@ -323,7 +324,8 @@ def create_all_reactions(reactions, meta_species_in_model,
                                                                                          meta_species_in_model,
                                                                                          ref_characteristics_to_object)
 
-                    for product_string_list in iterator_for_combinations(product_species_species_string_combination_list):
+                    for product_string_list in \
+                            iterator_for_combinations(product_species_species_string_combination_list):
 
                         reaction_rate_arguments = None
                         if callable(reaction.rate):
@@ -334,14 +336,15 @@ def create_all_reactions(reactions, meta_species_in_model,
                                             for reactant in reactant_string_list]
 
                         try:
-                            rate_string, parameters_in_reaction = fr.extract_reaction_rate(combination_of_reactant_species,
-                                                                                           reactant_strings
-                                                                                           , reaction.rate, type_of_model,
-                                                                                           dimension,
-                                                                                           reaction_rate_arguments,
-                                                                                           parameter_exist,
-                                                                                           parameters_in_reaction,
-                                                                                           skip_check)
+                            rate_string, parameters_in_reaction = \
+                                fr.extract_reaction_rate(combination_of_reactant_species,
+                                                         reactant_strings
+                                                         , reaction.rate, type_of_model,
+                                                         dimension,
+                                                         reaction_rate_arguments,
+                                                         parameter_exist,
+                                                         parameters_in_reaction,
+                                                         skip_check)
                         except TypeError as e:
                             simlog.error(f'On reaction {reaction} \n' + str(e))
 
@@ -352,7 +355,6 @@ def create_all_reactions(reactions, meta_species_in_model,
                             construct_single_reaction_for_sbml(reactant_strings,
                                                                product_string_list,
                                                                rate_string)
-
 
     return reactions_for_sbml, parameters_in_reaction
 
