@@ -835,6 +835,7 @@ def test_volume_after_sim():
 
     S = Simulation(A)
     S.plot_data = False
+    S.output_concentration = False
     S.level = -1
     S.volume = 1 * u.milliliter
     S.run()
@@ -1322,6 +1323,7 @@ def test_unit_args():
     A >> Zero[1 / u.year]
     A(1 * u.mol)
     S = Simulation(A)
+    S.level = - 1
     S.run(duration=10 * u.year, step_size=1 * u.year, unit_x=u.year, unit_y=u.mol, jobs=1, level=-1, plot_data=False)
 
     assert S.fres['Time'][-1] > 9.9
@@ -1345,6 +1347,28 @@ def test_multi_parameters_in_run():
     assert S2.__dict__['parameters']['duration'] == 3
 
 
+def test_output_concentration_in_multi_sim():
+
+    A, B = BaseSpecies()
+    A + B >> Zero [0.001]
+
+    A(100), B(200)
+    S1 = Simulation(A | B)
+    S1.duration = 5*u.seconds
+    S1.volume = 5
+
+    S2 = Simulation(A | B)
+    S2.duration = 5
+    S2.volume = 100
+    S = S1 + S2
+    S.level = -1
+    S.plot_data = False
+    S.output_concentration = True
+    S.run()
+    assert S.fres[A][-1] < 10
+    assert S.fres[B][-1] < 10
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1364,7 +1388,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
              test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
              test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit,
-             test_run_args, test_unit_args, test_multi_parameters_in_run]
+             test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim]
 
 sub_test = test_list
 

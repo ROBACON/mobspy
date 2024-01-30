@@ -321,12 +321,19 @@ class Simulation:
 
         simlog.debug("Simulation is Over")
 
+        # Volume list and time list are to convert into concentrations
+        # This section also checks if the output_concentration parameter is valid
+        volume_list, time_list, flag_concentration = dh.extract_time_and_volume_list(self._list_of_parameters)
+        tcb = self.parameters['unit_y'] is not None and '[length]' not in self.parameters['unit_y'].dimensionality
+        if not flag_concentration or tcb:
+            self.parameters['output_concentration'] = False
+
         def convert_one_ts_to_desired_unit(unconverted_data):
             # Convert all the data from a single ts to desired unit
-            return dh.convert_data_to_desired_unit(unconverted_data, self.parameters['unit_x'],
+            return dh.convert_data_to_desired_unit(unconverted_data, time_list, volume_list,
+                                                   self.parameters['unit_x'],
                                                    self.parameters['unit_y'],
-                                                   self.parameters['output_concentration'],
-                                                   self.parameters['volume'])
+                                                   self.parameters['output_concentration'])
 
         def convert_all_ts_to_correct_format(single_ts, parameters, unit_convert=False):
             # Convert multiple ts_data into correct format
@@ -352,7 +359,7 @@ class Simulation:
 
         ta = self.parameters['unit_x'] is not None
         tb = self.parameters['unit_y'] is not None
-        tc = self.parameters['output_concentration']
+        tc = self.parameters['output_concentration'] if flag_concentration else False
 
         if ta or tb or tc:
             all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
