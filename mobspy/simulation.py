@@ -12,6 +12,8 @@ import mobspy.sbml_simulator.run as sbml_run
 import mobspy.plot_scripts.default_plots as dp
 import mobspy.data_handler.process_result_data as dh
 from mobspy.data_handler.time_series_object import *
+from mobspy.parameter_estimation_data_loader.data_loader import Experimental_Data_Holder
+from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import *
 from mobspy.modules.user_functions import *
 from mobspy.modules.set_counts_module import set_counts
 import json
@@ -23,7 +25,7 @@ from joblib import Parallel, delayed
 import time
 
 
-class Simulation:
+class Simulation(Experimental_Data_Holder):
 
     # Event Implementation
     @classmethod
@@ -131,6 +133,7 @@ class Simulation:
             :param parameters: (dict) Simulation object parameters. If none takes default parameters
             :param plot_parameters: (dict) Parameters for plotting. If none takes default
         """
+        super().__init__()
 
         # Event Variable Definitions
         self._event_time = 0
@@ -378,14 +381,13 @@ class Simulation:
             self.save_data()
 
         if self.parameters['plot_data']:
-            methods_list = [x['simulation_method'] for x in self._list_of_parameters]
+            methods_list = [x['plot_type'] for x in self._list_of_parameters]
 
             if len(self._parameter_list_of_dic) > 1:
                 self.plot_parametric()
                 return 0
 
-            if ('stochastic' in methods_list or 'directmethod' in methods_list) \
-                    and self.parameters['repetitions'] > 1:
+            if 'stochastic' in methods_list:
                 self.plot_stochastic()
             else:
                 self.plot_deterministic()
@@ -457,7 +459,7 @@ class Simulation:
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
-                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension']
+                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension', 'experimental_data']
 
         plotted_flag = False
         if name in white_list:

@@ -469,7 +469,8 @@ class Reactions:
         if not (type(Compiler.last_rate) == int or type(Compiler.last_rate) == float
                 or callable(Compiler.last_rate) or type(Compiler.last_rate) == str
                 or isinstance(Compiler.last_rate, OverrideQuantity) or isinstance(Compiler.last_rate, Quantity)
-                or isinstance(Compiler.last_rate, Mobspy_Parameter) or Compiler.last_rate is None):
+                or isinstance(Compiler.last_rate, Mobspy_Parameter) or Compiler.last_rate is None
+                or isinstance(Compiler.last_rate, MobsPyExpression)):
             simlog.error('Reaction rate of type ' + str(type(Compiler.last_rate)) + ' not valid', stack_index=3)
 
         self.rate = Compiler.last_rate

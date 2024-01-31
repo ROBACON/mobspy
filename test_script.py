@@ -1369,6 +1369,18 @@ def test_output_concentration_in_multi_sim():
     assert S.fres[B][-1] < 10
 
 
+def test_parameter_operation_in_rate():
+
+    A, B = BaseSpecies()
+    a = ModelParameters(0.1)
+    A >> Zero[a]
+    B >> Zero[2 * a]
+    A(100), B(200)
+    S1 = Simulation(A | B)
+    S1.level = -1
+    assert compare_model(S1.compile(), 'test_tools/model_44.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1388,7 +1400,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
              test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
              test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit,
-             test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim]
+             test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim,
+             test_parameter_operation_in_rate]
 
 sub_test = test_list
 

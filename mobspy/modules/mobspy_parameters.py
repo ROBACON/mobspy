@@ -55,7 +55,7 @@ def ModelParameters(*args):
     parameter_variable_names = separated_line.split(',')
 
     if len(args) != len(parameter_variable_names):
-        simlog.error('The number of parameters provided does not match the number of variables', stack_index=1)
+        simlog.error('You must provide an initial value for every parameter variable declared', stack_index=2)
 
     if len(parameter_variable_names) > 1:
         parameters_to_return = [Mobspy_Parameter(p, v) for p, v in zip(parameter_variable_names, args)]
