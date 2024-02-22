@@ -26,7 +26,7 @@ class MobsPyTimeSeries:
 
 class MobsPyList_of_TS:
 
-    def __init__(self, list_of_mspy_ts, fres=False):
+    def __init__(self, list_of_mspy_ts, model_parameter_objects=None, fres=False):
         """Creates the MobsPy timeseries object
 
             :param data_dict: (dict) resulting dictionary from simulation
@@ -44,6 +44,21 @@ class MobsPyList_of_TS:
 
         self.ts_models = [x.ts_models for x in list_of_mspy_ts]
         self.ts_model_parameters = [x.ts_model_parameters for x in list_of_mspy_ts]
+
+        if model_parameter_objects is not None:
+            need_conversion_dict = set()
+            for par, par_object in model_parameter_objects.items():
+                if par_object._has_units == 'T':
+                    need_conversion_dict.add(par)
+
+            for i, par_comb in enumerate(self.ts_model_parameters):
+                for par_name in par_comb:
+                    if par_name not in need_conversion_dict:
+                        continue
+
+                    cf = model_parameter_objects[par_name].conversion_factor
+                    self.ts_model_parameters[i][par_name] = self.ts_model_parameters[i][par_name]/cf
+
         self.fres = fres
 
     def to_dict(self):
@@ -68,7 +83,7 @@ class MobsPyList_of_TS:
                 tr = tr + f'Model Parameters {params} \n'
 
             tr = tr + f'Time Series {i}: \n'
-            tr = tr + str(pd.DataFrame.from_dict(data)) + '\n'
+            tr = tr + str(data) + '\n \n'
 
         return tr
 

@@ -1381,6 +1381,118 @@ def test_parameter_operation_in_rate():
     assert compare_model(S1.compile(), 'test_tools/model_44.txt')
 
 
+def test_multi_parameter_with_expression():
+
+    A = BaseSpecies()
+    p = ModelParameters([0.5, 1, 1.5])
+    A >> Zero[2*p]
+    A(100)
+    S = Simulation(A)
+    S.run(duration=1, plot_data=False, level=-1)
+
+    assert int(S.results[A][0][-1]) == 36
+    assert int(S.results[A][1][-1]) == 13
+    assert int(S.results[A][2][-1]) == 4
+
+
+def test_double_parameters_with_units():
+    A = BaseSpecies()
+    p1, p2 = ModelParameters([1], [1/u.h, 2/u.h, 3/u.h])
+    A >> Zero[p1*p2]
+    A(100)
+    S = Simulation(A)
+    S.run(duration=5*u.h, plot_data=False, level=-1)
+    assert compare_model(str(S.results), 'test_tools/model_45.txt')
+
+
+def test_parameters_with_units():
+    A = BaseSpecies()
+    p = ModelParameters([1/u.h, 2/u.h, 3/u.h])
+    A >> Zero[p]
+    A(100)
+    S2 = Simulation(A)
+    S2.level = -1
+    S2.compile()
+
+
+def test_convert_back_parameter():
+    p = ModelParameters(2*u.mol/u.l)
+    p.convert_to_original_unit()
+    assert p.value.magnitude == (2*u.mol/u.l).magnitude
+    assert p.value.units == (2*u.mol/u.l).units
+
+
+def test_parameter_fit_with_units():
+    A = BaseSpecies()
+    A >> Zero[3 / u.h]
+    A(100)
+    S1 = Simulation(A)
+    S1.duration = 3 * u.h
+    S1.run(plot_data=False, level=-1)
+
+    A = BaseSpecies()
+    p = ModelParameters(1 / u.h)
+    A >> Zero[p]
+    A(100)
+    S2 = Simulation(A)
+    S2.run(plot_data=False, level=-1)
+    S2.load_experiment_data(S1.results)
+    basiCO_parameter_estimation(S2, [p], verbose=False)
+
+    assert 2.5/u.h <= p.value <= 3.5/u.h
+
+
+def test_multiple_runs_fit():
+
+    A, B = BaseSpecies()
+    A >> Zero[1]
+    B >> Zero[5]
+    A(100), B(200)
+    S1 = Simulation(A | B)
+    S1.run(plot_data=False, level=-1, step_size=1)
+
+    A, B = BaseSpecies()
+    A >> Zero[1]
+    B >> Zero[5]
+    A(100), B(200)
+    S2 = Simulation(A | B)
+    S2.run(plot_data=False, level=-1, step_size=1)
+    exp = [S1.results.return_pandas()[0], S2.results.return_pandas()[0]]
+
+    A, B = BaseSpecies()
+    a, b = ModelParameters(0.1, 0.5)
+    A >> Zero[a]
+    B >> Zero[b]
+    A(100), B(200)
+    S3 = Simulation(A | B)
+    S3.level = -1
+    basiCO_parameter_estimation(S3, experimental_data=exp, parameters_to_estimate=[a, b],
+                                bound={a: (0, 5), b: (0, 20)}, verbose=False)
+
+    assert 0.7 <= a.value <= 1.2
+    assert 4.7 <= b.value <= 5.2
+
+
+def test_simple_fit():
+
+    A = BaseSpecies()
+    A >> Zero [1]
+    A(100)
+    S1 = Simulation(A)
+    S1.run(level=-1, plot_data=False, step_size=1)
+
+    A = BaseSpecies()
+    k = ModelParameters(0.5)
+
+    A >> Zero [k]
+    A(100)
+    S2 = Simulation(A)
+    S2.load_experiment_data(S1.results)
+    S2.level = -1
+    basiCO_parameter_estimation(S2, [k], bound=(0, 2), verbose=False)
+    assert 0.8 <= k.value <= 1.2
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1401,7 +1513,9 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
              test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit,
              test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim,
-             test_parameter_operation_in_rate]
+             test_parameter_operation_in_rate, test_multi_parameter_with_expression, test_double_parameters_with_units,
+             test_parameters_with_units, test_convert_back_parameter, test_parameter_fit_with_units,
+             test_multiple_runs_fit, test_simple_fit]
 
 sub_test = test_list
 

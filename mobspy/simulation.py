@@ -153,6 +153,7 @@ class Simulation(Experimental_Data_Holder):
         self._parameter_list_of_dic = []
         self._is_compiled = False
         self.dimension = None
+        self.model_parameter_objects_dict = None
 
         # Must copy to avoid reference assignment
         self.model = List_Species(model)
@@ -222,7 +223,7 @@ class Simulation(Experimental_Data_Holder):
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
         self.model_string, self._events_for_sbml, self._assigned_species_list, \
-        self.model_parameters = \
+        self.model_parameters, self.model_parameter_objects_dict = \
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
                              species_counts=self._species_counts,
@@ -374,8 +375,8 @@ class Simulation(Experimental_Data_Holder):
             all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
                 (delayed(convert_all_ts_to_correct_format)(ts, params, False) for ts, params in flatt_ts)
 
-        self.results = MobsPyList_of_TS(all_processed_data)
-        self.fres = MobsPyList_of_TS([all_processed_data[0]], True)
+        self.results = MobsPyList_of_TS(all_processed_data, self.model_parameter_objects_dict)
+        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)
 
         if self.parameters['save_data']:
             self.save_data()
@@ -459,7 +460,8 @@ class Simulation(Experimental_Data_Holder):
                       'initial_duration', '_reactions_set', '_list_of_models', '_list_of_parameters',
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
-                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension', 'experimental_data']
+                      'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension', 'experimental_data',
+                      'model_parameter_objects_dict']
 
         plotted_flag = False
         if name in white_list:

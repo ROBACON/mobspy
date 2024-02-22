@@ -2,6 +2,7 @@ import inspect
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_expressions import *
 from pint import Quantity, UnitRegistry
+from mobspy.modules.mobspy_expressions import u
 
 
 class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
@@ -24,25 +25,73 @@ class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
         self._operation = str(name)
         self._parameter_set.add(self)
 
-        if isinstance(value, Quantity):
+        def unit_process(value):
             # We convert into MobsPy units already during the definition of a parameter
-            self.value = self.convert_received_unit(value)
+            self.value = self.convert_received_unit(value).magnitude
 
+            self.original_magnitude = value.magnitude
+            self.conversion_factor = self.value / self.original_magnitude
+            self.original_unit = value.units
+
+            # For future developers, the T is there to avoid potential bugs with the . query
             self._unit_count_op = value
             self._unit_conc_op = value
             self._unit_operation = value
             self._has_units = 'T'
+
+            return self.value, self.original_unit
+
+        if isinstance(value, Quantity):
+            unit_process(value)
+        elif type(value) == list or type(value) == tuple:
+            new_list = []
+            first_unit = None
+            for i, val in enumerate(value):
+                if isinstance(val, Quantity) and i == 0:
+                    new_value, first_unit = unit_process(val)
+                elif isinstance(val, Quantity) and i > 0 and first_unit is None:
+                    simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
+                elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
+                    new_value, unit = unit_process(val)
+                    if unit != first_unit:
+                        simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
+                else:
+                    new_value = val
+
+                new_list.append(new_value)
+
+            self.value = new_list
         else:
             self.value = value
 
             self._unit_count_op = 1
             self._unit_conc_op = 1
+            self.conversion_factor = 1
             self._has_units = False
 
+    def convert_to_original_unit(self):
+        if self.has_units():
+            self.set_value(self.value/self.conversion_factor*self.original_unit)
+
     def rename(self, new_name):
+        if new_name in self.parameter_stack:
+            simlog.warning(" MobsPy uses a parameter dictionary with parameter names as keys and the respective object"
+                           " as value to keep track of created parameters. As, there is a parameter with this name"
+                           " already in the stack. The old will be deleted and replaced by this one.")
+
         del self.parameter_stack[self.name]
         self.parameter_stack[new_name] = self
         self.name = new_name
+
+    def set_value(self, new_value):
+        self.value = new_value
+        return self
+
+    def has_units(self):
+        if self._has_units == 'T':
+            return True
+        else:
+            return False
 
     def __str__(self):
         return str(self._operation)

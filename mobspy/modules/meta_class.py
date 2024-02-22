@@ -291,6 +291,11 @@ class Compiler:
                 simlog.error('Parameters names must be unique and they must not share a name with a species')
             names_used.add(p)
 
+        # Store the parameter objects for possible unit conversion - or others
+        parameter_object_dict = {}
+        for key in parameters_used:
+            parameter_object_dict[key] = Mobspy_Parameter.parameter_stack[key]
+
         species_in_reactions = set()
         for key, reaction in reactions_for_sbml.items():
             for reactant in reaction['re']:
@@ -364,7 +369,7 @@ class Compiler:
                     model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
-               events_for_sbml, assigned_species, parameters_used
+               events_for_sbml, assigned_species, parameters_used, parameter_object_dict
 
 
 class Reactions:
