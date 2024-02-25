@@ -16,6 +16,7 @@ import mobspy.modules.species_string_generator as ssg
 from copy import deepcopy
 from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.mobspy_expressions import *
+import numpy as np
 import re
 
 
@@ -439,7 +440,6 @@ class Reactions:
             if p['object'].get_name() == 'Context_MetaSpecies':
                 simlog.error('The any specie cannot be used in reactions')
 
-
         # Add characteristics in Cts_context to each reactant and product
         if len(Species.meta_specie_named_any_context) != 0 : 
             for j in Species.meta_specie_named_any_context:
@@ -466,6 +466,9 @@ class Reactions:
 
         # Assign default order
         self.order = None
+        # Cast np to float
+        if isinstance(Compiler.last_rate, (np.int_, np.float_)):
+            Compiler.last_rate = float(Compiler.last_rate)
 
         if isinstance(Compiler.last_rate, Species) \
                 or isinstance(Compiler.last_rate, Reacting_Species) or isinstance(Compiler.last_rate, Reactions):
@@ -656,6 +659,10 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param quantity: (int, float, Quantity) count to be assigned to the species
         """
+        # We need to cast np to int or float
+        if isinstance(quantity, (np.int_, np.float_)):
+            quantity = float(quantity)
+
         # If called within a Any context, add the characteristics of the Any context to the reacting specie called
         if len(Species.meta_specie_named_any_context) > 0 : 
             for i in Species.meta_specie_named_any_context:
@@ -1157,6 +1164,10 @@ class Species(SpeciesComparator):
 
             :return self: to allow for assigning counts mid-reaction
         """
+        # We need to cast np to int or float
+        if isinstance(quantity, (np.int_, np.float_)):
+            quantity = float(quantity)
+
         # If called within a Any context, add the characteristics of the Any context to the specie called.
         # The specie becomes a reacting specie.
         if len(Species.meta_specie_named_any_context) != 0:
@@ -1180,7 +1191,7 @@ class Species(SpeciesComparator):
                          f'simulation context', stack_index=2)
         elif Species.get_simulation_context() is None:
             print(quantity, type(quantity))
-            simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}'
+            simlog.error(f'Species count assignment does not support the type {type(quantity)}'
                          f' if not under a simulation context',
                          stack_index=2)
 

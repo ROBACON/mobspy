@@ -19,13 +19,17 @@ def set_counts(count_dic):
         :return: List_Species object. All meta-species that had a count assigned in this dictionary will be returned
         as a List_Species which can be passed as a model to the simulation object
     """
+    new_count_dict = {}
     for key, item in count_dic.items():
         if type(item) == int or type(item) == float or isinstance(item, Quantity) or \
                 isinstance(item, Mobspy_Parameter):
-            continue
+            new_count_dict[key] = item
+        elif isinstance(item, (np.int_, np.float_)):
+            new_count_dict[key] = float(item)
         else:
             simlog.error(f'Reactant_species count assignment does not support the type {type(item)}',
                          stack_index=2)
+    count_dic = new_count_dict
 
     def find_species():
         found_species = set()

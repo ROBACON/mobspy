@@ -1,0 +1,25 @@
+
+Species
+A,100
+B,0
+C,0
+D,0
+
+Mappings
+A :
+A
+B :
+B
+C :
+C
+D :
+D
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A')], 'pr': [], 'kin': '(3+A)'}
+reaction_1,{'re': [(1, 'B')], 'pr': [], 'kin': '(3-B)'}
+reaction_2,{'re': [(1, 'C')], 'pr': [], 'kin': '(3*C)'}
+reaction_3,{'re': [(1, 'D')], 'pr': [], 'kin': '(3/D)'}

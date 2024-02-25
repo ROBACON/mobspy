@@ -2,6 +2,7 @@ from pint import Quantity, UnitRegistry, DimensionalityError
 import mobspy.simulation_logging.log_scripts as simlog
 from scipy.constants import N_A
 from copy import deepcopy
+import numpy as np
 import time
 
 # @TODO change _ms_active to context based name
@@ -197,6 +198,41 @@ class ExpressionDefiner:
                 conc_op = e
 
         return count_op, conc_op
+
+    def __array_ufunc__(self, ufunc, _, *inputs):
+        """
+            This function handles the numpy compatibility with MobsPy expressions. ufunc is the operation,
+            and inputs are both the numpy element (arrays not yet supported) and the quantity object.
+            You have to reverse the direction, for Numpy the numpy object is the mail call, for us it is in reverse!
+            That's why the r in every operation
+
+            :param ufunc: numpy operation
+            :param _: method, not used, please don't erase or it becomes an input - will break function
+            :param inputs: numpy element and the quantity object
+        """
+        # Implement all numpy operations
+        if ufunc == np.add:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return self.__radd__(inputs[0])
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.subtract:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return self.__rsub__(inputs[0])
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.multiply:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return self.__rmul__(inputs[0])
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.divide:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return self.__rtruediv__(inputs[0])
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        else:
+            simlog.error('Numpy operation not yet supported by MobsPy')
 
     # T is here to avoid problems with __getattr__ from units and quantities that were not overridden
     def __add__(self, other):
@@ -489,6 +525,39 @@ class QuantityConverter:
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
+
+    def __array_ufunc__(self, ufunc, _, *inputs):
+        """
+            This function handles the numpy compatibility with MobsPy expressions. ufunc is the operation,
+            and inputs are both the numpy element (arrays not yet supported) and the quantity object.
+
+            :param ufunc: numpy operation
+            :param _: method, not used, please don't erase or it becomes an input - will break function
+            :param inputs: numpy element and the quantity object
+        """
+        # Implement all numpy operations
+        if ufunc == np.add:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return OverrideQuantity(float(inputs[0]) + self.q_object)
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.subtract:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return OverrideQuantity(float(inputs[0]) - self.q_object)
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.multiply:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return OverrideQuantity(float(inputs[0])*self.q_object)
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        elif ufunc == np.divide:
+            if isinstance(inputs[0], (np.int_, np.float_)):
+                return OverrideQuantity(float(inputs[0])/self.q_object)
+            else:
+                simlog.error('MobsPy does not yet support array-wise numpy operations, only element-wise')
+        else:
+            simlog.error('Numpy operation not yet supported by MobsPy')
 
     def non_expression_add(self, other):
         q_object = Quantity.__add__(self.q_object, other.q_object)
