@@ -652,13 +652,10 @@ class Simulation(Experimental_Data_Holder):
         # If nothing is specified just run it in parallel
         try:
             if params["jobs"] == 1:
-                simlog.debug("Running simulation sequentially")
                 jobs = params["jobs"]
             else:
-                simlog.debug("Running simulation in parallel")
                 jobs = params["jobs"]
         except KeyError:
-            simlog.debug("Running simulation in parallel")
             jobs = -1
         return jobs
 
