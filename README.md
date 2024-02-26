@@ -116,5 +116,7 @@ Version 2.1 - Added model parameters. Now MySim.results returns a list of all re
 
 Version 2.2 - Added MobsPy expressions
 
+Version 2.3 - MobsPy standard output is now always concentration.
+
 
 
