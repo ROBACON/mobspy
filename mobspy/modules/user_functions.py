@@ -2,7 +2,10 @@ import inspect
 
 
 def Apply(function, *args):
-
+    """
+        Applies one function to a series of tuples with function arguments. It is useful when applying the same
+        function over and over to several arguments
+    """
     for arg in args:
         if type(arg) != tuple:
             raise TypeError('Only tuples are accepted for assignment with Apply')

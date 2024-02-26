@@ -122,10 +122,19 @@ class Specific_Species_Operator(Bool_Override):
 
 
 class ExpressionDefiner:
-
+    """
+        This class defines a MobsPy expression. It encompasses what is necessary for something to act as an expression.
+        For instance, the functionalities of storing the operations an object has gone through
+    """
     @classmethod
     def execute_op(cls, first, second, operation):
+        """
+            Executes a unit operation using the Quantity class
 
+            :param first: first number
+            :param second: second number
+            :param operation: operation to be executed
+        """
         if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
             raise Exception('Override quantity is not supposed to be in execute op')
 
@@ -173,7 +182,12 @@ class ExpressionDefiner:
             raise TypeError('Non Valid Operation resulted in no q_object creation')
 
     def execute_quantity_op(self, other, operation):
+        """
+            Executes the unit based operation. It is used to verify the unit of a MobsPy expression
 
+            :param other: other number (or expression) to execute the operation on
+            :param operation: string symbol of the operation to be executed
+        """
         count_op = 1
         conc_op = 1
 
@@ -302,6 +316,12 @@ class ExpressionDefiner:
             return self.non_expression_pow(other)
 
     def combine_binary_attributes(self, other, attribute):
+        """
+            Or gates to binary True or False attributes from self and other
+
+            :param other: other expression to execute operation
+            :param attribute: attributed to be combined
+        """
         to_return = False
         try:
             if self.__dict__[attribute]:
@@ -355,6 +375,16 @@ class ExpressionDefiner:
     def create_from_new_operation(self, other, symbol, count_op, conc_op, direct_sense=True,
                                   operation=None):
 
+        """
+            Executes the storing based operation. It also executes a unit operation to store the verify the unit
+            of the given expression
+
+            :param other: other number (or expression) to execute the operation on
+            :param symbol: string symbol of the operation to be executed
+            :param count_op: unit of the expression if the arguments are considered dimentionless
+            :param count_op: unit of the expression if the arguments are considered 1/v
+            :param direct_sense: sense of the operation
+        """
         if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):
             self = QuantityConverter.convert_received_unit(self)
         if isinstance(other, Quantity) or isinstance(other, OverrideQuantity):
@@ -455,7 +485,10 @@ class ExpressionDefiner:
 
 
 class OverrideUnitRegistry:
-
+    """
+        It was necessary to override Pint's unit registry so it behaves one way under context and
+        normally without context
+    """
     def __init__(self):
         self.unit_registry_object = UnitRegistry()
         self._ms_active = False
@@ -472,9 +505,16 @@ u = OverrideUnitRegistry()
 
 
 class QuantityConverter:
-
+    """
+        Class that converts an unit from any to MobsPy L-s-counts conversion
+    """
     @classmethod
     def convert_received_unit(cls, quantity):
+        """
+            Converts a received quantity to L-s-counts, standard MobsPy units
+
+            :param quantity: received quantity to convert
+        """
         ur = u.unit_registry_object
 
         is_override = False
@@ -633,6 +673,11 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             return str(self.q_object)
 
     def set_ms_active(self, ms_active):
+        """
+            ms_active is the boolean responsible for activating the context. This function can be used to set it
+
+            :param ms_active: boolean with the state to set the expression or normal unit context
+        """
         self._ms_active = ms_active
 
     # Had to propose new functions for conversion as Pint is doing something strange and checking the returned object
@@ -647,7 +692,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
 
 
 class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
-
+    """
+        MobsPy expression objects are passed to rate functions to store the expressions they've been through
+    """
     def __str__(self):
         return str(self._operation)
 
@@ -702,6 +749,12 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
     # Write string operation return and unit
     def generate_string_operation(self, skip_check=False, reaction_order=None):
+        """
+            Converts the expression from what has been stored to a string format for the sbml file
+
+            :param skip_check: skip units check or not - always set to False, True only for debugging
+            :param reaction_order: order of the reaction - to check if the unit is correct
+        """
         ur = u.unit_registry_object
 
         if self._dimension is None:

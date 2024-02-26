@@ -3,8 +3,18 @@ import numpy as np
 
 if __name__ == '__main__':
 
-   A = BaseSpecies()
+    Location = BaseSpecies()
+    Location.l1, Location.l2
+    A, B, C, D = New(Location)
 
-   A >> Zero[1]
-   S = Simulation(A)
-   S.run()
+    # Before
+    A.l1 + B.l1 >> 2 * C.l1
+    C.l1 >> D.l1
+
+    # After
+    with Location.l1:
+        A + B >> 2 * C
+        C >> D
+
+
+

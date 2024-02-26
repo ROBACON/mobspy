@@ -209,6 +209,7 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
         :params combination_of_reactant_species: meta-species involved in the reaction
         :params reactant_string_list: species strings involved in the reaction
         :params rate_function_arguments: arguments received by the rate function
+        :return: argument_dict - dictionary with arguments for a rate function
     """
     argument_dict = {}
 
@@ -239,6 +240,15 @@ def prepare_arguments_for_callable(combination_of_reactant_species, reactant_str
 
 
 def search_for_parameters_in_str(reaction_rate_string, parameters_exist, parameters_in_reaction):
+    """
+        Searches for MobsPy Parameter names in a string reaction rate. Uses the parameters_exit stack.
+        If it finds a parameter it adds it to the set parameters_in_reaction
+
+        :param reaction_rate_string: reaction rate in str format
+        :param parameters_exist: stack of parameters available
+        :param parameters_in_reaction: set of parameters already in reaction
+        :return: parameters_in_reaction set of parameters already in reaction
+    """
     split_operation = re.split(', |-|!|\*|\+|/|\)|\(| ', reaction_rate_string)
     split_operation = [x.replace(' ', '') for x in split_operation if x.replace(' ', '') != '']
 

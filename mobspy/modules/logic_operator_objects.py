@@ -286,6 +286,13 @@ class MetaSpeciesLogicResolver:
         return [x for x in species_for_sbml.keys() if reference_set.issubset(set(x.split('_dot_')))]
 
     def generate_string(self, characteristics_to_object, to_sort=False):
+        """
+            When a meta-species is used in a logic expression, this function transforms a meta-species in the sum of
+            all individual states
+
+            :param characteristics_to_object: orthogonal characteristic space
+            :param to_sort: sort strings or not - so the sum will always apear in the same order
+        """
         copasi_str = ''
         for i, e in enumerate(self.operation):
             if type(e) == int or type(e) == float or type(e) == str:

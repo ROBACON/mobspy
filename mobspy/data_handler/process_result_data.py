@@ -12,9 +12,12 @@ import mobspy.simulation_logging.log_scripts as simlog
 def extract_time_and_volume_list(list_of_params):
     """
         This function extracts the list of durations from all concatenated simulations (or one for single simulation)
-        It also extracts the respective volumes at each simulation
+        It also extracts the respective volumes at each simulation. It does not work if their is a change in volume
+        and a simulation without fixed duration
 
-        Conditional simulation in END condition
+        Conditional simulations have a parameter called '_end_condition' in their dictionary
+
+        :param list_of_params: list of parameters of all concatenated simulations
     """
     no_fixed_volume = False
     no_fixed_dur = False
@@ -106,7 +109,14 @@ def convert_data_to_desired_unit(data, time_list, volume_list,
 
 
 def convert_to_concentration(data, converted_data, volume_list, time_list):
+    """
+        Converts output data from counts to concentration according to simulation volume
 
+        :param data: simulation data
+        :param converted_data: data converted to rquested units
+        :param volume_list: list of volumes of all simulations (more than one if concatenated)
+        :param time_list: list of durations of each simulation (to check for respective volume in results)
+    """
     new_data = {}
     for key in data:
         new_data[key] = []

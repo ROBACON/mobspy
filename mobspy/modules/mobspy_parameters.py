@@ -6,7 +6,10 @@ from mobspy.modules.mobspy_expressions import u
 
 
 class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
-
+    """
+        This is the constructor that is called by ModelParameters to create a model parameter
+        (not a simulation parameter). The user is not supposed to create parameters using this object.
+    """
     # convert_received_unit
 
     parameter_stack = {}
@@ -70,10 +73,16 @@ class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
             self._has_units = False
 
     def convert_to_original_unit(self):
+        """
+            Converts the parameter from the MobsPy standard unit to the original unit of the parameter
+        """
         if self.has_units():
             self.set_value(self.value/self.conversion_factor*self.original_unit)
 
     def rename(self, new_name):
+        """
+            Renames a parameter. Checks to see if name is available beforehand. It uses the parameter stack to do so
+        """
         if new_name in self.parameter_stack:
             simlog.warning(" MobsPy uses a parameter dictionary with parameter names as keys and the respective object"
                            " as value to keep track of created parameters. As, there is a parameter with this name"
@@ -84,10 +93,16 @@ class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
         self.name = new_name
 
     def set_value(self, new_value):
+        """
+            Sets value of parameter
+        """
         self.value = new_value
         return self
 
     def has_units(self):
+        """
+            Check if is a unit based parameter or not
+        """
         if self._has_units == 'T':
             return True
         else:
@@ -98,7 +113,9 @@ class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
 
 
 def ModelParameters(*args):
-
+    """
+        Creates ModelParameters. Like meta-species, it uses the variable names as parameter names
+    """
     code_line = inspect.stack()[1].code_context[0][:-1]
     separated_line = code_line.split('=')[-2].replace(" ", "")
     parameter_variable_names = separated_line.split(',')

@@ -36,6 +36,8 @@ def expression_compilation_initiation():
 def expression_compilation_finish(expressions):
     """
         Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()
+
+        :param expressions: all expressions found in stack at the moment of reaction compilation
     """
     u._ms_active = False
 
