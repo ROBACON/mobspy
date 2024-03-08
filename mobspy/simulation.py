@@ -202,7 +202,10 @@ class Simulation(Experimental_Data_Holder):
             :param verbose: (bool) = print or not the results of the compilation
         """
         if self.dimension is None:
-            self.dimension = 3
+            if isinstance(self.volume, Quantity): 
+                self.dimension = uh.extract_length_dimension(str(self.volume.dimensionality), self.dimension)
+            else:
+                self.dimension = 3
 
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
@@ -229,6 +232,7 @@ class Simulation(Experimental_Data_Holder):
                              species_counts=self._species_counts,
                              orthogonal_vector_structure=self.orthogonal_vector_structure,
                              volume=self.parameters['volume'],
+                             dimension=self.dimension,
                              type_of_model=self.parameters["rate_type"],
                              verbose=verbose,
                              event_dictionary=self.total_packed_events,
@@ -272,7 +276,8 @@ class Simulation(Experimental_Data_Holder):
             self.sbml_data_list = data_for_sbml_construction
             self._parameter_list_of_dic = parameter_list_of_dic
 
-    def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
+    def run(self, duration=None, volume=None, dimension=None,
+            repetitions=None, level=None, simulation_method=None,
             rate_type = None, plot_type = None,
             start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
             jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
@@ -313,7 +318,8 @@ class Simulation(Experimental_Data_Holder):
 
         # This is only here so the ide gives the users tips about the function argument.
         # I wish there was a way to loop over all argument without args and kargs
-        pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
+        pr.manually_process_each_parameter(self, duration, volume, dimension,
+                                           repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
                                            output_file, save_data, plot_data, rate_type, plot_type)
@@ -705,7 +711,7 @@ class SimulationComposition:
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
         multi_cast_parameters = ['simulation_method', 'method', 'volume', 'duration']
-        broad_cast_parameters = ['level', 'rate_type', 'plot_type']
+        broad_cast_parameters = ['level', 'rate_type', 'plot_type', 'repetitions']
 
         if name in multi_cast_parameters:
 
@@ -757,7 +763,8 @@ class SimulationComposition:
                 sim.compile(verbose=False)
 
     # This run is for the multiple simulations
-    def run(self, duration=None, volume=None, repetitions=None, level=None, simulation_method=None,
+    def run(self, duration=None, volume=None, dimension=None,
+            repetitions=None, level=None, simulation_method=None,
             start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
             jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
             output_file=None, save_data=None, plot_data=None, rate_type=None, plot_type=None):
@@ -793,7 +800,8 @@ class SimulationComposition:
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
 
-        pr.manually_process_each_parameter(self, duration, volume, repetitions, level, simulation_method,
+        pr.manually_process_each_parameter(self, duration, volume, dimension, 
+                                           repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
                                            output_file, save_data, plot_data, rate_type, plot_type)

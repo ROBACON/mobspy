@@ -385,6 +385,7 @@ class ExpressionDefiner:
             :param count_op: unit of the expression if the arguments are considered 1/v
             :param direct_sense: sense of the operation
         """
+
         if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):
             self = QuantityConverter.convert_received_unit(self)
         if isinstance(other, Quantity) or isinstance(other, OverrideQuantity):
@@ -495,6 +496,9 @@ class OverrideUnitRegistry:
 
     def __getattr__(self, item):
         # Convert here
+        if item == 'h':
+            item = 'hour'
+
         q_object = 1*self.unit_registry_object.__getattr__(item)
         owq_obj = OverrideQuantity(q_object)
         owq_obj._ms_active = self._ms_active

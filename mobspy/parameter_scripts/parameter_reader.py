@@ -71,7 +71,7 @@ def convert_parameters_for_COPASI(params):
             if p.dimensionality != '[time]':
                 simlog.error('The duration of the simulation is not in units of time')
 
-        if isinstance(p, Quantity):
+        if isinstance(p, Quantity) and (key != 'unit_x' and key != 'unit_y'):
             if str(p.dimensionality) == '[time]':
                 params[key] = p.convert('second').magnitude
                 continue
@@ -170,7 +170,8 @@ def parameter_process(params):
 
 
 # I felt like inspect could be to invasive, maybe it would have been better to inspect the function signature
-def manually_process_each_parameter(simulation_object, duration, volume, repetitions, level, simulation_method,
+def manually_process_each_parameter(simulation_object, duration, volume, dimension,
+                                    repetitions, level, simulation_method,
                                     start_time, r_tol, a_tol, seeds, step_size,
                                     jobs, unit_x, unit_y, output_concentration, output_event,
                                     output_file, save_data, plot_data, rate_type, plot_type):
@@ -179,6 +180,9 @@ def manually_process_each_parameter(simulation_object, duration, volume, repetit
 
     if volume is not None:
         simulation_object.volume = volume
+    
+    if dimension is not None:
+        simulation_object.dimension = dimension
 
     if repetitions is not None:
         simulation_object.repetitions = repetitions

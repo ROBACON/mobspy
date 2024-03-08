@@ -80,7 +80,8 @@ class Compiler:
 
     @classmethod
     def compile(cls, meta_species_to_simulate, reactions_set, species_counts, orthogonal_vector_structure,
-                volume=1, type_of_model='deterministic', verbose=True, event_dictionary=None,
+                volume=1, dimension=None,
+                type_of_model='deterministic', verbose=True, event_dictionary=None,
                 continuous_sim=False, ending_condition=None, skip_expression_check=False):
         """
             Here we construct the species for Copasi using their objects
@@ -165,10 +166,9 @@ class Compiler:
                 species_for_sbml['_dot_'.join(species_string)] = 0
 
         # Default dimension equal to three after update
-        dimension = None
         if isinstance(volume, Quantity):
             dimension = uh.extract_length_dimension(str(volume.dimensionality), dimension)
-        else:
+        elif dimension is None:
             dimension = 3
 
         for count in species_counts:

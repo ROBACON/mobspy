@@ -996,10 +996,10 @@ def initial_expression_test():
     A, B, Hey = BaseSpecies()
     D = New(A)
 
-    A >> 2 * A[lambda r: 1 / u.h * (1 + 10 / r)]
-    A + B >> Zero[lambda r1, r2: (1 * u.millimolar / u.h) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
-    Hey >> Zero[lambda r: 1 / u.h * (20 * r + 30 * r + 40 * r)]
-    D >> 2 * D[lambda r: 20 / u.h * r]
+    A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / r)]
+    A + B >> Zero[lambda r1, r2: (1 * u.millimolar / u.hour) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
+    Hey >> Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
+    D >> 2 * D[lambda r: 20 / u.hour * r]
 
     S = Simulation(A | B | Hey | D)
     S.level = -1
@@ -1010,7 +1010,7 @@ def test_wrong_dimension_error():
     try:
         A, B = BaseSpecies()
 
-        A >> 2 * A[lambda r: 1 / u.h * (1 + 10 / u.decimeter ** 3 / r)]
+        A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / u.decimeter ** 3 / r)]
 
         S = Simulation(A)
         S.level = -1
@@ -1022,7 +1022,7 @@ def test_wrong_dimension_error():
     try:
         A, B = BaseSpecies()
 
-        A >> 2 * A[lambda r: (1 / (u.h * u.decimeter ** 3)) * (1 + 10 / r)]
+        A >> 2 * A[lambda r: (1 / (u.hour * u.decimeter ** 3)) * (1 + 10 / r)]
 
         S = Simulation(A)
         S.level = -1
@@ -1067,7 +1067,7 @@ def test_wrong_rate():
 
 def test_conversion_outside():
     n_0 = 10
-    mu_g = 0.2 / u.h
+    mu_g = 0.2 / u.hour
 
     Cell, Lysis, AHL, LuxI = BaseSpecies()
 
@@ -1372,17 +1372,17 @@ def test_multi_parameter_with_expression():
 
 def test_double_parameters_with_units():
     A = BaseSpecies()
-    p1, p2 = ModelParameters([1], [1 / u.h, 2 / u.h, 3 / u.h])
+    p1, p2 = ModelParameters([1], [1 / u.hour, 2 / u.hour, 3 / u.hour])
     A >> Zero[p1 * p2]
     A(100)
     S = Simulation(A)
-    S.run(duration=5 * u.h, plot_data=False, level=-1)
+    S.run(duration=5 * u.hour, plot_data=False, level=-1)
     assert compare_model(str(S.results), 'test_tools/model_45.txt')
 
 
 def test_parameters_with_units():
     A = BaseSpecies()
-    p = ModelParameters([1 / u.h, 2 / u.h, 3 / u.h])
+    p = ModelParameters([1 / u.hour, 2 / u.hour, 3 / u.hour])
     A >> Zero[p]
     A(100)
     S2 = Simulation(A)
@@ -1399,14 +1399,14 @@ def test_convert_back_parameter():
 
 def test_parameter_fit_with_units():
     A = BaseSpecies()
-    A >> Zero[3 / u.h]
+    A >> Zero[3 / u.hour]
     A(100)
     S1 = Simulation(A)
-    S1.duration = 3 * u.h
+    S1.duration = 3 * u.hour
     S1.run(plot_data=False, level=-1)
 
     A = BaseSpecies()
-    p = ModelParameters(1 / u.h)
+    p = ModelParameters(1 / u.hour)
     A >> Zero[p]
     A(100)
     S2 = Simulation(A)
@@ -1414,7 +1414,7 @@ def test_parameter_fit_with_units():
     S2.load_experiment_data(S1.results)
     basiCO_parameter_estimation(S2, [p], verbose=False)
 
-    assert 2.5 / u.h <= p.value <= 3.5 / u.h
+    assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
 
 
 def test_multiple_runs_fit():
@@ -1500,13 +1500,13 @@ def test_numpy_with_units():
     def test_numpy_in_expression(r):
         u._ms_active = True
         for a in np_array:
-            b = a / u.h
+            b = a / u.hour
         return b
 
     A, B, C, D = BaseSpecies()
     A >> Zero[lambda r: test_numpy_in_expression(r)]
     for a in np_array:
-        B >> Zero[a / u.h]
+        B >> Zero[a / u.hour]
     S = Simulation(A | B | C | D)
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_47.txt')
@@ -1563,6 +1563,35 @@ def test_numpy_in_set_counts():
     assert S.fres[A][-1] <= 10
 
 
+def test_multi_methods_plot():
+    A = BaseSpecies()
+
+    S1 = Simulation(A)
+
+    S2 = Simulation(A)
+    S2.method = 'stochastic'
+
+    S = S1 + S2
+    S.level = -1
+    S.repetitions = 10
+    S.compile()
+    assert S2.__dict__['parameters']['plot_type'] == 'stochastic'
+
+
+def test_unit_x_conversion():
+    A = BaseSpecies()
+
+    A >> Zero[1 / u.h]
+
+    A(100)
+    S = Simulation(A)
+    S.level = -1
+    S.step_size = 0.1 * u.h
+    S.duration = 1 * u.h
+    S.unit_x = u.h
+    S.run()
+    assert round(S.fres['Time'][-1]) == 1
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1586,7 +1615,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_parameter_operation_in_rate, test_multi_parameter_with_expression, test_double_parameters_with_units,
              test_parameters_with_units, test_convert_back_parameter, test_parameter_fit_with_units,
              test_multiple_runs_fit, test_simple_fit, test_numpy_in_expression_function, test_numpy_in_rates,
-             test_numpy_in_counts, test_numpy_in_set_counts]
+             test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion]
 
 sub_test = test_list
 

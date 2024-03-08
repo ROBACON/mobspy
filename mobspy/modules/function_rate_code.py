@@ -57,7 +57,8 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
         # [''] means that it is a function that takes no arguments (empty signature)
         if function_rate_arguments != ['']:
             arguments = prepare_arguments_for_callable(combination_of_reactant_species,
-                                                       reactant_string_list, function_rate_arguments, dimension)
+                                                       reactant_string_list, function_rate_arguments, 
+                                                       dimension)
 
             rate = reaction_rate_function(**arguments)
 

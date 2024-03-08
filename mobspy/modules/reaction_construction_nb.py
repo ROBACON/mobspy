@@ -297,6 +297,7 @@ def create_all_reactions(reactions, meta_species_in_model,
 
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
 
+
     # Initiate expressions
     with crs.Unit_Context_Setter():
         for reaction in reactions:
@@ -338,8 +339,8 @@ def create_all_reactions(reactions, meta_species_in_model,
                         try:
                             rate_string, parameters_in_reaction = \
                                 fr.extract_reaction_rate(combination_of_reactant_species,
-                                                         reactant_strings
-                                                         , reaction.rate, type_of_model,
+                                                         reactant_strings,
+                                                         reaction.rate, type_of_model,
                                                          dimension,
                                                          reaction_rate_arguments,
                                                          parameter_exist,

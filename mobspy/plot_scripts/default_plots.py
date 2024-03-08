@@ -64,7 +64,10 @@ def stochastic_plot(species, data, plot_params):
 
     data_to_plot = data
 
-    new_plot_params = deepcopy(plot_params)
+    try:
+        new_plot_params = deepcopy(plot_params)
+    except:
+        new_plot_params = plot_params
     set_plot_units(new_plot_params)
 
     # Plot config
@@ -119,7 +122,10 @@ def deterministic_plot(species, data, plot_params):
     species, data = ppd.query_plot_data(species, data)
     ppd.check_plot_parameters(species, plot_params)
 
-    new_plot_params = deepcopy(plot_params)
+    try:
+        new_plot_params = deepcopy(plot_params)
+    except:
+        new_plot_params = plot_params
     set_plot_units(new_plot_params)
 
     #  Plot Config
@@ -136,7 +142,10 @@ def parametric_plot(species, data, plot_params):
     max_labels = 15
     current_labels = 0
 
-    new_plot_params = deepcopy(plot_params)
+    try:
+        new_plot_params = deepcopy(plot_params)
+    except:
+        new_plot_params = plot_params
     set_plot_units(new_plot_params)
 
     new_plot_params['frameon'] = False
