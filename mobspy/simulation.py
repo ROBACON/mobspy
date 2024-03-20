@@ -202,7 +202,7 @@ class Simulation(Experimental_Data_Holder):
             :param verbose: (bool) = print or not the results of the compilation
         """
         if self.dimension is None:
-            if isinstance(self.volume, Quantity): 
+            if isinstance(self.volume, Quantity):
                 self.dimension = uh.extract_length_dimension(str(self.volume.dimensionality), self.dimension)
             else:
                 self.dimension = 3
@@ -226,7 +226,8 @@ class Simulation(Experimental_Data_Holder):
         self._species_for_sbml, self._reactions_for_sbml, \
         self._parameters_for_sbml, self._mappings_for_sbml, \
         self.model_string, self._events_for_sbml, self._assigned_species_list, \
-        self.model_parameters, self.model_parameter_objects_dict = \
+        self.model_parameters, self.model_parameter_objects_dict, \
+        self._assignments_for_sbml = \
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
                              species_counts=self._species_counts,
@@ -257,6 +258,7 @@ class Simulation(Experimental_Data_Holder):
                                   'parameters_for_sbml': self._parameters_for_sbml,
                                   'reactions_for_sbml': self._reactions_for_sbml,
                                   'events_for_sbml': self._events_for_sbml,
+                                  'assignments_for_sbml': self._assignments_for_sbml,
                                   'species_not_mapped': self.all_species_not_mapped,
                                   'mappings': self.mappings,
                                   'assigned_species': self._assigned_species_list}]
@@ -278,7 +280,7 @@ class Simulation(Experimental_Data_Holder):
 
     def run(self, duration=None, volume=None, dimension=None,
             repetitions=None, level=None, simulation_method=None,
-            rate_type = None, plot_type = None,
+            rate_type=None, plot_type=None,
             start_time=None, r_tol=None, a_tol=None, seeds=None, step_size=None,
             jobs=None, unit_x=None, unit_y=None, output_concentration=None, output_event=None,
             output_file=None, save_data=None, plot_data=None) -> None:
@@ -467,7 +469,7 @@ class Simulation(Experimental_Data_Holder):
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
                       'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension', 'experimental_data',
-                      'model_parameter_objects_dict']
+                      'model_parameter_objects_dict', '_assignments_for_sbml']
 
         plotted_flag = False
         if name in white_list:
@@ -645,7 +647,8 @@ class Simulation(Experimental_Data_Holder):
         for parameter_sweep in self.sbml_data_list:
             for sbml_data in parameter_sweep:
                 to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
-                                                    sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml']))
+                                                    sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml'],
+                                                    sbml_data['assignments_for_sbml']))
         return to_return
 
     @classmethod
@@ -800,7 +803,7 @@ class SimulationComposition:
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
 
-        pr.manually_process_each_parameter(self, duration, volume, dimension, 
+        pr.manually_process_each_parameter(self, duration, volume, dimension,
                                            repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
@@ -860,4 +863,3 @@ class SimulationComposition:
 
 if __name__ == '__main__':
     pass
-

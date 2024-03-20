@@ -306,9 +306,8 @@ class ExpressionDefiner:
             return self.non_expression_rtruediv(other)
 
     def __pow__(self, other):
-        if type(other) != int and type(other) != float:
-            raise TypeError('Power must only be int or floar')
-
+        # if type(other) != int and type(other) != float:
+        #    raise TypeError('Power must only be int or float')
         if self._ms_active:
             count_op, conc_op = self.execute_quantity_op(other, '__pow__')
             return self.create_from_new_operation(other, '^', count_op, conc_op)

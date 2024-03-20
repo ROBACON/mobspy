@@ -18,6 +18,7 @@ from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.mobspy_expressions import *
 import numpy as np
 import re
+from mobspy.modules.assignments_implementation import *
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -324,6 +325,15 @@ class Compiler:
                     if p1.name == p2.name:
                         simlog.error('There are two different Parameter Objects with the same name')
 
+        non_processed_assignments = {}
+        for spe in meta_species_to_simulate:
+            for asgn, expression in spe._assignments.items():
+                non_processed_assignments[asgn] = expression
+        assignments_for_sbml = \
+            Assignment_Operator.compile_assignments_for_sbml(non_processed_assignments, orthogonal_vector_structure,
+                                                             meta_species_to_simulate)
+
+
         model_str = ''
         if verbose:
             model_str = '\n'
@@ -370,7 +380,7 @@ class Compiler:
                     model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
-               events_for_sbml, assigned_species, parameters_used, parameter_object_dict
+               events_for_sbml, assigned_species, parameters_used, parameter_object_dict, assignments_for_sbml
 
 
 class Reactions:
@@ -441,15 +451,15 @@ class Reactions:
                 simlog.error('The any specie cannot be used in reactions')
 
         # Add characteristics in Cts_context to each reactant and product
-        if len(Species.meta_specie_named_any_context) != 0 : 
+        if len(Species.meta_specie_named_any_context) != 0:
             for j in Species.meta_specie_named_any_context:
-                    for r in reactants:
-                        r['object'].c(j)
-                        r['characteristics'].add(j)
-                    for p in products:
-                        p['object'].c(j)
-                        p['characteristics'].add(j)
-                
+                for r in reactants:
+                    r['object'].c(j)
+                    r['characteristics'].add(j)
+                for p in products:
+                    p['object'].c(j)
+                    p['characteristics'].add(j)
+
         try:
             to_test_context_object = reactants[0]['object']
         except IndexError:
@@ -501,7 +511,70 @@ class Reactions:
         self.rate = rate
 
 
-class Reacting_Species(ReactingSpeciesComparator):
+class Assignment_Opp_Imp:
+
+    def __add__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.add(self, other)
+        else:
+            simlog.error('Addition not implemented for meta-species in this context', stack_index=2)
+
+    def __radd__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.add(other, self)
+        else:
+            simlog.error('Addition not implemented for meta-species in this context', stack_index=2)
+
+    def __sub__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.sub(self, other)
+        else:
+            simlog.error('Subtraction not implemented for meta-species in this context', stack_index=2)
+
+    def __rsub__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.sub(other, self)
+        else:
+            simlog.error('Subtraction not implemented for meta-species in this context', stack_index=2)
+
+    def __truediv__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.div(self, other)
+        else:
+            simlog.error('Division not implemented for meta-species in this context', stack_index=2)
+
+    def __rtruediv__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.div(other, self)
+        else:
+            simlog.error('Division not implemented for meta-species in this context', stack_index=2)
+
+    def __pow__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.pow(self, other)
+        else:
+            simlog.error('Division not implemented for meta-species in this context', stack_index=2)
+
+    def __rpow__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.pow(other, self)
+        else:
+            simlog.error('Division not implemented for meta-species in this context', stack_index=2)
+
+    def __mul__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.mul(self, other)
+        else:
+            simlog.error('Multiplication not implemented for meta-species in this sense', stack_index=2)
+
+    def __rmul__(self, other):
+        if Assignment_Operator.check_context():
+            return Assignment_Operator.mul(other, self)
+        else:
+            simlog.error('Multiplication not implemented for meta-species in this sense', stack_index=2)
+
+
+class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
     """
         This is a intermediary object created when a species is used in a reaction. It is created when a species is
         part of a reaction, so it's constructor is called by the Species class in several of it's methods. It
@@ -515,6 +588,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         'characteristics': the characteristics queried, 'stoichiometry': stoichiometry value,
         'label': label if used (None)}
     """
+
     def __enter__(self):
         """
             Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when entering. 
@@ -527,7 +601,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when exiting. 
         """
         self.context_finish_for_reacting_specie()
-  
+
     def __str__(self):
         """
             String representation of the list of reactants
@@ -606,11 +680,14 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :params stoichiometry: (int) stoichiometry value of the meta-species in the reaction
         """
-        if type(stoichiometry) == int:
-            self.list_of_reactants[0]['stoichiometry'] = stoichiometry
+        if not Assignment_Operator.check_context():
+            if type(stoichiometry) == int:
+                self.list_of_reactants[0]['stoichiometry'] = stoichiometry
+            else:
+                simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
+            return self
         else:
-            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
-        return self
+            return Assignment_Operator.mul(stoichiometry, self)
 
     def __add__(self, other):
         """
@@ -620,16 +697,22 @@ class Reacting_Species(ReactingSpeciesComparator):
 
             :param  other: (Species or Reacting Species) other object being added
         """
-        if isinstance(other, Species):
-            other = Reacting_Species(other, set())
-        try:
-            self.list_of_reactants += other.list_of_reactants
-        except AttributeError:
-            simlog.error(f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
-        return self
+        if not Assignment_Operator.check_context():
+            if isinstance(other, Species):
+                other = Reacting_Species(other, set())
+            try:
+                self.list_of_reactants += other.list_of_reactants
+            except AttributeError:
+                simlog.error(f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
+            return self
+        else:
+            return Assignment_Operator.add(self, other)
 
     def __radd__(self, other):
-        return Reacting_Species.__add__(self, other)
+        if not Assignment_Operator.check_context():
+            return Reacting_Species.__add__(self, other)
+        else:
+            return Assignment_Operator.add(other, self)
 
     def __rshift__(self, other):
         """
@@ -651,7 +734,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         return reaction
 
     # Reacting_Species call
-    
+
     def __call__(self, quantity):
         """
             The call operator here is used to add counts to species non-default state. This stores the characteristics
@@ -664,7 +747,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             quantity = float(quantity)
 
         # If called within a Any context, add the characteristics of the Any context to the reacting specie called
-        if len(Species.meta_specie_named_any_context) > 0 : 
+        if len(Species.meta_specie_named_any_context) > 0:
             for i in Species.meta_specie_named_any_context:
                 self = self.c(i)
 
@@ -682,7 +765,7 @@ class Reacting_Species(ReactingSpeciesComparator):
         elif simulation_under_context is None:
             simlog.error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
-            
+
         # If called within an event context, make sure that the call is a count assignment only
         if simulation_under_context is not None:
             try:
@@ -710,6 +793,9 @@ class Reacting_Species(ReactingSpeciesComparator):
 
         Species.check_if_valid_characteristic(characteristic)
 
+        if characteristic == 'assign':
+            return Asg(self, species_or_reacting=False)
+
         for reactant in self.list_of_reactants:
 
             species_object = reactant['object']
@@ -725,8 +811,6 @@ class Reacting_Species(ReactingSpeciesComparator):
 
         return self
 
-
-
     @classmethod
     def is_species(cls):
         return False
@@ -734,7 +818,7 @@ class Reacting_Species(ReactingSpeciesComparator):
     @classmethod
     def is_spe_or_reac(cls):
         return True
-    
+
     # Context management for reacting species
     old_context = set()
 
@@ -746,7 +830,7 @@ class Reacting_Species(ReactingSpeciesComparator):
             self.old_context = Species.meta_specie_named_any_context
             new_context = Species.meta_specie_named_any_context.union(self.list_of_reactants[0]['characteristics'])
             Species.update_meta_specie_named_any_context(new_context)
-        else :
+        else:
             simlog.error('Contexts can only be used on basic Reacting meta species')
 
     def context_finish_for_reacting_specie(self):
@@ -890,7 +974,7 @@ def ListSpecies(number_of_elements, inherits_from=None):
     return List_Species(temp_list)
 
 
-class Species(SpeciesComparator):
+class Species(SpeciesComparator, Assignment_Opp_Imp):
     """
         Fundamental class - The meta-species object
         Contains the characteristics, the species name, the reactions it is involved in
@@ -922,7 +1006,7 @@ class Species(SpeciesComparator):
             :return: True if characteristic is allowed false if not
         """
         black_list = {'list_of_reactants', 'first_characteristic'}
-        if char[0] == '_' and char!="__sphinx_mock__":
+        if char[0] == '_' and char != "__sphinx_mock__":
             simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
 
         if char in _methods_Reacting_Species or char in _methods_Species or char in black_list:
@@ -1067,11 +1151,15 @@ class Species(SpeciesComparator):
             :param stoichiometry: (int) Stoichiometry of the meta-species in the meta-reaction
             :return: r (Reacting_Species) Reacting_Species with the stoichiometry added to it
         """
-        if type(stoichiometry) == int:
-            r = Reacting_Species(self, set(), stoichiometry)
+        if not Assignment_Operator.check_context():
+            if type(stoichiometry) == int:
+                r = Reacting_Species(self, set(), stoichiometry)
+            else:
+                simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
+            return r
         else:
-            simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
-        return r
+            # Here is not stoichiometry but other
+            return Assignment_Operator.mul(stoichiometry, self)
 
     def __add__(self, other):
         """
@@ -1081,18 +1169,24 @@ class Species(SpeciesComparator):
             :param other: (Species or Reacting Species object) Other objected added to construct a reaction
             :return: r1 + r2 (Reacting Species) Reacting Species objected created by the sum of the two
         """
-        r1 = Reacting_Species(self, set())
-        if isinstance(other, Reacting_Species):
-            r2 = other
+        if not Assignment_Operator.check_context():
+            r1 = Reacting_Species(self, set())
+            if isinstance(other, Reacting_Species):
+                r2 = other
+            else:
+                r2 = Reacting_Species(other, set())
+            return r1 + r2
         else:
-            r2 = Reacting_Species(other, set())
-        return r1 + r2
+            return Assignment_Operator.add(self, other)
 
     def __radd__(self, other):
         """
             Just making addition symmetric check __add__
         """
-        return Species.__add__(self, other)
+        if not Assignment_Operator.check_context():
+            return Species.__add__(self, other)
+        else:
+            return Assignment_Operator.add(other, self)
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
@@ -1140,6 +1234,10 @@ class Species(SpeciesComparator):
         # This is for IPython notebooks compatibility
         if characteristic == '_ipython_canary_method_should_not_exist_':
             return 0
+
+        if characteristic == 'assign':
+            Assignment_Operator._asg_context = True
+            return Asg(self, species_or_reacting=True)
 
         Species.check_if_valid_characteristic(characteristic)
 
@@ -1284,6 +1382,7 @@ class Species(SpeciesComparator):
         self._ordered_references = []
         self._reference_index_dictionary = {}
         self._unit = ''
+        self._assignments = {}
 
         # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
         self.first_characteristic = None
@@ -1368,7 +1467,7 @@ class Species(SpeciesComparator):
         else:
             simlog.error('A different Simulation Object was assigned to a meta-species object under context \n'
                          'Please use only one Simulation Object per context assignment', stack_index=6)
-    
+
     @classmethod
     def update_meta_specie_named_any_context(cls, meta_specie_named_any_characteristics):
         """
@@ -1407,8 +1506,6 @@ class Species(SpeciesComparator):
     @classmethod
     def is_spe_or_reac(cls):
         return True
-
-_methods_Species = set(dir(Species))
 
 
 def compile_species_number_line(code_line):
@@ -1483,12 +1580,15 @@ def BaseSpecies(number_or_names=None):
     code_line = inspect.stack()[1].code_context[0][:-1]
     return _Create_Species(None, code_line, number_or_names)
 
+
 __S0, __S1, __SF = BaseSpecies(3)
 __S0.name('S0')
 __S1.name('S1')
 __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
+_methods_Species = set(dir(Species))
+
 
 # u is reserved for units
 # u = OverrideUnitRegistry()

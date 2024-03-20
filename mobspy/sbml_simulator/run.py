@@ -188,7 +188,8 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
             pass
 
     return sbml_builder.build(species_for_sbml, model['parameters_for_sbml'],
-                              model['reactions_for_sbml'], model['events_for_sbml'])
+                              model['reactions_for_sbml'], model['events_for_sbml'],
+                              model['assignments_for_sbml'])
 
 
 def __add_simulations_data(added_data, reformatted_data):

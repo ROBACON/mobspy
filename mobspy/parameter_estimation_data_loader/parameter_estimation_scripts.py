@@ -87,7 +87,7 @@ def basiCO_parameter_estimation(simulation_object, parameters_to_estimate,
         simlog.error("BasiCO optimization does not support composite simulation optimization")
 
     sbml_str = sbml_list[0]
-    basico.model_io.load_model_from_string(sbml_str)
+    model = basico.model_io.load_model_from_string(sbml_str)
 
     fit_list = []
     for par in parameters_to_estimate:
@@ -115,8 +115,8 @@ def basiCO_parameter_estimation(simulation_object, parameters_to_estimate,
     else:
         basico.add_experiment('exp1', experimental_data)
 
-    basico.set_fit_parameters(fit_list)
-    basico_results = basico.run_parameter_estimation(method=method)
+    basico.set_fit_parameters(fit_list, model=model)
+    basico_results = basico.run_parameter_estimation(model=model, method=method)
 
     # WHY IS EVERYTHING PANDAS IN BASICO??????????? - I don't get paid enough for this
     results = {}

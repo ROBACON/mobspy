@@ -34,7 +34,7 @@ def check(value, message="error"):
         return
 
 
-def create_model(species={}, parameters={}, reactions={}, events={}):
+def create_model(species={}, parameters={}, reactions={}, events={}, assignments={}):
     """
     Returns an SBML Level 3 model.
     Example:
@@ -197,5 +197,18 @@ def create_model(species={}, parameters={}, reactions={}, events={}):
             check(ea, "check event assignment")
             check(ea.setVariable(ass[0]), "set variable")
             check(ea.setMath(sbml.parseL3Formula(ass[1])), "set math")
+
+    for _, asg in assignments.items():
+
+        species_id = asg['species']
+        expression = asg['expression']
+
+        # Create an AssignmentRule for species
+        assignment_rule = model.createAssignmentRule()
+        check(assignment_rule, "create assignment rule")
+        check(assignment_rule.setVariable(species_id), "set assignment variable")
+        math_ast = sbml.parseL3Formula(expression)
+        check(math_ast, f"create AST for assignment expression: {expression}")
+        check(assignment_rule.setMath(math_ast), "set math on assignment rule")
 
     return document  # sbml.writeSBMLToString(document)
