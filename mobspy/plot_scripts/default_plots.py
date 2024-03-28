@@ -4,6 +4,7 @@ import mobspy.plot_scripts.hierarchical_plot as hp
 import json
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.plot_scripts.process_plot_data as ppd
+from pint import Quantity
 
 
 def read_plot_json(plot_json_filename):
@@ -30,9 +31,13 @@ def set_plot_units(new_plot_params):
 
         :param new_plot_params: (dict) plot parameters after some changes
     """
+
     new_plot_params['xlabel'] = 'Time'
     if new_plot_params['unit_x'] is not None:
-        new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+        if not isinstance(new_plot_params['unit_x'], Quantity):
+            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+        else:
+            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units})'
     else:
         new_plot_params['xlabel'] += ' (s)'
 
@@ -42,7 +47,11 @@ def set_plot_units(new_plot_params):
         new_plot_params['ylabel'] = 'Counts'
 
     if new_plot_params['unit_y'] is not None:
-        new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"]})'
+        if not isinstance(new_plot_params['unit_x'], Quantity):
+            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+        else:
+            new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"].units})'
+
 
 
 
