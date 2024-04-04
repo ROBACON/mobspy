@@ -379,7 +379,7 @@ def set_global_parameters(fig, plot_params):
             fig.suptitle(plot_params['suptitle'])
 
 
-def plot_data(data, plot_params):
+def plot_data(data, plot_params, return_fig_object=False):
     """
         This function plots the simulation results according to the specifications
 
@@ -406,17 +406,25 @@ def plot_data(data, plot_params):
     # Global call for setting global parameters
     set_figure_characteristics(axis_matrix, plot_params)
 
+    tight_layout = find_parameter(plot_params, 'tight_layout')
+    if tight_layout is not None:
+        fig.tight_layout()
+
     # Now we plot
     for figure_index in range(figure_number):
         plot_curves(data, figure_hash(figure_index, axis_matrix), figure_index, plot_params)
 
     # Real default case
+    if return_fig_object:
+        return fig, axis_matrix
 
     save_to = find_parameter(plot_params, 'save_to')
     if save_to is None:
         plt.show()
     else:
         plt.savefig(save_to)
+
+    return None
 
 
 if __name__ == "__main__":

@@ -53,8 +53,6 @@ def set_plot_units(new_plot_params):
             new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"].units})'
 
 
-
-
 def stochastic_plot(species, data, plot_params):
     """
         Design default stochastic plot using MobsPy plotting hierarchy. It them passes the parameters for plotting
@@ -113,7 +111,7 @@ def stochastic_plot(species, data, plot_params):
         new_plot_params['figures'].append(
             {'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i_sta})
 
-    hp.plot_data(data_to_plot, new_plot_params)
+    return hp.plot_data(data_to_plot, new_plot_params)
 
 
 def deterministic_plot(species, data, plot_params):
@@ -143,7 +141,7 @@ def deterministic_plot(species, data, plot_params):
     color_cycler = hp.Color_cycle()
     for spe in species:
         new_plot_params[spe] = {'label': spe, 'color': color_cycler(1)}
-    hp.plot_data(data, new_plot_params)
+    return hp.plot_data(data, new_plot_params)
 
 
 def parametric_plot(species, data, plot_params):
@@ -210,16 +208,17 @@ def parametric_plot(species, data, plot_params):
         prop = {'size': 6}
 
     new_plot_params['prop'] = prop
-    hp.plot_data(data, new_plot_params)
+    return hp.plot_data(data, new_plot_params)
 
 
-def raw_plot(data, parameters_or_file):
+def raw_plot(data, parameters_or_file, return_fig=False):
     """
         Plots data from a json or parameter dictionary configured according to the hierarchical plot structure
         Does not accept parameters from a Simulation object, it must be given the parameters in it's entirety
 
         :param data: (dict) data in MobsPy format Simulation.results['data']
         :param parameters_or_file: (dict, str) Dictionary originated from a JSON or JSON file name
+        :param return_fig: (bool) return figure instead of plotting
     """
     if type(parameters_or_file) == str and parameters_or_file[-5:] == '.json':
         plot_params = read_plot_json(parameters_or_file)
@@ -232,7 +231,7 @@ def raw_plot(data, parameters_or_file):
     ppd.check_plot_parameters(species, plot_params)
 
     # Here we add some base data just in case the user has not supplied it
-    hp.plot_data(data, plot_params)
+    return hp.plot_data(data, plot_params, return_fig_object=return_fig)
 
 
 if __name__ == '__main__':

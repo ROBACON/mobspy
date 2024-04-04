@@ -595,7 +595,7 @@ class Simulation(Experimental_Data_Holder):
             :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
-        dp.stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp.stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_deterministic(self, *species):
         """
@@ -604,11 +604,11 @@ class Simulation(Experimental_Data_Holder):
             :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
-        dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_parametric(self, *species):
         plot_essentials = self.extract_plot_essentials(*species)
-        dp.parametric_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp.parametric_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot(self, *species):
         """
@@ -616,16 +616,16 @@ class Simulation(Experimental_Data_Holder):
 
             :param species: (str or meta-species objects) list of species to be plotted
         """
-        self.plot_deterministic(*species)
+        return self.plot_deterministic(*species)
 
-    def plot_raw(self, parameters_or_file):
+    def plot_raw(self, parameters_or_file, return_fig=False):
         """
             Calls raw plot. See default_plots module in the plot_scripts directory
 
             :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot
             parameter configuration
         """
-        dp.raw_plot(self.results, parameters_or_file)
+        return dp.raw_plot(self.results, parameters_or_file, return_fig=return_fig)
 
     def __add__(self, other):
         """

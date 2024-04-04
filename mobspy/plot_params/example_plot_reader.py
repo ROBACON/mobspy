@@ -31,6 +31,7 @@ def get_example_plot_parameters():
         'annotations': ['Test_note', 0, 0],
         'pad': 1,
         'dpi': 3,
+        'tight_layout': True,
         "plots": False,
         "species_to_plot": None,
         "save_to": 'example.png',
