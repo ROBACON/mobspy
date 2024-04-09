@@ -22,4 +22,7 @@ plot_config_donor.json
 plot_config_test.json
 Melanie_Model.py
 testing_tight_layout.png
+*.pyc
+__pycache__/
+
 
