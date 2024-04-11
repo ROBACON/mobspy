@@ -1,22 +1,6 @@
-""" Submodule with utility methods for carrying out and plotting of parameter estimations.
-
-The main function provided by this submodule is :func:`run_parameter_estimation`. Without any parameters, the
-previously set up parameter estimation as stored in the file will be carried out. And the parameters found will
-be returned.
-
-It is also possible to set up parameter estimation problems from scratch. To make it as simple as possible, pandas
-data frames are used, the mapping from the columns to the model element will be done implicitly by naming the
-columns like the corresponding model elements.
-
-Example:
-
-    >>> from basico import *
-    >>> m = model_io.load_example("LM-test1")
-    >>> print(get_fit_parameters())
-    >>> print(get_parameters_solution())
-    >>> run_parameter_estimation(method='Levenberg - Marquardt')
-    >>> print(get_parameters_solution())
-
+""" 
+Taken from basiCO repository - https://github.com/copasi/basico - code before changes to 0.65
+It fixes the parameter estimation task, for now
 """
 import shutil
 
