@@ -9,6 +9,8 @@ import pickle as pkl
 from pathlib import Path
 import inspect
 import matplotlib.pyplot as plt
+import mobspy.modules.unit_handler as uh
+from pint import Quantity
 
 
 ####################### PRACTICAL FUNCTIONS
@@ -293,6 +295,17 @@ def plot_curves(data, axs, figure_index, plot_params):
                         label = None
                 except KeyError:
                     pass
+
+        if find_parameter(plot_params, key='vertical_lines', index=(figure_index, plot_index)) is not None:
+            unit_x = find_parameter(plot_params, key='unit_x', index=(figure_index, plot_index))
+
+            position = find_parameter(plot_params, key='vertical_lines', index=(figure_index, plot_index))
+            for p in position:
+                if unit_x is not None and isinstance(p, Quantity):
+                    new_p = uh.time_convert_to_other_unit(p, unit_x)
+                else:
+                    new_p = p
+                axs.axvline(x=new_p, color='gray', linestyle='--')
 
     if legend_flag:
         if find_parameter(plot_params, key='prop', index=figure_index) is not None:

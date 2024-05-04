@@ -2,6 +2,9 @@
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
 from contextlib import contextmanager
+
+import libnuml
+
 from mobspy.parameter_scripts import parameter_reader as pr
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
@@ -227,7 +230,7 @@ class Simulation(Experimental_Data_Holder):
         self._parameters_for_sbml, self._mappings_for_sbml, \
         self.model_string, self._events_for_sbml, self._assigned_species_list, \
         self.model_parameters, self.model_parameter_objects_dict, \
-        self._assignments_for_sbml = \
+        self._assignments_for_sbml, self._has_mole = \
             Compiler.compile(self.model,
                              reactions_set=self._reactions_set,
                              species_counts=self._species_counts,
@@ -244,11 +247,6 @@ class Simulation(Experimental_Data_Holder):
         # The volume is converted to the proper unit at the compiler level
         self.parameters['volume'] = self._parameters_for_sbml['volume'][0]
         self.mappings = deepcopy(self._mappings_for_sbml)
-
-        # Set common parameters for plot and simulation
-        self.plot_parameters['unit_x'] = self.parameters['unit_x']
-        self.plot_parameters['unit_y'] = self.parameters['unit_y']
-        self.plot_parameters['output_concentration'] = self.parameters['output_concentration']
 
         self.all_species_not_mapped = {}
         for key in self._species_for_sbml:
@@ -336,6 +334,11 @@ class Simulation(Experimental_Data_Holder):
 
         simlog.debug("Simulation is Over")
 
+        if self.parameters['unit_y'] is None and self.parameters['output_concentration'] and self._has_mole:
+            self.parameters['unit_y'] = 1*u.unit_registry_object.molar
+        elif self.parameters['unit_y'] is None and not self.parameters['output_concentration'] and self._has_mole:
+            self.parameters['unit_y'] = 1*u.unit_registry_object.mol
+
         # Volume list and time list are to convert into concentrations
         # This section also checks if the output_concentration parameter is valid
         volume_list, time_list, flag_concentration = dh.extract_time_and_volume_list(self._list_of_parameters)
@@ -389,7 +392,13 @@ class Simulation(Experimental_Data_Holder):
         if self.parameters['save_data']:
             self.save_data()
 
+        # Set common simulation and plot parameters
+        self.plot_parameters['unit_x'] = self.parameters['unit_x']
+        self.plot_parameters['unit_y'] = self.parameters['unit_y']
+        self.plot_parameters['output_concentration'] = self.parameters['output_concentration']
+
         if self.parameters['plot_data']:
+
             methods_list = [x['plot_type'] for x in self._list_of_parameters]
 
             if len(self._parameter_list_of_dic) > 1:
@@ -469,7 +478,7 @@ class Simulation(Experimental_Data_Holder):
                       '_context_not_active', '_species_counts', '_assigned_species_list', '_conditional_event',
                       '_end_condition', 'orthogonal_vector_structure', 'model_parameters', 'fres',
                       'sbml_data_list', '_parameter_list_of_dic', '_is_compiled', 'dimension', 'experimental_data',
-                      'model_parameter_objects_dict', '_assignments_for_sbml']
+                      'model_parameter_objects_dict', '_assignments_for_sbml', '_has_mole']
 
         plotted_flag = False
         if name in white_list:

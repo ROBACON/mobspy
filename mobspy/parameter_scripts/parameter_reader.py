@@ -161,7 +161,15 @@ def check_method_parameter(params):
             params['plot_type'] = 'stochastic'
 
 
+def check_duration_unit(params):
+
+    if isinstance(params['duration'], Quantity):
+        if params['unit_x'] is None:
+            params['unit_x'] = 1*params['duration'].units
+
+
 def parameter_process(params):
+    check_duration_unit(params)
     convert_unit_parameters(params)
     name_output_file(params)
     check_stochastic_repetitions_seeds(params)

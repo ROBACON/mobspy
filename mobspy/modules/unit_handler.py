@@ -176,5 +176,18 @@ def convert_time(time):
         return time
 
 
+def time_convert_to_other_unit(time, other_unit):
+    """
+        Converts time into seconds
+
+        :param time: (int, float, Quantity) any time used
+    """
+    if isinstance(time, Quantity):
+        if str(time.dimensionality) == '[time]':
+            return time.convert(other_unit).magnitude
+    else:
+        return time
+
+
 if __name__ == '__main__':
     pass

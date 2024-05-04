@@ -1403,6 +1403,7 @@ def test_parameter_fit_with_units():
     A(100)
     S1 = Simulation(A)
     S1.duration = 3 * u.hour
+    S1.unit_x = u.seconds
     S1.run(plot_data=False, level=-1)
 
     A = BaseSpecies()
@@ -1592,6 +1593,65 @@ def test_unit_x_conversion():
     S.run()
     assert round(S.fres['Time'][-1]) == 1
 
+
+def test_Silicon_valley():
+
+    A = BaseSpecies()
+    A.name('\tA')
+
+    A >> Zero[1]
+
+    A(200)
+    S = Simulation(A)
+    S.plot_data = False
+    S.duration = 1
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_48.txt')
+
+
+def test_replacing_species_name_in_expression():
+
+    Resource, R = BaseSpecies()
+
+    death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)
+    Resource + R >> Zero[death_rate]
+
+    S = Simulation(Resource | R)
+    S.duration = 10
+    S.step_size = 5
+    S.plot_data = False
+    S.level = - 1
+    S.run()
+    assert True
+
+
+def test_basic_assignment():
+
+    A, B = BaseSpecies()
+
+    A.assign(2 * B)
+
+    B(100)
+    S = Simulation(A | B)
+    S.plot_data = False
+    S.duration = 10
+    S.step_size = 5
+    S.level = -1
+    S.run()
+    assert S.fres[A][-1] == 200
+
+
+def test_illegal_unit_op_in_assignment():
+    try:
+        simlog.global_simlog_level = -1
+        A, B = BaseSpecies()
+
+        A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
+    except SystemExit:
+        return 0
+    assert False
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1615,7 +1675,9 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_parameter_operation_in_rate, test_multi_parameter_with_expression, test_double_parameters_with_units,
              test_parameters_with_units, test_convert_back_parameter, test_parameter_fit_with_units,
              test_multiple_runs_fit, test_simple_fit, test_numpy_in_expression_function, test_numpy_in_rates,
-             test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion]
+             test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
+             test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
+             test_illegal_unit_op_in_assignment]
 
 sub_test = test_list
 

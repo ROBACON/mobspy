@@ -31,15 +31,12 @@ def set_plot_units(new_plot_params):
 
         :param new_plot_params: (dict) plot parameters after some changes
     """
-
     new_plot_params['xlabel'] = 'Time'
     if new_plot_params['unit_x'] is not None:
         if not isinstance(new_plot_params['unit_x'], Quantity):
             new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
         else:
             new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units})'
-    else:
-        new_plot_params['xlabel'] += ' (s)'
 
     if new_plot_params['output_concentration']:
         new_plot_params['ylabel'] = 'Conc.'
@@ -47,8 +44,8 @@ def set_plot_units(new_plot_params):
         new_plot_params['ylabel'] = 'Counts'
 
     if new_plot_params['unit_y'] is not None:
-        if not isinstance(new_plot_params['unit_x'], Quantity):
-            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+        if not isinstance(new_plot_params['unit_y'], Quantity):
+            new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"]})'
         else:
             new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"].units})'
 

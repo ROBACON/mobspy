@@ -1,5 +1,6 @@
 from pint import Quantity, UnitRegistry, DimensionalityError
 import mobspy.simulation_logging.log_scripts as simlog
+import re
 from scipy.constants import N_A
 from copy import deepcopy
 import numpy as np
@@ -135,8 +136,10 @@ class ExpressionDefiner:
             :param second: second number
             :param operation: operation to be executed
         """
-        if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
-            raise Exception('Override quantity is not supposed to be in execute op')
+        # TODO: FIX HERE NOW! FABRICIO DONT FORGET THIS DUMBASS
+        # CHANGED HERE
+        #if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
+        #    raise Exception('Override quantity is not supposed to be in execute op')
 
         q_object = None
         if isinstance(first, Quantity) and isinstance(second, Quantity):
@@ -188,28 +191,24 @@ class ExpressionDefiner:
             :param other: other number (or expression) to execute the operation on
             :param operation: string symbol of the operation to be executed
         """
-        count_op = 1
-        conc_op = 1
 
-        if count_op is not None:
-            try:
-                if isinstance(other, ExpressionDefiner):
-                    count_op = self.execute_op(self._unit_count_op, other._unit_count_op, operation)
-                else:
-                    count_op = self.execute_op(self._unit_count_op, other, operation)
-            except Exception as e:
-                # raise e - For debug
-                count_op = e
+        try:
+            if isinstance(other, ExpressionDefiner):
+                count_op = self.execute_op(self._unit_count_op, other._unit_count_op, operation)
+            else:
+                count_op = self.execute_op(self._unit_count_op, other, operation)
+        except Exception as e:
+            # raise e - For debug
+            count_op = e
 
-        if conc_op is not None:
-            try:
-                if isinstance(other, ExpressionDefiner):
-                    conc_op = self.execute_op(self._unit_conc_op, other._unit_conc_op, operation)
-                else:
-                    conc_op = self.execute_op(self._unit_conc_op, other, operation)
-            except Exception as e:
-                # raise e - For debug
-                conc_op = e
+        try:
+            if isinstance(other, ExpressionDefiner):
+                conc_op = self.execute_op(self._unit_conc_op, other._unit_conc_op, operation)
+            else:
+                conc_op = self.execute_op(self._unit_conc_op, other, operation)
+        except Exception as e:
+            # raise e - For debug
+            conc_op = e
 
         return count_op, conc_op
 
@@ -349,8 +348,8 @@ class ExpressionDefiner:
         """
         # Operation variables
         self._operation = None
-        self._unit_count_op = None
-        self._unit_conc_op = None
+        self._unit_count_op = 1
+        self._unit_conc_op = 1
 
         # MobsPy active - Behavior change
         self._ms_active = False
@@ -383,7 +382,31 @@ class ExpressionDefiner:
             :param count_op: unit of the expression if the arguments are considered dimentionless
             :param count_op: unit of the expression if the arguments are considered 1/v
             :param direct_sense: sense of the operation
+            :param operation: current operation in the stack
         """
+        _has_units = False
+        try:
+            # Returns string True not boolean to avoid risk __getattr__ bugs
+            if self._has_units == 'T':
+                _has_units = 'T'
+            if other._has_units == 'T':
+                _has_units = 'T'
+        except AttributeError:
+            pass
+
+        try:
+            c1 = self._has_units == 'T'
+        except AttributeError:
+            c1 = False
+        try:
+            c2 = other._has_units == 'T'
+        except AttributeError:
+            c2 = False
+        if c1 or c2:
+            if isinstance(count_op, Exception) and isinstance(conc_op, Exception):
+                simlog.error("The units cannot be resolved. "
+                             "Ex: This error is cased by summing two number with different units "
+                             "(1/u.s) + 1*(u.l/u.s), \nor other impossible unit operations", stack_index=3)
 
         if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):
             self = QuantityConverter.convert_received_unit(self)
@@ -402,11 +425,17 @@ class ExpressionDefiner:
         except Exception as e:
             conc_op = e
 
-        if type(self._operation) == str or (isinstance(other, ExpressionDefiner) and type(other._operation)) == str:
+        if type(self._operation) == str or (isinstance(other, ExpressionDefiner) and
+                                            type(other._operation)) == str:
+            int_op_self = str(self.magnitude) if isinstance(self, Quantity) or isinstance(self, OverrideQuantity)\
+                else str(self)
+            int_op_other = str(other.magnitude) if isinstance(other, Quantity) or isinstance(other, OverrideQuantity)\
+                else str(other)
+
             if direct_sense:
-                op1, op2 = str(self), str(other)
+                op1, op2 = int_op_self, int_op_other
             else:
-                op2, op1 = str(self), str(other)
+                op2, op1 = int_op_self, int_op_other
 
             if operation is None:
                 operation = '(' + op1 + symbol + op2 + ')'
@@ -429,16 +458,6 @@ class ExpressionDefiner:
             new_parameter_set = self._parameter_set.union(other._parameter_set)
         elif isinstance(other, MobsPyExpression):
             self._expression_variables.union(other._expression_variables)
-
-        _has_units = False
-        try:
-            # Returns string True not boolean to avoid risk __getattr__ bugs
-            if self._has_units == 'T':
-                _has_units = 'T'
-            if other._has_units == 'T':
-                _has_units = 'T'
-        except AttributeError:
-            pass
 
         _count_in_model = self.combine_binary_attributes(other, '_count_in_model')
         _concentration_in_model = self.combine_binary_attributes(other, '_concentration_in_model')
@@ -503,9 +522,13 @@ class OverrideUnitRegistry:
         owq_obj._ms_active = self._ms_active
         return owq_obj
 
-
+# u is defined here
 u = OverrideUnitRegistry()
+def set_u_context():
+    u._ms_active = True
 
+def reset_u_context():
+    u._ms_active = False
 
 class QuantityConverter:
     """
@@ -815,23 +838,28 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             replace_name = variable.species_string
 
             if self._count_in_model:
-                convert_operation = convert_operation.replace(count_name, replace_name)
-                convert_operation = convert_operation.replace(concentration_name, '(' + replace_name + '/volume)')
+                convert_operation = replace_spe_in_expr(convert_operation, count_name, replace_name)
+                convert_operation = replace_spe_in_expr(convert_operation, concentration_name,
+                                                        '(' + replace_name + '/volume)')
 
                 # Add unit check!!!
                 if self._count_in_expression:
                     pass
                 elif self._concentration_in_expression:
-                    convert_operation = convert_operation.replace(default_name, '(' + replace_name + '/volume)')
+                    convert_operation = replace_spe_in_expr(convert_operation, default_name,
+                                                            '(' + replace_name + '/volume)')
                     convert_operation = '(' + convert_operation + ')' + '*volume'
                 else:
                     raise ValueError('The expression did not resolve for lack of concentration/count specifications')
             elif self._concentration_in_model:
-                convert_operation = convert_operation.replace(concentration_name, replace_name)
+                convert_operation = replace_spe_in_expr(convert_operation, concentration_name, replace_name)
                 convert_operation = convert_operation.replace(count_name, '(' + replace_name + '*volume)')
+                convert_operation = replace_spe_in_expr(convert_operation, count_name,'(' + replace_name + '*volume)')
 
                 if self._count_in_expression:
                     convert_operation = convert_operation.replace(default_name, '(' + replace_name + '*volume)')
+                    convert_operation = replace_spe_in_expr(convert_operation, default_name,
+                                                            '(' + replace_name + '*volume)')
                     convert_operation = '(' + convert_operation + ')' + '/volume'
                 elif self._concentration_in_expression:
                     pass
@@ -840,6 +868,10 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
         return convert_operation, self._count_in_expression
 
+
+def replace_spe_in_expr(string, to_replace, replacement):
+    pattern = re.compile(re.escape(to_replace) + r'(?![a-zA-Z0-9_])')
+    return pattern.sub(replacement, string)
 
 class _Count_Base:
 
@@ -871,6 +903,8 @@ class _Conc_Base:
 Concentration = _Conc_Base()
 
 if __name__ == '__main__':
+
+    print('Ran local script')
 
     # u = OverrideUnitRegistry(is_active=True)
     # a = MobsPyExpression('a_dot_alive', None, count_in_model=False, concentration_in_model=True,

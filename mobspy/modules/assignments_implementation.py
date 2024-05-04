@@ -1,6 +1,7 @@
 from mobspy.modules.mobspy_expressions import MobsPyExpression
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.modules.species_string_generator as ssg
+from mobspy.modules.mobspy_expressions import u
 import re
 
 
@@ -96,6 +97,7 @@ class Assignment_Operator:
         spe_str = express_spe.replace('$asg_', '')
         spe_str = spe_str.split('.')
 
+        # CHECK HERE FOR MISSING SPECIES IN MODEL
         for meta_spe in meta_species_in_model:
             if spe_str[0] == str(meta_spe):
                 spe_object = meta_spe
@@ -114,6 +116,7 @@ class Assignment_Operator:
 
     @classmethod
     def compile_assignments_for_sbml(cls, unprocessed_asgns, ortogonal_vector_structure, meta_species_in_model):
+
         assignments_for_sbml = {}
         for i, asg in enumerate(unprocessed_asgns):
             spe_to_asgn = ssg.construct_species_char_list(asg[0], asg[1],
@@ -121,7 +124,6 @@ class Assignment_Operator:
                                                           symbol='_dot_')
 
             asgn_expression = str(unprocessed_asgns[asg])
-
             spe_in_expression = Assignment_Operator.find_arg_strings(asgn_expression)
 
             replacement_dict = {}

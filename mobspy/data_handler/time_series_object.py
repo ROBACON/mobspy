@@ -32,8 +32,8 @@ class MobsPyList_of_TS:
             :param data_dict: (dict) resulting dictionary from simulation
             {'data': ...., 'params':....., 'models':.......}
         """
-        self.ts_data = [x.ts_data for x in list_of_mspy_ts]
-        self.ts_parameters = [x.ts_parameters for x in list_of_mspy_ts]
+        self.ts_data = [dict(x.ts_data) for x in list_of_mspy_ts]
+        self.ts_parameters = [dict(x.ts_parameters) for x in list_of_mspy_ts]
 
         # This lines are here to allow the object to be deepcopiable
         for ts_par in self.ts_parameters:
@@ -42,8 +42,9 @@ class MobsPyList_of_TS:
             if ts_par['unit_y'] is not None:
                 ts_par['unit_y'] = str(ts_par['unit_y'])
 
-        self.ts_models = [x.ts_models for x in list_of_mspy_ts]
-        self.ts_model_parameters = [x.ts_model_parameters for x in list_of_mspy_ts]
+        self.ts_models = [list(x.ts_models) for x in list_of_mspy_ts]
+        self.ts_model_parameters = [dict(x.ts_model_parameters) for x in list_of_mspy_ts]
+
 
         if model_parameter_objects is not None:
             need_conversion_dict = set()
