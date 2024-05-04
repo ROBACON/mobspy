@@ -3,8 +3,6 @@
 """
 from contextlib import contextmanager
 
-import libnuml
-
 from mobspy.parameter_scripts import parameter_reader as pr
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
