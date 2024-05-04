@@ -1652,6 +1652,50 @@ def test_illegal_unit_op_in_assignment():
     assert False
 
 
+def test_all_asgn_ops():
+
+    A, B, C, D = BaseSpecies()
+
+    A.a1.assign(B * 5)
+    A.a2.assign(B + C)
+    A.a3.assign(B - C)
+    A.a4.assign(B / C)
+    A.a5.assign(B / 200)
+    A.a6.assign(B ** 2)
+    A.a7.assign(B ** D)
+
+    B(200), C(100), D(2)
+    S = Simulation(A | B | C | D)
+    S.duration = 10
+    S.step_size = 5
+    S.plot_data = False
+    S.level = - 1
+    S.run()
+
+    assert S.fres[A.a1][-1] == 1000
+    assert S.fres[A.a2][-1] == 300
+    assert S.fres[A.a3][-1] == 100
+    assert S.fres[A.a4][-1] == 2
+    assert S.fres[A.a5][-1] == 1
+    assert S.fres[A.a6][-1] == 40000
+    assert S.fres[A.a7][-1] == 40000
+
+def test_no_species_in_asg():
+
+    try:
+        A, B = BaseSpecies()
+
+        A.assign(10 * B)
+
+        S = Simulation(A)
+        S.level = -1
+        S.compile()
+    except SystemExit:
+        return 0
+
+    assert False
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1677,7 +1721,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_multiple_runs_fit, test_simple_fit, test_numpy_in_expression_function, test_numpy_in_rates,
              test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
              test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
-             test_illegal_unit_op_in_assignment]
+             test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg]
 
 sub_test = test_list
 

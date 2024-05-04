@@ -93,7 +93,8 @@ class Assignment_Operator:
         return first ** second
 
     @staticmethod
-    def generate_replacement_in_expression(express_spe, ortogonal_vector_structure, meta_species_in_model):
+    def generate_replacement_in_expression(express_spe, ortogonal_vector_structure, meta_species_in_model,
+                                           expression_tuple):
         spe_str = express_spe.replace('$asg_', '')
         spe_str = spe_str.split('.')
 
@@ -101,6 +102,13 @@ class Assignment_Operator:
         for meta_spe in meta_species_in_model:
             if spe_str[0] == str(meta_spe):
                 spe_object = meta_spe
+                break
+        else:
+            spe_name = str(expression_tuple[0][0])
+            error_message = f'Assignment {spe_name}, {expression_tuple[0][1]}: ' \
+                            f'{expression_tuple[1].replace("$asg_", "")} failed\n' \
+                            f'One of the meta-species in the assignment expression was not found in the model'
+            simlog.error(error_message)
 
         if len(spe_str) == 1:
             str_comb = ssg.construct_all_combinations(spe_object, set(), ortogonal_vector_structure, '_dot_')
@@ -130,7 +138,8 @@ class Assignment_Operator:
             for spe in spe_in_expression:
                 replacement_dict[spe] = \
                     Assignment_Operator.generate_replacement_in_expression(spe, ortogonal_vector_structure,
-                                                                           meta_species_in_model)
+                                                                           meta_species_in_model,
+                                                                           (asg, asgn_expression))
 
             for key, item in replacement_dict.items():
                 asgn_expression = asgn_expression.replace(key, item)
