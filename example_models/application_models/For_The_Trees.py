@@ -36,5 +36,6 @@ if __name__ == '__main__':
     MySim.duration = 100*u.years
     MySim.unit_x = 'year'
     MySim.volume = 1*u.meter**2
+    MySim.repetitions = 3
     MySim.run()
     MySim.plot_stochastic(Tree.dense, Tree.sparse, Tree.brown)
