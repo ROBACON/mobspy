@@ -86,24 +86,31 @@ def convert_data_to_desired_unit(data, time_list, volume_list,
 
             converted_data[key] = [count * factor for count in data[key]]
 
-    def convert_data(data, from_unit, to_unit):
-        for key in data:
-            if key == 'Time':
-                continue
+    # Old function - remove if not need in future. Removed because it is to slow to do this with pint
+    #def convert_data(data, from_unit, to_unit):
+    #    for key in data:
+    #        if key == 'Time':
+    #            continue
 
-            converted_data[key] = [(count * from_unit).to(to_unit).magnitude for count in data[key]]
+    #        converted_data[key] = [(count * from_unit).to(to_unit).magnitude for count in data[key]]
 
     if output_concentration:
         converted_data = convert_to_concentration(data, converted_data, volume_list, time_list)
 
-    # Fix here:
+    # Fix here - forgot concentration conversion
     if unit_y is not None:
         if 'mol' in str(unit_y):
             multiply_data_by_factor(converted_data, N_A ** -1)
             if output_concentration:
-                convert_data(converted_data, ur.molar, unit_y)
+                factor = (1*ur.molar).to(unit_y).magnitude
+                multiply_data_by_factor(converted_data, factor)
             else:
-                convert_data(converted_data, ur.moles, unit_y)
+                factor = (1*ur.moles).to(unit_y).magnitude
+                multiply_data_by_factor(converted_data, factor)
+        else:
+            if output_concentration:
+                factor = (1/ur.l).to(unit_y).magnitude
+                multiply_data_by_factor(converted_data, factor)
 
     return converted_data
 

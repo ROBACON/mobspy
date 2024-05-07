@@ -50,6 +50,8 @@ def get_example_plot_parameters():
         # They are only listed here to avoid printing out errors during parameter checks
         "unit_x": '',
         "unit_y": '',
+        "ignore_unit_label_x": True,
+        "ignore_unit_label_y": True,
         "output_concentration": False,
         'simulation_method': 'stochastic'
     }

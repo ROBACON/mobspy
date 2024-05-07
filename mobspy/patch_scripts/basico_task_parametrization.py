@@ -2022,3 +2022,8 @@ def add_experiment_from_dict(exp_dict, **kwargs):
             obj_map.setScale(i, float(mapping['weight']))
 
     exp_set.addExperiment(experiment)
+
+
+if __name__ == '__main__':
+
+    get_default_handler()

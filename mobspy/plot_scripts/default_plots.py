@@ -31,23 +31,28 @@ def set_plot_units(new_plot_params):
 
         :param new_plot_params: (dict) plot parameters after some changes
     """
-    new_plot_params['xlabel'] = 'Time'
-    if new_plot_params['unit_x'] is not None:
-        if not isinstance(new_plot_params['unit_x'], Quantity):
-            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
-        else:
-            new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units})'
+    if 'xlabel' not in new_plot_params:
+        new_plot_params['xlabel'] = 'Time'
 
-    if new_plot_params['output_concentration']:
-        new_plot_params['ylabel'] = 'Conc.'
-    else:
-        new_plot_params['ylabel'] = 'Counts'
+        if new_plot_params['unit_x'] is not None and not ("ignore_unit_label_x" in new_plot_params and
+                                                          new_plot_params["ignore_unit_label_x"]):
+            if not isinstance(new_plot_params['unit_x'], Quantity):
+                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+            else:
+                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units})'
 
-    if new_plot_params['unit_y'] is not None:
-        if not isinstance(new_plot_params['unit_y'], Quantity):
-            new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"]})'
+    if 'ylabel' not in new_plot_params:
+        if new_plot_params['output_concentration']:
+            new_plot_params['ylabel'] = 'Conc.'
         else:
-            new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"].units})'
+            new_plot_params['ylabel'] = 'Counts'
+
+        if new_plot_params['unit_y'] is not None and not ("ignore_unit_label_x" in new_plot_params and
+                                                          new_plot_params["ignore_unit_label_y"]):
+            if not isinstance(new_plot_params['unit_y'], Quantity):
+                new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"]})'
+            else:
+                new_plot_params['ylabel'] += f' ({new_plot_params["unit_y"].units})'
 
 
 def stochastic_plot(species, data, plot_params):
@@ -94,19 +99,47 @@ def stochastic_plot(species, data, plot_params):
             data_to_plot[0][key_dev] = [processed_runs[1], processed_runs[2]]
 
             # We define the standard plot for the average and deviation
-            color = color_cycler(1)
-            plots_for_spe_i.append({'species_to_plot': [spe],
-                                    spe: {'color': color, 'label': spe}})
+            plots_for_spe_i.append({'species_to_plot': [spe]})
 
-            plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': [0],
-                                        key_average: {'color': color, 'linestyle': '-', 'label': 'mean'}})
-            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True, 'time_series': [0],
-                                        key_dev: {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}})
+            plots_for_spe_i_sta.append({'species_to_plot': [key_average], 'time_series': [0]})
+            plots_for_spe_i_sta.append({'species_to_plot': [key_dev], 'fill_between': True, 'time_series': [0]})
+
         except ValueError:
             simlog.error(f'{spe} species not found in data')
         new_plot_params['figures'].append({'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i})
         new_plot_params['figures'].append(
             {'ylabel': spe + ' ' + new_plot_params['ylabel'], 'plots': plots_for_spe_i_sta})
+
+    # Setting species parameters
+    for spe in species:
+        key_average = spe + '$' + 'average'
+        key_dev = spe + '$' + 'deviation'
+
+        color = color_cycler(1)
+
+        new_plot_params[key_dev] = {'color': (0.8, 0.8, 0.8), 'linestyle': ':', 'label': 'std. dev'}
+        if spe not in new_plot_params:
+            new_plot_params[spe] = {'color': color, 'label': spe}
+            new_plot_params[key_average] = {'color': color, 'linestyle': '-', 'label': 'mean'}
+        else:
+            new_plot_params[key_average] = {}
+
+            for par in new_plot_params[spe]:
+                new_plot_params[key_average][par] = new_plot_params[spe][par]
+                new_plot_params[key_dev][par] = new_plot_params[spe][par]
+
+            if 'label' not in new_plot_params[spe]:
+                new_plot_params[spe]['label'] = spe
+
+            if 'color' not in new_plot_params[spe]:
+                new_plot_params[spe]['color'] = color
+                new_plot_params[key_average]['color'] = color
+                new_plot_params[key_average]['linestyle'] = '-'
+                new_plot_params[key_average]['label'] = 'mean'
+            else:
+                new_plot_params[key_average]['color'] = new_plot_params[spe]['color']
+                new_plot_params[key_average]['linestyle'] = '-'
+                new_plot_params[key_average]['label'] = 'mean'
 
     return hp.plot_data(data_to_plot, new_plot_params)
 
@@ -137,7 +170,14 @@ def deterministic_plot(species, data, plot_params):
     new_plot_params['species_to_plot'] = species
     color_cycler = hp.Color_cycle()
     for spe in species:
-        new_plot_params[spe] = {'label': spe, 'color': color_cycler(1)}
+        if spe not in new_plot_params:
+            new_plot_params[spe] = {'label': spe, 'color': color_cycler(1)}
+        else:
+            if 'label' not in new_plot_params[spe]:
+                new_plot_params[spe]['label'] = spe
+            if 'color' not in new_plot_params[spe]:
+                new_plot_params[spe]['color'] = color_cycler(1)
+
     return hp.plot_data(data, new_plot_params)
 
 

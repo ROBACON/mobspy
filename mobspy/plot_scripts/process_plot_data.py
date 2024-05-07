@@ -68,6 +68,7 @@ def check_plot_parameters(species, plot_params):
 
 
 def time_filter_operation(low, high, time_data, data):
+
     new_time_data = []
     new_data = []
 

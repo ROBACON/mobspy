@@ -267,6 +267,13 @@ def plot_curves(data, axs, figure_index, plot_params):
             else:
                 label = None
 
+            if find_parameter(species_characteristics, key='ylabel') is not None:
+                y_label = find_parameter(species_characteristics, key='ylabel')
+                if find_parameter(plot_params, 'ylabel_fontsize', figure_index) is not None:
+                    axs.set_ylabel(y_label, fontsize=plot_params['ylabel_fontsize'])
+                else:
+                    axs.set_ylabel(y_label)
+
             for ts in time_series:
                 ts_time = data['Time'][ts]
                 if '$' not in spe:
@@ -399,7 +406,6 @@ def plot_data(data, plot_params, return_fig_object=False):
         :param data: (dict) Data in MobsPy format
         :param plot_params: (dict) Plot parameters received
     """
-
     # Get the figure number from the list of figures
     # Add it to parameters
     try:
