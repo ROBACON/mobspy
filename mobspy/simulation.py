@@ -567,7 +567,13 @@ class Simulation(Experimental_Data_Holder):
             simlog.error("Parameters must be python dictionary or json file", stack_index=3)
         return parameters_to_config
 
-    def add_plot_params(self, **kwargs):
+    def add_plot_params(self, *args, **kwargs):
+
+        for a in args:
+            if type(a) == dict:
+                for par in a:
+                    self.base_sim.plot_parameters[par] = a[par]
+
         for key in kwargs:
             self.plot_parameters[key] = deepcopy(kwargs[key])
 
@@ -852,9 +858,16 @@ class SimulationComposition:
     def plot_raw(self, parameters_or_file):
         self.base_sim.plot_raw(parameters_or_file)
 
-    def add_plot_params(self, **kwargs):
+    def add_plot_params(self, *args, **kwargs):
+
+        for a in args:
+            if type(a) == dict:
+                for par in a:
+                    self.base_sim.plot_parameters[par] = a[par]
+
         for key in kwargs:
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
+
 
     def generate_sbml(self):
 

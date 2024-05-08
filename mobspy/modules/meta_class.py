@@ -337,7 +337,7 @@ class Compiler:
             for asgn, expression in spe._assignments.items():
                 non_processed_assignments[asgn] = expression
         assignments_for_sbml = \
-            asgi.Assignment_Operator.compile_assignments_for_sbml(non_processed_assignments,
+            asgi.Assign.compile_assignments_for_sbml(non_processed_assignments,
                                                                   orthogonal_vector_structure,
                                                                   meta_species_to_simulate)
 
@@ -386,6 +386,14 @@ class Compiler:
                 list_to_sort = sorted(list_to_sort)
                 for i in range(len(list_to_sort)):
                     model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
+
+            if assignments_for_sbml != {}:
+                model_str += '\n'
+                model_str += 'Assignments' + '\n'
+                list_to_sort = [str(assignments_for_sbml[key]) for key in assignments_for_sbml]
+                list_to_sort = sorted(list_to_sort)
+                for i in range(len(list_to_sort)):
+                    model_str += ('assignment_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
 
         return species_for_sbml, reactions_for_sbml, parameters_for_sbml, mappings_for_sbml, model_str, \
                events_for_sbml, assigned_species, parameters_used, parameter_object_dict, assignments_for_sbml, \
@@ -454,10 +462,16 @@ class Reactions:
             :raise simlog.error: if a reaction is defined under a simulation context
             :raise simlog.error: if was called from Zero to Zero
         """
-        # Make sure the any context is not used in reactions
         for p in products:
             if p['object'].get_name() == 'Context_MetaSpecies':
                 simlog.error('The any specie cannot be used in reactions')
+
+        # CHECK-SET CONTEXT ZERO
+        if asgi.Assign.check_context():
+            asgi.Assign.reset_context()
+            simlog.error('A MobsPy context error has happen. '
+                         'A reaction was defined with the assignment context activated.'
+                         'The assignment context was deactivated. Please try to redefine the model')
 
         # Add characteristics in Cts_context to each reactant and product
         if len(Species.meta_specie_named_any_context) != 0:
@@ -523,62 +537,62 @@ class Reactions:
 class Assignment_Opp_Imp:
 
     def __add__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.add(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.add(self, other)
         else:
             simlog.error('Addition not implemented for meta-species in this context', stack_index=2)
 
     def __radd__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.add(other, self)
+        if asgi.Assign.check_context():
+            return asgi.Assign.add(other, self)
         else:
             simlog.error('Addition not implemented for meta-species in this context', stack_index=2)
 
     def __sub__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.sub(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.sub(self, other)
         else:
             simlog.error('Subtraction not implemented for meta-species in this context', stack_index=2)
 
     def __rsub__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.sub(other, self)
+        if asgi.Assign.check_context():
+            return asgi.Assign.sub(other, self)
         else:
             simlog.error('Subtraction not implemented for meta-species in this context', stack_index=2)
 
     def __truediv__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.div(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.div(self, other)
         else:
             simlog.error('Division not implemented for meta-species in this context', stack_index=2)
 
     def __rtruediv__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.div(other, self)
+        if asgi.Assign.check_context():
+            return asgi.Assign.div(other, self)
         else:
             simlog.error('Division not implemented for meta-species in this context', stack_index=2)
 
     def __pow__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.pow(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.pow(self, other)
         else:
             simlog.error('Division not implemented for meta-species in this context', stack_index=2)
 
     def __rpow__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.pow(other, self)
+        if asgi.Assign.check_context():
+            return asgi.Assign.pow(other, self)
         else:
             simlog.error('Division not implemented for meta-species in this context', stack_index=2)
 
     def __mul__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.mul(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.mul(self, other)
         else:
             simlog.error('Multiplication not implemented for meta-species in this sense', stack_index=2)
 
     def __rmul__(self, other):
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.mul(other, self)
+        if asgi.Assign.check_context():
+            return asgi.Assign.mul(other, self)
         else:
             simlog.error('Multiplication not implemented for meta-species in this sense', stack_index=2)
 
@@ -640,7 +654,7 @@ class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
             :param item: value to query over
         """
         item = str(item)
-        Species.check_if_valid_characteristic(item)
+        Species.check_if_valid_characteristic(self, item)
         return self.__getattr__(item)
 
     def label(self, label):
@@ -689,14 +703,14 @@ class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
 
             :params stoichiometry: (int) stoichiometry value of the meta-species in the reaction
         """
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             if type(stoichiometry) == int:
                 self.list_of_reactants[0]['stoichiometry'] = stoichiometry
             else:
                 simlog.error(f'Stoichiometry can only be an int - Received {stoichiometry}', stack_index=2)
             return self
         else:
-            return asgi.Assignment_Operator.mul(stoichiometry, self)
+            return asgi.Assign.mul(stoichiometry, self)
 
     def __add__(self, other):
         """
@@ -706,7 +720,7 @@ class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
 
             :param  other: (Species or Reacting Species) other object being added
         """
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             if isinstance(other, Species):
                 other = Reacting_Species(other, set())
             try:
@@ -715,13 +729,13 @@ class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
                 simlog.error(f'Addition between meta-species and types {type(other)} is not supported', stack_index=2)
             return self
         else:
-            return asgi.Assignment_Operator.add(self, other)
+            return asgi.Assign.add(self, other)
 
     def __radd__(self, other):
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             return Reacting_Species.__add__(self, other)
         else:
-            return asgi.Assignment_Operator.add(other, self)
+            return asgi.Assign.add(other, self)
 
     def __rshift__(self, other):
         """
@@ -800,7 +814,7 @@ class Reacting_Species(ReactingSpeciesComparator, Assignment_Opp_Imp):
         if characteristic == '_ipython_canary_method_should_not_exist_':
             return 0
 
-        Species.check_if_valid_characteristic(characteristic)
+        Species.check_if_valid_characteristic(self, characteristic)
 
         if characteristic == 'assign':
             return asgi.Asg(self, species_or_reacting=False)
@@ -1005,7 +1019,7 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
     """
 
     @classmethod
-    def check_if_valid_characteristic(cls, char):
+    def check_if_valid_characteristic(cls, affected_object, char):
         """
             Checks if the characteristics is valid. If there is any conflict between the methods of the class or
             attributes of the class the user will be asked to rename the characteristic
@@ -1016,10 +1030,12 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
         """
         black_list = {'list_of_reactants', 'first_characteristic'}
         if char[0] == '_' and char != "__sphinx_mock__":
-            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+            simlog.error(f'Characteristic name {char} in object {affected_object} is not allowed.'
+                         f' Please pick another name', stack_index=3)
 
         if char in _methods_Reacting_Species or char in _methods_Species or char in black_list:
-            simlog.error(f'Characteristic name {char} is not allowed. Please pick another name', stack_index=3)
+            simlog.error(f'Characteristic name {char} in object {affected_object} is not allowed. '
+                         f'Please pick another name', stack_index=3)
             return False
         else:
             return True
@@ -1063,7 +1079,7 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             :param item: value to query over
         """
         item = str(item)
-        Species.check_if_valid_characteristic(item)
+        Species.check_if_valid_characteristic(self, item)
         return self.__getattr__(item)
 
     # Def labels
@@ -1160,7 +1176,7 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             :param stoichiometry: (int) Stoichiometry of the meta-species in the meta-reaction
             :return: r (Reacting_Species) Reacting_Species with the stoichiometry added to it
         """
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             if type(stoichiometry) == int:
                 r = Reacting_Species(self, set(), stoichiometry)
             else:
@@ -1168,7 +1184,7 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             return r
         else:
             # Here is not stoichiometry but other
-            return asgi.Assignment_Operator.mul(stoichiometry, self)
+            return asgi.Assign.mul(stoichiometry, self)
 
     def __add__(self, other):
         """
@@ -1178,7 +1194,7 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             :param other: (Species or Reacting Species object) Other objected added to construct a reaction
             :return: r1 + r2 (Reacting Species) Reacting Species objected created by the sum of the two
         """
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             r1 = Reacting_Species(self, set())
             if isinstance(other, Reacting_Species):
                 r2 = other
@@ -1186,16 +1202,16 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
                 r2 = Reacting_Species(other, set())
             return r1 + r2
         else:
-            return asgi.Assignment_Operator.add(self, other)
+            return asgi.Assign.add(self, other)
 
     def __radd__(self, other):
         """
             Just making addition symmetric check __add__
         """
-        if not asgi.Assignment_Operator.check_context():
+        if not asgi.Assign.check_context():
             return Species.__add__(self, other)
         else:
-            return asgi.Assignment_Operator.add(other, self)
+            return asgi.Assign.add(other, self)
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
@@ -1245,10 +1261,15 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             return 0
 
         if characteristic == 'assign':
-            asgi.Assignment_Operator._asg_context = True
+            asgi.Assign._asg_context = True
             return asgi.Asg(self, species_or_reacting=True)
 
-        Species.check_if_valid_characteristic(characteristic)
+        if asgi.Assign.check_context():
+            return MobsPyExpression('($asg_' + str(self) + ')', None, dimension=None, count_in_model=True,
+                                     concentration_in_model=False, count_in_expression=False,
+                                     concentration_in_expression=False)
+
+        Species.check_if_valid_characteristic(self, characteristic)
 
         characteristics_from_references = mcu.unite_characteristics(self.get_references())
         characteristics = {characteristic}
@@ -1297,7 +1318,6 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             simlog.error(f'Assignments of counts using meta-species are only allowed under events in '
                          f'simulation context', stack_index=2)
         elif Species.get_simulation_context() is None:
-            print(quantity, type(quantity))
             simlog.error(f'Species count assignment does not support the type {type(quantity)}'
                          f' if not under a simulation context',
                          stack_index=2)
@@ -1361,13 +1381,13 @@ class Species(SpeciesComparator, Assignment_Opp_Imp):
             :param other: (Species) Species for the multiplication and creation of a higher order species
             :return: new_entity (Species) Higher order species resulted from the multiplication
         """
-        if asgi.Assignment_Operator.check_context():
-            return asgi.Assignment_Operator.mul(self, other)
+        if asgi.Assign.check_context():
+            return asgi.Assign.mul(self, other)
 
         code_line = inspect.stack()[1].code_context[0][:-1]
 
-        #         if asgi.Assignment_Operator.check_context():
-        #             return asgi.Assignment_Operator.sub(self, other)
+        #         if asgi.Assign.check_context():
+        #             return asgi.Assign.sub(self, other)
         if not isinstance(other, Species):
             simlog.error(f'At {code_line}: \n' + 'Meta-Species can only be multiplied by other meta-species \n'
                          + f'It was multiplied by the type {type(other)}')
@@ -1602,6 +1622,9 @@ def BaseSpecies(number_or_names=None):
         :param number_or_names: (int) number of base species wanted or (list) list of names of wanted Species
         :return: Species objects according to the number of species requested
     """
+    # CHECK-SET CONTEXT ZERO
+    asgi.Assign.reset_context()
+
     code_line = inspect.stack()[1].code_context[0][:-1]
     return _Create_Species(None, code_line, number_or_names)
 

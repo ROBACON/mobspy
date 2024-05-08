@@ -1,0 +1,33 @@
+
+Species
+A.h1,0
+A.h2,0
+B.h1,0
+B.h2,0
+C.h1,0
+C.h2,0
+D.h1,0
+D.h2,0
+
+Mappings
+A :
+A.h1
+A.h2
+B :
+B.h1
+B.h2
+C :
+C.h1
+C.h2
+D :
+D.h1
+D.h2
+
+Parameters
+volume,1
+
+Reactions
+
+Assignments
+assignment_0,{'species': 'A.h1', 'expression': '((B.h2+B.h1)*(((C.h2+C.h1)+5)/(D.h2+D.h1)))'}
+

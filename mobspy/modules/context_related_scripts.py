@@ -1,11 +1,3 @@
-from copy import deepcopy
-import mobspy.modules.function_rate_code as fr
-import itertools
-import mobspy.modules.meta_class as mc
-import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.modules.species_string_generator as ssg
-from inspect import signature
-from mobspy.modules.order_operators import Default
 from mobspy.modules.mobspy_parameters import *
 
 def expression_compilation_initiation():

@@ -178,6 +178,8 @@ class ExpressionDefiner:
                 q_object = second/first
             elif operation == '__pow__':
                 q_object = first**second
+            elif operation == '__rpow__':
+                q_object = second**first
 
         if q_object is not None:
             return q_object
@@ -313,6 +315,15 @@ class ExpressionDefiner:
         else:
             return self.non_expression_pow(other)
 
+    def __rpow__(self, other):
+        # if type(other) != int and type(other) != float:
+        #    raise TypeError('Power must only be int or float')
+        if self._ms_active:
+            count_op, conc_op = self.execute_quantity_op(other, '__rpow__')
+            return self.create_from_new_operation(other, '^', count_op, conc_op, False)
+        else:
+            return self.non_expression_rpow(other)
+
     def combine_binary_attributes(self, other, attribute):
         """
             Or gates to binary True or False attributes from self and other
@@ -372,7 +383,6 @@ class ExpressionDefiner:
 
     def create_from_new_operation(self, other, symbol, count_op, conc_op, direct_sense=True,
                                   operation=None):
-
         """
             Executes the storing based operation. It also executes a unit operation to store the verify the unit
             of the given expression
@@ -384,6 +394,14 @@ class ExpressionDefiner:
             :param direct_sense: sense of the operation
             :param operation: current operation in the stack
         """
+        # If other contexts are needed please scale by passing the context as an argument to this function
+        # Probably needs to be a new MobsPy expression attribute
+        if not isinstance(other, ExpressionDefiner) and not type(other) == int and not type(other) == float \
+                and not isinstance(other, Quantity) and not isinstance(other, (np.int_, np.float_)):
+            other = MobsPyExpression('($asg_' + str(other) + ')', None, dimension=None, count_in_model=True,
+                                     concentration_in_model=False, count_in_expression=False,
+                                     concentration_in_expression=False)
+
         _has_units = False
         try:
             # Returns string True not boolean to avoid risk __getattr__ bugs
@@ -674,6 +692,13 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__pow__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__pow__(self.q_object, other)
+        return OverrideQuantity(q_object)
+
+    def non_expression_rpow(self, other):
+        if isinstance(other, OverrideQuantity):
+            q_object = Quantity.__rpow__(self.q_object, other.q_object)
+        else:
+            q_object = Quantity.__rpow__(self.q_object, other)
         return OverrideQuantity(q_object)
 
     def __init__(self, quantity_object):

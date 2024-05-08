@@ -1696,6 +1696,54 @@ def test_no_species_in_asg():
     assert False
 
 
+def text_complex_assignments():
+    A, B, C, D = BaseSpecies()
+
+    A.assign(B * ((C + 5) / D))
+
+    S = Simulation(A | B | C | D)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_49.txt')
+
+
+def text_assign_context_exit():
+        try:
+            simlog.global_simlog_level = -1
+            A, B = BaseSpecies()
+
+            A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
+        except SystemExit:
+            pass
+        try:
+            simlog.global_simlog_level = -1
+            A >> Zero [1]
+        except SystemExit:
+            pass
+        A, B = BaseSpecies()
+
+        A >> Zero [1]
+        B.assign(A/2)
+        S = Simulation(A | B)
+        S.plot_data = False
+        S.level = -1
+        S.duration = 10
+        S.step_size = 5
+        S.run()
+        assert True
+
+
+def text_even_more_complex_assignments():
+        Hi = BaseSpecies()
+        Hi.h1, Hi.h2
+        A, B, C, D = New(Hi)
+
+        A.assign(B * ((C + 5) / D))
+
+        S = Simulation(A | B | C | D)
+        S.level = -1
+        assert compare_model(S.compile(), 'test_tools/model_50.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1721,7 +1769,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_multiple_runs_fit, test_simple_fit, test_numpy_in_expression_function, test_numpy_in_rates,
              test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
              test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
-             test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg]
+             test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
+             text_assign_context_exit, text_even_more_complex_assignments]
 
 sub_test = test_list
 

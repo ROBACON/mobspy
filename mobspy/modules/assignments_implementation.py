@@ -32,27 +32,32 @@ class Assignment_Operator:
 
         return arg_strings
 
-    @classmethod
-    def __enter__(cls):
-        _asg_context = True
+    def __enter__(self):
+        self._asg_context = True
+        yield 0
 
-    @classmethod
-    def __exit__(cls, *args):
-        _asg_context = False
+    def set_context(self):
+        self._asg_context = True
 
-    @classmethod
-    def check_context(cls):
-        return cls._asg_context
+    def __exit__(self, *args):
+        self._asg_context = False
+        yield 0
+
+    def reset_context(self):
+        self._asg_context = False
+
+    def check_context(self):
+        return self._asg_context
 
     @staticmethod
     def check_arguments(first, second):
 
-        if type(first) == int or type(second) == float:
+        if type(first) == int or type(first) == float:
             first = MobsPyExpression(str(first), None, dimension=None, count_in_model=True,
                                      concentration_in_model=False, count_in_expression=False,
                                      concentration_in_expression=False)
 
-        if type(second) == int or type(first) == float:
+        if type(second) == int or type(second) == float:
             second = MobsPyExpression(str(second), None, dimension=None, count_in_model=True,
                                       concentration_in_model=False, count_in_expression=False,
                                       concentration_in_expression=False)
@@ -122,8 +127,8 @@ class Assignment_Operator:
                 to_replace += '+' + e
         return to_replace
 
-    @classmethod
-    def compile_assignments_for_sbml(cls, unprocessed_asgns, ortogonal_vector_structure, meta_species_in_model):
+    @staticmethod
+    def compile_assignments_for_sbml(unprocessed_asgns, ortogonal_vector_structure, meta_species_in_model):
 
         assignments_for_sbml = {}
         for i, asg in enumerate(unprocessed_asgns):
@@ -145,17 +150,18 @@ class Assignment_Operator:
                 asgn_expression = asgn_expression.replace(key, item)
 
             assignments_for_sbml['assignment_' + str(i)] = {'species': spe_to_asgn, 'expression': asgn_expression}
+
         return assignments_for_sbml
 
 
-_Dummy_Asg_Op_Object = Assignment_Operator()
+Assign = Assignment_Operator()
 
 
 class Asg:
     assignments = {}
 
     def __init__(self, meta_spe, species_or_reacting):
-        Assignment_Operator._asg_context = True
+        Assign.set_context()
         self.meta_spe = []
         self.asgn_key = []
         if species_or_reacting:
@@ -170,7 +176,15 @@ class Asg:
     def __call__(self, assignment):
         for spe, key in zip(self.meta_spe, self.asgn_key):
             spe._assignments[key] = assignment
-        Assignment_Operator._asg_context = False
+        Assign.reset_context()
 
     def __getattr__(self, item):
         simlog.error("Assignments must be the last query in the stack - Ex: A.young.blue.assign()", stack_index=2)
+
+
+
+
+
+
+
+
