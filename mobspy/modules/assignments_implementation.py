@@ -1,8 +1,7 @@
-from mobspy.modules.mobspy_expressions import MobsPyExpression
-import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.modules.species_string_generator as ssg
-from mobspy.modules.mobspy_expressions import u
-import re
+from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
+from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
+    construct_species_char_list as ssg_construct_species_char_list
 
 
 class Assignment_Operator:
@@ -53,23 +52,23 @@ class Assignment_Operator:
     def check_arguments(first, second):
 
         if type(first) == int or type(first) == float:
-            first = MobsPyExpression(str(first), None, dimension=None, count_in_model=True,
-                                     concentration_in_model=False, count_in_expression=False,
-                                     concentration_in_expression=False)
+            first = mbe_MobsPyExpression(str(first), None, dimension=None, count_in_model=True,
+                                         concentration_in_model=False, count_in_expression=False,
+                                         concentration_in_expression=False)
 
         if type(second) == int or type(second) == float:
-            second = MobsPyExpression(str(second), None, dimension=None, count_in_model=True,
-                                      concentration_in_model=False, count_in_expression=False,
-                                      concentration_in_expression=False)
+            second = mbe_MobsPyExpression(str(second), None, dimension=None, count_in_model=True,
+                                          concentration_in_model=False, count_in_expression=False,
+                                          concentration_in_expression=False)
 
-        if not isinstance(first, MobsPyExpression):
-            first = MobsPyExpression('($asg_' + str(first) + ')', None, dimension=None, count_in_model=True,
-                                     concentration_in_model=False, count_in_expression=False,
-                                     concentration_in_expression=False)
-        if not isinstance(second, MobsPyExpression):
-            second = MobsPyExpression('($asg_' + str(second) + ')', None, dimension=None, count_in_model=True,
-                                      concentration_in_model=False, count_in_expression=False,
-                                      concentration_in_expression=False)
+        if not isinstance(first, mbe_MobsPyExpression):
+            first = mbe_MobsPyExpression('($asg_' + str(first) + ')', None, dimension=None, count_in_model=True,
+                                         concentration_in_model=False, count_in_expression=False,
+                                         concentration_in_expression=False)
+        if not isinstance(second, mbe_MobsPyExpression):
+            second = mbe_MobsPyExpression('($asg_' + str(second) + ')', None, dimension=None, count_in_model=True,
+                                          concentration_in_model=False, count_in_expression=False,
+                                          concentration_in_expression=False)
         return first, second
 
     @staticmethod
@@ -113,12 +112,12 @@ class Assignment_Operator:
             error_message = f'Assignment {spe_name}, {expression_tuple[0][1]}: ' \
                             f'{expression_tuple[1].replace("$asg_", "")} failed\n' \
                             f'One of the meta-species in the assignment expression was not found in the model'
-            simlog.error(error_message)
+            simlog_error(error_message)
 
         if len(spe_str) == 1:
-            str_comb = ssg.construct_all_combinations(spe_object, set(), ortogonal_vector_structure, '_dot_')
+            str_comb = ssg_construct_all_combinations(spe_object, set(), ortogonal_vector_structure, '_dot_')
         else:
-            str_comb =ssg.construct_all_combinations(spe_object, set(spe_str[1:]), ortogonal_vector_structure, '_dot_')
+            str_comb = ssg_construct_all_combinations(spe_object, set(spe_str[1:]), ortogonal_vector_structure, '_dot_')
 
         for i, e in enumerate(str_comb):
             if i == 0:
@@ -132,7 +131,7 @@ class Assignment_Operator:
 
         assignments_for_sbml = {}
         for i, asg in enumerate(unprocessed_asgns):
-            spe_to_asgn = ssg.construct_species_char_list(asg[0], asg[1],
+            spe_to_asgn = ssg_construct_species_char_list(asg[0], asg[1],
                                                           ortogonal_vector_structure,
                                                           symbol='_dot_')
 
@@ -179,12 +178,4 @@ class Asg:
         Assign.reset_context()
 
     def __getattr__(self, item):
-        simlog.error("Assignments must be the last query in the stack - Ex: A.young.blue.assign()", stack_index=2)
-
-
-
-
-
-
-
-
+        simlog_error("Assignments must be the last query in the stack - Ex: A.young.blue.assign()", stack_index=2)

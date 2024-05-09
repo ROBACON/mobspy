@@ -11,8 +11,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
 import mobspy.modules.unit_handler as uh
 import inspect
-from mobspy.modules.meta_class import u
-
+from mobspy.modules.mobspy_expressions import u
 
 def read_json(json_file_name):
     """

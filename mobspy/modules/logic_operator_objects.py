@@ -1,6 +1,7 @@
-import mobspy.simulation_logging.log_scripts as simlog
-import inspect
-import mobspy.modules.species_string_generator as ssg
+from mobspy.simulation_logging.log_scripts import error as simlog_error
+from inspect import stack as inspect_stack
+# import mobspy.modules.species_string_generator as ssg
+from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations
 from pint import Quantity
 
 """
@@ -48,7 +49,7 @@ class SpeciesComparator:
                 # Check if finished
                 if i == 0 or i == len(code_line):
                     if number_of_comp > 1:
-                        simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                        simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
                                      'All clauses must be individually isolated by parenthesis '
                                      '- Ex: (A <= 0) & (B <= 0) \n')
                     else:
@@ -56,7 +57,7 @@ class SpeciesComparator:
 
                 char = code_line[i]
                 if char == '<' or char == '>' or char == '|' or char == '&':
-                    simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                    simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
                                  'All clauses must be isolated by parenthesis - Ex: (A <= 0) & (B <= 0) \n')
                 elif char == ')' and number_of_comp > 1:
                     if symbol == ')':
@@ -65,7 +66,7 @@ class SpeciesComparator:
                     if symbol == '(':
                         condition_not_satisfied = False
             except IndexError:
-                simlog.error(f'Error Compiling the following line {line_number}: {code_line}')
+                simlog_error(f'Error Compiling the following line {line_number}: {code_line}')
         return condition_not_satisfied
 
     @classmethod
@@ -75,10 +76,10 @@ class SpeciesComparator:
 
             :raise simlog.error: if the code line is not properly written isolating the clauses with parenthesis
         """
-        code_line = inspect.stack()[2].code_context[0][:-1]
-        line_number = inspect.stack()[2].lineno
+        code_line = inspect_stack()[2].code_context[0][:-1]
+        line_number = inspect_stack()[2].lineno
         if 'and' in code_line or 'or' in code_line:
-            simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+            simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
                          'Event notation did not compile, please use & for \'and\' and  | for \'or\' \n'
                          'Please also put the clauses under parentheses: example (A <= 0) & (B <= 0)')
 
@@ -86,7 +87,7 @@ class SpeciesComparator:
         multiplication_position = [pos for pos, char in enumerate(temp_code_line) if char == '*']
         for pos in multiplication_position:
             if not (temp_code_line[pos - 1].isnumeric() or temp_code_line[pos + 1].isnumeric()):
-                simlog.error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
+                simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n' +
                              'Multiplication between meta-species under comparison context' +
                              ' not yet supported by MobsPy - \n.')
 
@@ -177,7 +178,7 @@ class SpeciesComparator:
 
     def __eq__(self, other):
         if self._simulation_context is not None:
-            simlog.error('Equality assignment not allowed for event condition in MobsPy.\n'
+            simlog_error('Equality assignment not allowed for event condition in MobsPy.\n'
                          'Please if necessary use ( >= ) & ( =< )')
         else:
             return id(self) == id(other)
@@ -299,7 +300,7 @@ class MetaSpeciesLogicResolver:
                 copasi_str = copasi_str + str(e) + ' '
             else:
                 copasi_str = copasi_str + '('
-                ite = ssg.construct_all_combinations(e['object'], e['characteristics'],
+                ite = ssg_construct_all_combinations(e['object'], e['characteristics'],
                                                      characteristics_to_object, '_dot_')
                 if to_sort:
                     ite = sorted(ite)

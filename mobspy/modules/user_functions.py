@@ -1,4 +1,3 @@
-import inspect
 
 
 def Apply(function, *args):

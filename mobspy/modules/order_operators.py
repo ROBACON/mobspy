@@ -5,10 +5,10 @@
     It has also the implementation of the Rev operator, since that is a also a reaction operator
 """
 from copy import deepcopy
-import mobspy.modules.meta_class_utils as mcu
-import mobspy.modules.meta_class as mc
+from mobspy.modules.meta_class import Reactions
 import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.modules.species_string_generator as ssg
+from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
+    construct_species_char_list as ssg_construct_species_char_list
 
 
 class __Operator_Base:
@@ -82,8 +82,9 @@ class __Operator_Base:
         """
         to_return = []
         for species in species_referenced_by:
-            to_return += ssg.construct_all_combinations(species, characteristics,
+            to_return += ssg_construct_all_combinations(species, characteristics,
                                                         ref_characteristics_to_object, symbol='_dot_')
+
         return to_return
 
     @staticmethod
@@ -102,7 +103,7 @@ class __Operator_Base:
         """
         to_return = []
         for species in species_referenced_by:
-            to_return += [ssg.construct_species_char_list(species, characteristics,
+            to_return += [ssg_construct_species_char_list(species, characteristics,
                                                           ref_characteristics_to_object, symbol='_dot_')]
 
         return to_return
@@ -151,6 +152,7 @@ class __Operator_Base:
 
             # If the species is not on the reactants - order_dictionary
             except KeyError:
+
                 species_is_referenced_by = []
                 for spe_obe in model:
                     if species in spe_obe.get_references():
@@ -290,7 +292,7 @@ class __Reversible_Base:
             :param reaction: (Reaction object) object from the reaction class
         """
         reaction_direct = reaction
-        reaction_reverse = mc.Reactions(reaction_direct.products, reaction_direct.reactants)
+        reaction_reverse = Reactions(reaction_direct.products, reaction_direct.reactants)
         self.rate_setter.set_reactions(reaction_direct, reaction_reverse)
         return self.rate_setter
 

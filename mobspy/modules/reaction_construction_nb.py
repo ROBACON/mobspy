@@ -2,15 +2,16 @@
     This module is responsible for the construction of all individual reactions from a meta-reaction
 """
 from copy import deepcopy
-import mobspy.modules.function_rate_code as fr
-import itertools
-import mobspy.modules.meta_class as mc
-import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.modules.species_string_generator as ssg
-from inspect import signature
+from mobspy.modules.function_rate_code import extract_reaction_rate as fr_extract_reaction_rate
+from itertools import product as itertools_product
+from mobspy.modules.meta_class import Reactions
+from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations
+from inspect import signature as inspect_signature
 from mobspy.modules.order_operators import Default
-from mobspy.modules.mobspy_parameters import *
-import mobspy.modules.context_related_scripts as crs
+from mobspy.simulation_logging.log_scripts import error as simlog_error
+# from mobspy.modules.mobspy_parameters import *
+from mobspy.modules.context_related_scripts import Unit_Context_Setter as crs_Unit_Context_Setter
+from mobspy.modules.meta_class_utils import count_string_dictionary as mcu_count_string_dictionary
 
 
 def iterator_for_combinations(list_of_lists):
@@ -22,7 +23,7 @@ def iterator_for_combinations(list_of_lists):
         Parameter:
             list_of_lists (list of lists) = list of all lists to iterate through all combinations
     """
-    for i in itertools.product(*list_of_lists):
+    for i in itertools_product(*list_of_lists):
         yield i
 
 
@@ -50,7 +51,7 @@ def copy_reaction(reaction):
         products.append({'object': species, 'characteristics': characteristics,
                          'stoichiometry': stoichiometry})
 
-    reaction_copy = mc.Reactions(reactants, products)
+    reaction_copy = Reactions(reactants, products)
     reaction_copy.set_rate(reaction.rate)
     return reaction_copy
 
@@ -76,7 +77,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog.error(f'Illegal reaction: {reaction}. \n'
+                    simlog_error(f'Illegal reaction: {reaction}. \n'
                                  'There is a query with two characteristics '
                                  f'{ref_characteristics_to_object[cha].get_characteristics()} from the same'
                                  f' vector axis resulting in an impossible query. \n'
@@ -88,7 +89,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
-                        simlog.error(
+                        simlog_error(
                             f'A base object for characteristic {cha} was not found in the species supplied to the '
                             f'simulator \n'
                             'Perhaps a species is missing ? ')
@@ -100,7 +101,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog.error(f'Illegal reaction: {reaction}. \n'
+                    simlog_error(f'Illegal reaction: {reaction}. \n'
                                  'There is a transformation with two characteristics '
                                  f'{ref_characteristics_to_object[cha].get_characteristics()} from the same'
                                  f' vector axis resulting in an undefinable transformation. \n'
@@ -125,7 +126,7 @@ def construct_reactant_structures(reactant_species, ref_characteristics_to_objec
     species_string_combinations = []
 
     for reactant in reactant_species:
-        species_string_combinations.append(ssg.construct_all_combinations(reactant['object'],
+        species_string_combinations.append(ssg_construct_all_combinations(reactant['object'],
                                                                           reactant['characteristics'],
                                                                           ref_characteristics_to_object))
 
@@ -191,30 +192,14 @@ def construct_single_reaction_for_sbml(reactant_species_string_list, product_spe
     """
     to_return = {'re': [], 'pr': [], 'kin': reaction_rate}
 
-    reactant_count_dict = count_string_dictionary(reactant_species_string_list)
-    product_count_dict = count_string_dictionary(product_species_string_list)
+    reactant_count_dict = mcu_count_string_dictionary(reactant_species_string_list)
+    product_count_dict = mcu_count_string_dictionary(product_species_string_list)
 
     for key in reactant_count_dict:
         to_return['re'].append((reactant_count_dict[key], key))
 
     for key in product_count_dict:
         to_return['pr'].append((product_count_dict[key], key))
-
-    return to_return
-
-
-def count_string_dictionary(list_of_strings):
-    """
-        Count the number of instances in a list and return them in a dictionary where the keys are the strings and
-        the value the number of times it appeared in the list
-    """
-    to_return = {}
-
-    for e in list_of_strings:
-        try:
-            to_return[e] += 1
-        except KeyError:
-            to_return[e] = 1
 
     return to_return
 
@@ -250,7 +235,7 @@ def get_involved_species(reaction, meta_species_in_model):
                     flag_absent_reactant = True
 
             if not flag_absent_reactant:
-                simlog.error(f'Species {reactant["object"]} or any inheritors were not found in model \n'
+                simlog_error(f'Species {reactant["object"]} or any inheritors were not found in model \n'
                              f'For reaction {reaction} \n'
                              f'Please add the species or remove the reaction')
 
@@ -260,13 +245,13 @@ def get_involved_species(reaction, meta_species_in_model):
 
 
 def construct_rate_function_arguments(rate_function, reaction):
-    rate_function_arguments = str(signature(rate_function))
+    rate_function_arguments = str(inspect_signature(rate_function))
 
     black_list = ['*', '=']
     if any(i in rate_function_arguments for i in black_list):
-        simlog.error(f'Rate arguments must not contain = or *. \n'
+        simlog_error(f'Rate arguments must not contain = or *. \n'
                      f'Error in reaction {reaction}. \n'
-                     f'Error in rate function {rate_function} in signature {str(signature(rate_function))}')
+                     f'Error in rate function {rate_function} in signature {str(inspect_signature(rate_function))}')
 
     rate_function_arguments = str(rate_function_arguments).replace('(', '')
     rate_function_arguments = str(rate_function_arguments).replace(')', '')
@@ -299,7 +284,7 @@ def create_all_reactions(reactions, meta_species_in_model,
 
 
     # Initiate expressions
-    with crs.Unit_Context_Setter():
+    with crs_Unit_Context_Setter():
         for reaction in reactions:
 
             base_species_order, reactant_species_combination_list = get_involved_species(reaction,
@@ -338,7 +323,7 @@ def create_all_reactions(reactions, meta_species_in_model,
 
                         try:
                             rate_string, parameters_in_reaction = \
-                                fr.extract_reaction_rate(combination_of_reactant_species,
+                                fr_extract_reaction_rate(combination_of_reactant_species,
                                                          reactant_strings,
                                                          reaction.rate, type_of_model,
                                                          dimension,
@@ -347,7 +332,7 @@ def create_all_reactions(reactions, meta_species_in_model,
                                                          parameters_in_reaction,
                                                          skip_check)
                         except TypeError as e:
-                            simlog.error(f'On reaction {reaction} \n' + str(e))
+                            simlog_error(f'On reaction {reaction} \n' + str(e))
 
                         if rate_string == 0:
                             continue

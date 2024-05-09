@@ -1,8 +1,9 @@
-import mobspy.simulation_logging.log_scripts as simlog
-import inspect
+from mobspy.simulation_logging.log_scripts import error as simlog_error
+from inspect import stack as inspect_stack
 from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
-from mobspy.modules.mobspy_parameters import *
+from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
 from pint import Quantity
+from numpy import int_ as np_int_, float_ as np_float_
 
 
 def set_counts(count_dic):
@@ -22,21 +23,21 @@ def set_counts(count_dic):
     new_count_dict = {}
     for key, item in count_dic.items():
         if type(item) == int or type(item) == float or isinstance(item, Quantity) or \
-                isinstance(item, Mobspy_Parameter):
+                isinstance(item, mp_Mobspy_Parameter):
             new_count_dict[key] = item
-        elif isinstance(item, (np.int_, np.float_)):
+        elif isinstance(item, (np_int_, np_float_)):
             new_count_dict[key] = float(item)
         else:
-            simlog.error(f'Reactant_species count assignment does not support the type {type(item)}',
+            simlog_error(f'Reactant_species count assignment does not support the type {type(item)}',
                          stack_index=2)
     count_dic = new_count_dict
 
     def find_species():
         found_species = set()
 
-        for i in range(len(inspect.stack())):
-            local_names = inspect.stack()[i][0].f_locals
-            global_names = inspect.stack()[i][0].f_globals
+        for i in range(len(inspect_stack())):
+            local_names = inspect_stack()[i][0].f_locals
+            global_names = inspect_stack()[i][0].f_globals
             for key, item in global_names.items():
                 try:
                     if isinstance(item, Species) and type(item) != type:
@@ -70,25 +71,25 @@ def set_counts(count_dic):
                     if temp_set.issubset(spe.get_all_characteristics()):
                         spe.add_quantities(str_characteristics, item)
                     else:
-                        simlog.error('Characteristics not found in species with equal name', stack_index=2)
+                        simlog_error('Characteristics not found in species with equal name', stack_index=2)
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
-                    simlog.error(f'There are two different meta-species with the same name. Set_counts cannot resolve',
+                    simlog_error(f'There are two different meta-species with the same name. Set_counts cannot resolve',
                                  stack_index=2)
             if not already_found:
-                simlog.error(f'Meta-species with the following name {key} not found', stack_index=2)
+                simlog_error(f'Meta-species with the following name {key} not found', stack_index=2)
         else:
             try:
                 if isinstance(key, Species) or isinstance(key, Reacting_Species):
                     if not isinstance(key, Species):
                         if len(key.list_of_reactants) != 1:
-                            simlog.error('Assignment used incorrectly. Only one species at a time', stack_index=2)
+                            simlog_error('Assignment used incorrectly. Only one species at a time', stack_index=2)
                         model.add(key.list_of_reactants[0]['object'])
                     if isinstance(key, Species):
                         model.add(key)
                     key(item)
             except AttributeError:
-                simlog.error('Keys must be either meta-species or strings',
+                simlog_error('Keys must be either meta-species or strings',
                              stack_index=2)
 
     return List_Species(model)

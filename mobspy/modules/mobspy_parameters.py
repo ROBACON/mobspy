@@ -1,11 +1,11 @@
-import inspect
+from inspect import stack as inspect_stack
 import mobspy.simulation_logging.log_scripts as simlog
-from mobspy.modules.mobspy_expressions import *
+from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_ExpressionDefiner, \
+    QuantityConverter as me_QuantityConverter
 from pint import Quantity, UnitRegistry
-from mobspy.modules.mobspy_expressions import u
 
 
-class Mobspy_Parameter(ExpressionDefiner, QuantityConverter):
+class Mobspy_Parameter(me_ExpressionDefiner, me_QuantityConverter):
     """
         This is the constructor that is called by ModelParameters to create a model parameter
         (not a simulation parameter). The user is not supposed to create parameters using this object.
@@ -116,7 +116,7 @@ def ModelParameters(*args):
     """
         Creates ModelParameters. Like meta-species, it uses the variable names as parameter names
     """
-    code_line = inspect.stack()[1].code_context[0][:-1]
+    code_line = inspect_stack()[1].code_context[0][:-1]
     separated_line = code_line.split('=')[-2].replace(" ", "")
     parameter_variable_names = separated_line.split(',')
 

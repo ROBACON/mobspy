@@ -5,9 +5,7 @@
 from pint import UnitRegistry, Quantity
 from scipy.constants import N_A
 from copy import deepcopy
-import os, sys
 import mobspy.simulation_logging.log_scripts as simlog
-import mobspy.modules.unit_handler as uh
 
 
 def convert_rate(quantity, reaction_order, dimension):
@@ -29,8 +27,8 @@ def convert_rate(quantity, reaction_order, dimension):
 
     # Check to see if rate dimension is valid
     if dimension is None and isinstance(quantity, Quantity) and reaction_order > 1:
-        dimension = uh.extract_length_dimension(str(quantity.dimensionality), dimension,
-                                                reaction_order)
+        dimension = extract_length_dimension(str(quantity.dimensionality), dimension,
+                                             reaction_order)
 
     if isinstance(quantity, Quantity):
         try:
@@ -39,10 +37,10 @@ def convert_rate(quantity, reaction_order, dimension):
                 return converted_quantity.magnitude, dimension, True
             elif str(quantity.dimensionality) == '[substance] / [time]':
                 converted_quantity = converted_quantity.convert(f'moles/seconds')
-                return converted_quantity.magnitude*N_A, dimension, True
+                return converted_quantity.magnitude * N_A, dimension, True
             elif '[substance]' in str(quantity.dimensionality):
                 converted_quantity = converted_quantity.convert(
-                f'decimeters ** {dimension * volume_power}/(moles ** {volume_power} * seconds)')
+                    f'decimeters ** {dimension * volume_power}/(moles ** {volume_power} * seconds)')
                 return converted_quantity.magnitude / (N_A ** volume_power), dimension, False
             else:
                 converted_quantity = converted_quantity.convert(f'decimeters ** {dimension * volume_power}/seconds')
@@ -79,13 +77,13 @@ def convert_counts(quantity, volume, dimension):
             if '[substance]' in quantity.dimensionality:
                 if '[length]' in str(quantity.dimensionality):
                     converted_quantity = converted_quantity.convert(f'moles/(decimeter ** {dimension})')
-                    converted_quantity = converted_quantity*volume
+                    converted_quantity = converted_quantity * volume
 
                 converted_quantity = converted_quantity.magnitude * N_A
             else:
                 if '[length]' in str(quantity.dimensionality):
                     converted_quantity = converted_quantity.convert(f'1/(decimeter ** {dimension})')
-                    converted_quantity = converted_quantity*volume
+                    converted_quantity = converted_quantity * volume
                 converted_quantity = converted_quantity.magnitude
         except Exception as e:
             simlog.error(str(e) + '\n' +
@@ -139,7 +137,7 @@ def extract_length_dimension(unit_string, dimension, reaction_order=None, contex
         if reaction_order is None:
             dimension = check_dimension(dimension, temp_list[position + 2], context)
         else:
-            temp_int = int(int(temp_list[position + 2])/(reaction_order - 1))
+            temp_int = int(int(temp_list[position + 2]) / (reaction_order - 1))
             dimension = check_dimension(dimension, temp_int, context)
     else:
         dimension = check_dimension(dimension, 1, context)

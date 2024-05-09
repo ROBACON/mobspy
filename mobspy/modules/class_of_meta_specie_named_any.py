@@ -1,8 +1,9 @@
 """
     The class_of_meta_specie_named_any.py model is responsible for defining the Context_specie_named_any class.
 """
-from mobspy.modules.meta_class import *
-from contextlib import contextmanager
+from mobspy.modules.meta_class import Species
+from inspect import stack as inspect_stack
+from mobspy.simulation_logging.log_scripts import error as simlog_error
 
 class Context_specie_named_any(Species):
     """
@@ -27,13 +28,13 @@ class Context_specie_named_any(Species):
             :raise simlog.error: if the Any specie is given a characteristic outside of a context.
             :return self: to allow for assigning multiple characteristics to the Any specie in the same line.
         """
-        code_line = inspect.stack()[1].code_context[0][:-1]
+        code_line = inspect_stack()[1].code_context[0][:-1]
         code_line = code_line.split(' ')
         is_with = [x for x in code_line if x != ''][0]
         if is_with == 'with' or item == "__sphinx_mock__":
             pass
         else:
-            simlog.error('Characteristics cannot be added to the Any specie outside of a context')
+            simlog_error('Characteristics cannot be added to the Any specie outside of a context')
         self._set_of_characteristics_currently_under_the_any_context.add(item)
         return self
 
@@ -77,32 +78,32 @@ class Context_specie_named_any(Species):
             The call operator is overloaded as the Any specie cannot be called, as it is not supposed to
             be used this way. Thus, it raises an error when called.
         """
-        simlog.error('The Any specie cannot be called')
+        simlog_error('The Any specie cannot be called')
     
     def __add__(self, other):
         """
             The add operator is overloaded as the Any specie cannot be added. Thus, it raises an error when added.
         """
-        simlog.error('The Any specie cannot be added')
+        simlog_error('The Any specie cannot be added')
     
     def __radd__(self, other):
         """
             The add operator is overloaded as the Any specie cannot be added. Thus it raises an error when added.
         """
-        simlog.error('The Any specie cannot be added')
+        simlog_error('The Any specie cannot be added')
     
     def __rmul__(self, other):
         """
             The multiplication operator is overloaded as the Any specie cannot be multiplied.
             Thus it raises an error when multiplied.
         """
-        simlog.error('The Any specie cannot be multiplied')
+        simlog_error('The Any specie cannot be multiplied')
 
     def __rshift__(self, other):
         """
             The >> operator is overloaded so that  it raises an error when used.
         """
-        simlog.error('The >> operator cannot be used on the Any specie')
+        simlog_error('The >> operator cannot be used on the Any specie')
 
    
 # Any is the only object of the Any_specie class that will be used. It is defined here.

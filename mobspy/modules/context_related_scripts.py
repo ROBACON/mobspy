@@ -1,4 +1,5 @@
-from mobspy.modules.mobspy_parameters import *
+from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_ExpressionDefiner, u
+import inspect
 
 def expression_compilation_initiation():
     """
@@ -13,10 +14,10 @@ def expression_compilation_initiation():
         local_names = inspect.stack()[i][0].f_locals
         global_names = inspect.stack()[i][0].f_globals
         for key, item in global_names.items():
-            if isinstance(item, ExpressionDefiner):
+            if isinstance(item, me_ExpressionDefiner):
                 expressions_in_stack.append(item)
         for key, item in local_names.items():
-            if isinstance(item, ExpressionDefiner):
+            if isinstance(item, me_ExpressionDefiner):
                 expressions_in_stack.append(item)
 
     for expression in expressions_in_stack:

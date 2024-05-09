@@ -1,8 +1,19 @@
 """
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
+
+# CLEANED IMPORTS
+from mobspy.modules.meta_class_utils \
+    import create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure
+from mobspy.modules.order_operators import Default, All
+from mobspy.modules.mobspy_parameters import ModelParameters
+from mobspy.modules.mobspy_expressions import u
+from mobspy.modules.logic_operator_objects import MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver
+from mobspy.modules.compiler import Compiler
+from copy import deepcopy
 from contextlib import contextmanager
 
+# NOT CLEANED IMPORTS
 from mobspy.parameter_scripts import parameter_reader as pr
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
@@ -21,9 +32,7 @@ import json
 import os
 import inspect
 import mobspy.modules.unit_handler as uh
-from pint import UnitRegistry
 from joblib import Parallel, delayed
-import time
 
 
 class Simulation(Experimental_Data_Holder):
@@ -164,7 +173,7 @@ class Simulation(Experimental_Data_Holder):
             simlog.error('Model must be formed only by Species objects or List_Species objects \n'
                          f'Model type {type(model)} and it is {model}')
 
-        self.orthogonal_vector_structure = mcu.create_orthogonal_vector_structure(model)
+        self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)
 
         # Get all meta - reactions
         self._reactions_set = set()
@@ -503,7 +512,7 @@ class Simulation(Experimental_Data_Holder):
                                      f'creating event conditions \n'
                                      , stack_index=2)
 
-                if name == 'duration' and isinstance(value, MetaSpeciesLogicResolver):
+                if name == 'duration' and isinstance(value, lop_MetaSpeciesLogicResolver):
                     self.__dict__['parameters']['_continuous_simulation'] = True
                     self.__dict__['_end_condition'] = value
                     if 'initial_conditional_duration' not in self.__dict__['parameters']:

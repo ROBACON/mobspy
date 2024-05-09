@@ -1,9 +1,22 @@
 """
     This model stores function used by the meta_class.py module
 """
-import copy
-import itertools
 import mobspy.simulation_logging.log_scripts as simlog
+
+def count_string_dictionary(list_of_strings):
+    """
+        Count the number of instances in a list and return them in a dictionary where the keys are the strings and
+        the value the number of times it appeared in the list
+    """
+    to_return = {}
+
+    for e in list_of_strings:
+        try:
+            to_return[e] += 1
+        except KeyError:
+            to_return[e] = 1
+
+    return to_return
 
 
 def combine_references(species1, species2):

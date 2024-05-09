@@ -1,5 +1,4 @@
-import itertools
-
+from itertools import product as itertools_product
 
 def characteristics_dictionary(characteristics, characteristics_to_object):
     """
@@ -46,7 +45,7 @@ def construct_species_char_list(spe_object, characteristics, characteristics_to_
 
     if symbol is not None:
         species_char_list = symbol.join([spe_object.get_name()] + species_char_list [1:]) \
-            if len(species_char_list ) > 1 else spe_object.get_name()
+            if len(species_char_list) > 1 else spe_object.get_name()
 
     return species_char_list
 
@@ -80,7 +79,7 @@ def construct_all_combinations(spe_object, characteristics, characteristics_to_o
             list_of_all_possibilities.append(list(obj.get_characteristics()))
 
     to_return = []
-    for i in itertools.product(*list_of_all_possibilities):
+    for i in itertools_product(*list_of_all_possibilities):
         if symbol is not None:
             to_return.append(symbol.join([spe_object.get_name()] + list(i)[1:])
                              if len(i) > 1 else spe_object.get_name())
