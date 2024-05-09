@@ -7,6 +7,7 @@ from mobspy import *
 import numpy as np
 from copy import deepcopy
 import sys
+import os
 
 
 # Compare results with expected file

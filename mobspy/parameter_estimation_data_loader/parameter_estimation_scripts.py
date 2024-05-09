@@ -1,6 +1,7 @@
 import mobspy.simulation_logging.log_scripts as simlog
-import basico
-import mobspy.patch_scripts.basico_task_parametrization as basico_task_par
+from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
+basico = ipm_LazyImporter('basico')
+mobspy_basico_patch = ipm_LazyImporter('mobspy.patch_scripts.basico_task_parametrization')
 from pandas import DataFrame
 
 
@@ -112,9 +113,9 @@ def basiCO_parameter_estimation(simulation_object, parameters_to_estimate,
 
     if type(experimental_data) == list or type(experimental_data) == set or type(experimental_data) == tuple:
         for i, exp in enumerate(experimental_data):
-            basico_task_par.add_experiment('exp' + str(i), exp, model=model)
+            mobspy_basico_patch.add_experiment('exp' + str(i), exp, model=model)
     else:
-        basico_task_par.add_experiment('exp1', experimental_data, model=model)
+        mobspy_basico_patch.add_experiment('exp1', experimental_data, model=model)
 
     basico.set_fit_parameters(fit_list, model=model)
     basico_results = basico.run_parameter_estimation(model=model, method=method)

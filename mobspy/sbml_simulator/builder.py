@@ -8,7 +8,7 @@
 
 
 from mobspy.sbml_simulator.SBMLWriter import create_model
-import libsbml as sbml
+from libsbml import writeSBMLToString as sbml_writeSBMLToString
 
 
 def build(species, parameters, reactions, events, assignments):
@@ -26,7 +26,7 @@ def build(species, parameters, reactions, events, assignments):
     doc = create_model(species, parameters, reactions, events, assignments)
 
     # Convert sbml document into a string for basico
-    sbml_str = sbml.writeSBMLToString(doc)
+    sbml_str = sbml_writeSBMLToString(doc)
     return sbml_str
 
 

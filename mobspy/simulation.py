@@ -2,40 +2,54 @@
     Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
 """
 
-# CLEANED IMPORTS
+# For user imports
+from mobspy.modules.meta_class import BaseSpecies, ListSpecies, New, Zero
+from mobspy.modules.set_counts_module import set_counts
+from mobspy.modules.mobspy_parameters import ModelParameters
+from mobspy.modules.order_operators import All, Default
+from mobspy.modules.class_of_meta_specie_named_any import Any
+from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import basiCO_parameter_estimation
+
+# Module imports
 from mobspy.modules.meta_class_utils \
     import create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure
-from mobspy.modules.order_operators import Default, All
-from mobspy.modules.mobspy_parameters import ModelParameters
 from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.logic_operator_objects import MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver
 from mobspy.modules.compiler import Compiler
 from copy import deepcopy
 from contextlib import contextmanager
-
-# NOT CLEANED IMPORTS
-from mobspy.parameter_scripts import parameter_reader as pr
+from mobspy.parameter_estimation_data_loader.data_loader \
+    import Experimental_Data_Holder as pdl_Experimental_Data_Holder
+import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.modules.meta_class import Species, Reacting_Species, List_Species
+from inspect import stack as inspect_stack
+from mobspy.modules.unit_handler import convert_time as uh_convert_time, \
+    extract_length_dimension as uh_extract_length_dimension
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
-import mobspy.parameter_scripts.parametric_sweeps as ps
 from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
-import mobspy.sbml_simulator.builder as sbml_builder
-import mobspy.sbml_simulator.run as sbml_run
-import mobspy.plot_scripts.default_plots as dp
-import mobspy.data_handler.process_result_data as dh
-from mobspy.data_handler.time_series_object import *
-from mobspy.parameter_estimation_data_loader.data_loader import Experimental_Data_Holder
-from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import *
-from mobspy.modules.user_functions import *
-from mobspy.modules.set_counts_module import set_counts
-import json
-import os
-import inspect
-import mobspy.modules.unit_handler as uh
-from joblib import Parallel, delayed
+from mobspy.plot_params.example_plot_reader import get_example_plot_parameters
+from pint import Quantity
+from mobspy.parameter_scripts.parameter_reader import parameter_process as pr_parameter_process, \
+    manually_process_each_parameter as pr_manually_process_each_parameter, \
+    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation, \
+    convert_volume_after_compilation as pr_convert_volume_after_compilation,\
+    read_json as pr_read_json
+from mobspy.parameter_scripts.parametric_sweeps import generate_all_sbml_models as ps_generate_all_sbml_models,\
+    unite_parameter_dictionaries as ps_unite_parameter_dictionaries
+from joblib import Parallel as joblib_Parallel, delayed as joblib_delayed
+from mobspy.sbml_simulator.run import simulate as sbml_simulate
+from mobspy.data_handler.process_result_data import extract_time_and_volume_list as dh_extract_time_and_volume_list, \
+    convert_data_to_desired_unit as dh_convert_data_to_desired_unit
+from mobspy.data_handler.time_series_object import MobsPyTimeSeries, MobsPyList_of_TS
+from json import dump as json_dump, load as json_load
+from mobspy.plot_scripts.default_plots import deterministic_plot as dp_deterministic_plot, \
+    stochastic_plot as dp_stochastic_plot, raw_plot as dp_raw_plot, parametric_plot as dp_parametric_plot
+from mobspy.sbml_simulator.builder import build as sbml_build
+from os.path import splitext as os_path_splitext
 
 
-class Simulation(Experimental_Data_Holder):
+class Simulation(pdl_Experimental_Data_Holder):
 
     # Event Implementation
     @classmethod
@@ -103,7 +117,7 @@ class Simulation(Experimental_Data_Holder):
             :param delay: (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled
         """
         try:
-            code_line = inspect.stack()[2].code_context[0][:-1]
+            code_line = inspect_stack()[2].code_context[0][:-1]
             if '==' in code_line:
                 simlog.error('Equality comparison operator (==) not allowed for MobsPy events \n' +
                              'Please use (A <= n) & (A >= n) if necessary', stack_index=3)
@@ -115,7 +129,7 @@ class Simulation(Experimental_Data_Holder):
             self._event_handler()
             yield 0
         finally:
-            delay = uh.convert_time(delay)
+            delay = uh_convert_time(delay)
             self._conditional_event = False
             self.event_context_add(delay, trigger)
 
@@ -130,7 +144,7 @@ class Simulation(Experimental_Data_Holder):
             self._event_handler()
             yield 0
         finally:
-            time = uh.convert_time(time)
+            time = uh_convert_time(time)
             self.event_context_add(time, 'true')
 
     def __init__(self, model, names=None, parameters=None, plot_parameters=None):
@@ -213,14 +227,14 @@ class Simulation(Experimental_Data_Holder):
         """
         if self.dimension is None:
             if isinstance(self.volume, Quantity):
-                self.dimension = uh.extract_length_dimension(str(self.volume.dimensionality), self.dimension)
+                self.dimension = uh_extract_length_dimension(str(self.volume.dimensionality), self.dimension)
             else:
                 self.dimension = 3
 
         simlog.global_simlog_level = self.parameters['level']
         simlog.debug('Compiling model')
 
-        pr.parameter_process(self.parameters)
+        pr_parameter_process(self.parameters)
         if self.parameters['method'] is not None:
             self.parameters['simulation_method'] = self.parameters['method']
 
@@ -278,7 +292,7 @@ class Simulation(Experimental_Data_Holder):
     def _assemble_multi_simulation_structure(self):
 
         if not self.sbml_data_list:
-            data_for_sbml_construction, parameter_list_of_dic = ps.generate_all_sbml_models(self.model_parameters,
+            data_for_sbml_construction, parameter_list_of_dic = ps_generate_all_sbml_models(self.model_parameters,
                                                                                             self._list_of_models)
             self.sbml_data_list = data_for_sbml_construction
             self._parameter_list_of_dic = parameter_list_of_dic
@@ -325,7 +339,7 @@ class Simulation(Experimental_Data_Holder):
 
         # This is only here so the ide gives the users tips about the function argument.
         # I wish there was a way to loop over all argument without args and kargs
-        pr.manually_process_each_parameter(self, duration, volume, dimension,
+        pr_manually_process_each_parameter(self, duration, volume, dimension,
                                            repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
@@ -335,27 +349,27 @@ class Simulation(Experimental_Data_Holder):
 
         simlog.debug('Starting Simulator')
         jobs = self.set_job_number(self.parameters)
-        simulation_function = lambda x: sbml_run.simulate(jobs, self._list_of_parameters, x)
-        results = Parallel(n_jobs=jobs, prefer="threads")(delayed(simulation_function)(sbml)
-                                                          for sbml in self.sbml_data_list)
+        simulation_function = lambda x: sbml_simulate(jobs, self._list_of_parameters, x)
+        results = joblib_Parallel(n_jobs=jobs, prefer="threads")(joblib_delayed(simulation_function)(sbml)
+                                                                 for sbml in self.sbml_data_list)
 
         simlog.debug("Simulation is Over")
 
         if self.parameters['unit_y'] is None and self.parameters['output_concentration'] and self._has_mole:
-            self.parameters['unit_y'] = 1*u.unit_registry_object.molar
+            self.parameters['unit_y'] = 1 * u.unit_registry_object.molar
         elif self.parameters['unit_y'] is None and not self.parameters['output_concentration'] and self._has_mole:
-            self.parameters['unit_y'] = 1*u.unit_registry_object.mol
+            self.parameters['unit_y'] = 1 * u.unit_registry_object.mol
 
         # Volume list and time list are to convert into concentrations
         # This section also checks if the output_concentration parameter is valid
-        volume_list, time_list, flag_concentration = dh.extract_time_and_volume_list(self._list_of_parameters)
+        volume_list, time_list, flag_concentration = dh_extract_time_and_volume_list(self._list_of_parameters)
         tcb = self.parameters['unit_y'] is not None and '[length]' not in self.parameters['unit_y'].dimensionality
         if not flag_concentration or tcb:
             self.parameters['output_concentration'] = False
 
         def convert_one_ts_to_desired_unit(unconverted_data):
             # Convert all the data from a single ts to desired unit
-            return dh.convert_data_to_desired_unit(unconverted_data, time_list, volume_list,
+            return dh_convert_data_to_desired_unit(unconverted_data, time_list, volume_list,
                                                    self.parameters['unit_x'],
                                                    self.parameters['unit_y'],
                                                    self.parameters['output_concentration'])
@@ -387,11 +401,11 @@ class Simulation(Experimental_Data_Holder):
         tc = self.parameters['output_concentration'] if flag_concentration else False
 
         if ta or tb or tc:
-            all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
-                (delayed(convert_all_ts_to_correct_format)(ts, params, True) for ts, params in flatt_ts)
+            all_processed_data = joblib_Parallel(n_jobs=jobs, prefer="threads") \
+                (joblib_delayed(convert_all_ts_to_correct_format)(ts, params, True) for ts, params in flatt_ts)
         else:
-            all_processed_data = Parallel(n_jobs=jobs, prefer="threads") \
-                (delayed(convert_all_ts_to_correct_format)(ts, params, False) for ts, params in flatt_ts)
+            all_processed_data = joblib_Parallel(n_jobs=jobs, prefer="threads") \
+                (joblib_delayed(convert_all_ts_to_correct_format)(ts, params, False) for ts, params in flatt_ts)
 
         self.results = MobsPyList_of_TS(all_processed_data, self.model_parameter_objects_dict)
         self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)
@@ -435,14 +449,14 @@ class Simulation(Experimental_Data_Holder):
         if file is None:
             try:
                 with open(self.parameters["absolute_output_file"], 'w') as f:
-                    json.dump(self.results.to_dict(), f, indent=4)
+                    json_dump(self.results.to_dict(), f, indent=4)
             except Exception as e:
                 simlog.warning("Error saving data. Potential solve: file name parameter")
                 simlog.warning(str(e))
         else:
             file += '.json'
             with open(file, 'w') as jf:
-                json.dump(self.results.to_dict(), jf, indent=4)
+                json_dump(self.results.to_dict(), jf, indent=4)
 
     def _pack_data(self, time_series_data):
         """
@@ -460,7 +474,7 @@ class Simulation(Experimental_Data_Holder):
             :param file_name: (str) name of the json file
         """
         with open(file_name) as json_file:
-            data = json.load(json_file)
+            data = json_load(json_file)
             for key in data:
                 self.__setattr__(key, data[key])
 
@@ -501,9 +515,9 @@ class Simulation(Experimental_Data_Holder):
             if name in example_parameters.keys():
                 # If the model is already compiled, the change in parameters should be faster
                 if self._is_compiled and name != 'unit_x' and name != 'unit_y':
-                    value = pr.convert_time_parameters_after_compilation(value)
+                    value = pr_convert_time_parameters_after_compilation(value)
                 if self._is_compiled and name == 'volume':
-                    value = pr.convert_volume_after_compilation(self.dimension, self._parameters_for_sbml, value)
+                    value = pr_convert_volume_after_compilation(self.dimension, self._parameters_for_sbml, value)
 
                 if name == 'duration':
                     if type(value) == bool:
@@ -567,9 +581,9 @@ class Simulation(Experimental_Data_Holder):
             Encapsulation for config_plot and config_parameters
         """
         if type(config) == str:
-            if os.path.splitext(config)[1] != '.json':
+            if os_path_splitext(config)[1] != '.json':
                 simlog.error('Wrong file extension', stack_index=3)
-            parameters_to_config = pr.read_json(config)
+            parameters_to_config = pr_read_json(config)
         elif type(config) == dict:
             parameters_to_config = config
         else:
@@ -621,7 +635,7 @@ class Simulation(Experimental_Data_Holder):
             :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
-        return dp.stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp_stochastic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_deterministic(self, *species):
         """
@@ -630,11 +644,11 @@ class Simulation(Experimental_Data_Holder):
             :param species: (str or meta-species objects) list of species to be plotted
         """
         plot_essentials = self.extract_plot_essentials(*species)
-        return dp.deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp_deterministic_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot_parametric(self, *species):
         plot_essentials = self.extract_plot_essentials(*species)
-        return dp.parametric_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
+        return dp_parametric_plot(plot_essentials[0], plot_essentials[1], plot_essentials[2])
 
     def plot(self, *species):
         """
@@ -651,7 +665,7 @@ class Simulation(Experimental_Data_Holder):
             :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot
             parameter configuration
         """
-        return dp.raw_plot(self.results, parameters_or_file, return_fig=return_fig)
+        return dp_raw_plot(self.results, parameters_or_file, return_fig=return_fig)
 
     def __add__(self, other):
         """
@@ -672,9 +686,9 @@ class Simulation(Experimental_Data_Holder):
 
         for parameter_sweep in self.sbml_data_list:
             for sbml_data in parameter_sweep:
-                to_return.append(sbml_builder.build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
-                                                    sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml'],
-                                                    sbml_data['assignments_for_sbml']))
+                to_return.append(sbml_build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
+                                            sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml'],
+                                            sbml_data['assignments_for_sbml']))
         return to_return
 
     @classmethod
@@ -829,7 +843,7 @@ class SimulationComposition:
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
 
-        pr.manually_process_each_parameter(self, duration, volume, dimension,
+        pr_manually_process_each_parameter(self, duration, volume, dimension,
                                            repetitions, level, simulation_method,
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
@@ -838,7 +852,7 @@ class SimulationComposition:
         multi_parameter_dictionary = {}
 
         for sim in self.list_of_simulations:
-            multi_parameter_dictionary = ps.unite_parameter_dictionaries(multi_parameter_dictionary,
+            multi_parameter_dictionary = ps_unite_parameter_dictionaries(multi_parameter_dictionary,
                                                                          sim.model_parameters)
 
         self.base_sim.model_parameters = multi_parameter_dictionary
@@ -876,7 +890,6 @@ class SimulationComposition:
 
         for key in kwargs:
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
-
 
     def generate_sbml(self):
 

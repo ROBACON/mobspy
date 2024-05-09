@@ -1,4 +1,7 @@
-import basico
+# import basico
+# Lazy import basico
+from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
+basico = ipm_LazyImporter('basico')
 from joblib import Parallel, delayed
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.sbml_simulator.builder as sbml_builder
