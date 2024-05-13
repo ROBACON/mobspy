@@ -1747,6 +1747,31 @@ def text_even_more_complex_assignments():
         assert compare_model(S.compile(), 'test_tools/model_50.txt')
 
 
+def test_assign_context_complex():
+        # model 51
+        A, B, C, D = BaseSpecies()
+        B.b1, B.b2, B.b3
+        C.c1, C.c2
+        D.d1, D.d2
+
+        with Assign:
+            All[B]((C + D**2)*D)
+
+        S = Simulation(A | B | C | D)
+        S.level = -1
+        assert compare_model(S.compile(), 'test_tools/model_51.txt')
+
+
+def test_assign_context_constant():
+        # model 52
+        A = BaseSpecies()
+        with Assign:
+            A(5)
+        S = Simulation(A)
+        S.level = -1
+        assert compare_model(S.compile(), 'test_tools/model_52.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1773,7 +1798,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
              test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
              test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
-             text_assign_context_exit, text_even_more_complex_assignments]
+             text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
+             test_assign_context_constant]
 
 sub_test = test_list
 

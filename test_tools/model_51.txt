@@ -1,0 +1,34 @@
+
+Species
+A,0
+B.b1,0
+B.b2,0
+B.b3,0
+C.c1,0
+C.c2,0
+D.d1,0
+D.d2,0
+
+Mappings
+A :
+A
+B :
+B.b1
+B.b2
+B.b3
+C :
+C.c1
+C.c2
+D :
+D.d1
+D.d2
+
+Parameters
+volume,1
+
+Reactions
+
+Assignments
+assignment_0,{'species': 'B.b1', 'expression': '(((C.c1+C.c2)+((D.d1+D.d2)^2))*(D.d1+D.d2))'}
+assignment_1,{'species': 'B.b2', 'expression': '(((C.c1+C.c2)+((D.d1+D.d2)^2))*(D.d1+D.d2))'}
+assignment_2,{'species': 'B.b3', 'expression': '(((C.c1+C.c2)+((D.d1+D.d2)^2))*(D.d1+D.d2))'}
