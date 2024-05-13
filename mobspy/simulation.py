@@ -6,6 +6,7 @@
 from mobspy.modules.meta_class import BaseSpecies, ListSpecies, New, Zero
 from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.mobspy_parameters import ModelParameters
+from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.order_operators import All, Default
 from mobspy.modules.class_of_meta_specie_named_any import Any
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import basiCO_parameter_estimation

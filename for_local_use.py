@@ -1,16 +1,26 @@
-import cProfile
-from importlib import import_module as implib_import_module
-from pint import UnitRegistry
-
-def profile_imports():
-    # Import the modules you want to profile
-    implib_import_module('mobspy')
+from mobspy import *
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
-    cProfile.run("profile_imports()", sort='cumulative')
-    pass
+    # C = BaseSpecies()
+    # C.c1, C.c2, C.c3
 
+    #def idk(r):
+    #    print(r.get_state())
+    #    return 1
 
+    #C >> Zero [idk]
 
+    #C(100)
+    #S = Simulation(C)
+    #S.compile()
+
+    A, B, C = BaseSpecies()
+
+    with Assign:
+        r = (A + B)/B
+        # C.c1(r)
+
+    S = Simulation(A | B | C)
+    print(S.compile())

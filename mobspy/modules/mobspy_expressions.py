@@ -122,6 +122,12 @@ class Specific_Species_Operator(Bool_Override):
         """
         return set(self.species_string.split('_dot_')[1:])
 
+    def get_state(self):
+        """
+            Returns: the string of a state with dots instead of _dot_
+        """
+        return self.species_string.replace('_dot_', '.')
+
 
 class ExpressionDefiner:
     """
