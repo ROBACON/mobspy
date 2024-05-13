@@ -4,12 +4,13 @@ from mobspy import *
 if __name__ == '__main__':
 
     A, B, C, D = BaseSpecies()
-    C.c1, C.c2
-    D.d1, D.d2
+    B.b1, B.b2, B.b3
+    #C.c1, C.c2
+    #D.d1, D.d2
 
     with Assign:
-        r = (C + 5)/D
-        B.b1(r)
+        All[B](5)
+    # exit()
 
     S = Simulation(A | B | C | D)
     print(S.compile())

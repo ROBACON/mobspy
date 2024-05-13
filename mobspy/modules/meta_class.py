@@ -27,7 +27,7 @@ from mobspy.modules.meta_class_utils import unite_characteristics as mcu_unite_c
 class _Last_rate_storage:
     last_rate = None
     entity_counter = 0
-    
+
     @classmethod
     def override_get_item(cls, object_to_return, item):
         """
@@ -426,15 +426,17 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         species_object = self.list_of_reactants[0]['object']
         characteristics = self.list_of_reactants[0]['characteristics']
         simulation_under_context = self.list_of_reactants[0]['object'].get_simulation_context()
-        if type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
-                or isinstance(quantity, mp_Mobspy_Parameter):
+        if (type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)
+            or isinstance(quantity, mp_Mobspy_Parameter)) and not asgi_Assign.check_context():
             if len(self.list_of_reactants) != 1:
                 simlog_error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             quantity_dict = species_object.add_quantities(characteristics, quantity)
         # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
         #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
-        elif isinstance(quantity, me_ExpressionDefiner):
-            species_object.assign(quantity)
+        elif asgi_Assign.check_context():
+            dummy_rsp = species_object
+            dummy_rsp = [dummy_rsp.c(char) for char in characteristics][-1]
+            dummy_rsp.assign(quantity)
         elif simulation_under_context is None:
             simlog_error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
@@ -954,10 +956,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             quantity_dict = self.add_quantities(Species.meta_specie_named_any_context.copy(), quantity)
 
         # Check if the quantity is a valid type and add the new count to the specie
-        elif type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
-                or isinstance(quantity, mp_Mobspy_Parameter):
+        elif (type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)
+              or isinstance(quantity, mp_Mobspy_Parameter)) and not asgi_Assign.check_context():
             quantity_dict = self.add_quantities('std$', quantity)
-        elif isinstance(quantity, me_ExpressionDefiner) and asgi_Assign.check_context():
+        elif asgi_Assign.check_context():
             self.assign(quantity)
         elif isinstance(quantity, me_Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
@@ -1289,6 +1291,7 @@ def New(species, number_or_names=None):
     code_line = inspect_stack()[1].code_context[0][:-1]
     return _Create_Species(species, code_line, number_or_names)
 
+
 __S0, __S1, __SF = BaseSpecies(3)
 __S0.name('S0')
 __S1.name('S1')
@@ -1296,7 +1299,6 @@ __SF.name('End_Flag_MetaSpecies')
 EndFlagSpecies = __SF
 Zero = __S0
 _methods_Species = set(dir(Species))
-
 
 if __name__ == '__main__':
     pass

@@ -128,28 +128,63 @@ class Assignment_Operator:
         return to_replace
 
     @staticmethod
+    def process_assignments(asg_expression, ortogonal_vector_structure, meta_species_in_model,
+                            for_error_tuple):
+
+        spe_in_expression = Assignment_Operator.find_arg_strings(asg_expression)
+        replacement_dict = {}
+        for spe in spe_in_expression:
+            replacement_dict[spe] = \
+                Assignment_Operator.generate_replacement_in_expression(spe, ortogonal_vector_structure,
+                                                                       meta_species_in_model,
+                                                                       for_error_tuple)
+
+        for key, item in replacement_dict.items():
+            asg_expression = asg_expression.replace(key, item)
+
+        return asg_expression
+
+    @staticmethod
     def compile_assignments_for_sbml(unprocessed_asgns, ortogonal_vector_structure, meta_species_in_model):
 
         assignments_for_sbml = {}
-        for i, asg in enumerate(unprocessed_asgns):
+        assignment_counter = 0
+        for asg in unprocessed_asgns:
+
+            if 'all$' not in asg[1]:
+                continue
+
+            spe_to_asgn = ssg_construct_all_combinations(asg[0], asg[1],
+                                                         ortogonal_vector_structure,
+                                                         symbol='_dot_')
+
+            asgn_expression = Assignment_Operator.process_assignments(str(unprocessed_asgns[asg]),
+                                                                      ortogonal_vector_structure,
+                                                                      meta_species_in_model,
+                                                                      (asg, str(unprocessed_asgns[asg])))
+
+            for spe in spe_to_asgn:
+                assignments_for_sbml['assignment_' + str(assignment_counter)] = \
+                    {'species': spe, 'expression': asgn_expression}
+                assignment_counter += 1
+
+        for asg in unprocessed_asgns:
+
+            if 'all$' in asg[1]:
+                continue
+
             spe_to_asgn = ssg_construct_species_char_list(asg[0], asg[1],
                                                           ortogonal_vector_structure,
                                                           symbol='_dot_')
 
-            asgn_expression = str(unprocessed_asgns[asg])
-            spe_in_expression = Assignment_Operator.find_arg_strings(asgn_expression)
+            asgn_expression = Assignment_Operator.process_assignments(str(unprocessed_asgns[asg]),
+                                                                      ortogonal_vector_structure,
+                                                                      meta_species_in_model,
+                                                                      (asg, str(unprocessed_asgns[asg])))
 
-            replacement_dict = {}
-            for spe in spe_in_expression:
-                replacement_dict[spe] = \
-                    Assignment_Operator.generate_replacement_in_expression(spe, ortogonal_vector_structure,
-                                                                           meta_species_in_model,
-                                                                           (asg, asgn_expression))
-
-            for key, item in replacement_dict.items():
-                asgn_expression = asgn_expression.replace(key, item)
-
-            assignments_for_sbml['assignment_' + str(i)] = {'species': spe_to_asgn, 'expression': asgn_expression}
+            assignments_for_sbml['assignment_' + str(assignment_counter)] = \
+                {'species': spe_to_asgn, 'expression': asgn_expression}
+            assignment_counter += 1
 
         return assignments_for_sbml
 
