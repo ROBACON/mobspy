@@ -33,7 +33,7 @@ class Assignment_Operator:
 
     def __enter__(self):
         self._asg_context = True
-        yield 0
+        return self
 
     def set_context(self):
         self._asg_context = True
@@ -118,6 +118,7 @@ class Assignment_Operator:
             str_comb = ssg_construct_all_combinations(spe_object, set(), ortogonal_vector_structure, '_dot_')
         else:
             str_comb = ssg_construct_all_combinations(spe_object, set(spe_str[1:]), ortogonal_vector_structure, '_dot_')
+        str_comb.sort()
 
         for i, e in enumerate(str_comb):
             if i == 0:

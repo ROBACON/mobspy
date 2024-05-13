@@ -29,5 +29,5 @@ volume,1
 Reactions
 
 Assignments
-assignment_0,{'species': 'A.h1', 'expression': '((B.h2+B.h1)*(((C.h2+C.h1)+5)/(D.h2+D.h1)))'}
+assignment_0,{'species': 'A.h1', 'expression': '((B.h1+B.h2)*(((C.h1+C.h2)+5)/(D.h1+D.h2)))'}
 

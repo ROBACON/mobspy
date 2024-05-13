@@ -200,7 +200,6 @@ class ExpressionDefiner:
             :param other: other number (or expression) to execute the operation on
             :param operation: string symbol of the operation to be executed
         """
-
         try:
             if isinstance(other, ExpressionDefiner):
                 count_op = self.execute_op(self._unit_count_op, other._unit_count_op, operation)
@@ -259,6 +258,7 @@ class ExpressionDefiner:
     # T is here to avoid problems with __getattr__ from units and quantities that were not overridden
     def __add__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__add__')
             return self.create_from_new_operation(other, '+', count_op, conc_op, True)
         else:
@@ -266,6 +266,7 @@ class ExpressionDefiner:
 
     def __radd__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__radd__')
             return self.create_from_new_operation(other, '+', count_op, conc_op, False)
         else:
@@ -273,6 +274,7 @@ class ExpressionDefiner:
 
     def __sub__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__sub__')
             return self.create_from_new_operation(other, '-', count_op, conc_op, True)
         else:
@@ -280,6 +282,7 @@ class ExpressionDefiner:
 
     def __rsub__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__rsub__')
             return self.create_from_new_operation(other, '-', count_op, conc_op, False)
         else:
@@ -287,6 +290,7 @@ class ExpressionDefiner:
 
     def __mul__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__mul__')
             return self.create_from_new_operation(other, '*', count_op, conc_op, True)
         else:
@@ -294,6 +298,7 @@ class ExpressionDefiner:
 
     def __rmul__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__rmul__')
             return self.create_from_new_operation(other, '*', count_op, conc_op, False)
         else:
@@ -301,6 +306,7 @@ class ExpressionDefiner:
 
     def __truediv__(self, other):
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__truediv__')
             return self.create_from_new_operation(other, '/', count_op, conc_op, True)
         else:
@@ -317,6 +323,7 @@ class ExpressionDefiner:
         # if type(other) != int and type(other) != float:
         #    raise TypeError('Power must only be int or float')
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__pow__')
             return self.create_from_new_operation(other, '^', count_op, conc_op)
         else:
@@ -326,6 +333,7 @@ class ExpressionDefiner:
         # if type(other) != int and type(other) != float:
         #    raise TypeError('Power must only be int or float')
         if self._ms_active:
+            other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, '__rpow__')
             return self.create_from_new_operation(other, '^', count_op, conc_op, False)
         else:
@@ -401,14 +409,6 @@ class ExpressionDefiner:
             :param direct_sense: sense of the operation
             :param operation: current operation in the stack
         """
-        # If other contexts are needed please scale by passing the context as an argument to this function
-        # Probably needs to be a new MobsPy expression attribute
-        if not isinstance(other, ExpressionDefiner) and not type(other) == int and not type(other) == float \
-                and not isinstance(other, Quantity) and not isinstance(other, (np_int_, np_float_)):
-            other = MobsPyExpression('($asg_' + str(other) + ')', None, dimension=None, count_in_model=True,
-                                     concentration_in_model=False, count_in_expression=False,
-                                     concentration_in_expression=False)
-
         _has_units = False
         try:
             # Returns string True not boolean to avoid risk __getattr__ bugs
@@ -899,6 +899,15 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                     raise ValueError('The expression did not resolve for lack of concentration/count specifications')
 
         return convert_operation, self._count_in_expression
+
+
+def check_if_non_expression_operated(other):
+    if not isinstance(other, ExpressionDefiner) and not type(other) == int and not type(other) == float \
+            and not isinstance(other, Quantity) and not isinstance(other, (np_int_, np_float_)):
+        other = MobsPyExpression('($asg_' + str(other) + ')', None, dimension=None, count_in_model=True,
+                                 concentration_in_model=False, count_in_expression=False,
+                                 concentration_in_expression=False)
+    return other
 
 
 def replace_spe_in_expr(string, to_replace, replacement):

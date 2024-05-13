@@ -11,7 +11,8 @@ from pint import Quantity
 from mobspy.modules.logic_operator_objects import ReactingSpeciesComparator as lop_ReactingSpeciesComparator, \
     SpeciesComparator as lop_SpeciesComparator
 from mobspy.modules.mobspy_expressions import OverrideQuantity as me_OverrideQuantity, \
-    MobsPyExpression as me_MobsPyExpression, Specific_Species_Operator as me_Specific_Species_Operator
+    MobsPyExpression as me_MobsPyExpression, Specific_Species_Operator as me_Specific_Species_Operator, \
+    ExpressionDefiner as me_ExpressionDefiner
 from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
 from numpy import int_ as np_int_, float_ as np_float_
 from inspect import stack as inspect_stack
@@ -157,7 +158,7 @@ class Reactions:
                 or isinstance(_Last_rate_storage.last_rate, Quantity)
                 or isinstance(_Last_rate_storage.last_rate, mp_Mobspy_Parameter)
                 or _Last_rate_storage.last_rate is None
-                or isinstance(_Last_rate_storage.last_rate, me_MobsPyExpression)):
+                or isinstance(_Last_rate_storage.last_rate, me_ExpressionDefiner)):
             simlog_error('Reaction rate of type ' + str(type(_Last_rate_storage.last_rate)) + ' not valid',
                          stack_index=3)
 
@@ -432,6 +433,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             quantity_dict = species_object.add_quantities(characteristics, quantity)
         # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
         #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
+        elif isinstance(quantity, me_ExpressionDefiner):
+            species_object.assign(quantity)
         elif simulation_under_context is None:
             simlog_error(f'Reactant_Species count assignment does not support the type {type(quantity)}',
                          stack_index=2)
@@ -911,10 +914,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             asgi_Assign._asg_context = True
             return asgi_Asg(self, species_or_reacting=True)
 
-        if asgi_Assign.check_context():
-            return me_MobsPyExpression('($asg_' + str(self) + ')', None, dimension=None, count_in_model=True,
-                                       concentration_in_model=False, count_in_expression=False,
-                                       concentration_in_expression=False)
+        # if asgi_Assign.check_context():
+        #    return me_MobsPyExpression('($asg_' + str(self) + ')', None, dimension=None, count_in_model=True,
+        #                               concentration_in_model=False, count_in_expression=False,
+        #                               concentration_in_expression=False)
 
         Species.check_if_valid_characteristic(self, characteristic)
 
@@ -954,8 +957,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         elif type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity) \
                 or isinstance(quantity, mp_Mobspy_Parameter):
             quantity_dict = self.add_quantities('std$', quantity)
-        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
-        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
+        elif isinstance(quantity, me_ExpressionDefiner) and asgi_Assign.check_context():
+            self.assign(quantity)
         elif isinstance(quantity, me_Specific_Species_Operator):
             for cha in str(quantity).split('_dot_')[1:]:
                 if cha in self._characteristics:
