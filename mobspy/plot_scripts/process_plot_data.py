@@ -84,3 +84,23 @@ def time_filter_operation(low, high, time_data, data):
     return new_time_data, new_data
 
 
+def y_filter_operation(low_y, high_y, time_data, data):
+
+    new_time_data = []
+    new_data = []
+
+    for t, d in zip(time_data, data):
+        if d < low_y:
+            continue
+        elif low_y <= d <= high_y:
+            new_time_data.append(t)
+            new_data.append(d)
+        elif d > high_y:
+            continue
+
+    return new_time_data, new_data
+
+
+
+
+

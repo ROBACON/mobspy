@@ -237,6 +237,21 @@ def plot_curves(data, axs, figure_index, plot_params):
         else:
             low, high = None, None
 
+        if find_parameter(plot_params, key='y_filter', index=(figure_index, plot_index)) is not None:
+            low_y, high_y = find_parameter(plot_params, key='y_filter', index=(figure_index, plot_index))
+        else:
+            low_y, high_y = None, None
+
+        if find_parameter(plot_params, key='x_from', index=(figure_index, plot_index)) is not None:
+            x_start, x_finish = find_parameter(plot_params, key='x_from', index=(figure_index, plot_index))
+        else:
+            x_start, x_finish = None, None
+
+        if find_parameter(plot_params, key='y_from', index=(figure_index, plot_index)) is not None:
+            y_start, y_finish = find_parameter(plot_params, key='y_from', index=(figure_index, plot_index))
+        else:
+            y_start, y_finish = None, None
+
         for spe in species:
 
             # Get the parameters assigned to the species, if not assign empty for None returns
@@ -281,8 +296,19 @@ def plot_curves(data, axs, figure_index, plot_params):
                 else:
                     ts_data = data[ts][spe]
 
-                if low is not None or high is not None:
+                if low is not None and high is not None:
                     ts_time, ts_data = ppd.time_filter_operation(low, high, ts_time, ts_data)
+
+                if low_y is not None and high_y is not None:
+                    ts_time, ts_data = ppd.y_filter_operation(low_y, high_y, ts_time, ts_data)
+
+                if x_start is not None and x_finish is not None:
+                    ref_point = ts_data[-1]
+                    axs.plot([x_start, x_finish], [ref_point,  ref_point], alpha=0)
+
+                if y_start is not None and y_finish is not None:
+                    ref_point = ts_time[-1]
+                    axs.plot([ref_point, ref_point], [y_start, y_finish], alpha=0)
 
                 try:
                     if find_parameter(plot_params, key='fill_between', index=(figure_index, plot_index)) is not None \

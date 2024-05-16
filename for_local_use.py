@@ -3,15 +3,17 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    # TODO Write texts for Rev operator
-    def test_rev():
+    A = BaseSpecies()
+    A(10000)
 
-        A, B, C = BaseSpecies()
+    A >> Zero [1]
 
-        Rev[A + 4*B >> C][1, 2]
-        Rev[A + 4 * B >> C][lambda r1, r2: (100-r1)*(100-r2), lambda r: r**3]
-
-        S = Simulation(A | B | C)
-        print(S.compile())
-    test_rev()
+    S = Simulation(A)
+    S.duration = 1000
+    # S.plot_data = False
+    S.plot_config.logscale = ["Y"]
+    S.plot_config.y_filter = [0.01, 1e50]
+    S.plot_config.x_from = [0, 2000]
+    S.run()
+    print(S.fres[A][-1])
 

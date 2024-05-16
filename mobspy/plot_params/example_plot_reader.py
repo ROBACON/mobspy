@@ -42,7 +42,10 @@ def get_example_plot_parameters():
             }]
         }],
 
+        "x_from": [0, 1e50],
+        "y_from": [0, 1e50],
         "time_filter": [0, 100000],
+        "y_filter": [0, 1e50],
         "vertical_lines": [1, 2],
 
         # These parameters are not supported by plot_raw
