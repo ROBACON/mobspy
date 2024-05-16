@@ -1,0 +1,22 @@
+
+Species
+A,0
+B,0
+C,0
+
+Mappings
+A :
+A
+B :
+B
+C :
+C
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A'), (4, 'B')], 'pr': [(1, 'C')], 'kin': '((100-A)*(100-B))'}
+reaction_1,{'re': [(1, 'A'), (4, 'B')], 'pr': [(1, 'C')], 'kin': 'A * B * B * B * B * 1 * volume^-4'}
+reaction_2,{'re': [(1, 'C')], 'pr': [(1, 'A'), (4, 'B')], 'kin': '(C^3)'}
+reaction_3,{'re': [(1, 'C')], 'pr': [(1, 'A'), (4, 'B')], 'kin': 'C * 2'}

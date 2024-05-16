@@ -7,7 +7,7 @@ from mobspy.modules.meta_class import BaseSpecies, ListSpecies, New, Zero
 from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.mobspy_parameters import ModelParameters
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.order_operators import All, Default
+from mobspy.modules.order_operators import All, Default, Rev
 from mobspy.modules.class_of_meta_specie_named_any import Any
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import basiCO_parameter_estimation
 
@@ -754,18 +754,42 @@ class SimulationComposition:
 
     def __setattr__(self, name, value):
         white_list = ['list_of_simulations', 'results', 'base_sim', 'fres']
-        multi_cast_parameters = ['simulation_method', 'method', 'volume', 'duration']
+        multi_cast_parameters = ['duration']
         broad_cast_parameters = ['level', 'rate_type', 'plot_type', 'repetitions']
+        double_cast_parameters = ['simulation_method', 'volume', 'method']
 
-        if name in multi_cast_parameters:
+        if name in double_cast_parameters:
+
+            # Broadcast if single value
+            if type(value) == str or type(value) == int or type(value) == float or isinstance(value, Quantity):
+                for sim in self:
+                    sim.__dict__['parameters'][name] = value
+            else:
+                # Multicast if list
+                try:
+                    if not len(self) == len(value):
+                        raise SystemExit
+                except:
+                    simlog.error(f'The parameter {name} was assigned non-accepted type.', stack_index=2)
+
+                for par, sim in zip(value, self):
+                    # DON'T ADD DIRECTLY to the object's dict, changes in volume, duration after compilation are
+                    # checked in the setattr method in the individual simulations
+                    if name == 'volume':
+                        sim.volume = par
+                    elif name == 'duration':
+                        sim.duration = par
+                    else:
+                        sim.__dict__['parameters'][name] = par
+
+        elif name in multi_cast_parameters:
 
             try:
                 if not len(self) == len(value):
                     raise SystemExit
             except:
-                simlog.error('For versions higher than 2.2.2, the parameters simulation_method (or method), volume, '
-                             'and duration must be assigned an iterable for each simulation when using '
-                             'the composition object', stack_index=2)
+                simlog.error('From 2.4.4 duration must be assigned to each simulation individually or a list '
+                             'with all durations must be assigned to the concatenated simulation', stack_index=2)
 
             for par, sim in zip(value, self):
                 # DON'T ADD DIRECTLY to the object's dict, changes in volume, duration after compilation are

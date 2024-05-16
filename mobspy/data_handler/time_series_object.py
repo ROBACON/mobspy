@@ -26,12 +26,19 @@ class MobsPyTimeSeries:
 
 class MobsPyList_of_TS:
 
+    def check_parameters_for_deepcopy(self):
+        for i, d in enumerate(self.ts_parameters):
+            for par, val in d.items():
+                if not(type(val) == int or type(val) == float or type(val) == str or type(val) == bool):
+                    self.ts_parameters[i][par] = str(val)
+
     def __init__(self, list_of_mspy_ts, model_parameter_objects=None, fres=False):
         """Creates the MobsPy timeseries object
 
             :param data_dict: (dict) resulting dictionary from simulation
             {'data': ...., 'params':....., 'models':.......}
         """
+
         self.ts_data = [dict(x.ts_data) for x in list_of_mspy_ts]
         self.ts_parameters = [dict(x.ts_parameters) for x in list_of_mspy_ts]
 
@@ -45,6 +52,7 @@ class MobsPyList_of_TS:
         self.ts_models = [list(x.ts_models) for x in list_of_mspy_ts]
         self.ts_model_parameters = [dict(x.ts_model_parameters) for x in list_of_mspy_ts]
 
+        self.check_parameters_for_deepcopy()
 
         if model_parameter_objects is not None:
             need_conversion_dict = set()

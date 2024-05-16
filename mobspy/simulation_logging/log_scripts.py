@@ -10,7 +10,6 @@ def error(message, stack_index=-1):
     #for i in range(len(inspect.stack())):
     #    print(inspect.stack()[i].code_context[0][:-1])
     #exit()
-    
 
     if stack_index > -1:
         code_line = inspect.stack()[stack_index].code_context[0][:-1]
