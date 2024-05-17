@@ -28,7 +28,6 @@ def get_example_plot_parameters():
         'suptitle': 'Test_Sup_Title',
         'suptitle_fontsize': 18,
 
-        'annotations': ['Test_note', 0, 0],
         'pad': 1,
         'dpi': 3,
         'tight_layout': True,
@@ -47,6 +46,9 @@ def get_example_plot_parameters():
         "time_filter": [0, 100000],
         "y_filter": [0, 1e50],
         "vertical_lines": [1, 2],
+
+        "annotations": [{"text": "S1", "coordinates": [0.54, 1e5], "fontsize": "large"},
+                        {"text": "S2", "coordinates": [0.58, 1e5], "fontsize": "large"}],
 
         # These parameters are not supported by plot_raw
         # Their only function is to alter the plot labels so please use that parameter

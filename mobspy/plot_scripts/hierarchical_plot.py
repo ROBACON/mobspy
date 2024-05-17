@@ -191,6 +191,39 @@ def find_parameter(params, key, index=None):
                     return None
 
 
+def annotation_handling(axs, figure_index, plot_index, plot_params):
+    print()
+
+    if find_parameter(plot_params, key='annotations', index=(figure_index, plot_index)) is not None:
+        annotations = find_parameter(plot_params, key='annotations', index=(figure_index, plot_index))
+
+        if type(annotations) != list:
+            simlog.warning("On plotting annotations: Annotations must a be list with dictionaries as elements")
+            return 0
+
+        for annotation_dict in annotations:
+            argument_dict = {}
+
+            if "text" not in annotation_dict:
+                text = "Default Annotation"
+            else:
+                text = annotation_dict["text"]
+
+            if 'coordinates' not in annotation_dict:
+                coordinates = (0, 0)
+            else:
+                coordinates = annotation_dict['coordinates']
+
+            arg_list = ["textcoords", "xytext", "ha", "fontsize"]
+            for arg in arg_list:
+                if arg in annotation_dict:
+                    argument_dict[arg] = annotation_dict[arg]
+
+            axs.annotate(text, coordinates, **argument_dict)
+        else:
+            return 0
+
+
 ####################### PLOTING FUNCTIONS
 def plot_curves(data, axs, figure_index, plot_params):
     """
@@ -215,6 +248,8 @@ def plot_curves(data, axs, figure_index, plot_params):
     # Set all parameters and plot
     legend_flag = False
     for plot_index in range(plot_number):
+
+        annotation_handling(axs, figure_index, plot_index, plot_params)
 
         # Get the species from plot parameters
         if find_parameter(plot_params, key='species_to_plot', index=(figure_index, plot_index)) is not None:
@@ -396,10 +431,6 @@ def set_figure_characteristics(axis_matrix, plot_params):
                                                        fontsize=plot_params['ylabel_fontsize'])
             else:
                 figure_hash(i, axis_matrix).set_ylabel(find_parameter(plot_params, 'ylabel', i))
-
-        if find_parameter(plot_params, 'annotations', i) is not None:
-            for annotations in find_parameter(plot_params, 'annotations', i):
-                figure_hash(i, axis_matrix).text(annotations[0], annotations[1], annotations[2])
 
 
 def set_global_parameters(fig, plot_params):
