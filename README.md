@@ -118,5 +118,7 @@ Version 2.2 - Added MobsPy expressions
 
 Version 2.3 - MobsPy standard output is now always concentration.
 
+Version 2.4.4 - Assignments completely added (both notations)
+
 
 

@@ -37,9 +37,9 @@ def set_plot_units(new_plot_params):
         if new_plot_params['unit_x'] is not None and not ("ignore_unit_label_x" in new_plot_params and
                                                           new_plot_params["ignore_unit_label_x"]):
             if not isinstance(new_plot_params['unit_x'], Quantity):
-                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]})'
+                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"]}s)'
             else:
-                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units})'
+                new_plot_params['xlabel'] += f' ({new_plot_params["unit_x"].units}s)'
 
     if 'ylabel' not in new_plot_params:
         if new_plot_params['output_concentration']:
