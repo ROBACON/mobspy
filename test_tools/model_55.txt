@@ -1,0 +1,22 @@
+
+Species
+A,0
+R,0
+Raa,0
+
+Mappings
+A :
+A
+R :
+R
+Raa :
+Raa
+
+Parameters
+volume,1
+
+Reactions
+
+Assignments
+assignment_0,{'species': 'A', 'expression': '((R)*(Raa))'}
+
