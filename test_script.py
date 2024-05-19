@@ -1798,6 +1798,31 @@ def test_rev():
     assert compare_model(S.compile(), 'test_tools/model_53.txt')
 
 
+def test_dimensionless_count():
+    # model 54
+    a = 100*u.l/u.l
+    A = BaseSpecies()
+
+    A >> Zero [1]
+
+    A(a)
+    S = Simulation(A)
+    S.duration = 10
+    S.level = - 1
+    assert compare_model(S.compile(), 'test_tools/model_54.txt')
+
+
+def test_assignment_similar_species():
+    # model 55
+    A, R, Raa = BaseSpecies()
+
+    A.assign(R*Raa)
+
+    S = Simulation(A | R | Raa)
+    S.level = - 1
+    assert compare_model(S.compile(), 'test_tools/model_55.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1825,7 +1850,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
              test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
              text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
-             test_assign_context_constant, test_duration_with_run, test_rev]
+             test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
+             test_assignment_similar_species]
 
 sub_test = test_list
 

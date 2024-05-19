@@ -192,7 +192,6 @@ def find_parameter(params, key, index=None):
 
 
 def annotation_handling(axs, figure_index, plot_index, plot_params):
-    print()
 
     if find_parameter(plot_params, key='annotations', index=(figure_index, plot_index)) is not None:
         annotations = find_parameter(plot_params, key='annotations', index=(figure_index, plot_index))

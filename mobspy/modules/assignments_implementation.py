@@ -2,6 +2,7 @@ from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpr
 from mobspy.simulation_logging.log_scripts import error as simlog_error
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
     construct_species_char_list as ssg_construct_species_char_list
+from re import compile as re_compile, escape as re_escape
 
 
 class Assignment_Operator:
@@ -140,7 +141,7 @@ class Assignment_Operator:
                                                                        for_error_tuple)
 
         for key, item in replacement_dict.items():
-            asg_expression = asg_expression.replace(key, item)
+            asg_expression = Assignment_Operator.replace_agn_expr(asg_expression, key, item)
 
         return asg_expression
 
@@ -187,6 +188,11 @@ class Assignment_Operator:
             assignment_counter += 1
 
         return assignments_for_sbml
+
+    @staticmethod
+    def replace_agn_expr(assignment_ex, to_replace, replacement):
+        pattern = re_compile(re_escape(to_replace) + r'(?![a-zA-Z0-9_])')
+        return pattern.sub(replacement, assignment_ex)
 
 
 Assign = Assignment_Operator()

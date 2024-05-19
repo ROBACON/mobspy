@@ -86,14 +86,6 @@ def convert_data_to_desired_unit(data, time_list, volume_list,
 
             converted_data[key] = [count * factor for count in data[key]]
 
-    # Old function - remove if not need in future. Removed because it is to slow to do this with pint
-    #def convert_data(data, from_unit, to_unit):
-    #    for key in data:
-    #        if key == 'Time':
-    #            continue
-
-    #        converted_data[key] = [(count * from_unit).to(to_unit).magnitude for count in data[key]]
-
     if output_concentration:
         converted_data = convert_to_concentration(data, converted_data, volume_list, time_list)
 

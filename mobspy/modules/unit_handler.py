@@ -70,8 +70,12 @@ def convert_counts(quantity, volume, dimension):
         converted_quantity = quantity
 
     if isinstance(quantity, Quantity):
-        if '[length]' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality:
+
+        if '[length]' not in str(quantity.dimensionality) and '[substance]' not in quantity.dimensionality\
+                and str(quantity.dimensionality) != "dimensionless":
             simlog.error(f'The assigned quantity {quantity} is neither a count or concentration')
+        elif str(quantity) == "dimensionless":
+            return quantity.magnitude
 
         try:
             if '[substance]' in quantity.dimensionality:
