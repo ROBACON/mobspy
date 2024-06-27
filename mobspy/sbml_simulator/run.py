@@ -67,7 +67,7 @@ def job_execution(params, models, jobs):
                 reformatted_data = reformat_time_series(data)
 
                 if sim_par['_continuous_simulation']:
-                    if reformatted_data['End_Flag_MetaSpecies'][-1] > 0:
+                    if reformatted_data['_End_Flag_MetaSpecies'][-1] > 0:
                         reformatted_data = __filter_condition_event_time_data(reformatted_data)
                         end_condition_not_satisfied = False
                     else:
@@ -144,7 +144,7 @@ def __filter_condition_event_time_data(data):
     """
     new_data = {}
 
-    for i, e in enumerate(data['End_Flag_MetaSpecies']):
+    for i, e in enumerate(data['_End_Flag_MetaSpecies']):
         if e == 1:
             stop_index = i
             break
@@ -186,7 +186,7 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
 
     if new_model:
         try:
-            species_for_sbml['End_Flag_MetaSpecies'] = 0
+            species_for_sbml['_End_Flag_MetaSpecies'] = 0
         except KeyError:
             pass
 

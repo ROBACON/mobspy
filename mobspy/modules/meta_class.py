@@ -339,7 +339,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             :param label: (int, float, str) value for the label for matching used in this reaction
         """
         super(Reacting_Species, self).__init__()
-        if object_reference.get_name() == 'S0' and characteristics == set():
+        if object_reference.get_name() == '_S0' and characteristics == set():
             self.list_of_reactants = []
         else:
             self.list_of_reactants = [{'object': object_reference, 'characteristics': characteristics,
@@ -1062,7 +1062,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             :param name: (str) Name of the species (can be placeholder if named with N$)
         """
         super(Species, self).__init__()
-        self._name = name
+        self.name(name)
         self._characteristics = set()
         self._references = {self}
         self._ordered_references = []
@@ -1088,6 +1088,13 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
             :param name: (str) name of the species
         """
+        if '_' == name[0]:
+            simlog_error(f"In species  name {name}: Species cannot have a name starting with underscore")
+
+        name = clean_species_name(name)
+        self._name = name
+
+    def _bypass_name(self, name):
         name = clean_species_name(name)
         self._name = name
 
@@ -1255,7 +1262,7 @@ def _Create_Species(species, code_line, number_or_names=None):
         if species is None:
             to_return.append(Species(name))
         else:
-            temp = __S1 * species
+            temp = One * species
             temp.name(name)
             to_return.append(temp)
 
@@ -1292,12 +1299,10 @@ def New(species, number_or_names=None):
     return _Create_Species(species, code_line, number_or_names)
 
 
-__S0, __S1, __SF = BaseSpecies(3)
-__S0.name('S0')
-__S1.name('S1')
-__SF.name('End_Flag_MetaSpecies')
-EndFlagSpecies = __SF
-Zero = __S0
+Zero, One, EndFlagSpecies = BaseSpecies(3)
+Zero._bypass_name('_S0')
+One._bypass_name('_S1')
+EndFlagSpecies._bypass_name('_End_Flag_MetaSpecies')
 _methods_Species = set(dir(Species))
 
 if __name__ == '__main__':

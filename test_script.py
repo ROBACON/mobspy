@@ -1823,6 +1823,17 @@ def test_assignment_similar_species():
     assert compare_model(S.compile(), 'test_tools/model_55.txt')
 
 
+def test_blocked_names():
+
+    try:
+        _S0 = BaseSpecies()
+
+        _S0 >> Zero[1]
+        assert False
+    except SystemExit:
+        assert True
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1851,7 +1862,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
              text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
              test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
-             test_assignment_similar_species]
+             test_assignment_similar_species, test_blocked_names]
 
 sub_test = test_list
 

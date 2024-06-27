@@ -305,10 +305,10 @@ class Compiler:
         if continuous_sim:
             end_event = {'trigger': ending_condition.generate_string(orthogonal_vector_structure),
                          'delay': '0',
-                         'assignments': [('End_Flag_MetaSpecies', '1')]}
+                         'assignments': [('_End_Flag_MetaSpecies', '1')]}
 
-            reactions_for_sbml['phantom_reaction_end'] = {'re': [(10, 'End_Flag_MetaSpecies')], 'pr': [],
-                                                          'kin': 'End_Flag_MetaSpecies * 1e-100'}
+            reactions_for_sbml['phantom_reaction_end'] = {'re': [(10, '_End_Flag_MetaSpecies')], 'pr': [],
+                                                          'kin': '_End_Flag_MetaSpecies * 1e-100'}
             events_for_sbml['end_event'] = end_event
 
         set_to_double_parameter = \
