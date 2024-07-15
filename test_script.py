@@ -1401,28 +1401,26 @@ def test_convert_back_parameter():
 
 
 def test_parameter_fit_with_units():
-    try:
-        A = BaseSpecies()
-        A >> Zero[3 / u.hour]
-        A(100)
-        S1 = Simulation(A)
-        S1.duration = 3 * u.hour
-        S1.unit_x = u.seconds
-        S1.run(plot_data=False, level=-1)
 
-        A = BaseSpecies()
-        p = ModelParameters(1 / u.hour)
-        A >> Zero[p]
-        A(100)
-        S2 = Simulation(A)
-        S2.run(plot_data=False, level=-1)
-        S2.load_experiment_data(S1.results)
-        basiCO_parameter_estimation(S2, [p], verbose=False)
+    A = BaseSpecies()
+    A >> Zero[3 / u.hour]
+    A(100)
+    S1 = Simulation(A)
+    S1.duration = 3 * u.hour
+    S1.unit_x = u.seconds
+    S1.run(plot_data=False, level=-1)
 
-        assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
-    except Exception as e:
-        print(e)
-        assert False
+    A = BaseSpecies()
+    p = ModelParameters(1 / u.hour)
+    A >> Zero[p]
+    A(100)
+    S2 = Simulation(A)
+    S2.run(plot_data=False, level=-1)
+    S2.load_experiment_data(S1.results)
+    basiCO_parameter_estimation(S2, [p], verbose=False)
+
+    assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
+
 
 
 
@@ -1889,7 +1887,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
              test_assignment_similar_species, test_blocked_names, test_blocked_names_2]
 
-sub_test = [test_parameter_fit_with_units]
+sub_test = test_list
 
 
 def perform_tests():
