@@ -14,7 +14,7 @@ from mobspy.modules.mobspy_expressions import OverrideQuantity as me_OverrideQua
     MobsPyExpression as me_MobsPyExpression, Specific_Species_Operator as me_Specific_Species_Operator, \
     ExpressionDefiner as me_ExpressionDefiner
 from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
-from numpy import int_ as np_int_, float_ as np_float_
+from numpy import integer as np_int_, floating as np_float_
 from inspect import stack as inspect_stack
 from mobspy.modules.meta_class_utils import unite_characteristics as mcu_unite_characteristics, \
     combine_references as mcu_combine_references, \

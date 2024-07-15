@@ -3,7 +3,7 @@ import mobspy.simulation_logging.log_scripts as simlog
 import re
 from scipy.constants import N_A
 from copy import deepcopy
-from numpy import int_ as np_int_, float_ as np_float_, add as np_add, subtract as np_subtract, \
+from numpy import integer as np_int_, floating as np_float_, add as np_add, subtract as np_subtract, \
     multiply as np_multiply, divide as np_divide
 import time
 

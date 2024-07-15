@@ -3,7 +3,7 @@ from inspect import stack as inspect_stack
 from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
 from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
 from pint import Quantity
-from numpy import int_ as np_int_, float_ as np_float_
+from numpy import integer as np_int_, floating as np_float_
 
 
 def set_counts(count_dic):
