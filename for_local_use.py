@@ -7,11 +7,20 @@ import pint
 
 if __name__ == '__main__':
 
-    _S0 = BaseSpecies()
+    # Used for Model 56
+    try:
+        _S1 = BaseSpecies()
+    except SystemExit:
+        print('Nice')
 
-    _S0 >> Zero [1]
+    S0, S1, S2 = BaseSpecies()
 
-    S = Simulation(_S0)
+    S0 >> Zero [1]
+    S1 >> Zero [1]
+    S2 >> Zero [1]
+
+    S = Simulation(S0 | S1 | S2)
     print(S.compile())
+
 
 

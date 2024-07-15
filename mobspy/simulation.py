@@ -34,9 +34,9 @@ from pint import Quantity
 from mobspy.parameter_scripts.parameter_reader import parameter_process as pr_parameter_process, \
     manually_process_each_parameter as pr_manually_process_each_parameter, \
     convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation, \
-    convert_volume_after_compilation as pr_convert_volume_after_compilation,\
+    convert_volume_after_compilation as pr_convert_volume_after_compilation, \
     read_json as pr_read_json
-from mobspy.parameter_scripts.parametric_sweeps import generate_all_sbml_models as ps_generate_all_sbml_models,\
+from mobspy.parameter_scripts.parametric_sweeps import generate_all_sbml_models as ps_generate_all_sbml_models, \
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries
 from joblib import Parallel as joblib_Parallel, delayed as joblib_delayed
 from mobspy.sbml_simulator.run import simulate as sbml_simulate
@@ -48,6 +48,7 @@ from mobspy.plot_scripts.default_plots import deterministic_plot as dp_determini
     stochastic_plot as dp_stochastic_plot, raw_plot as dp_raw_plot, parametric_plot as dp_parametric_plot
 from mobspy.sbml_simulator.builder import build as sbml_build
 from os.path import splitext as os_path_splitext
+from random import randint as rd_randint
 
 
 class Simulation(pdl_Experimental_Data_Holder):
@@ -678,7 +679,7 @@ class Simulation(pdl_Experimental_Data_Holder):
         """
             Generates sbmls strings from the current stored models in the simulation
 
-            "return: to_return (list of str) list of sbml files from all the simulations stored
+            :return: to_return (list of str) list of sbml files from all the simulations stored
         """
         to_return = []
         if self._species_for_sbml is None:
@@ -691,6 +692,80 @@ class Simulation(pdl_Experimental_Data_Holder):
                                             sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml'],
                                             sbml_data['assignments_for_sbml']))
         return to_return
+
+    def generate_antimony(self, model_name=None):
+        """
+            Generates an string with an Antimony model from a respective MobsPy model
+
+            :param model_name: (str) desired name of the model. If not supplied a random name will be chosen
+        """
+        antimony_text = ''
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
+        self._assemble_multi_simulation_structure()
+
+        model_list = []
+
+        for parameter_sweep in self.sbml_data_list:
+            for sbml_data in parameter_sweep:
+                if model_name is None:
+                    antimony_model = f'model mobspy_{rd_randint(0, 100000)} \n'
+                else:
+                    antimony_model = f'model {model_name} \n'
+
+                for reaction_name, reaction_data in sbml_data['reactions_for_sbml'].items():
+
+                    if 'phantom' in reaction_name:
+                        continue
+
+                    antimony_model = antimony_model + f'    {reaction_name}:'
+                    for r in reaction_data['re']:
+
+                        if r[0] > 1:
+                            antimony_model = antimony_model + f' {r[0]}*{r[1]}'
+                        else:
+                            antimony_model = antimony_model + f' {r[1]}'
+
+                    antimony_model = antimony_model + f' -> '
+
+                    for p in reaction_data['pr']:
+
+                        if p[0] > 1:
+                            antimony_model = antimony_model + f' {p[0]}*{p[1]}'
+                        else:
+                            antimony_model = antimony_model + f' {p[1]}'
+
+                    antimony_model = antimony_model + f"; {reaction_data['kin'].replace(' ', '')};"
+
+                    antimony_model = antimony_model + '\n'
+
+                if sbml_data['species_for_sbml']:
+                    for species_name, species_count in sbml_data['species_for_sbml'].items():
+                        antimony_model = antimony_model + f"    {species_name} = {species_count};"
+                        antimony_model = antimony_model + '\n'
+
+                if sbml_data['parameters_for_sbml']:
+                    for parameter_name, parameter_value in sbml_data['parameters_for_sbml'].items():
+                        antimony_model = antimony_model + f"    {parameter_name} = {parameter_value[0]};\n"
+
+                if sbml_data['events_for_sbml']:
+                    for event_name, event_data in sbml_data['events_for_sbml'].items():
+                        if event_data['trigger']:
+                            antimony_model = \
+                                antimony_model + f"    {event_name}: at(time > {event_data['delay']}): "
+                        for asg in event_data['assignments']:
+                            antimony_model = antimony_model + f" {asg[0]}={asg[1]},"
+                        antimony_model = antimony_model[:-1] + ';\n'
+
+                if sbml_data['assignments_for_sbml']:
+                    for assign_name, assign_data in sbml_data['assignments_for_sbml'].items():
+                        antimony_model = antimony_model + \
+                                         f"    {assign_data['species']} := {assign_data['expression']};\n"
+
+                antimony_model = antimony_model + 'end'
+                model_list.append(antimony_model)
+
+        return model_list
 
     @classmethod
     def is_simulation(cls):

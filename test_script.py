@@ -1834,6 +1834,26 @@ def test_blocked_names():
         assert True
 
 
+def test_blocked_names_2():
+
+    # Used for Model 56
+    try:
+        _S1 = BaseSpecies()
+        assert False
+    except SystemExit:
+        pass
+
+    S0, S1, S2 = BaseSpecies()
+
+    S0 >> Zero[1]
+    S1 >> Zero[1]
+    S2 >> Zero[1]
+
+    S = Simulation(S0 | S1 | S2)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_56.txt')
+
+
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
 test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
@@ -1862,7 +1882,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
              text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
              test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
-             test_assignment_similar_species, test_blocked_names]
+             test_assignment_similar_species, test_blocked_names, test_blocked_names_2]
 
 sub_test = test_list
 
