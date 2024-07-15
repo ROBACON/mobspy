@@ -6,7 +6,7 @@ class LazyImporter:
     def __init__(self, module_name, *attrs):
         self.module_name = module_name
         self.attrs = attrs
-        self._module: type_Any | None = None
+        self._module = None
 
     def __getattr__(self, attr):
         if self._module is None:

@@ -145,7 +145,7 @@ class ExpressionDefiner:
         """
         # TODO: FIX HERE NOW! FABRICIO DONT FORGET THIS DUMBASS
         # CHANGED HERE
-        #if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
+        # if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
         #    raise Exception('Override quantity is not supposed to be in execute op')
 
         q_object = None
