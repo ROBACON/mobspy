@@ -1,0 +1,21 @@
+
+Species
+S0,0
+S1,0
+S2,0
+
+Mappings
+S0 :
+S0
+S1 :
+S1
+S2 :
+S2
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'S0')], 'pr': [], 'kin': 'S0 * 1'}
+reaction_1,{'re': [(1, 'S1')], 'pr': [], 'kin': 'S1 * 1'}
+reaction_2,{'re': [(1, 'S2')], 'pr': [], 'kin': 'S2 * 1'}
