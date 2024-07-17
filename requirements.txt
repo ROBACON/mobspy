@@ -5,6 +5,6 @@ scipy
 pandas
 joblib
 tqdm
-copasi-basico==0.69
+copasi-basico
 pint
 
