@@ -6,6 +6,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 with open("requirements.txt") as fh:
     install_requires = fh.read().strip().split("\n")
 
+with open("extra_requires.txt") as fh:
+    extra_requires = fh.read().strip().split("\n")
+
 with open("mobspy/_version.py") as fh:
     version = fh.readlines()[-1].split()[-1].strip("\"'")
 
@@ -20,5 +23,6 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ROBACON/mobspy",
     python_requires=">=3.6",
-    install_requires=install_requires
+    install_requires=install_requires,
+    extras_require=extra_requires
 )
