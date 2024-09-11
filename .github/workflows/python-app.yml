@@ -28,6 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f extra_requires.txt ]; then pip install -r extra_requires.txt; fi 
     - name: List installed packages
       run: |
         pip freeze
