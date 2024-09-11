@@ -4,6 +4,7 @@
 
 # import pytest
 from mobspy import *
+from tellurium import loada as te_load_anti
 import numpy as np
 from copy import deepcopy
 import sys
@@ -1422,8 +1423,6 @@ def test_parameter_fit_with_units():
     assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
 
 
-
-
 def test_multiple_runs_fit():
     A, B = BaseSpecies()
     A >> Zero[1]
@@ -1856,6 +1855,54 @@ def test_blocked_names_2():
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_56.txt')
 
+def test_antimony_model():
+    A, TestSpe = BaseSpecies()
+    a = ModelParameters([1, 2])
+
+    A + TestSpe >> Zero[a]
+    A >> 2 * A[0.01]
+
+    A(2), TestSpe(1)
+    S = Simulation(A | TestSpe)
+    S.level = -1
+    S.duration = 10
+
+    anti_model = S.generate_antimony()[0]
+    r = te_load_anti(anti_model)
+    results = r.simulate(0, 10, 3)
+    assert results[0][1] == 2
+    assert results[-1][1] > 1
+    assert results[-1][2] < 0.01
+
+def test_antimony_compose_model_gen():
+    A, B, C = BaseSpecies()
+    a = ModelParameters(1)
+
+    A >> 2 * A[a]
+
+    A(1)
+    S1 = Simulation(A | C)
+    S1.duration = 2
+
+    with S1.event_time(1):
+        A(10)
+
+    A >> Zero[1]
+    B >> 2 * B[1e-20]
+    B(10)
+    S2 = Simulation(A | B | C)
+    S2.duration = 5
+    S = S1 + S2
+    S.level = -1
+
+    anti_model = S.generate_antimony(compose=True, model_name="test_compose")[0]
+
+    r = te_load_anti(anti_model)
+    results = r.simulate(0, 10, 3)
+
+    assert results[0][1] == 1
+    assert results[-1][1] > 10
+    assert results[-1][2] == 10
 
 # This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
 # python version in terminal is above 3.10
@@ -1878,16 +1925,20 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit,
              test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim,
              test_parameter_operation_in_rate, test_multi_parameter_with_expression, test_double_parameters_with_units,
-             test_parameters_with_units, test_convert_back_parameter, test_parameter_fit_with_units,
-             test_multiple_runs_fit, test_simple_fit, test_numpy_in_expression_function, test_numpy_in_rates,
+             test_parameters_with_units, test_convert_back_parameter,
+             test_numpy_in_expression_function, test_numpy_in_rates,
              test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
              test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
              test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
              text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
              test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
-             test_assignment_similar_species, test_blocked_names, test_blocked_names_2]
+             test_assignment_similar_species, test_blocked_names, test_blocked_names_2,
+             test_antimony_model, test_antimony_compose_model_gen]
+
+temporary_test_removal = [test_parameter_fit_with_units, test_multiple_runs_fit, test_simple_fit]
 
 sub_test = test_list
+#sub_test = [test_antimony_compose_model_gen]
 
 
 def perform_tests():

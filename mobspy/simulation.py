@@ -675,9 +675,135 @@ class Simulation(pdl_Experimental_Data_Holder):
         """
         return SimulationComposition(self, other)
 
-    def generate_sbml(self):
+    def compose_sbml(self):
+
+        list_of_composite_dicts_for_sbml = []
+
+        def check_convertible():
+            if len(self._list_of_parameters) == 1:
+                simlog.error("Single simulations cannot generate a composed sbml or antimony string")
+
+            for i in range(len(self._list_of_parameters)):
+                if self._list_of_parameters[i]['_end_condition'] is not None:
+                    simlog.error("Composite Simulations with conditional duration cannot be converted to sbml "
+                                 "or antimony")
+        check_convertible()
+
+        def reaction_process(i, flag_species_name, current_sbml_reaction):
+            for reaction_key, reaction in current_sbml_reaction.items():
+                if 'phantom' in reaction_key:
+                    continue
+                new_reaction = {'re': reaction['re'],
+                                'pr': reaction['pr'],
+                                'kin': '(' + reaction['kin'].replace('volume', f'_vol{i}')
+                                       + ') * ' + str(flag_species_name)}
+
+                reaction_number = len(new_sbml_file['reactions_for_sbml'])
+                new_sbml_file['reactions_for_sbml']['reaction_' + str(reaction_number)] = new_reaction
+
+        def event_process(next_spe, simulation_index, cul_duration, sim_sbml):
+            if self._list_of_parameters[simulation_index]['_end_condition'] is None:
+                event_name = 'e' + str(len(new_sbml_file['events_for_sbml']))
+                new_sbml_file['events_for_sbml'][event_name] = {'trigger': 'true', 'delay': cul_duration,
+                                                                'assignments': [(next_spe, 1)]}
+            else:
+                end_trigger = sim_sbml['events_for_sbml']['end_event']['trigger']
+                event_name = 'e' + str(len(new_sbml_file['events_for_sbml']))
+                new_sbml_file['events_for_sbml'][event_name] = {'trigger': end_trigger,
+                                                                'delay': 0,
+                                                                'assignments': [(next_spe, 1)]}
+
+        def parameter_process(sim_index, sim_sbml):
+            for par in sim_sbml['parameters_for_sbml']:
+                if par == 'volume':
+                    new_sbml_file['parameters_for_sbml']['_vol' + str(sim_index)] = \
+                        sim_sbml['parameters_for_sbml'][par]
+                else:
+                    new_sbml_file['parameters_for_sbml'][par] = sim_sbml['parameters_for_sbml'][par]
+
+        def process_a_sim(i, sim_sbml, pre_spe, next_spe, cul_duration, skip_end_event):
+            parameter_process(i, sim_sbml)
+            reaction_process(i, pre_spe, sim_sbml['reactions_for_sbml'])
+            if not skip_end_event:
+                event_process(next_spe, i, cul_duration, sim_sbml)
+
+            for spe in sim_sbml['species_for_sbml']:
+                if spe not in new_sbml_file['species_for_sbml'] and '_' != spe[0]:
+                    event_number = len(new_sbml_file['events_for_sbml'])
+                    new_sbml_file['events_for_sbml']['e' + str(event_number)] = {
+                        'trigger': f"_SFS_{str(i)} > 0",
+                        'delay': 0,
+                        'assignments': [(spe, sim_sbml['species_for_sbml'][spe])]
+                    }
+                    new_sbml_file['species_for_sbml'][spe] = 0
+
+        def process_simulations(multi_sims):
+
+            for i, sim_sbml in enumerate(multi_sims):
+                if i == 0:
+                    cul_duration = self._list_of_parameters[i]['duration']
+                    continue
+                elif i == len(multi_sims) - 1:
+                    skip_end_event = True
+                else:
+                    cul_duration = cul_duration + self._list_of_parameters[i]['duration']
+
+                if sim_sbml['assignments_for_sbml'] != {}:
+                    simlog.warning("Assignments beyond the initial simulation are ignored")
+
+                pre_spe = '_SFS_' + str(i)
+                next_spe = '_SFS_' + str(i + 1)
+
+                process_a_sim(i, sim_sbml, pre_spe, next_spe, cul_duration, skip_end_event)
+
+        for multi_sims in self.sbml_data_list:
+            # Sequential Flag Species - SFS
+            new_sbml_file = {'species_for_sbml': {}, 'parameters_for_sbml': {},
+                             'reactions_for_sbml': {}, 'events_for_sbml': {}, 'assignments_for_sbml': {}}
+
+            initial_sim = multi_sims[0]
+
+            new_sbml_file['species_for_sbml'] = initial_sim['species_for_sbml']
+            parameter_process(0, initial_sim)
+            new_sbml_file['assignments_for_sbml'] = initial_sim['assignments_for_sbml']
+
+            reaction_process(0, '_SFS_0', initial_sim['reactions_for_sbml'])
+
+            event_process('_SFS_1', 0, 0, initial_sim)
+
+            process_simulations(multi_sims)
+
+            for i in range(len(multi_sims)):
+                new_sbml_file['species_for_sbml']['_SFS_' + str(i)] = 0
+            new_sbml_file['species_for_sbml']['_SFS_0'] = 1
+
+            list_of_composite_dicts_for_sbml.append([new_sbml_file])
+        return list_of_composite_dicts_for_sbml
+
+    def parse_volume_name_for_antimony(self):
+        new_sims = []
+        for multi_sims in self.sbml_data_list:
+            sim_sbml = multi_sims[0]
+            new_sbml_file = {'species_for_sbml': sim_sbml['species_for_sbml'],
+                             'parameters_for_sbml': sim_sbml['parameters_for_sbml'], 'reactions_for_sbml': {},
+                             'events_for_sbml': sim_sbml['events_for_sbml'],
+                             'assignments_for_sbml': sim_sbml['assignments_for_sbml']}
+
+            new_sbml_file['parameters_for_sbml']['_vol'] = sim_sbml['parameters_for_sbml']['volume']
+
+            for re_name, reaction in sim_sbml['reactions_for_sbml'].items():
+                new_reaction = {'re': reaction['re'],
+                                'pr': reaction['pr'],
+                                'kin':reaction['kin'].replace('volume', f'_vol')}
+                new_sbml_file['reactions_for_sbml'][re_name] = new_reaction
+
+            new_sims.append([new_sbml_file])
+        return new_sims
+
+    def generate_sbml(self, compose=False):
         """
             Generates sbmls strings from the current stored models in the simulation
+            :param composes: (bool) Join composite simulations into a single sbml
 
             :return: to_return (list of str) list of sbml files from all the simulations stored
         """
@@ -686,17 +812,22 @@ class Simulation(pdl_Experimental_Data_Holder):
             self.compile(verbose=False)
         self._assemble_multi_simulation_structure()
 
-        for parameter_sweep in self.sbml_data_list:
+        if compose:
+            sbml_dict_list = self.compose_sbml()
+        else:
+            sbml_dict_list = self.sbml_data_list
+
+        for parameter_sweep in sbml_dict_list:
             for sbml_data in parameter_sweep:
                 to_return.append(sbml_build(sbml_data['species_for_sbml'], sbml_data['parameters_for_sbml'],
                                             sbml_data['reactions_for_sbml'], sbml_data['events_for_sbml'],
                                             sbml_data['assignments_for_sbml']))
         return to_return
 
-    def generate_antimony(self, model_name=None):
+    def generate_antimony(self, compose=False, model_name=None):
         """
             Generates an string with an Antimony model from a respective MobsPy model
-
+            :param compose: (bool) Join composite simulations into a single sbml
             :param model_name: (str) desired name of the model. If not supplied a random name will be chosen
         """
         antimony_text = ''
@@ -704,63 +835,83 @@ class Simulation(pdl_Experimental_Data_Holder):
             self.compile(verbose=False)
         self._assemble_multi_simulation_structure()
 
+        if compose:
+            sbml_dict_list = self.compose_sbml()
+        else:
+            sbml_dict_list = self.parse_volume_name_for_antimony()
+
         model_list = []
 
-        for parameter_sweep in self.sbml_data_list:
+        for parameter_sweep in sbml_dict_list:
             for sbml_data in parameter_sweep:
                 if model_name is None:
                     antimony_model = f'model mobspy_{rd_randint(0, 100000)} \n'
                 else:
                     antimony_model = f'model {model_name} \n'
+                if sbml_data['species_for_sbml']:
+                    for species_name, species_count in sbml_data['species_for_sbml'].items():
+                        antimony_model = antimony_model + f"    {species_name} = {species_count} dimensionless"
+                        antimony_model = antimony_model + '\n'
+
+                if sbml_data['parameters_for_sbml']:
+                    for parameter_name, parameter_value in sbml_data['parameters_for_sbml'].items():
+                        antimony_model = antimony_model + f"    {parameter_name} = {parameter_value[0]} " \
+                                                          f"dimensionless\n"
+
+                if sbml_data['assignments_for_sbml']:
+                    for assign_name, assign_data in sbml_data['assignments_for_sbml'].items():
+                        antimony_model = antimony_model + \
+                                         f"    {assign_data['species']} := {assign_data['expression']}\n"
 
                 for reaction_name, reaction_data in sbml_data['reactions_for_sbml'].items():
 
                     if 'phantom' in reaction_name:
                         continue
 
-                    antimony_model = antimony_model + f'    {reaction_name}:'
-                    for r in reaction_data['re']:
+                    antimony_model = antimony_model + f'    {reaction_name}: '
+                    for i, r in enumerate(reaction_data['re']):
+                        if i == 0 and r[0] > 1:
+                            antimony_model = antimony_model + f'{r[0]}*{r[1]}'
+                            continue
+                        if i == 0:
+                            antimony_model = antimony_model + f'{r[1]}'
+                            continue
 
                         if r[0] > 1:
-                            antimony_model = antimony_model + f' {r[0]}*{r[1]}'
+                            antimony_model = antimony_model + f' + {r[0]} {r[1]}'
                         else:
-                            antimony_model = antimony_model + f' {r[1]}'
+                            antimony_model = antimony_model + f' + {r[1]}'
 
                     antimony_model = antimony_model + f' -> '
-
-                    for p in reaction_data['pr']:
+                    for i, p in enumerate(reaction_data['pr']):
+                        if i == 0 and p[0] > 1:
+                            antimony_model = antimony_model + f' {p[0]} {p[1]}'
+                            continue
+                        if i == 0:
+                            antimony_model = antimony_model + f' {p[1]}'
+                            continue
 
                         if p[0] > 1:
-                            antimony_model = antimony_model + f' {p[0]}*{p[1]}'
+                            antimony_model = antimony_model + f' + {p[0]}*{p[1]}'
                         else:
-                            antimony_model = antimony_model + f' {p[1]}'
+                            antimony_model = antimony_model + f' + {p[1]}'
 
-                    antimony_model = antimony_model + f"; {reaction_data['kin'].replace(' ', '')};"
+                    antimony_model = antimony_model + f"; {reaction_data['kin']}"
 
                     antimony_model = antimony_model + '\n'
 
-                if sbml_data['species_for_sbml']:
-                    for species_name, species_count in sbml_data['species_for_sbml'].items():
-                        antimony_model = antimony_model + f"    {species_name} = {species_count};"
-                        antimony_model = antimony_model + '\n'
-
-                if sbml_data['parameters_for_sbml']:
-                    for parameter_name, parameter_value in sbml_data['parameters_for_sbml'].items():
-                        antimony_model = antimony_model + f"    {parameter_name} = {parameter_value[0]};\n"
-
                 if sbml_data['events_for_sbml']:
                     for event_name, event_data in sbml_data['events_for_sbml'].items():
-                        if event_data['trigger']:
+                        if event_data['trigger'] == 'true':
                             antimony_model = \
                                 antimony_model + f"    {event_name}: at(time > {event_data['delay']}): "
+                        else:
+                            antimony_model = \
+                                antimony_model + f"    {event_name}: at({event_data['trigger']}): "
+
                         for asg in event_data['assignments']:
                             antimony_model = antimony_model + f" {asg[0]}={asg[1]},"
-                        antimony_model = antimony_model[:-1] + ';\n'
-
-                if sbml_data['assignments_for_sbml']:
-                    for assign_name, assign_data in sbml_data['assignments_for_sbml'].items():
-                        antimony_model = antimony_model + \
-                                         f"    {assign_data['species']} := {assign_data['expression']};\n"
+                        antimony_model = antimony_model[:-1] + '\n'
 
                 antimony_model = antimony_model + 'end'
                 model_list.append(antimony_model)
@@ -895,7 +1046,17 @@ class SimulationComposition:
             str += sim.compile(verbose)
 
         self._compile_multi_simulation()
+
+        for sim in self.list_of_simulations:
+
+            if sim == self.base_sim:
+                continue
+
+            self.base_sim._list_of_models += sim._list_of_models
+            self.base_sim._list_of_parameters += sim._list_of_parameters
+
         self.base_sim._assemble_multi_simulation_structure()
+
         if str != '':
             return str
 
@@ -991,7 +1152,11 @@ class SimulationComposition:
         for key in kwargs:
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
 
-    def generate_sbml(self):
+    def generate_sbml(self, compose=False):
+        """
+            Generates an string with an SBML model from a respective MobsPy model
+            :param compose: (bool) Join composite simulations into a single sbml
+        """
 
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
@@ -1004,7 +1169,25 @@ class SimulationComposition:
             self.base_sim._list_of_models += sim._list_of_models
             self.base_sim._list_of_parameters += sim._list_of_parameters
 
-        return self.base_sim.generate_sbml()
+        return self.base_sim.generate_sbml(compose=compose)
+
+    def generate_antimony(self, compose=False, model_name=None):
+        """
+            Generates an string with an Antimony model from a respective MobsPy model
+            :param compose: (bool) Join composite simulations into a single sbml
+        """
+        self._check_all_sims_compilation()
+        self._compile_multi_simulation()
+
+        for sim in self.list_of_simulations:
+
+            if sim == self.base_sim:
+                continue
+
+            self.base_sim._list_of_models += sim._list_of_models
+            self.base_sim._list_of_parameters += sim._list_of_parameters
+
+        return self.base_sim.generate_antimony(compose=compose, model_name=model_name)
 
     @classmethod
     def is_simulation(cls):
