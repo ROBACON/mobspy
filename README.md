@@ -105,20 +105,23 @@ For now MobsPy is not thread-safe and it's not compatible with numpy and deepcop
 
 # Release info
 
-Version 1.1 added automated testing to git pushes with test_script.py
+Version 2.5.0 -  Added generate antimony function that translates a MobsPy model to antimony. Thank you Hebert Sauro and Lucian Smith for the discussions and help.
+
+Version 2.4.4 - Assignments completely added (both notations)
+
+Version 2.3 - MobsPy standard output is now always concentration.
+
+Version 2.2 - Added MobsPy expressions
+
+Version 2.1 - Added model parameters. Now MySim.results returns a list of all resulting time series no matter the number of repetitions. However, now a MySim.fres attribute was released that returns only the first time series in each simulation (thus, it is equal to MySim results with only one repetition in the previous version).
 
 Version 2.0.1 added events, ability to concatenate simulations, and changed the structure of output data to be more 
 user-friendly. Now MySim.results["data"]["runs"]["MetaSpeciesName"] has been deprecated. It has been replaced by 
 MySim.results["MetaSpeciesName"] or MySim.results[MetaSpeciesObject]. It will return only one run if there are no 
 repetitions and multiple runs with several repetitions.
 
-Version 2.1 - Added model parameters. Now MySim.results returns a list of all resulting time series no matter the number of repetitions. However, now a MySim.fres attribute was released that returns only the first time series in each simulation (thus, it is equal to MySim results with only one repetition in the previous version).
+Version 1.1 added automated testing to git pushes with test_script.py
 
-Version 2.2 - Added MobsPy expressions
-
-Version 2.3 - MobsPy standard output is now always concentration.
-
-Version 2.4.4 - Assignments completely added (both notations)
 
 
 
