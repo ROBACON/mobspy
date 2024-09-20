@@ -24,5 +24,5 @@ setuptools.setup(
     url="https://github.com/ROBACON/mobspy",
     python_requires=">=3.6",
     install_requires=install_requires,
-    extras_require=extra_requires
+    extras_require={'test': extra_requires}
 )
