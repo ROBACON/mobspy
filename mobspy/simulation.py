@@ -43,6 +43,7 @@ from mobspy.sbml_simulator.run import simulate as sbml_simulate
 from mobspy.data_handler.process_result_data import extract_time_and_volume_list as dh_extract_time_and_volume_list, \
     convert_data_to_desired_unit as dh_convert_data_to_desired_unit
 from mobspy.data_handler.time_series_object import MobsPyTimeSeries, MobsPyList_of_TS
+from mobspy.simulator_object.simulator_object_functions import sim_remove_reaction as sof_sim_remove_reaction
 from json import dump as json_dump, load as json_load
 from mobspy.plot_scripts.default_plots import deterministic_plot as dp_deterministic_plot, \
     stochastic_plot as dp_stochastic_plot, raw_plot as dp_raw_plot, parametric_plot as dp_parametric_plot
@@ -934,6 +935,12 @@ class Simulation(pdl_Experimental_Data_Holder):
         except KeyError:
             jobs = -1
         return jobs
+
+    def __sub__(self, other):
+        return sof_sim_remove_reaction(self, other, Simulation)
+
+    def __rsub__(self, other):
+        return sof_sim_remove_reaction(other, self, Simulation)
 
 
 class SimulationComposition:
