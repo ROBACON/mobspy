@@ -19,6 +19,7 @@ from inspect import stack as inspect_stack
 from mobspy.modules.meta_class_utils import unite_characteristics as mcu_unite_characteristics, \
     combine_references as mcu_combine_references, \
     check_orthogonality_between_references as mcu_check_orthogonality_between_references
+import re
 
 
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
@@ -867,11 +868,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
-        new_code_line = code_line.replace(' ', '')
-        if '#' in new_code_line:
-            new_code_line = new_code_line[:(new_code_line.find("#"))]
-
-        if new_code_line[-1] != ']':
+        # Check that line ends with a ']' and after that only ')', ',', whitespace and comments
+        pattern = r'\][\s\)\],]*(#.*)?$'
+            
+        # Make sure the reaction rate is present.
+        if not bool(re.search(pattern, code_line)):
             simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
                          + f'There must be a rate in the end of the reaction. Avoid comments in the same line as the reaction.')
 
