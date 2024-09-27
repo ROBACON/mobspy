@@ -50,6 +50,7 @@ from mobspy.plot_scripts.default_plots import deterministic_plot as dp_determini
 from mobspy.sbml_simulator.builder import build as sbml_build
 from os.path import splitext as os_path_splitext
 from random import randint as rd_randint
+import re
 
 
 class Simulation(pdl_Experimental_Data_Holder):
@@ -150,12 +151,13 @@ class Simulation(pdl_Experimental_Data_Holder):
             time = uh_convert_time(time)
             self.event_context_add(time, 'true')
 
-    def __init__(self, model, names=None, parameters=None, plot_parameters=None):
+    def __init__(self, model, reactions=None, names=None, parameters=None, plot_parameters=None):
         """
             Constructor of the simulation object
 
             Parameters:
             :param model: (List_Species object) Meta-Species object for modeling
+            :param reactions: (Iterable) ignore all reactions not present in :reactions
             :param names: (dict) names of the meta-species in globals() format. If none it uses the variable names
             :param parameters: (dict) Simulation object parameters. If none takes default parameters
             :param plot_parameters: (dict) Parameters for plotting. If none takes default
@@ -191,12 +193,13 @@ class Simulation(pdl_Experimental_Data_Holder):
                          f'Model type {type(model)} and it is {model}')
 
         self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)
-
-        # Get all meta - reactions
-        self._reactions_set = set()
-        for spe_object in self.model:
-            for reference in spe_object.get_references():
-                self._reactions_set = self._reactions_set.union(reference.get_reactions())
+        if reactions is not None:
+            self._reactions_set = set(reactions)
+        else:
+            self._reactions_set = set()
+            for spe_object in self.model:
+                for reference in spe_object.get_references():
+                        self._reactions_set = self._reactions_set.union(reference.get_reactions())
 
         self._species_counts = []
         for spe_object in self.model:
