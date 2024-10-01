@@ -108,7 +108,7 @@ class Reactions:
         """
         for p in products:
             if p['object'].get_name() == 'Context_MetaSpecies':
-                simlog_error('The any specie cannot be used in reactions')
+                simlog_error('The Any meta-species cannot be used in reactions')
 
         # CHECK-SET CONTEXT ZERO
         if asgi_Assign.check_context():
@@ -870,11 +870,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def _compile_defined_reaction(cls, code_line, line_number):
         # Check that line ends with a ']' and after that only ')', ',', whitespace and comments
         pattern = r'\][\s\)\],]*(#.*)?$'
+        set_pattern = r'Set\s*\[.*>>.*\]'
+
+        if re.search(set_pattern, code_line):
+            return True
             
         # Make sure the reaction rate is present.
         if not bool(re.search(pattern, code_line)):
             simlog_error(f'At: {code_line} \n' + f'Line number: {line_number} \n'
-                         + f'There must be a rate in the end of the reaction. Avoid comments in the same line as the reaction.')
+                         + f'There must be a rate in the end of the reaction. '
+                           f'Avoid comments in the same line as the reaction.')
 
     def __rshift__(self, other):
         """
@@ -1070,6 +1075,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self._reference_index_dictionary = {}
         self._unit = ''
         self._assignments = {}
+        self._linked_species = set()
 
         # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
         self.first_characteristic = None
@@ -1079,6 +1085,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         # This will store the quantities relating to the species counts
         self._species_counts = []
+
+    def link_a_species(self, other_species):
+        """
+            Links a species with another. So if one is added to the model, the other is also added to the model
+
+            :param other_species: (Species) Other species to be linked with this one
+        """
+        self._linked_species.add(other_species)
 
     def unit(self, unit):
         pass

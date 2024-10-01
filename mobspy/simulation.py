@@ -7,7 +7,7 @@ from mobspy.modules.meta_class import BaseSpecies, ListSpecies, New, Zero
 from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.mobspy_parameters import ModelParameters
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.order_operators import All, Default, Rev
+from mobspy.modules.order_operators import All, Default, Rev, Set
 from mobspy.modules.class_of_meta_specie_named_any import Any
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import basiCO_parameter_estimation
 
@@ -185,7 +185,14 @@ class Simulation(pdl_Experimental_Data_Holder):
         self.model_parameter_objects_dict = None
 
         # Must copy to avoid reference assignment
-        self.model = List_Species(model)
+        # Change model to include linked species
+        model_pre_link = List_Species(model)
+        model_pos_link = set()
+        for spe in model_pre_link:
+            model_pos_link.add(spe)
+            model_pos_link = model_pos_link.union(spe._linked_species)
+        self.model = List_Species(model_pos_link)
+
         self.names = names
 
         if not isinstance(model, Species) and not isinstance(model, List_Species):
@@ -678,6 +685,12 @@ class Simulation(pdl_Experimental_Data_Holder):
             The add operator is used to concatenate simulations.
         """
         return SimulationComposition(self, other)
+
+    def to_dataframe(self):
+        if self.results is None:
+            simlog.error("Simulation results were accessed before a simulation was executed")
+        else:
+            return self.results.return_pandas()
 
     def compose_sbml(self):
 
@@ -1198,6 +1211,9 @@ class SimulationComposition:
             self.base_sim._list_of_parameters += sim._list_of_parameters
 
         return self.base_sim.generate_antimony(compose=compose, model_name=model_name)
+
+    def to_dataframe(self):
+        self.base_sim.to_dataframe()
 
     @classmethod
     def is_simulation(cls):

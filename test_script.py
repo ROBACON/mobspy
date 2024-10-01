@@ -1102,15 +1102,19 @@ def test_model_reference():
 
     A(100), B(200)
     S1 = Simulation(A | B)
-    assert str(S1.model) == '[\'A\', \'B\']'
+
+    r1 = [str(spe) for spe in S1.model]
+    assert sorted(r1) == ['A', 'B']
 
     S1.duration = 0.5
 
     C = New(Mortal)
     C(50)
     S2 = Simulation(A | B | C)
-    assert str(S1.model) == '[\'A\', \'B\']'
-    assert str(S2.model) == '[\'A\', \'B\', \'C\']'
+    r1 = [str(spe) for spe in S1.model]
+    r2 = [str(spe) for spe in S2.model]
+    assert sorted(r1) == ['A', 'B']
+    assert sorted(r2) == ['A', 'B', 'C']
 
 
 def test_sbml_generation():

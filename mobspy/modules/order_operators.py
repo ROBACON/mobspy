@@ -9,6 +9,7 @@ from mobspy.modules.meta_class import Reactions
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
     construct_species_char_list as ssg_construct_species_char_list
+from mobspy.modules.meta_class import Species
 
 
 class __Operator_Base:
@@ -304,3 +305,43 @@ class __Reversible_Base:
 
 
 Rev = __Reversible_Base(__Set_Reversible_Rate())
+
+
+class _Set_Reaction_User_Base:
+
+    def __getitem__(self, reaction):
+        """
+            Operates with the reaction to
+
+            :param reaction: (Reaction object) object from the reaction class
+        """
+        return _Set_Reaction_Method(reaction)
+
+
+Set = _Set_Reaction_User_Base()
+
+
+class _Set_Reaction_Method:
+    _number_of_calls = 0
+
+    def __init__(self, reaction):
+        if reaction.rate is None:
+            simlog.error('A reaction rate was not found in the reaction used in the Set Operator', stack_index=3)
+
+        self.reaction = reaction
+
+    def at(self, time):
+        self._number_of_calls += 1
+        self._set_species = Species('dummy')
+        self._set_species._bypass_name('_set_spe_' + str(self._number_of_calls))
+
+        dict_insert_species = {'object': self._set_species, 'characteristics': set(),
+                               'stoichiometry': 1, 'label': None}
+        self._set_species(1)
+        self.reaction.reactants.append(dict_insert_species)
+        self.reaction.products.append(dict_insert_species)
+
+        for spe_obj in self.reaction.reactants + self.reaction.products:
+            spe_obj = spe_obj['object']
+            spe_obj.link_a_species(self._set_species)
+

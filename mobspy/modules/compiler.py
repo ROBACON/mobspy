@@ -274,6 +274,7 @@ class Compiler:
         # Event implementation here
         # Basico does not resolve species that have no reactions but were added to events
         # So we add "phantom" reactions to fix this
+
         parameters_in_events = set()
         events_for_sbml, species_in_events = eh_format_event_dictionary_for_sbml(species_for_sbml, event_dictionary,
                                                                                  orthogonal_vector_structure,
