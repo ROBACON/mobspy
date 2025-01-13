@@ -45,7 +45,7 @@ For instance:
 	Mortal = BaseSpecies()
 	Mortal >> Zero [1]
 
-The reaction above is a death reaction where the meta-species Mortal is dying. Zero is the MobsPy variable for representing nothing. We can design new meta-species from other meta-species using either the multiplication or the `New()` constructor. 
+The reaction above is a death reaction where the meta-species Mortal is dying. `Zero` is the MobsPy variable for representing nothing. We can design new meta-species from other meta-species using either the multiplication or the `New()` constructor. 
 
 	Replicator, Triplicator = New(Mortal, 2)
 	Replicator >> 2*Replicator [1]
