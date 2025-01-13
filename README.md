@@ -22,7 +22,7 @@ Meta-species are sets of species. Using them allows users to assign reactions to
 
 ## Basic syntax
 
-To create species from scratch, use the BaseSpecies function that takes as an argument the number of species one wants to make. To assign rates, one can define reactions using the `>>` operator and the brackets `[]`. To assign counts, use the call operator. An elementary example is the following:
+To create species from scratch, use the `BaseSpecies` constructor that takes as an optional argument the number of species one wants to create. To assign rates, one can define reactions using the `>>` operator and the brackets `[]`. To assign counts, use the call operator. An elementary example is the following:
 
 	from mobspy import *
 
