@@ -1,4 +1,4 @@
-![Alt text](/images/img.png "MobsPy")
+<img src="/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
 
 # MobsPy
 
@@ -24,10 +24,19 @@ Meta-Species are sets of species. Using them allows users to assign reactions to
 
 To create species from scratch, use the BaseSpecies function that takes as an argument the number of species one wants to make. To assign rates, one can define reactions using the '>>' operator and the brackets '[]'. To assign counts, use the call operator. An elementary example is the following:
 
-	A, B, C, D = BaseSpecies(4)
+	from mobspy import *
+
+	A, B, C, D = BaseSpecies()
 	A(200) + B(100) >> 2*C + D [420]
+
 	MySim = Simulation(A | B | C | D)
 	MySim.run()
+
+## Reversible Reactions
+
+Reactions can be reversible, denoted via the `Rev` operator. Forward and a backward rates are provided within brackets:
+
+	Rev[A(200) + B(100) >> 2*C + D][420, 10]
 
 ## Inheritance
 
@@ -50,7 +59,7 @@ In the code above, one can visualize the inheritance mechanism. Here both Replic
 Each Meta-Species has a set of states. One can add states to species by using the dot command ('.state') or by inheritance. A Meta-Species that inherits from another gains access to its states. 
 For instance:
 
-	Horned, Color = BaseSpecies(2)
+	Horned, Color = BaseSpecies()
 	Horned.small_horn >> Horned.big_horn [1]
 	Color.white >> Color.rainbow [1]
 	Unicorn = Horned*Color
