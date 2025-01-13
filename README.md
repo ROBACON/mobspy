@@ -6,7 +6,7 @@ Welcome to the Meta-species Oriented Biosystem Syntax in Python repository. Mobs
 
 # Python Version
 
-MobsPy requires python version 3.10 or higher
+MobsPy requires Python version 3.10 or higher
 
 # Getting started 
 
@@ -93,7 +93,7 @@ For a list of parameters, check the read_me in the parameter directory. The stan
 
 # Units
 	
-The variable u from the pint python module for unit handling is used to assign units to values in MobsPy. Just add `u.name_of_the_unit`, and MobsPy will handle it. As a code example, we have:
+The variable u from the pint Python module for unit handling is used to assign units to values in MobsPy. Just add `u.name_of_the_unit`, and MobsPy will handle it. As a code example, we have:
 
 	A(100*u.molar)
 	A >> Zero [10/u.nanosecond]
