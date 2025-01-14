@@ -22,7 +22,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ROBACON/mobspy",
-    python_requires=">=3.6",
+    python_requires=">=3.11",
     install_requires=install_requires,
     extras_require={'test': extra_requires}
 )
