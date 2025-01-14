@@ -6,7 +6,7 @@ Welcome to the Meta-species Oriented Biosystem Syntax in Python repository. Mobs
 
 # Python Version
 
-MobsPy requires Python version 3.10 or higher
+MobsPy requires Python version 3.11 or higher.
 
 # Getting started 
 
