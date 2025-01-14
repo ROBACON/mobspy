@@ -57,7 +57,7 @@ class Simulation(pdl_Experimental_Data_Holder):
 
     # Event Implementation
     @classmethod
-    def event_compilation_error(cls):
+    def event_compilation_error(cls) -> None:
         simlog.error('The event condition did not compile.\n'
                      'Please make sure it follows the following format:\n'
                      'For simple conditions - if C1 \n'
@@ -65,7 +65,7 @@ class Simulation(pdl_Experimental_Data_Holder):
                      'For or based conditions - if (C1) & (C2)\n'
                      'Please include the parentheses')
 
-    def event_context_finish(self):
+    def event_context_finish(self) -> None:
         """
             Removes the context in all meta-species and resets some varaiables. Called each time an event context is finished. 
         """
@@ -151,7 +151,7 @@ class Simulation(pdl_Experimental_Data_Holder):
             time = uh_convert_time(time)
             self.event_context_add(time, 'true')
 
-    def __init__(self, model, reactions=None, names=None, parameters=None, plot_parameters=None):
+    def __init__(self, model, reactions=None, names=None, parameters=None, plot_parameters=None) -> None:
         """
             Constructor of the simulation object
 
@@ -232,7 +232,7 @@ class Simulation(pdl_Experimental_Data_Holder):
         self._events_for_sbml = None
         self.model_string = ''
 
-    def compile(self, verbose=True):
+    def compile(self, verbose: bool=True) -> str | None:
         """
             Compiler method that calls the Compiler class in the modules directory
 
@@ -299,8 +299,11 @@ class Simulation(pdl_Experimental_Data_Holder):
 
         self._is_compiled = True
 
-        if self.model_string != '':
-            return self.model_string
+        if self.model_string == '':
+            return None
+        
+        return self.model_string
+        
 
     def _assemble_multi_simulation_structure(self):
 
@@ -841,7 +844,7 @@ class Simulation(pdl_Experimental_Data_Holder):
                                             sbml_data['assignments_for_sbml']))
         return to_return
 
-    def generate_antimony(self, compose=False, model_name=None):
+    def generate_antimony(self, compose: bool=False, model_name=None) -> list[str]:
         """
             Generates an string with an Antimony model from a respective MobsPy model
             :param compose: (bool) Join composite simulations into a single sbml
@@ -936,7 +939,7 @@ class Simulation(pdl_Experimental_Data_Holder):
         return model_list
 
     @classmethod
-    def is_simulation(cls):
+    def is_simulation(cls) -> bool:
         return True
 
     @classmethod
@@ -976,7 +979,7 @@ class SimulationComposition:
                                              f'Although reactions can be removed, the characteristics inherited must'
                                              f' remain the same')
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.list_of_simulations)
 
     def __iter__(self):
@@ -1175,9 +1178,9 @@ class SimulationComposition:
         for key in kwargs:
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
 
-    def generate_sbml(self, compose=False):
+    def generate_sbml(self, compose=False) -> list[str]:
         """
-            Generates an string with an SBML model from a respective MobsPy model
+            Generates a string with an SBML model from a respective MobsPy model
             :param compose: (bool) Join composite simulations into a single sbml
         """
 
@@ -1194,9 +1197,9 @@ class SimulationComposition:
 
         return self.base_sim.generate_sbml(compose=compose)
 
-    def generate_antimony(self, compose=False, model_name=None):
+    def generate_antimony(self, compose=False, model_name=None) -> list[str]:
         """
-            Generates an string with an Antimony model from a respective MobsPy model
+            Generates a string with an Antimony model from a respective MobsPy model
             :param compose: (bool) Join composite simulations into a single sbml
         """
         self._check_all_sims_compilation()
@@ -1216,7 +1219,7 @@ class SimulationComposition:
         self.base_sim.to_dataframe()
 
     @classmethod
-    def is_simulation(cls):
+    def is_simulation(cls) -> bool:
         return True
 
 
