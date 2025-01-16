@@ -248,17 +248,27 @@ class Assignment_Opp_Imp:
 
 class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     """
-        This is a intermediary object created when a species is used in a reaction. It is created when a species is
-        part of a reaction, so it's constructor is called by the Species class in several of it's methods. It
-        transforms a Species object into a list packable object to pass to create the reaction
-        object. This list format allows for easy concatenation of reactants by summing
+        Represents an intermediary object created when a species is used in a reaction.
+        
+        This object is created when a species participates in a reaction. Its constructor is
+        called by the `Species` class in several of its methods. The class transforms a `Species` object
+        into a list-compatible format to pass it into the reaction object. This list format allows for easy
+        concatenation of reactants by summing.
+        
+        The `>>` operator calls the `Reaction` constructor to define a reaction object.
 
-        The >> operator calls the Reaction constructor to finally define a reaction object
+        Attributes:
+            list_of_reactants (list[dict]): Represents reactants or products. Each dictionary contains:
+                - 'object' (object): A reference to a meta-species object.
+                - 'characteristics' (dict): Characteristics of the species being queried.
+                - 'stoichiometry' (float): Stoichiometric value for the species.
+                - 'label' (str, optional): A label for the species, if provided.
 
-        :param  list_of_reactants: (list of dict) used interchangeably for products and reactants.
-        A list of dictionaries containing the following {'object': meta-species object reference,
-        'characteristics': the characteristics queried, 'stoichiometry': stoichiometry value,
-        'label': label if used (None)}
+        Example:
+
+            species1 = Species("A")
+            species2 = Species("B")
+            reaction = species1 >> species2  # Creates a Reaction object.
     """
 
     def __enter__(self):
@@ -659,16 +669,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         So we construct the species through reactions and __getattr__ to form a model
 
         :param _name: (str) name of the species - named firstly as N$Counter as a placeholder. During compilation it is
-        named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
+            named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
         :param _characteristics: (str) set of characteristics DIRECTLY added to a species, does not contain inherited
-        characteristics
+            characteristics
         :param _references: (set) set of meta-species a meta-species has inherited from (used in it's construction).
-        Every species contains itself in this set
+            Every species contains itself in this set
         :param first_characteristic: (str) first characteristic added to the species
         :param _reactions: (set) Every species stores all reactions is involved in. The compiler performs the union of
-        the set with all species and species in the _references set to get the reactions back
+            the set with all species and species in the _references set to get the reactions back
         :param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
-        keys and the counts of values
+            keys and the counts of values
     """
 
     @classmethod
@@ -1229,7 +1239,7 @@ def compile_species_number_line(code_line):
 
         :param code_line: - Line of code where BaseSpecies or New has been called
         :return: n (int) = number of variables after a coma, names (list) = list of strings with the names of the
-        variables
+            variables
     """
     before_eq, after_eq = code_line.split('=')[0], code_line.split('=')[1]
     if after_eq.count('BaseSpecies') > 1:

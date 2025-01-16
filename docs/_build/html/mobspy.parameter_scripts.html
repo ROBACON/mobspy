@@ -51,9 +51,9 @@
 <li class="toctree-l3"><a class="reference internal" href="mobspy.modules.html">mobspy.modules package</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">mobspy.parameter_scripts package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mobspy-parameter-scripts-parameter-reader-module">mobspy.parameter_scripts.parameter_reader module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mobspy-parameter-scripts-parametric-sweeps-module">mobspy.parameter_scripts.parametric_sweeps module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.parameter_scripts.parameter_reader">mobspy.parameter_scripts.parameter_reader module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.parameter_scripts.parametric_sweeps">mobspy.parameter_scripts.parametric_sweeps module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.parameter_scripts">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mobspy.parameters.html">mobspy.parameters package</a></li>
@@ -64,8 +64,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="mobspy.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mobspy.html#mobspy-simulation-module">mobspy.simulation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy.simulation">mobspy.simulation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -100,14 +100,112 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="mobspy-parameter-scripts-parameter-reader-module">
-<h2>mobspy.parameter_scripts.parameter_reader module<a class="headerlink" href="#mobspy-parameter-scripts-parameter-reader-module" title="Link to this heading"></a></h2>
+<section id="module-mobspy.parameter_scripts.parameter_reader">
+<span id="mobspy-parameter-scripts-parameter-reader-module"></span><h2>mobspy.parameter_scripts.parameter_reader module<a class="headerlink" href="#module-mobspy.parameter_scripts.parameter_reader" title="Link to this heading"></a></h2>
+<p>This module is responsible for processing the parameters given to MobsPy before starting the simulation</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.check_duration_unit">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">check_duration_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.check_duration_unit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.check_method_parameter">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">check_method_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.check_method_parameter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.check_stochastic_repetitions_seeds">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">check_stochastic_repetitions_seeds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.check_stochastic_repetitions_seeds" title="Link to this definition"></a></dt>
+<dd><p>The list of seeds must be equal to the number of repetitions specified</p>
+<p>:param params (dict) = Dictionary with simulation parameters</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.convert_parameters_for_COPASI">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">convert_parameters_for_COPASI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.convert_parameters_for_COPASI" title="Link to this definition"></a></dt>
+<dd><p>Converts parameters units to MobsPy standard units (basiCO needs seconds for simulation duration)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> – (dict) = Dictionary with simulation parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.convert_time_parameters_after_compilation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">convert_time_parameters_after_compilation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.convert_time_parameters_after_compilation" title="Link to this definition"></a></dt>
+<dd><p>This function converts the duration if the model was already compiled</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.convert_unit_parameters">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">convert_unit_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.convert_unit_parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.convert_volume_after_compilation">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">convert_volume_after_compilation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_for_sbml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.convert_volume_after_compilation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.manually_process_each_parameter">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">manually_process_each_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_concentration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.manually_process_each_parameter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.name_output_file">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">name_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.name_output_file" title="Link to this definition"></a></dt>
+<dd><p>Gives a name to the output file - just date time in case the user has not specified one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> – (dict) Dictionary with simulation parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.parameter_process">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">parameter_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.parameter_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parameter_reader.read_json">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parameter_reader.</span></span><span class="sig-name descname"><span class="pre">read_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parameter_reader.read_json" title="Link to this definition"></a></dt>
+<dd><p>Reads json file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>plot_json_filename</strong> – json file name</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>simlog.error</strong> – If the file was not able to be read</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>plot parameter dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="mobspy-parameter-scripts-parametric-sweeps-module">
-<h2>mobspy.parameter_scripts.parametric_sweeps module<a class="headerlink" href="#mobspy-parameter-scripts-parametric-sweeps-module" title="Link to this heading"></a></h2>
+<section id="module-mobspy.parameter_scripts.parametric_sweeps">
+<span id="mobspy-parameter-scripts-parametric-sweeps-module"></span><h2>mobspy.parameter_scripts.parametric_sweeps module<a class="headerlink" href="#module-mobspy.parameter_scripts.parametric_sweeps" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parametric_sweeps.assign_values_to_model">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parametric_sweeps.</span></span><span class="sig-name descname"><span class="pre">assign_values_to_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parametric_sweeps.assign_values_to_model" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parametric_sweeps.generate_all_sbml_models">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parametric_sweeps.</span></span><span class="sig-name descname"><span class="pre">generate_all_sbml_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_of_models</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parametric_sweeps.generate_all_sbml_models" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.parameter_scripts.parametric_sweeps.unite_parameter_dictionaries">
+<span class="sig-prename descclassname"><span class="pre">mobspy.parameter_scripts.parametric_sweeps.</span></span><span class="sig-name descname"><span class="pre">unite_parameter_dictionaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict_2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.parameter_scripts.parametric_sweeps.unite_parameter_dictionaries" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="module-mobspy.parameter_scripts">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy.parameter_scripts" title="Link to this heading"></a></h2>
 </section>
 </section>
 

@@ -10,10 +10,11 @@ Welcome to MobsPy's documentation!
    :maxdepth: 2
    :caption: Getting started
 
-   ./example_models/tutorial_notebooks/01_Basic_Intro.ipynb
 
 .. toctree::
    :maxdepth: 2
    :caption: API
 
    mobspy
+   modules
+   api

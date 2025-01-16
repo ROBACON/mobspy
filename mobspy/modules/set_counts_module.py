@@ -12,13 +12,14 @@ def set_counts(count_dic):
         objects or strings. Items must be the assign counts to species
 
         :param count_dic: Dictionary where keys can be either meta-species or strings
-        :raise simlog.error: - If a count is assigned to a Reacting_Species with more than one meta-species.
-        If there are two species with the same name and a string assignment is performed.
-        If the keys are not strings or meta-species.
-        If the counts are not Quantities, Floats or Ints.
-        If the species was not found in the stack.
+        :raise simlog.error:
+            - If a count is assigned to a Reacting_Species with more than one meta-species.
+            - If there are two species with the same name and a string assignment is performed.
+            - If the keys are not strings or meta-species.
+            - If the counts are not Quantities, Floats or Ints.
+            - If the species was not found in the stack.
         :return: List_Species object. All meta-species that had a count assigned in this dictionary will be returned
-        as a List_Species which can be passed as a model to the simulation object
+            as a List_Species which can be passed as a model to the simulation object
     """
     new_count_dict = {}
     for key, item in count_dic.items():

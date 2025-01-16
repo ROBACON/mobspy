@@ -6,5 +6,4 @@ mobspy
 
    for_local_use
    mobspy
-   setup
    test_script

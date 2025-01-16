@@ -55,18 +55,18 @@
 <li class="toctree-l3"><a class="reference internal" href="mobspy.plot_scripts.html">mobspy.plot_scripts package</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">mobspy.sbml_simulator package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mobspy-sbml-simulator-sbmlwriter-module">mobspy.sbml_simulator.SBMLWriter module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mobspy-sbml-simulator-builder-module">mobspy.sbml_simulator.builder module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mobspy-sbml-simulator-run-module">mobspy.sbml_simulator.run module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.sbml_simulator.SBMLWriter">mobspy.sbml_simulator.SBMLWriter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.sbml_simulator.builder">mobspy.sbml_simulator.builder module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.sbml_simulator.run">mobspy.sbml_simulator.run module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mobspy.sbml_simulator">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mobspy.simulation_logging.html">mobspy.simulation_logging package</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="mobspy.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mobspy.html#mobspy-simulation-module">mobspy.simulation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy.simulation">mobspy.simulation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -101,17 +101,138 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="mobspy-sbml-simulator-sbmlwriter-module">
-<h2>mobspy.sbml_simulator.SBMLWriter module<a class="headerlink" href="#mobspy-sbml-simulator-sbmlwriter-module" title="Link to this heading"></a></h2>
+<section id="module-mobspy.sbml_simulator.SBMLWriter">
+<span id="mobspy-sbml-simulator-sbmlwriter-module"></span><h2>mobspy.sbml_simulator.SBMLWriter module<a class="headerlink" href="#module-mobspy.sbml_simulator.SBMLWriter" title="Link to this heading"></a></h2>
+<p>This module is responsible for converting a model_str into a SBML format</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.SBMLWriter.check">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.SBMLWriter.</span></span><span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'error'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.SBMLWriter.check" title="Link to this definition"></a></dt>
+<dd><p>If ‘value’ is None, prints an error message constructed using
+‘message’ and then exits with status code 1.  If ‘value’ is an integer,
+it assumes it is a libSBML return status code.  If the code value is
+LIBSBML_OPERATION_SUCCESS, returns without further action; if it is not,
+prints an error message constructed using ‘message’ along with text from
+libSBML explaining the meaning of the code, and exits with status code 1.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.SBMLWriter.create_model">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.SBMLWriter.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.SBMLWriter.create_model" title="Link to this definition"></a></dt>
+<dd><p>Returns an SBML Level 3 model.
+Example:
+species = { ‘E’: 1,</p>
+<blockquote>
+<div><p>‘EM’: 0,
+‘EM2’: 0,
+‘F’: 100,
+},</p>
+</div></blockquote>
+<dl>
+<dt>parameters = {‘k’: (1e-06,’per_min’),</dt><dd><p>}</p>
+</dd>
+<dt>reactions = { ‘Production_E’:</dt><dd><blockquote>
+<div><dl class="simple">
+<dt>{ ‘re’: [(1,’E’),(1,’F’)],</dt><dd><p>‘pr’: [(2,’E’)],
+‘kin’ : ‘k * E * F’</p>
+</dd>
+</dl>
+<p>},</p>
+</div></blockquote>
+<p>},</p>
+</dd>
+<dt>events = {‘e’:</dt><dd><dl class="simple">
+<dt>{ ‘trigger’: ‘true’,</dt><dd><p>‘delay’: ‘10’,
+‘assignments’: [(‘M’,’1’),],</p>
+</dd>
+</dl>
+<p>},</p>
+</dd>
+</dl>
+<p>}</p>
+</dd></dl>
+
 </section>
-<section id="mobspy-sbml-simulator-builder-module">
-<h2>mobspy.sbml_simulator.builder module<a class="headerlink" href="#mobspy-sbml-simulator-builder-module" title="Link to this heading"></a></h2>
+<section id="module-mobspy.sbml_simulator.builder">
+<span id="mobspy-sbml-simulator-builder-module"></span><h2>mobspy.sbml_simulator.builder module<a class="headerlink" href="#module-mobspy.sbml_simulator.builder" title="Link to this heading"></a></h2>
+<p>Picks and translates a python model into an
+SBML readable by Copasi. New models must
+be references here as well.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.builder.build">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.builder.</span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignments</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.builder.build" title="Link to this definition"></a></dt>
+<dd><p>Constructs the sbml file for a model from the dictionary syntax for python sbml lib</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – (dict) species as keys and counts as values</p></li>
+<li><p><strong>parameters</strong> – (dict) parameter name and value</p></li>
+<li><p><strong>reactions</strong> – (dict) reaction name and reaction in python sbml writer format</p></li>
+<li><p><strong>events</strong> – (dict) event name and event in python sbml writer format</p></li>
+<li><p><strong>assignments</strong> – (dict) assignments numbers and expressions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>sbml_str (str) = string describing the model in sbml format</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="mobspy-sbml-simulator-run-module">
-<h2>mobspy.sbml_simulator.run module<a class="headerlink" href="#mobspy-sbml-simulator-run-module" title="Link to this heading"></a></h2>
+<section id="module-mobspy.sbml_simulator.run">
+<span id="mobspy-sbml-simulator-run-module"></span><h2>mobspy.sbml_simulator.run module<a class="headerlink" href="#module-mobspy.sbml_simulator.run" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.run.job_execution">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.run.</span></span><span class="sig-name descname"><span class="pre">job_execution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.run.job_execution" title="Link to this definition"></a></dt>
+<dd><p>This is defined for parallelism purposes
+Uses multiple cores from the processor to execute stochastic simulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – (dict) = simulation parameters</p></li>
+<li><p><strong>models</strong> – (list) [{‘species_for_sbml’:, ‘parameters_for_sbml’:, ‘reactions_for_sbml’:,
+‘events_for_sbml’:, ‘species_not_mapped’:, ‘mappings’:}]</p></li>
+<li><p><strong>jobs</strong> – (int) = number of cores to use, -1 for all available</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>parallel_data data of all the individual simulations executed in parallel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.run.reformat_time_series">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.run.</span></span><span class="sig-name descname"><span class="pre">reformat_time_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.run.reformat_time_series" title="Link to this definition"></a></dt>
+<dd><p>Transforms the _dot_ in from the results into .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – (pd.dataframe) simulation data results from BasiCO</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mobspy.sbml_simulator.run.simulate">
+<span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.run.</span></span><span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_of_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.run.simulate" title="Link to this definition"></a></dt>
+<dd><p>This function coordinates the simulation by calling the necessary jobs
+In the future we hope to implement parallel cluster computing compatibility</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_of_params</strong> – (dict) simulation parameters from the text file</p></li>
+<li><p><strong>models</strong> – (list) [{‘species_for_sbml’:, ‘parameters_for_sbml’:, ‘reactions_for_sbml’:,
+‘events_for_sbml’:, ‘species_not_mapped’:, ‘mappings’:}]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>data (dict) = dictionary containing the resulting data from simulation</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="module-mobspy.sbml_simulator">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mobspy.sbml_simulator" title="Link to this heading"></a></h2>
 </section>
 </section>
 

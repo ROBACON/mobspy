@@ -90,7 +90,7 @@ class Specific_Species_Operator(Bool_Override):
 
             :param reference: (Species) Meta-species object
             :return: (bool) True if the meta-species in Specific_Species_Operator has inherited from the reference
-            False otherwise
+                False otherwise
         """
         if not self._stocked_characteristics:
             if reference in self._species_object.get_references():

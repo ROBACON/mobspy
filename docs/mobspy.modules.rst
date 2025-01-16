@@ -84,14 +84,6 @@ mobspy.modules.reaction\_construction\_nb module
    :undoc-members:
    :show-inheritance:
 
-mobspy.modules.reaction\_construction\_nb\_parallel module
-----------------------------------------------------------
-
-.. automodule:: mobspy.modules.reaction_construction_nb_parallel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 mobspy.modules.set\_counts\_module module
 -----------------------------------------
 

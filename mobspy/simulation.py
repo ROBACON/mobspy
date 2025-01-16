@@ -622,8 +622,7 @@ class Simulation(pdl_Experimental_Data_Holder):
             Extract essential information for plotting
 
             :param species: (meta-species objects) meta-species objects to plot
-            :return: species_strings (str) = species strings to be plotted, self.results = data resulting from the
-            simulation, self.plot_parameters (dict) = parameters for plotting
+            :return: species_strings (str) = species strings to be plotted, self.results = data resulting from the simulation, self.plot_parameters (dict) = parameters for plotting
         """
         if not species:
             species_strings = set()
@@ -678,8 +677,7 @@ class Simulation(pdl_Experimental_Data_Holder):
         """
             Calls raw plot. See default_plots module in the plot_scripts directory
 
-            :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot
-            parameter configuration
+            :param parameters_or_file: json file name with plot parameter configuration or dictionary with plot parameter configuration
         """
         return dp_raw_plot(self.results, parameters_or_file, return_fig=return_fig)
 

@@ -19,7 +19,7 @@ release = '2.2'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser", "nbsphinx", "sphinx.ext.autodoc", ]  # "sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.autosummary"]
+extensions = ["myst_parser", "nbsphinx", "sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.autosummary"]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

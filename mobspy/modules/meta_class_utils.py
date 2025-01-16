@@ -60,7 +60,7 @@ def complete_characteristics_with_first_values(spe_object, characteristics, char
         :param spe_object: (meta-species object) meta-species to generate the species states with the first values
         :param characteristics: (str) if there are characteristics to use instead of the default
         :param characteristics_to_object: (dict) dictionary with characteristics as keys and the meta-species which
-        they have been added to directly as value (no inheritance or New)
+            they have been added to directly as value (no inheritance or New)
 
         :return: Set with the species name and characteristics
     """
@@ -109,7 +109,7 @@ def create_orthogonal_vector_structure(species):
         :param species: (meta-species objects) - meta-species objects used in a model
 
         :return ref_characteristics_to_object: (dict) a dictionary where the keys are characteristics and the
-        values are meta-species objects that have been directly added to that object
+            values are meta-species objects that have been directly added to that object
     """
     ref_characteristics_to_object = {}
     for spe in species:

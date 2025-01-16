@@ -102,8 +102,7 @@ class SpeciesComparator:
 
     def add_operation_and_number(self, symbol, number):
         """
-            Creates a MetaSpeciesLogicResolver from the comparison of a meta-species with a value or another
-            meta-species
+            Creates a MetaSpeciesLogicResolver from the comparison of a meta-species with a value or another meta-species
 
             :param symbol: Comparison symbol '>=', '<=', '>' or '<'
             :param number: (int) if compared to a value, (Species or ReactingSpecies) if compared to the objects
@@ -233,11 +232,10 @@ class ReactingSpeciesComparator(SpeciesComparator):
 
 class MetaSpeciesLogicResolver:
     """
-        This object stores the logical and comparison operations that become the event triggers for conditions
-        or the conditional duration for simulations
+        This object stores the logical and comparison operations that become the event triggers for conditions or the conditional duration for simulations
 
         :param operation: (list) the logical operation that will be transformed in a string for copasi. Format ex
-        [{object: ..., characteristics:...}, '<=', 10]
+            [{object: ..., characteristics:...}, '<=', 10]
         :param simulation_context: (Simulation) simulation under context
     """
 
@@ -289,7 +287,7 @@ class MetaSpeciesLogicResolver:
     def generate_string(self, characteristics_to_object, to_sort=False):
         """
             When a meta-species is used in a logic expression, this function transforms a meta-species in the sum of
-            all individual states
+                all individual states
 
             :param characteristics_to_object: orthogonal characteristic space
             :param to_sort: sort strings or not - so the sum will always apear in the same order

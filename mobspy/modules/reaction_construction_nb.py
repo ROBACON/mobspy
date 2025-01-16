@@ -64,7 +64,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
         :param reactions: (set of meta-reactions) set of meta-reactions inside the model
         :param ref_characteristics_to_object: (dict) dictionary with the characteristics as keys and their respective
-        object as values
+            object as values
     """
     for reaction in reactions:
         for reactant in reaction.reactants:
@@ -121,7 +121,7 @@ def construct_reactant_structures(reactant_species, ref_characteristics_to_objec
 
         :param reactant_species: (meta-species object) species objects of the involved species
         :param ref_characteristics_to_object: (dict) dictionary with characteristics as keys and species objects as
-        values
+            values
     """
     species_string_combinations = []
 
@@ -141,12 +141,12 @@ def construct_order_structure(species_order_list, current_species_string_list):
         step
 
         :param species_order_list: (list of meta-species objects) list of meta-species objects as they appear in the
-        meta-reaction
+            meta-reaction
         :param current_species_string_list: (list of strings) list of strings in MobsPy format of the species
-        currently in this specific reaction
+            currently in this specific reaction
 
         :return: cyclic_dict (dict) Dictionary where the keys are meta-species objects and the values are
-        lists of species
+            lists of species
     """
     cyclic_dict = {}
     for species_object, species_string in zip(species_order_list, current_species_string_list):
@@ -166,7 +166,7 @@ def construct_product_structure(reaction):
         :param: reaction meta-reaction currently being analysed
 
         :return: product_list = A list of dictionaries for each product with the meta-species object, the label and the
-        characteristics
+            characteristics
     """
     product_list = []
     for product in reaction.products:
@@ -214,8 +214,8 @@ def get_involved_species(reaction, meta_species_in_model):
         :param meta_species_in_model: (list) list of meta-species used in the model
 
         :return: base_species_order (list of meta-species objects) = order that the meta-species appear in the
-        meta-reaction, reactant_species_combination_list (list of lists of meta-species) = list of lists of all
-        meta-species that have inherited from the meta-species in the meta-reaction
+            meta-reaction, reactant_species_combination_list (list of lists of meta-species) = list of lists of all
+            meta-species that have inherited from the meta-species in the meta-reaction
     """
     reactant_species_combination_list = []
     base_species_order = []
@@ -276,7 +276,7 @@ def create_all_reactions(reactions, meta_species_in_model,
         :param dimension: (int) model dimension 1D, 2D, 3D, .....
 
         :returns: reactions_for_sbml (dict) = dictionary with all reactions that will be added to the sbml model file,
-        parameters_for_sbml (dict) = parameters for the sbml model file
+            parameters_for_sbml (dict) = parameters for the sbml model file
     """
     reactions_for_sbml = {}
 
