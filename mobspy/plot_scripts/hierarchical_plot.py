@@ -59,7 +59,7 @@ def get_total_figure_number(axis_matrix):
         correct part of the axis_matrix
 
         :param axis_matrix: (1D or 2D numpy array) Array returned by pyplot once multiple figures are introduced into
-        a single plot
+            a single plot
 
         :return: total_figure_number (int) Total number of figures
     """

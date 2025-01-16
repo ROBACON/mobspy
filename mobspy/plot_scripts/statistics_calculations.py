@@ -92,7 +92,7 @@ def average_plus_standard_deviation(species_string, mobspy_ts, average_series=No
         :param deviation_series: (list) if the deviation is given it is not recalculated
 
         :return: series_average (list) = average value of the run,  plus (list) = average + deviation,
-        minus (list) = average - deviation,
+            minus (list) = average - deviation,
    """
     if average_series is None:
         series_average = time_series_average(species_string, mobspy_ts)

@@ -61,10 +61,10 @@ def stochastic_plot(species, data, plot_params):
         in the hierarchical plot module
 
         :param species: (list of str) list of species names in MobsPy str format (queries are performed with the
-        query plot data function)
+            query plot data function)
         :param data: (dict) data in MobsPy format Simulation.results['data']
         :param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
-        from this function
+            from this function
     """
 
     # Data Handling - Copy data object to not interfere with simulation data
@@ -150,10 +150,10 @@ def deterministic_plot(species, data, plot_params):
         in the hierarchical plot module
 
         :param species: (list of str) list of species names in MobsPy str format (queries are performed
-        with the query plot data function)
+            with the query plot data function)
         :param data: (dict) data in MobsPy format Simulation.results['data']
         :param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
-        from this function
+            from this function
     """
     # Data Handling
     species, data = ppd.query_plot_data(species, data)

@@ -19,7 +19,9 @@
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="for_local_use module" href="for_local_use.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,8 +44,115 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="mobspy.html">mobspy package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">mobspy</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="for_local_use.html">for_local_use module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mobspy.html">mobspy package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">test_script module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.all_test"><code class="docutils literal notranslate"><span class="pre">all_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.all_test_2"><code class="docutils literal notranslate"><span class="pre">all_test_2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.compare_model"><code class="docutils literal notranslate"><span class="pre">compare_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.initial_expression_test"><code class="docutils literal notranslate"><span class="pre">initial_expression_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.order_model_str"><code class="docutils literal notranslate"><span class="pre">order_model_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_Silicon_valley"><code class="docutils literal notranslate"><span class="pre">test_Silicon_valley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_Zero_rate_reactions"><code class="docutils literal notranslate"><span class="pre">test_Zero_rate_reactions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_all_asgn_ops"><code class="docutils literal notranslate"><span class="pre">test_all_asgn_ops()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_antimony_compose_model_gen"><code class="docutils literal notranslate"><span class="pre">test_antimony_compose_model_gen()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_antimony_model"><code class="docutils literal notranslate"><span class="pre">test_antimony_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_assign_context_complex"><code class="docutils literal notranslate"><span class="pre">test_assign_context_complex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_assign_context_constant"><code class="docutils literal notranslate"><span class="pre">test_assign_context_constant()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_assignment_similar_species"><code class="docutils literal notranslate"><span class="pre">test_assignment_similar_species()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_average_value"><code class="docutils literal notranslate"><span class="pre">test_average_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_basic_assignment"><code class="docutils literal notranslate"><span class="pre">test_basic_assignment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_bi_dimensional_rates"><code class="docutils literal notranslate"><span class="pre">test_bi_dimensional_rates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_blocked_names"><code class="docutils literal notranslate"><span class="pre">test_blocked_names()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_blocked_names_2"><code class="docutils literal notranslate"><span class="pre">test_blocked_names_2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_bool_error"><code class="docutils literal notranslate"><span class="pre">test_bool_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_changes_after_compilation"><code class="docutils literal notranslate"><span class="pre">test_changes_after_compilation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_concatenated_simulation"><code class="docutils literal notranslate"><span class="pre">test_concatenated_simulation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_conditional_between_meta_species"><code class="docutils literal notranslate"><span class="pre">test_conditional_between_meta_species()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_conditional_between_meta_species_2"><code class="docutils literal notranslate"><span class="pre">test_conditional_between_meta_species_2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_conversion_outside"><code class="docutils literal notranslate"><span class="pre">test_conversion_outside()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_convert_back_parameter"><code class="docutils literal notranslate"><span class="pre">test_convert_back_parameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_count_assignment"><code class="docutils literal notranslate"><span class="pre">test_count_assignment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_crash_after_modification"><code class="docutils literal notranslate"><span class="pre">test_crash_after_modification()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_dimension_in_function_only"><code class="docutils literal notranslate"><span class="pre">test_dimension_in_function_only()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_dimensional_inconsistency"><code class="docutils literal notranslate"><span class="pre">test_dimensional_inconsistency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_dimensionless_count"><code class="docutils literal notranslate"><span class="pre">test_dimensionless_count()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_double_parameters_with_units"><code class="docutils literal notranslate"><span class="pre">test_double_parameters_with_units()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_double_rate"><code class="docutils literal notranslate"><span class="pre">test_double_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_duration_with_run"><code class="docutils literal notranslate"><span class="pre">test_duration_with_run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_empty_arguments"><code class="docutils literal notranslate"><span class="pre">test_empty_arguments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_error_mult"><code class="docutils literal notranslate"><span class="pre">test_error_mult()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_event_all"><code class="docutils literal notranslate"><span class="pre">test_event_all()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_event_reaction_not_allowed"><code class="docutils literal notranslate"><span class="pre">test_event_reaction_not_allowed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_event_type"><code class="docutils literal notranslate"><span class="pre">test_event_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_first_characteristic_in_reacting_species"><code class="docutils literal notranslate"><span class="pre">test_first_characteristic_in_reacting_species()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_hybrid_sim"><code class="docutils literal notranslate"><span class="pre">test_hybrid_sim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_inline_comment"><code class="docutils literal notranslate"><span class="pre">test_inline_comment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_logic_operator_syntax"><code class="docutils literal notranslate"><span class="pre">test_logic_operator_syntax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_matching_characteristic_rate"><code class="docutils literal notranslate"><span class="pre">test_matching_characteristic_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_1"><code class="docutils literal notranslate"><span class="pre">test_model_1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_2"><code class="docutils literal notranslate"><span class="pre">test_model_2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_3"><code class="docutils literal notranslate"><span class="pre">test_model_3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_4"><code class="docutils literal notranslate"><span class="pre">test_model_4()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_5"><code class="docutils literal notranslate"><span class="pre">test_model_5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_6"><code class="docutils literal notranslate"><span class="pre">test_model_6()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_7"><code class="docutils literal notranslate"><span class="pre">test_model_7()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_model_reference"><code class="docutils literal notranslate"><span class="pre">test_model_reference()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_more_than_used"><code class="docutils literal notranslate"><span class="pre">test_more_than_used()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_multi_methods_plot"><code class="docutils literal notranslate"><span class="pre">test_multi_methods_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_multi_parameter_with_expression"><code class="docutils literal notranslate"><span class="pre">test_multi_parameter_with_expression()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_multi_parameters_in_run"><code class="docutils literal notranslate"><span class="pre">test_multi_parameters_in_run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_multi_sim_sbml"><code class="docutils literal notranslate"><span class="pre">test_multi_sim_sbml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_multiple_simulation_counts"><code class="docutils literal notranslate"><span class="pre">test_multiple_simulation_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_numpy_in_counts"><code class="docutils literal notranslate"><span class="pre">test_numpy_in_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_numpy_in_expression_function"><code class="docutils literal notranslate"><span class="pre">test_numpy_in_expression_function()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_numpy_in_rates"><code class="docutils literal notranslate"><span class="pre">test_numpy_in_rates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_numpy_in_set_counts"><code class="docutils literal notranslate"><span class="pre">test_numpy_in_set_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_numpy_with_units"><code class="docutils literal notranslate"><span class="pre">test_numpy_with_units()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_one_value_concatenation_sim"><code class="docutils literal notranslate"><span class="pre">test_one_value_concatenation_sim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_orthogonal_spaces"><code class="docutils literal notranslate"><span class="pre">test_orthogonal_spaces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_output_concentration_in_multi_sim"><code class="docutils literal notranslate"><span class="pre">test_output_concentration_in_multi_sim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_parameter_operation_in_rate"><code class="docutils literal notranslate"><span class="pre">test_parameter_operation_in_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_parameters_with_sbml"><code class="docutils literal notranslate"><span class="pre">test_parameters_with_sbml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_parameters_with_units"><code class="docutils literal notranslate"><span class="pre">test_parameters_with_units()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_plotting"><code class="docutils literal notranslate"><span class="pre">test_plotting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_proper_unit_context_exit"><code class="docutils literal notranslate"><span class="pre">test_proper_unit_context_exit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_reacting_species_event"><code class="docutils literal notranslate"><span class="pre">test_reacting_species_event()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_reaction_deactivation"><code class="docutils literal notranslate"><span class="pre">test_reaction_deactivation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_repeated_parameters"><code class="docutils literal notranslate"><span class="pre">test_repeated_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_replacing_species_name_in_expression"><code class="docutils literal notranslate"><span class="pre">test_replacing_species_name_in_expression()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_rev"><code class="docutils literal notranslate"><span class="pre">test_rev()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_run_args"><code class="docutils literal notranslate"><span class="pre">test_run_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_sbml_generation"><code class="docutils literal notranslate"><span class="pre">test_sbml_generation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_set_counts"><code class="docutils literal notranslate"><span class="pre">test_set_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_set_counts_parameters"><code class="docutils literal notranslate"><span class="pre">test_set_counts_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_shared_parameter_name"><code class="docutils literal notranslate"><span class="pre">test_shared_parameter_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_single_rate"><code class="docutils literal notranslate"><span class="pre">test_single_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_stack_position"><code class="docutils literal notranslate"><span class="pre">test_stack_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_stochastic_event_duration"><code class="docutils literal notranslate"><span class="pre">test_stochastic_event_duration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_string_events_assignment"><code class="docutils literal notranslate"><span class="pre">test_string_events_assignment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_triple_rate"><code class="docutils literal notranslate"><span class="pre">test_triple_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_unit_args"><code class="docutils literal notranslate"><span class="pre">test_unit_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_unit_bi_dimension"><code class="docutils literal notranslate"><span class="pre">test_unit_bi_dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_unit_event_test"><code class="docutils literal notranslate"><span class="pre">test_unit_event_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_unit_x_conversion"><code class="docutils literal notranslate"><span class="pre">test_unit_x_conversion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_volume_after_sim"><code class="docutils literal notranslate"><span class="pre">test_volume_after_sim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_with_statement_any_and_species_characteristics"><code class="docutils literal notranslate"><span class="pre">test_with_statement_any_and_species_characteristics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_with_statement_on_any_and_event"><code class="docutils literal notranslate"><span class="pre">test_with_statement_on_any_and_event()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_wrong_dimension_error"><code class="docutils literal notranslate"><span class="pre">test_wrong_dimension_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.test_wrong_rate"><code class="docutils literal notranslate"><span class="pre">test_wrong_rate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.text_assign_context_exit"><code class="docutils literal notranslate"><span class="pre">text_assign_context_exit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.text_complex_assignments"><code class="docutils literal notranslate"><span class="pre">text_complex_assignments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.text_even_more_complex_assignments"><code class="docutils literal notranslate"><span class="pre">text_even_more_complex_assignments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test_script.zero_rate_test"><code class="docutils literal notranslate"><span class="pre">zero_rate_test()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
         </div>
@@ -60,6 +169,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">mobspy</a></li>
       <li class="breadcrumb-item active">test_script module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/test_script.rst.txt" rel="nofollow"> View page source</a>
@@ -567,7 +677,10 @@
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="for_local_use.html" class="btn btn-neutral float-left" title="for_local_use module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

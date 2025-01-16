@@ -70,6 +70,29 @@
 <li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">mobspy</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="for_local_use.html">for_local_use module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mobspy.html">mobspy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mobspy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html">mobspy.data_handler package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html">mobspy.modules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.parameter_scripts.html">mobspy.parameter_scripts package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.parameters.html">mobspy.parameters package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.plot_params.html">mobspy.plot_params package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">mobspy.plot_scripts package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.sbml_simulator.html">mobspy.sbml_simulator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.simulation_logging.html">mobspy.simulation_logging package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#module-mobspy.simulation">mobspy.simulation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="test_script.html">test_script module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
         </div>
@@ -111,13 +134,15 @@
 in the hierarchical plot module</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed
+with the query plot data function)</p></li>
+<li><p><strong>data</strong> – (dict) data in MobsPy format Simulation.results[‘data’]</p></li>
+<li><p><strong>plot_params</strong> – (dict) dictionary with the plot parameters supplied by the user before the modifications
+from this function</p></li>
+</ul>
 </dd>
 </dl>
-<p>with the query plot data function)
-:param data: (dict) data in MobsPy format Simulation.results[‘data’]
-:param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
-from this function</p>
 </dd></dl>
 
 <dl class="py function">
@@ -173,13 +198,15 @@ Does not accept parameters from a Simulation object, it must be given the parame
 in the hierarchical plot module</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed with the</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – (list of str) list of species names in MobsPy str format (queries are performed with the
+query plot data function)</p></li>
+<li><p><strong>data</strong> – (dict) data in MobsPy format Simulation.results[‘data’]</p></li>
+<li><p><strong>plot_params</strong> – (dict) dictionary with the plot parameters supplied by the user before the modifications
+from this function</p></li>
+</ul>
 </dd>
 </dl>
-<p>query plot data function)
-:param data: (dict) data in MobsPy format Simulation.results[‘data’]
-:param plot_params: (dict) dictionary with the plot parameters supplied by the user before the modifications
-from this function</p>
 </dd></dl>
 
 </section>
@@ -293,13 +320,11 @@ This function is implemented to allow for the comparison of models with experime
 correct part of the axis_matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>axis_matrix</strong> – (1D or 2D numpy array) Array returned by pyplot once multiple figures are introduced into</p>
+<dd class="field-odd"><p><strong>axis_matrix</strong> – (1D or 2D numpy array) Array returned by pyplot once multiple figures are introduced into
+a single plot</p>
 </dd>
-</dl>
-<p>a single plot</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>total_figure_number (int) Total number of figures</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>total_figure_number (int) Total number of figures</p>
 </dd>
 </dl>
 </dd></dl>
@@ -421,10 +446,10 @@ It creates a new data structure with the results from the query added to it for 
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>series_average (list) = average value of the run,  plus (list) = average + deviation,</p>
+<dd class="field-even"><p>series_average (list) = average value of the run,  plus (list) = average + deviation,
+minus (list) = average - deviation,</p>
 </dd>
 </dl>
-<p>minus (list) = average - deviation,</p>
 </dd></dl>
 
 <dl class="py function">

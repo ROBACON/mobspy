@@ -69,6 +69,29 @@
 <li class="toctree-l2"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">mobspy</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="for_local_use.html">for_local_use module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mobspy.html">mobspy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mobspy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mobspy.data_handler.html">mobspy.data_handler package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.modules.html">mobspy.modules package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.parameter_scripts.html">mobspy.parameter_scripts package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.parameters.html">mobspy.parameters package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.plot_params.html">mobspy.plot_params package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.plot_scripts.html">mobspy.plot_scripts package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">mobspy.sbml_simulator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mobspy.simulation_logging.html">mobspy.simulation_logging package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#module-mobspy.simulation">mobspy.simulation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mobspy.html#module-mobspy">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="test_script.html">test_script module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
         </div>
@@ -118,37 +141,23 @@ libSBML explaining the meaning of the code, and exits with status code 1.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="mobspy.sbml_simulator.SBMLWriter.create_model">
 <span class="sig-prename descclassname"><span class="pre">mobspy.sbml_simulator.SBMLWriter.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mobspy.sbml_simulator.SBMLWriter.create_model" title="Link to this definition"></a></dt>
-<dd><p>Returns an SBML Level 3 model.
-Example:
-species = { ‘E’: 1,</p>
-<blockquote>
-<div><p>‘EM’: 0,
+<dd><p>Returns an SBML Level 3 model.</p>
+<p class="rubric">Example</p>
+<dl class="simple">
+<dt>species = {             ‘E’: 1,</dt><dd><p>‘EM’: 0,
 ‘EM2’: 0,
-‘F’: 100,
-},</p>
-</div></blockquote>
-<dl>
-<dt>parameters = {‘k’: (1e-06,’per_min’),</dt><dd><p>}</p>
-</dd>
-<dt>reactions = { ‘Production_E’:</dt><dd><blockquote>
-<div><dl class="simple">
-<dt>{ ‘re’: [(1,’E’),(1,’F’)],</dt><dd><p>‘pr’: [(2,’E’)],
-‘kin’ : ‘k * E * F’</p>
+‘F’: 100, }</p>
 </dd>
 </dl>
-<p>},</p>
-</div></blockquote>
-<p>},</p>
+<p>parameters = {             ‘k’: (1e-06, ‘per_min’), }</p>
+<dl class="simple">
+<dt>reactions = {             ‘Production_E’: {                 ‘re’: [(1, ‘E’), (1, ‘F’)],</dt><dd><p>‘pr’: [(2, ‘E’)],
+‘kin’: ‘k * E * F’, } }</p>
 </dd>
-<dt>events = {‘e’:</dt><dd><dl class="simple">
-<dt>{ ‘trigger’: ‘true’,</dt><dd><p>‘delay’: ‘10’,
-‘assignments’: [(‘M’,’1’),],</p>
-</dd>
-</dl>
-<p>},</p>
+<dt>events = {             ‘e’: {                 ‘trigger’: ‘true’,</dt><dd><p>‘delay’: ‘10’,
+‘assignments’: [(‘M’, ‘1’)], } }</p>
 </dd>
 </dl>
-<p>}</p>
 </dd></dl>
 
 </section>
