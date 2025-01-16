@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>for_local_use module &mdash; MobsPy 2.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=f35be339"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f35be339"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -41,32 +41,9 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html">Welcome</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Meta-Reaction-Syntax">Meta-Reaction Syntax</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#How-MobsPy-works?">How MobsPy works?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/01_Basic_Intro.html#Following-Notebooks">Following Notebooks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/02_Reaction_Inheritance.html">Reaction Inheritance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/03_Characteristics.html">Characteristics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/04_Characteristic_restriction.html">Restraints</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/05_For_Loops.html">For Loops</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/06_Order_Matters.html">Order of Reactants and Products</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html">Count/Concentration Assignment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/07_Initial_Condition.html#Set-count-function">Set count function</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/08_Units.html">Units</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/09_Result_Data.html">Simulation Results</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/10_Reaction_Rates.html">Reaction Rates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html">Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#Characteristics">Characteristics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/11_Looping_Through_Species.html#List-Species">List Species</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/12_Born_Species.html">Born Species</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/13_Events.html">Events</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Notebooks/14_Concatenating_Simulations.html">Concatenated simulations</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mobspy.html">mobspy package</a></li>
 </ul>
 
         </div>
@@ -93,8 +70,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-for_local_use">
-<span id="for-local-use-module"></span><h1>for_local_use module<a class="headerlink" href="#module-for_local_use" title="Link to this heading"></a></h1>
+  <section id="for-local-use-module">
+<h1>for_local_use module<a class="headerlink" href="#for-local-use-module" title="Link to this heading"></a></h1>
 </section>
 
 

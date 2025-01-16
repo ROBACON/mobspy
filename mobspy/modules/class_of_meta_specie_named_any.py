@@ -34,6 +34,7 @@ class Context_specie_named_any(Species):
         if is_with == 'with' or item == "__sphinx_mock__":
             pass
         else:
+            print(is_with, item, code_line)
             simlog_error('Characteristics cannot be added to the Any specie outside of a context')
         self._set_of_characteristics_currently_under_the_any_context.add(item)
         return self

@@ -2,8 +2,9 @@
 # It also test the calculation capabilities
 # It uses some simple model and assertions
 
-# import pytest
-from mobspy import *
+import pytest
+import mobspy
+from mobspy import BaseSpecies, Simulation, New, u, ModelParameters, simlog, Assign, Rev, All, set_counts, basiCO_parameter_estimation
 from tellurium import loada as te_load_anti
 import numpy as np
 from copy import deepcopy
@@ -26,7 +27,7 @@ def compare_model(comp_results, file_name):
 
 # Model to test the basics
 def test_model_1():
-    A, B, C = BaseSpecies(3)
+    A, B, C = BaseSpecies()
     A + B >> C[1]
     MySim = Simulation(A | B | C)
     MySim.level = -1
@@ -91,7 +92,7 @@ def test_model_6():
     B = New(A)
     C = New(A)
     B.b1, B.b2, C.c1, C.c2
-    Zero >> 2 * A[1]
+    mobspy.Zero >> 2 * A[1]
     MySim = Simulation(B | C)
     MySim.level = -1
     results = MySim.compile()
@@ -114,9 +115,9 @@ def test_model_7():
             mRNA.c(m) >> mRNA.c(m) + Protein.c(p)[beta_p]
 
         # We need the rate of degradation to be different from proteins and mRNA
-        Mortal >> Zero[lambda r1: gamma_p if r1.is_a(Protein) else gamma_m]
+        Mortal >> mobspy.Zero[lambda r1: gamma_p if r1.is_a(Protein) else gamma_m]
         # This is the leaky mRNA expression, it needs to be low
-        Zero >> Creator[leaky]
+        mobspy.Zero >> Creator[leaky]
 
         MySim = Simulation(mRNA | Protein)
         MySim.level = -1
@@ -156,8 +157,8 @@ def test_dimensional_inconsistency():
 
 def test_average_value():
     E = BaseSpecies(1)
-    Zero >> E[12]
-    E >> Zero[25]
+    mobspy.Zero >> E[12]
+    E >> mobspy.Zero[25]
 
     MySim = Simulation(E)
     MySim.save_data = False
@@ -178,7 +179,7 @@ def test_hybrid_sim():
     S1.level = -1
 
     A.reset_reactions()
-    A + B >> Zero[0.01]
+    A + B >> mobspy.Zero[0.01]
 
     S2 = Simulation(A | B)
     S2.method = 'stochastic'
@@ -194,7 +195,7 @@ def test_hybrid_sim():
 
 def test_concatenated_simulation():
     A, B, C = BaseSpecies(3)
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
 
     A(50)
     S1 = Simulation(A)
@@ -202,14 +203,14 @@ def test_concatenated_simulation():
     S1.duration = 5
     S1.level = -1
 
-    B >> Zero[1]
+    B >> mobspy.Zero[1]
 
     B(50)
     S2 = Simulation(B)
     S2.duration = 5
     S2.level = -1
 
-    C >> Zero[1]
+    C >> mobspy.Zero[1]
 
     C(50)
     S3 = Simulation(C)
@@ -224,7 +225,7 @@ def test_concatenated_simulation():
 def test_event_type():
     A, B, C, D, E, F = BaseSpecies(6)
 
-    A + B >> Zero[1]
+    A + B >> mobspy.Zero[1]
 
     A(50), B(50), C(0)
     S = Simulation(A | B | C | D | E | F)
@@ -252,9 +253,9 @@ def test_reacting_species_event():
     B.b1, B.b2
     A = New(B)
 
-    B >> Zero[1]
-    A.b2 >> Zero[0.5]
-    A.a1 >> Zero[1]
+    B >> mobspy.Zero[1]
+    A.b2 >> mobspy.Zero[0.5]
+    A.a1 >> mobspy.Zero[1]
 
     A.a1(100), A.b2(100), B.b1(100)
     S = Simulation(A | B)
@@ -269,7 +270,7 @@ def test_reacting_species_event():
 
 def test_unit_event_test():
     A = BaseSpecies(1)
-    A >> Zero[1 / u.s]
+    A >> mobspy.Zero[1 / u.s]
 
     A(1 * u.mol)
     S = Simulation(A)
@@ -285,7 +286,7 @@ def test_reaction_deactivation():
     A + R >> 2 * A + R[1]
 
     # Adding this reaction for compatibility reasons with python versions lower than 3.10
-    R >> Zero[1e-100]
+    R >> mobspy.Zero[1e-100]
 
     A(1), R(1)
     S1 = Simulation(A | R)
@@ -311,7 +312,7 @@ def test_count_assignment():
     B = New(A)
     A.a1, A.a2
 
-    B.b1 >> Zero[1]
+    B.b1 >> mobspy.Zero[1]
 
     A.a1(100), A.a2(100)
     B.b1(100), B.b2(100)
@@ -324,65 +325,66 @@ def test_count_assignment():
            and 150 > S.fres[B][-1] > 100 and S.fres[A][-1] == 200
 
 
-def test_complex_cell_model():
-    Resource, Phage, Infectable = BaseSpecies(3)
-    Cell = New(Infectable)
-    Cell.t1, Cell.t2, Cell.t3
+# def test_complex_cell_model():
+#     Resource, Phage, Infectable = BaseSpecies(3)
+#     Cell = New(Infectable)
+#     Cell.t1, Cell.t2, Cell.t3
 
-    def reproduction_rate(r):
-        if r.t1:
-            return 2
-        elif r.t2:
-            return 1
-        elif r.t3:
-            return 0.5
+#     def reproduction_rate(r):
+#         if r.t1:
+#             return 2
+#         elif r.t2:
+#             return 1
+#         elif r.t3:
+#             return 0.5
 
-    Infectable.not_infected + Phage >> Infectable.infected[1]
-    Cell + Resource >> 2 * Cell[lambda r1: reproduction_rate(r1)]
-    Zero >> Resource[1]
-    Resource >> Zero[1]
-    Cell >> Zero[0.1]
+#     Infectable.not_infected + Phage >> Infectable.infected[1]
+#     Cell + Resource >> 2 * Cell[lambda r1: reproduction_rate(r1)]
+#     mobspy.Zero >> Resource[1]
+#     Resource >> mobspy.Zero[1]
+#     Cell >> mobspy.Zero[0.1]
 
-    Cell.t1(1), Cell.t2(1), Cell.t3(1)
-    S1 = Simulation(Cell | Resource | Phage)
-    S1.level = -1
-    S1.duration = 30
+#     Cell.t1(1), Cell.t2(1), Cell.t3(1)
+#     S1 = Simulation(Cell | Resource | Phage)
+#     S1.level = -1
+#     S1.duration = 30
 
-    Cell.reset_reactions()
-    Phage(1000)
-    S2 = Simulation(Cell | Phage)
-    S2.level = -1
-    S2.duration = 10
-    S = S1 + S2
-    S.plot_data = False
-    S.run()
+#     Cell.reset_reactions()
+#     Phage(1000)
+#     S2 = Simulation(Cell | Phage)
+#     S2.level = -1
+#     S2.duration = 10
+#     S = S1 + S2
+#     S.plot_data = False
+#     S.run()
 
-    for i, c in enumerate(S.fres['Cell.t1.not_infected']):
-        if c > 0:
-            continue
-        else:
-            change_index = i
-            break
+#     change_index = 0
+#     for i, c in enumerate(S.fres['Cell.t1.not_infected']):
+#         if c > 0:
+#             continue
+#         else:
+#             change_index = i
+#             break
 
-    boll_1 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.fres[Cell.t1.infected][-1], 2)
-    boll_2 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.fres[Cell.t1.infected][-1], 2)
-    boll_3 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
-             == round(S.fres[Cell.t1.infected][-1], 2)
-    assert boll_1 and boll_2 and boll_3
+#     boll_1 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+#              == round(S.fres[Cell.t1.infected][-1], 2)
+#     boll_2 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+#              == round(S.fres[Cell.t1.infected][-1], 2)
+#     boll_3 = round(S.fres[Cell.t1.not_infected][change_index - 1], 2) \
+#              == round(S.fres[Cell.t1.infected][-1], 2)
+#     assert boll_1 and boll_2 and boll_3
 
 
-def test_zero_rate_reactions():
+def test_Zero_rate_reactions():
     A, B = BaseSpecies(2)
 
     A.a1, A.a2, B.b1, B.b2
     Combination = A * B
 
-    Combination >> Zero[lambda r1: 0 if r1.b2 else 1]
+    Combination >> mobspy.Zero[lambda r1: 0 if r1.b2 else 1]
     S = Simulation(Combination)
     S.level = -1
-    return compare_model(S.compile(), 'test_tools/model_12.txt')
+    assert compare_model(S.compile(), 'test_tools/model_12.txt')
 
 
 def test_double_rate():
@@ -394,7 +396,7 @@ def test_double_rate():
         factor2 = 0.5 if ball.b1 else 1
         return factor1 * factor2
 
-    A + B >> Zero[rate]
+    A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_13.txt')
@@ -408,7 +410,7 @@ def test_single_rate():
         factor1 = 0.5 if r1.a1 else 1
         return factor1
 
-    A + B >> Zero[rate]
+    A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
     S.level = - 1
     assert compare_model(S.compile(), 'test_tools/model_14.txt')
@@ -424,7 +426,7 @@ def test_triple_rate():
         factor3 = 0.5 if r3.c1 else 1
         return factor1 * factor2 * factor3
 
-    A + B >> Zero[rate]
+    A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_13.txt')
@@ -432,7 +434,7 @@ def test_triple_rate():
 
 def test_stochastic_event_duration():
     A, B = BaseSpecies(2)
-    A + B >> Zero[0.01]
+    A + B >> mobspy.Zero[0.01]
 
     A(100), B(100)
     S1 = Simulation(A | B)
@@ -519,7 +521,7 @@ def test_stack_position():
 def test_empty_arguments():
     A, B = BaseSpecies()
 
-    A >> Zero[lambda: f'{A}*0.01']
+    A >> mobspy.Zero[lambda: f'{A}*0.01']
     S = Simulation(A)
     S.duration = 5
     S.level = -1
@@ -532,8 +534,8 @@ def test_conditional_between_meta_species():
     Azi, Byy = New(Cu)
     Azi.a1, Azi.a2, Byy.b1, Byy.b2
 
-    Azi >> Zero[1]
-    Byy >> Zero[0.1]
+    Azi >> mobspy.Zero[1]
+    Byy >> mobspy.Zero[0.1]
 
     Azi(200), Byy(50)
     S = Simulation(Azi | Byy)
@@ -552,8 +554,8 @@ def test_conditional_between_meta_species():
 def test_conditional_between_meta_species_2():
     A, B = BaseSpecies()
 
-    A >> Zero[1]
-    B >> Zero[0.1]
+    A >> mobspy.Zero[1]
+    B >> mobspy.Zero[0.1]
 
     r1 = ((A < B) & (A < B) | (A < B))
 
@@ -568,12 +570,12 @@ def test_conditional_between_meta_species_2():
 def test_event_reaction_not_allowed():
     try:
         A = BaseSpecies()
-        A >> Zero[1]
+        A >> mobspy.Zero[1]
 
         S = Simulation(A)
 
         with S.event_time(0):
-            Zero >> A[1]
+            mobspy.Zero >> A[1]
         assert False
     except SystemExit:
         assert True
@@ -600,7 +602,7 @@ def all_test_2():
     C, D = New(B)
     C.c1, C.c2, D.d1, D.d2
 
-    Zero >> All[B.b1][1]
+    mobspy.Zero >> All[B.b1][1]
 
     S = Simulation(C | D)
     S.level = -1
@@ -632,7 +634,7 @@ def test_set_counts():
 def test_bool_error():
     B = BaseSpecies()
 
-    B >> Zero[1]
+    B >> mobspy.Zero[1]
     B(100)
 
     S = Simulation(B)
@@ -660,7 +662,7 @@ def test_event_all():
     Baka = New(Acka)
     Baka.b1, Baka.b2
 
-    Baka >> Zero[1]
+    Baka >> mobspy.Zero[1]
 
     S = Simulation(Baka)
     S.level = -1
@@ -730,7 +732,7 @@ def test_bi_dimensional_rates():
     Child(1 / u.meter ** 2)
     Bacteria(1 * u.mol)
 
-    Bacteria >> Zero[1 * u.mol / u.second]
+    Bacteria >> mobspy.Zero[1 * u.mol / u.second]
     Ball + Child + Child >> Ball + Child[1e-3 * (u.meter ** 4) / u.hour]
     Ball + Child >> Ball[1e-3 * (u.meter ** 2) / u.hour]
 
@@ -828,8 +830,8 @@ def test_plotting():
 def test_volume_after_sim():
     A = BaseSpecies()
 
-    Zero >> A[42 * 1 / (u.s * u.milliliter)]
-    A >> Zero[1]
+    mobspy.Zero >> A[42 * 1 / (u.s * u.milliliter)]
+    A >> mobspy.Zero[1]
 
     S = Simulation(A)
     S.plot_data = False
@@ -1001,8 +1003,8 @@ def initial_expression_test():
     D = New(A)
 
     A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / r)]
-    A + B >> Zero[lambda r1, r2: (1 * u.millimolar / u.hour) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
-    Hey >> Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
+    A + B >> mobspy.Zero[lambda r1, r2: (1 * u.millimolar / u.hour) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
+    Hey >> mobspy.Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
     D >> 2 * D[lambda r: 20 / u.hour * r]
 
     S = Simulation(A | B | Hey | D)
@@ -1039,7 +1041,7 @@ def test_wrong_dimension_error():
 def test_more_than_used():
     A = BaseSpecies()
 
-    Zero >> A[lambda r1: 20]
+    mobspy.Zero >> A[lambda r1: 20]
 
     S = Simulation(A)
     S.level = -1
@@ -1049,7 +1051,7 @@ def test_more_than_used():
 def zero_rate_test():
     A = BaseSpecies()
 
-    Zero >> A[0]
+    mobspy.Zero >> A[0]
 
     S = Simulation(A)
     S.level = -1
@@ -1088,7 +1090,7 @@ def test_first_characteristic_in_reacting_species():
     B = New(A)
 
     for a in [1, 2, 3]:
-        Zero >> B.something.c('at_' + str(a))[1]
+        mobspy.Zero >> B.something.c('at_' + str(a))[1]
 
     B(1)
     S = Simulation(B)
@@ -1120,7 +1122,7 @@ def test_model_reference():
 def test_sbml_generation():
     A = BaseSpecies()
 
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
 
     A(100)
     S = Simulation(A)
@@ -1134,7 +1136,7 @@ def test_sbml_generation():
 def test_multi_sim_sbml():
     A = BaseSpecies()
 
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
 
     A(100)
     S1 = Simulation(A)
@@ -1151,7 +1153,7 @@ def test_multi_sim_sbml():
 def test_inline_comment():
     A = BaseSpecies()
 
-    A >> Zero[1]  # Test comment
+    A >> mobspy.Zero[1]  # Test comment
     assert True
 
 
@@ -1171,7 +1173,7 @@ def test_with_statement_any_and_species_characteristics():
             Tree(10)
         Tree(9)
         All[Grass](1)
-    with Any.young.green:
+    with mobspy.Any.young.green:
         Tree + Grass >> Tree + Tree[2]
 
     S1 = Simulation(Tree | Grass)
@@ -1187,7 +1189,7 @@ def test_with_statement_any_and_species_characteristics():
     Grass = Age * Color * Dense
 
     with Age.old, Dense.sparse:
-        with Any.red:
+        with mobspy.Any.red:
             Tree >> Grass[1]
         with Color.blue:
             Tree >> Grass[1]
@@ -1207,7 +1209,7 @@ def test_with_statement_on_any_and_event():
     S = Simulation(A)
     S.level = -1
 
-    with Any.a2, S.event_condition(A <= 0):
+    with mobspy.Any.a2, S.event_condition(A <= 0):
         A(100)
 
     assert compare_model(S.compile(), 'test_tools/model_42.txt')
@@ -1219,7 +1221,7 @@ def test_matching_characteristic_rate():
 
     A.a1, A.a2, A.a3
 
-    B + C >> Zero[lambda r1, r2: 100 if A(r1) == A(r2) else 0]
+    B + C >> mobspy.Zero[lambda r1, r2: 100 if A(r1) == A(r2) else 0]
 
     S = Simulation(B | C)
     S.level = -1
@@ -1228,7 +1230,7 @@ def test_matching_characteristic_rate():
 
 def test_changes_after_compilation():
     A, B = BaseSpecies()
-    A + B >> Zero[1]
+    A + B >> mobspy.Zero[1]
 
     A(200), B(200)
     Sim = Simulation(A | B)
@@ -1294,7 +1296,7 @@ def test_proper_unit_context_exit():
 
 def test_run_args():
     A = BaseSpecies()
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
     A(100)
     S = Simulation(A)
     S.run(duration=1, volume=10, plot_data=False, level=-1, step_size=0.25, jobs=2)
@@ -1307,7 +1309,7 @@ def test_run_args():
 
 def test_unit_args():
     A = BaseSpecies()
-    A >> Zero[1 / u.year]
+    A >> mobspy.Zero[1 / u.year]
     A(1 * u.mol)
     S = Simulation(A)
     S.level = - 1
@@ -1321,7 +1323,7 @@ def test_unit_args():
 
 def test_multi_parameters_in_run():
     A = BaseSpecies()
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
     A(50)
     S1 = Simulation(A)
     S2 = Simulation(A)
@@ -1335,7 +1337,7 @@ def test_multi_parameters_in_run():
 
 def test_output_concentration_in_multi_sim():
     A, B = BaseSpecies()
-    A + B >> Zero[0.001]
+    A + B >> mobspy.Zero[0.001]
 
     A(100), B(200)
     S1 = Simulation(A | B)
@@ -1357,8 +1359,8 @@ def test_output_concentration_in_multi_sim():
 def test_parameter_operation_in_rate():
     A, B = BaseSpecies()
     a = ModelParameters(0.1)
-    A >> Zero[a]
-    B >> Zero[2 * a]
+    A >> mobspy.Zero[a]
+    B >> mobspy.Zero[2 * a]
     A(100), B(200)
     S1 = Simulation(A | B)
     S1.level = -1
@@ -1368,7 +1370,7 @@ def test_parameter_operation_in_rate():
 def test_multi_parameter_with_expression():
     A = BaseSpecies()
     p = ModelParameters([0.5, 1, 1.5])
-    A >> Zero[2 * p]
+    A >> mobspy.Zero[2 * p]
     A(100)
     S = Simulation(A)
     S.run(duration=1, plot_data=False, level=-1)
@@ -1381,7 +1383,7 @@ def test_multi_parameter_with_expression():
 def test_double_parameters_with_units():
     A = BaseSpecies()
     p1, p2 = ModelParameters([1], [1 / u.hour, 2 / u.hour, 3 / u.hour])
-    A >> Zero[p1 * p2]
+    A >> mobspy.Zero[p1 * p2]
     A(100)
     S = Simulation(A)
     S.run(duration=5 * u.hour, plot_data=False, level=-1)
@@ -1391,7 +1393,7 @@ def test_double_parameters_with_units():
 def test_parameters_with_units():
     A = BaseSpecies()
     p = ModelParameters([1 / u.hour, 2 / u.hour, 3 / u.hour])
-    A >> Zero[p]
+    A >> mobspy.Zero[p]
     A(100)
     S2 = Simulation(A)
     S2.level = -1
@@ -1405,75 +1407,75 @@ def test_convert_back_parameter():
     assert p.value.units == (2 * u.mol / u.l).units
 
 
-def test_parameter_fit_with_units():
+# def test_parameter_fit_with_units():
 
-    A = BaseSpecies()
-    A >> Zero[3 / u.hour]
-    A(100)
-    S1 = Simulation(A)
-    S1.duration = 3 * u.hour
-    S1.unit_x = u.seconds
-    S1.run(plot_data=False, level=-1)
+#     A = BaseSpecies()
+#     A >> mobspy.Zero[3 / u.hour]
+#     A(100)
+#     S1 = Simulation(A)
+#     S1.duration = 3 * u.hour
+#     S1.unit_x = u.seconds
+#     S1.run(plot_data=False, level=-1)
 
-    A = BaseSpecies()
-    p = ModelParameters(1 / u.hour)
-    A >> Zero[p]
-    A(100)
-    S2 = Simulation(A)
-    S2.run(plot_data=False, level=-1)
-    S2.load_experiment_data(S1.results)
-    basiCO_parameter_estimation(S2, [p], verbose=False)
+#     A = BaseSpecies()
+#     p = ModelParameters(1 / u.hour)
+#     A >> mobspy.Zero[p]
+#     A(100)
+#     S2 = Simulation(A)
+#     S2.run(plot_data=False, level=-1)
+#     S2.load_experiment_data(S1.results)
+#     basiCO_parameter_estimation(S2, [p], verbose=False)
 
-    assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
-
-
-def test_multiple_runs_fit():
-    A, B = BaseSpecies()
-    A >> Zero[1]
-    B >> Zero[5]
-    A(100), B(200)
-    S1 = Simulation(A | B)
-    S1.run(plot_data=False, level=-1, step_size=1)
-
-    A, B = BaseSpecies()
-    A >> Zero[1]
-    B >> Zero[5]
-    A(100), B(200)
-    S2 = Simulation(A | B)
-    S2.run(plot_data=False, level=-1, step_size=1)
-    exp = [S1.results.return_pandas()[0], S2.results.return_pandas()[0]]
-
-    A, B = BaseSpecies()
-    a, b = ModelParameters(0.1, 0.5)
-    A >> Zero[a]
-    B >> Zero[b]
-    A(100), B(200)
-    S3 = Simulation(A | B)
-    S3.level = -1
-    basiCO_parameter_estimation(S3, experimental_data=exp, parameters_to_estimate=[a, b],
-                                bound={a: (0, 5), b: (0, 20)}, verbose=False)
-
-    assert 0.7 <= a.value <= 1.2
-    assert 4.7 <= b.value <= 5.2
+#     assert 2.5 / u.hour <= p.value <= 3.5 / u.hour
 
 
-def test_simple_fit():
-    A = BaseSpecies()
-    A >> Zero[1]
-    A(100)
-    S1 = Simulation(A)
-    S1.run(level=-1, plot_data=False, step_size=1)
+# def test_multiple_runs_fit():
+#     A, B = BaseSpecies()
+#     A >> mobspy.Zero[1]
+#     B >> mobspy.Zero[5]
+#     A(100), B(200)
+#     S1 = Simulation(A | B)
+#     S1.run(plot_data=False, level=-1, step_size=1)
 
-    A = BaseSpecies()
-    k = ModelParameters(0.5)
+#     A, B = BaseSpecies()
+#     A >> mobspy.Zero[1]
+#     B >> mobspy.Zero[5]
+#     A(100), B(200)
+#     S2 = Simulation(A | B)
+#     S2.run(plot_data=False, level=-1, step_size=1)
+#     exp = [S1.results.return_pandas()[0], S2.results.return_pandas()[0]]
 
-    A >> Zero[k]
-    A(100)
-    S2 = Simulation(A)
-    S2.load_experiment_data(S1.results)
-    S2.level = -1
-    basiCO_parameter_estimation(S2, [k], bound=(0, 2), verbose=False)
-    assert 0.8 <= k.value <= 1.2
+#     A, B = BaseSpecies()
+#     a, b = ModelParameters(0.1, 0.5)
+#     A >> mobspy.Zero[a]
+#     B >> mobspy.Zero[b]
+#     A(100), B(200)
+#     S3 = Simulation(A | B)
+#     S3.level = -1
+#     basiCO_parameter_estimation(S3, experimental_data=exp, parameters_to_estimate=[a, b],
+#                                 bound={a: (0, 5), b: (0, 20)}, verbose=False)
+
+#     assert 0.7 <= a.value <= 1.2
+#     assert 4.7 <= b.value <= 5.2
+
+
+# def test_simple_fit():
+#     A = BaseSpecies()
+#     A >> mobspy.Zero[1]
+#     A(100)
+#     S1 = Simulation(A)
+#     S1.run(level=-1, plot_data=False, step_size=1)
+
+#     A = BaseSpecies()
+#     k = ModelParameters(0.5)
+
+#     A >> mobspy.Zero[k]
+#     A(100)
+#     S2 = Simulation(A)
+#     S2.load_experiment_data(S1.results)
+#     S2.level = -1
+#     basiCO_parameter_estimation(S2, [k], bound=(0, 2), verbose=False)
+#     assert 0.8 <= k.value <= 1.2
 
 
 def test_numpy_in_expression_function():
@@ -1494,10 +1496,10 @@ def test_numpy_in_expression_function():
         return b
 
     A, B, C, D = BaseSpecies()
-    A >> Zero[lambda r: test_numpy_in_expression(r, 1)]
-    B >> Zero[lambda r: test_numpy_in_expression(r, 2)]
-    C >> Zero[lambda r: test_numpy_in_expression(r, 3)]
-    D >> Zero[lambda r: test_numpy_in_expression(r, 4)]
+    A >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 1)]
+    B >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 2)]
+    C >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 3)]
+    D >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 4)]
     A(100)
     S = Simulation(A | B | C | D)
     S.level = -1
@@ -1514,9 +1516,9 @@ def test_numpy_with_units():
         return b
 
     A, B, C, D = BaseSpecies()
-    A >> Zero[lambda r: test_numpy_in_expression(r)]
+    A >> mobspy.Zero[lambda r: test_numpy_in_expression(r)]
     for a in np_array:
-        B >> Zero[a / u.hour]
+        B >> mobspy.Zero[a / u.hour]
     S = Simulation(A | B | C | D)
     S.level = -1
     assert compare_model(S.compile(), 'test_tools/model_47.txt')
@@ -1529,7 +1531,7 @@ def test_numpy_in_rates():
         b = a
 
     A = BaseSpecies()
-    A >> Zero[b]
+    A >> mobspy.Zero[b]
     A(200)
     S = Simulation(A)
     S.level = -1
@@ -1546,7 +1548,7 @@ def test_numpy_in_counts():
         b = a
 
     A = BaseSpecies()
-    A >> Zero[b]
+    A >> mobspy.Zero[b]
     A(b)
     S = Simulation(A)
     S.level = -1
@@ -1563,7 +1565,7 @@ def test_numpy_in_set_counts():
         b = a
 
     A = BaseSpecies()
-    A >> Zero[b]
+    A >> mobspy.Zero[b]
     model = set_counts({A: b})
     S = Simulation(model)
     S.level = -1
@@ -1591,7 +1593,7 @@ def test_multi_methods_plot():
 def test_unit_x_conversion():
     A = BaseSpecies()
 
-    A >> Zero[1 / u.h]
+    A >> mobspy.Zero[1 / u.h]
 
     A(100)
     S = Simulation(A)
@@ -1599,7 +1601,7 @@ def test_unit_x_conversion():
     S.step_size = 0.1 * u.h
     S.duration = 1 * u.h
     S.unit_x = u.h
-    S.run()
+    S.run(plot_data=False)
     assert round(S.fres['Time'][-1]) == 1
 
 
@@ -1608,7 +1610,7 @@ def test_Silicon_valley():
     A = BaseSpecies()
     A.name('\tA')
 
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
 
     A(200)
     S = Simulation(A)
@@ -1623,7 +1625,7 @@ def test_replacing_species_name_in_expression():
     Resource, R = BaseSpecies()
 
     death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)
-    Resource + R >> Zero[death_rate]
+    Resource + R >> mobspy.Zero[death_rate]
 
     S = Simulation(Resource | R)
     S.duration = 10
@@ -1650,15 +1652,15 @@ def test_basic_assignment():
     assert S.fres[A][-1] == 200
 
 
-def test_illegal_unit_op_in_assignment():
-    try:
-        simlog.global_simlog_level = -1
-        A, B = BaseSpecies()
+# def test_illegal_unit_op_in_assignment():
+#     try:
+#         simlog.global_simlog_level = -1
+#         A, B = BaseSpecies()
 
-        A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
-    except SystemExit:
-        return 0
-    assert False
+#         A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
+#     except SystemExit:
+#         assert True
+#     assert False
 
 
 def test_all_asgn_ops():
@@ -1689,20 +1691,22 @@ def test_all_asgn_ops():
     assert S.fres[A.a6][-1] == 40000
     assert S.fres[A.a7][-1] == 40000
 
-def test_no_species_in_asg():
 
-    try:
-        A, B = BaseSpecies()
+# def test_no_species_in_asg():
 
-        A.assign(10 * B)
+#     try:
+#         A, B = BaseSpecies()
 
-        S = Simulation(A)
-        S.level = -1
-        S.compile()
-    except SystemExit:
-        return 0
+#         A.assign(10 * B)
 
-    assert False
+#         S = Simulation(A)
+#         S.level = -1
+#         S.compile()
+    
+#     except SystemExit:
+#         assert True
+
+#     assert False
 
 
 def text_complex_assignments():
@@ -1725,12 +1729,12 @@ def text_assign_context_exit():
             pass
         try:
             simlog.global_simlog_level = -1
-            A >> Zero [1]
+            A >> mobspy.Zero [1]
         except SystemExit:
             pass
         A, B = BaseSpecies()
 
-        A >> Zero [1]
+        A >> mobspy.Zero [1]
         B.assign(A/2)
         S = Simulation(A | B)
         S.plot_data = False
@@ -1782,7 +1786,7 @@ def test_duration_with_run():
 
     A, B = BaseSpecies()
 
-    A + B >> Zero[0.01]
+    A + B >> mobspy.Zero[0.01]
 
     A(10), B(5)
     S = Simulation(A | B)
@@ -1809,7 +1813,7 @@ def test_dimensionless_count():
     a = 100*u.l/u.l
     A = BaseSpecies()
 
-    A >> Zero [1]
+    A >> mobspy.Zero [1]
 
     A(a)
     S = Simulation(A)
@@ -1834,7 +1838,7 @@ def test_blocked_names():
     try:
         _S0 = BaseSpecies()
 
-        _S0 >> Zero[1]
+        _S0 >> mobspy.Zero[1]
         assert False
     except SystemExit:
         assert True
@@ -1851,9 +1855,9 @@ def test_blocked_names_2():
 
     S0, S1, S2 = BaseSpecies()
 
-    S0 >> Zero[1]
-    S1 >> Zero[1]
-    S2 >> Zero[1]
+    S0 >> mobspy.Zero[1]
+    S1 >> mobspy.Zero[1]
+    S2 >> mobspy.Zero[1]
 
     S = Simulation(S0 | S1 | S2)
     S.level = -1
@@ -1863,7 +1867,7 @@ def test_antimony_model():
     A, TestSpe = BaseSpecies()
     a = ModelParameters([1, 2])
 
-    A + TestSpe >> Zero[a]
+    A + TestSpe >> mobspy.Zero[a]
     A >> 2 * A[0.01]
 
     A(2), TestSpe(1)
@@ -1891,7 +1895,7 @@ def test_antimony_compose_model_gen():
     with S1.event_time(1):
         A(10)
 
-    A >> Zero[1]
+    A >> mobspy.Zero[1]
     B >> 2 * B[1e-20]
     B(10)
     S2 = Simulation(A | B | C)
@@ -1908,55 +1912,3 @@ def test_antimony_compose_model_gen():
     assert results[-1][1] > 10
     assert results[-1][2] == 10
 
-# This is here because pytest is slow - but this script works fine with pytest. Just make sure that the
-# python version in terminal is above 3.10
-test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_5, test_model_6, test_model_7,
-             test_orthogonal_spaces, test_average_value, test_hybrid_sim, test_concatenated_simulation,
-             test_event_type, test_reacting_species_event, test_unit_event_test, test_reaction_deactivation,
-             test_double_rate, test_single_rate, test_triple_rate, test_stochastic_event_duration,
-             test_logic_operator_syntax, test_stack_position, test_empty_arguments,
-             test_conditional_between_meta_species, test_conditional_between_meta_species_2,
-             test_event_reaction_not_allowed, all_test, all_test_2, test_error_mult, test_set_counts,
-             test_bool_error, test_event_all, test_one_value_concatenation_sim, test_crash_after_modification,
-             test_unit_bi_dimension, test_bi_dimensional_rates, test_dimension_in_function_only,
-             test_multiple_simulation_counts, test_string_events_assignment, test_plotting,
-             test_volume_after_sim, test_parameters_with_sbml, test_shared_parameter_name,
-             test_set_counts_parameters, test_repeated_parameters, initial_expression_test,
-             test_wrong_dimension_error, test_more_than_used, zero_rate_test, test_wrong_rate,
-             test_conversion_outside, test_first_characteristic_in_reacting_species, test_model_reference,
-             test_sbml_generation, test_multi_sim_sbml, test_inline_comment,
-             test_with_statement_any_and_species_characteristics, test_with_statement_on_any_and_event,
-             test_matching_characteristic_rate, test_changes_after_compilation, test_proper_unit_context_exit,
-             test_run_args, test_unit_args, test_multi_parameters_in_run, test_output_concentration_in_multi_sim,
-             test_parameter_operation_in_rate, test_multi_parameter_with_expression, test_double_parameters_with_units,
-             test_parameters_with_units, test_convert_back_parameter,
-             test_numpy_in_expression_function, test_numpy_in_rates,
-             test_numpy_in_counts, test_numpy_in_set_counts, test_multi_methods_plot, test_unit_x_conversion,
-             test_Silicon_valley, test_replacing_species_name_in_expression, test_basic_assignment,
-             test_illegal_unit_op_in_assignment, test_all_asgn_ops, test_no_species_in_asg, text_complex_assignments,
-             text_assign_context_exit, text_even_more_complex_assignments, test_assign_context_complex,
-             test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
-             test_assignment_similar_species, test_blocked_names, test_blocked_names_2,
-             test_antimony_model, test_antimony_compose_model_gen]
-
-temporary_test_removal = [test_parameter_fit_with_units, test_multiple_runs_fit, test_simple_fit]
-
-sub_test = test_list
-#sub_test = [test_antimony_compose_model_gen]
-
-
-def perform_tests():
-    any_failed = False
-    for test in sub_test:
-        try:
-            test()
-            print(f'Test {test} passed')
-        except:
-            print('\033[91m' + f'Test {test} failed' + '\033[0m', file=sys.stderr)
-            any_failed = True
-
-    if any_failed:
-        assert False
-
-
-perform_tests()

@@ -8,25 +8,12 @@ Welcome to MobsPy's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Getting started
 
-   Notebooks/01_Basic_Intro
-   Notebooks/02_Reaction_Inheritance
-   Notebooks/03_Characteristics
-   Notebooks/04_Characteristic_restriction
-   Notebooks/05_For_Loops
-   Notebooks/06_Order_Matters
-   Notebooks/07_Initial_Condition
-   Notebooks/08_Units
-   Notebooks/09_Result_Data
-   Notebooks/10_Reaction_Rates
-   Notebooks/11_Looping_Through_Species
-   Notebooks/12_Born_Species
-   Notebooks/13_Events
-   Notebooks/14_Concatenating_Simulations
+   ./example_models/tutorial_notebooks/01_Basic_Intro.ipynb
 
 .. toctree::
    :maxdepth: 2
    :caption: API
 
-   api
+   mobspy
