@@ -8,13 +8,14 @@ Welcome to MobsPy's documentation!
 
 .. toctree::
    :maxdepth: 4
+   :glob:
    :caption: Getting started
 
-   example_models.tutorial_notebooks.01_Basic_Intro.ipynb
-
+   tutorial
+   applications
 
 .. toctree::
-   :maxdepth: 2
-   :caption: API
+..   :maxdepth: 2
+..   :caption: API
 
-   mobspy
+..   mobspy
