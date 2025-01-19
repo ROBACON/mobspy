@@ -19,6 +19,7 @@ setuptools.setup(
     packages=setuptools.find_packages(include=["mobspy", "mobspy.*"]),
     version=version,
     description="A Query-Based Language for Chemical Reaction Networks",
+    keywords=["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "specification language"]
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ROBACON/mobspy",

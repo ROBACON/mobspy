@@ -14,7 +14,9 @@ To get started, you only need to pip install:
 
 	pip install mobspy 
 
-And check out some example tutorial models in the docs/example_model folder.
+And check out the [Read the Docs for MobsPy](https://mobspy-doc.readthedocs.io/en/latest/).
+Some example tutorial models are available in the docs/example_model folder.
+
 
 # How it works
 
