@@ -83,27 +83,27 @@ class Compiler:
             :param meta_species_to_simulate: (List_Species or Species) Species to generate the model
             :param reactions_set: (set) Set of meta-reactions collected when the simulation objected was constructed
             :param species_counts: (dict) All counts assigned to species in the model
-             before the simulation object was constructed
+                before the simulation object was constructed
             :param orthogonal_vector_structure: (dict) ref_characteristics_to_objects in other modules. Dictionary
-            with the characteristics as keys and the objects as values. Characteritics pointing to their coordinate
-            in the vector space
+                with the characteristics as keys and the objects as values. Characteritics pointing to their coordinate
+                in the vector space
             :param volume: (int, flot) Simulation volume
             :param type_of_model: (str) deterministic or stochastic
             :param verbose: (bool) print or not the model results by generating a model_str
-            meta-reaction ( or Default we have the round-robin) and how MobsPy will handle meta-species in
-            the products that are not referenced in the reactants - see order_operators.py
+                meta-reaction ( or Default we have the round-robin) and how MobsPy will handle meta-species in
+                the products that are not referenced in the reactants - see order_operators.py
             :param event_dictionary: (dict) dictionary with all the events to be added to the model
             :param continuous_sim: (bool) simulation with conditional duration or not
             :param ending_condition: (MetaSpeciesLogicResolver) trigger for the ending contion
 
             :returns: species_for_sbml (dict) = dictionary where the species strings (in MobsPy format) are the keys and
-            the values are their counts inside the model. reactions_for_sbml (dict) = Reaction in dictionary format
-            with keys 're', 'pr' and 'rate'. Values are strings parameters_for_sbml (dict) = value with parameter
-            name and tuple with quantity and unit. For standard models it only holds the volume mappings_for_sbml
-            (dict) = Dictionary that maps a meta-species to the set of species strings that belong to it. model_str
-            (str) = str of the variables defined above in a user-readable format. events_for_sbml (dict) = dictionary
-            containing the event trigger and count assignments. assigned_species (list) = list of meta-species which
-            had counts assigned to them during this model execution (used when composing simulations)
+                the values are their counts inside the model. reactions_for_sbml (dict) = Reaction in dictionary format
+                with keys 're', 'pr' and 'rate'. Values are strings parameters_for_sbml (dict) = value with parameter
+                name and tuple with quantity and unit. For standard models it only holds the volume mappings_for_sbml
+                (dict) = Dictionary that maps a meta-species to the set of species strings that belong to it. model_str
+                (str) = str of the variables defined above in a user-readable format. events_for_sbml (dict) = dictionary
+                containing the event trigger and count assignments. assigned_species (list) = list of meta-species which
+                had counts assigned to them during this model execution (used when composing simulations)
         """
         # Check to see if all species are named
         # Parameter compilation as well
