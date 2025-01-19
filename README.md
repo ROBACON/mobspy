@@ -1,4 +1,4 @@
-<img src="/_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
+<img src="_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
 
 # MobsPy
 
