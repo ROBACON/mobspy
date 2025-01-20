@@ -3,7 +3,7 @@ from mobspy.simulation_logging.log_scripts import error as simlog_error
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
      construct_species_char_list as ssg_construct_species_char_list
 from pint import Quantity
-from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from mobspy.modules.function_rate_code import search_for_parameters_in_str as frc_search_for_parameters_in_str
 
 

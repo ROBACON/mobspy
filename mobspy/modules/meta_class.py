@@ -13,7 +13,7 @@ from mobspy.modules.logic_operator_objects import ReactingSpeciesComparator as l
 from mobspy.modules.mobspy_expressions import OverrideQuantity as me_OverrideQuantity, \
     MobsPyExpression as me_MobsPyExpression, Specific_Species_Operator as me_Specific_Species_Operator, \
     ExpressionDefiner as me_ExpressionDefiner
-from mobspy.modules.mobspy_parameters import Mobspy_Parameter as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from numpy import integer as np_int_, floating as np_float_
 from inspect import stack as inspect_stack
 from mobspy.modules.meta_class_utils import unite_characteristics as mcu_unite_characteristics, \
@@ -442,7 +442,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             if len(self.list_of_reactants) != 1:
                 simlog_error('Assignment used incorrectly. Only one species at a time', stack_index=2)
             quantity_dict = species_object.add_quantities(characteristics, quantity)
-        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Mobspy_Parameter):
+        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, _Internal_Parameter_Constructor):
         #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
         elif asgi_Assign.check_context():
             dummy_rsp = species_object

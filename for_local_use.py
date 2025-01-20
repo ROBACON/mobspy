@@ -1,28 +1,20 @@
 from mobspy import *
+from mobspy import modules
 
 if __name__ == '__main__':
 
-    A = BaseSpecies()
+    k1 = ModelParameters(1)
+    A, B, C, D = BaseSpecies()
 
-    A >> Zero [1]
+    A >> 2 * B[modules.mobspy_parameters._Internal_Parameter_Constructor('k1', 3)]
+    B >> C + D[modules.mobspy_parameters._Internal_Parameter_Constructor('k2', 1.4)]
 
     A(100)
-    S = Simulation(A)
+    S = Simulation(A | B | C | D)
     S.duration = 10
-    S.run()
-    print(S.to_dataframe()[0])
-    exit()
-
-
-    #A = BaseSpecies()
-
-    #Set[A >> 2*A [1]].at(5)
-   # Set[A >> 2*A [2]].when(A > 5)
-
-    #S = Simulation(A)
-    #with S.event_time(5):
-    #    A(10)
-
     print(S.compile())
+    # print(S.generate_sbml()[0])
+
+    S.update_model()
 
 
