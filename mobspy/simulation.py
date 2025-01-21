@@ -44,6 +44,7 @@ from mobspy.data_handler.process_result_data import extract_time_and_volume_list
     convert_data_to_desired_unit as dh_convert_data_to_desired_unit
 from mobspy.data_handler.time_series_object import MobsPyTimeSeries, MobsPyList_of_TS
 from mobspy.simulator_object.simulator_object_functions import sim_remove_reaction as sof_sim_remove_reaction
+from mobspy.simulator_object.simulator_object_functions import Simulation_Utils
 from json import dump as json_dump, load as json_load
 from mobspy.plot_scripts.default_plots import deterministic_plot as dp_deterministic_plot, \
     stochastic_plot as dp_stochastic_plot, raw_plot as dp_raw_plot, parametric_plot as dp_parametric_plot
@@ -53,7 +54,7 @@ from random import randint as rd_randint
 import re
 
 
-class Simulation(pdl_Experimental_Data_Holder):
+class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
     # Event Implementation
     @classmethod
@@ -307,11 +308,11 @@ class Simulation(pdl_Experimental_Data_Holder):
 
     def _assemble_multi_simulation_structure(self):
 
-        if not self.sbml_data_list:
-            data_for_sbml_construction, parameter_list_of_dic = ps_generate_all_sbml_models(self.model_parameters,
-                                                                                            self._list_of_models)
-            self.sbml_data_list = data_for_sbml_construction
-            self._parameter_list_of_dic = parameter_list_of_dic
+        data_for_sbml_construction, parameter_list_of_dic = ps_generate_all_sbml_models(self.model_parameters,
+                                                                                        self._list_of_models)
+        self.sbml_data_list = data_for_sbml_construction
+        self._parameter_list_of_dic = parameter_list_of_dic
+
 
     def run(self, duration=None, volume=None, dimension=None,
             repetitions=None, level=None, simulation_method=None,

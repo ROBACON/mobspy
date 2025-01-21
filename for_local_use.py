@@ -6,15 +6,28 @@ if __name__ == '__main__':
     k1 = ModelParameters(1)
     A, B, C, D = BaseSpecies()
 
-    A >> 2 * B[modules.mobspy_parameters._Internal_Parameter_Constructor('k1', 3)]
-    B >> C + D[modules.mobspy_parameters._Internal_Parameter_Constructor('k2', 1.4)]
+    k1 = ModelParameters([1, 2, 3])
+
+    A >> Zero [2*k1]
 
     A(100)
-    S = Simulation(A | B | C | D)
-    S.duration = 10
-    print(S.compile())
+    S1 = Simulation(A)
+    S1.duration = 10
+    # print(S.compile())
     # print(S.generate_sbml()[0])
 
-    S.update_model()
+    A.reset_reactions()
+    B >> Zero [1]
 
+    B(200)
+    S2 = Simulation(A | B)
+    S2.duration = 5
 
+    S = S1 + S2
+    S.compile()
+    # S.run()
+    S1.update_model([k1, 1])
+    S.run()
+
+    # TODO - Fix 2*k1 in B later
+    # TODO - Fix multiple compilation issue
