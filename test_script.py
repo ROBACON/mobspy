@@ -1944,4 +1944,50 @@ def test_update_parameter_for_multi_model():
     S.update_model([k1, 1])
 
     sbml = S.generate_sbml()[0] + '\n' + S.generate_sbml()[1]
-    compare_model(sbml, 'test_tools/model_57.txt')
+    assert compare_model(sbml, 'test_tools/model_57.txt')
+
+
+def test_update_parameter_through_str():
+
+    A = BaseSpecies()
+    k1 = ModelParameters(0.00000001)
+
+    A >> Zero [k1]
+
+    S = Simulation(A)
+    S.level = -1
+    S.compile()
+
+    S.update_model(['k1', 1])
+    assert compare_model(S.generate_sbml()[0],'test_tools/model_58.txt')
+
+
+def test_update_multiple_parameters_in_expression():
+
+    A = BaseSpecies()
+    k1, k2 = ModelParameters(0.00000001, 10)
+
+    A >> Zero [k1 / (10 + k2 ** 4)]
+
+    S = Simulation(A)
+    S.level = -1
+    S.compile()
+
+    S.update_model([k1, 1], [k2, 1])
+    assert compare_model(S.generate_sbml()[0], 'test_tools/model_59.txt')
+
+
+def test_update_parameter_with_unit():
+
+    # Replace parameters using units
+    A = BaseSpecies()
+    k1 = ModelParameters(1 / u.h)
+
+    A >> Zero[k1]
+
+    S = Simulation(A)
+    S.level = -1
+    S.compile()
+
+    S.update_model([k1, 1 / u.s])
+    assert compare_model(S.generate_sbml()[0], 'test_tools/model_60.txt')

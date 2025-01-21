@@ -66,7 +66,7 @@ class Simulation_Utils:
         else:
             value_to_update = arg[1]
 
-        if type(arg) == str:
+        if type(arg[0]) == str:
             parameter_str = arg[0]
         else:
             parameter_str = arg[0].get_name()
@@ -78,16 +78,18 @@ class Simulation_Utils:
             except KeyError:
                 simlog.error(f'The parameter named {parameter_str } was not found in the model')
 
+        parameter_object = self.model_parameters[parameter_str]['object']
+        parameter_object.update_value(arg[1])
+
         # Update parameter in model_parameters in the simulation object
         try:
             if not iterable:
-                self.model_parameters[parameter_str]['values'] = [arg[1]]
+                self.model_parameters[parameter_str]['values'] = [parameter_object.value]
             else:
-                self.model_parameters[parameter_str]['values'] = arg[1]
+                self.model_parameters[parameter_str]['values'] = parameter_object.value
         except KeyError:
             simlog.error(f'The parameter named {parameter_str} was not found in the model')
 
-        self.model_parameters[parameter_str]['object'].update_value(arg[1])
 
 
     def _update_species(self, arg):
