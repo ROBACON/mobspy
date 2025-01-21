@@ -252,7 +252,7 @@ def search_for_parameters_in_str(reaction_rate_string, parameters_exist, paramet
         :param parameters_in_reaction: set of parameters already in reaction
         :return: parameters_in_reaction set of parameters already in reaction
     """
-    split_operation = re_split(', |-|!|\*|\+|/|\)|\(| ', reaction_rate_string)
+    split_operation = re_split(r', |-|!|\*|\+|/|\)|\(| ', reaction_rate_string)
     split_operation = [x.replace(' ', '') for x in split_operation if x.replace(' ', '') != '']
 
     for name in split_operation:
