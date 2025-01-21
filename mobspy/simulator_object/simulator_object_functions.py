@@ -14,11 +14,13 @@ class Simulation_Utils:
 
     def update_model(self, *args):
 
+        # Check if the model was already compiled
         if not self._list_of_models:
             simlog.error('In .update_model method - \n'
                          'The model was not compiled yet. The update_model method is reserved for simulations that '
                          'have already been compiled')
 
+        # Check every argument to see if it is in the proper format - len 2
         for arg in args:
 
             if len(arg) != 2:
@@ -28,16 +30,25 @@ class Simulation_Utils:
 
             self._update_from_compiler(arg)
 
-        # This does not look to be necessary
-        # We need to regenerate the sbml files - each parameter has a single sbml file
-        # They are generated in _assemble_multi_simulation_structure - which is a partial compilation
-        # self._assemble_multi_simulation_structure()
-
 
     def _update_from_compiler(self, arg):
 
         if isinstance(arg[0], _Internal_Parameter_Constructor):
             self._update_parameter(arg)
+        elif type(arg[0]) == str:
+            test_model = self._list_of_models[0]
+
+            try:
+                a =  test_model['parameters_for_sbml'][arg[0]]
+                self._update_parameter(arg)
+            except KeyError:
+                not_parameter = True
+
+            try:
+                a = test_model['species_for_sbml'][arg[0]]
+                self._update_species(arg)
+            except KeyError:
+                not_species = True
 
         else:
             simlog.error('Placeholder error for now')
@@ -63,7 +74,7 @@ class Simulation_Utils:
         # Update values on standard compiler
         for model in self._list_of_models:
             try:
-                model['parameters_for_sbml'][parameter_str ] = (value_to_update, 'dimensionless')
+                model['parameters_for_sbml'][parameter_str] = (value_to_update, 'dimensionless')
             except KeyError:
                 simlog.error(f'The parameter named {parameter_str } was not found in the model')
 
@@ -78,3 +89,7 @@ class Simulation_Utils:
 
         self.model_parameters[parameter_str]['object'].update_value(arg[1])
 
+
+    def _update_species(self, arg):
+
+        print('Still testing')

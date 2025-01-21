@@ -963,6 +963,9 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
 class SimulationComposition:
 
+    def update_model(self, *args):
+        self.base_sim.update_model(*args)
+
     def _compile_multi_simulation(self):
         for sim1 in self.list_of_simulations:
             for sim2 in self.list_of_simulations:
