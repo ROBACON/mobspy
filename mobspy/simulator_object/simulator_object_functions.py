@@ -1,7 +1,7 @@
 from scipy.constants import value
 
 import mobspy.simulation_logging.log_scripts as simlog
-from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor
+from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
 
 
 def sim_remove_reaction(sim, reaction, Simulation_Constructor):
@@ -33,22 +33,38 @@ class Simulation_Utils:
 
     def _update_from_compiler(self, arg):
 
-        if isinstance(arg[0], _Internal_Parameter_Constructor):
+        try:
+            is_species = arg[0].is_spe_or_reac()
+        except:
+            is_species = False
+
+        if isinstance(arg[0], Internal_Parameter_Constructor):
             self._update_parameter(arg)
         elif type(arg[0]) == str:
             test_model = self._list_of_models[0]
 
+            # Check to see if string is in parameters
             try:
-                a =  test_model['parameters_for_sbml'][arg[0]]
+                test_model['parameters_for_sbml'][arg[0]]
                 self._update_parameter(arg)
+                not_parameter = False
             except KeyError:
                 not_parameter = True
 
+            # Check to see if string is in species
             try:
-                a = test_model['species_for_sbml'][arg[0]]
+                test_model['species_for_sbml'][arg[0].replace('_dot_', '.')]
                 self._update_species(arg)
+                not_species = False
             except KeyError:
                 not_species = True
+
+            # If it is in neither - throw an error
+            if not_species and not_parameter:
+                simlog.error(f"The string {arg[0]} was not found either in parameters or species")
+
+        elif is_species:
+            pass
 
         else:
             simlog.error('Placeholder error for now')
@@ -90,8 +106,6 @@ class Simulation_Utils:
         except KeyError:
             simlog.error(f'The parameter named {parameter_str} was not found in the model')
 
-
-
     def _update_species(self, arg):
 
-        print('Still testing')
+        simlog.error("Still working on this - give me a sec")

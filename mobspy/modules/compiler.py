@@ -1,5 +1,5 @@
 from mobspy.simulation_logging.log_scripts import error as simlog_error, warning as simlog_warning
-from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
     construct_species_char_list as ssg_construct_species_char_list
 from pint import Quantity

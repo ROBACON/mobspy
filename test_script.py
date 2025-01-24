@@ -1915,7 +1915,6 @@ def test_antimony_compose_model_gen():
 
 
 def test_update_parameter_for_multi_model():
-    k1 = ModelParameters(1)
     A, B, C, D = BaseSpecies()
 
     k1 = ModelParameters([1, 2, 3])

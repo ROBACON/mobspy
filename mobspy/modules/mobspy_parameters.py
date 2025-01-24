@@ -5,7 +5,7 @@ from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_Expression
 from pint import Quantity, UnitRegistry
 
 
-class _Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
+class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
     """
         This is the constructor that is called by ModelParameters to create a model parameter
         (not a simulation parameter). The user is not supposed to create parameters using this object.
@@ -144,9 +144,9 @@ def ModelParameters(*args):
         simlog.error('You must provide an initial value for every parameter variable declared', stack_index=2)
 
     if len(parameter_variable_names) > 1:
-        parameters_to_return = [_Internal_Parameter_Constructor(p, v) for p, v in zip(parameter_variable_names, args)]
+        parameters_to_return = [Internal_Parameter_Constructor(p, v) for p, v in zip(parameter_variable_names, args)]
     else:
-        parameters_to_return = _Internal_Parameter_Constructor(parameter_variable_names[0], args[0])
+        parameters_to_return = Internal_Parameter_Constructor(parameter_variable_names[0], args[0])
 
     return parameters_to_return
 
@@ -157,5 +157,5 @@ if __name__ == '__main__':
     r1 = (a + b + c)/5
     print(r1._operation)
     # print(type(r1._parameter_set))
-    # print(_Internal_Parameter_Constructor.parameter_stack)
+    # print(Internal_Parameter_Constructor.parameter_stack)
 

@@ -5,14 +5,16 @@ if __name__ == '__main__':
 
     # Replace parameters using units
     A = BaseSpecies()
-    k1 = ModelParameters(1/u.h)
+    A.a1, A.a2
+    k1 = ModelParameters(1)
 
     A >> Zero [k1]
 
+    A(100)
     S = Simulation(A)
     S.compile()
 
-    S.update_model([k1, 1/u.s])
+    S.update_model([A, 200])
     print(S.generate_sbml()[0])
 
 
