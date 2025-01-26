@@ -2017,16 +2017,19 @@ def test_update_parameter_with_unit():
 
 def test_species_value_modification():
 
+    # Replace parameters using units
     A = BaseSpecies()
     A.a1, A.a2
+    B = New(A)
+    B.b1, B.b2
     k1 = ModelParameters(1)
 
-    A >> Zero[k1]
+    B >> Zero[k1]
 
-    A(100)
-    S = Simulation(A)
+    B(100), B.b2(100)
+    S = Simulation(B)
     S.level = -1
     S.compile()
 
-    S.update_model([A, 200 / u.l])
-    assert compare_model(S.generate_sbml()[0], )
+    S.update_model([B, 200 / u.l], [B.b2, 300 / u.l])
+    assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_61.txt')

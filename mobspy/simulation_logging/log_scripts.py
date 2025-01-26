@@ -7,9 +7,9 @@ import mobspy.modules.mobspy_expressions as me
 global_simlog_level = 3
 
 # For debugging
-_PRINT_FULL_EXCEPTION_LOG = 1
+_PRINT_FULL_EXCEPTION_LOG = 0
 
-def error(message, stack_index=-1):
+def error(message, stack_index=-1, full_exception_log = False):
 
     if stack_index > -1:
         # Get information about the code line where the error occurred
@@ -19,7 +19,7 @@ def error(message, stack_index=-1):
         message = f'At: {code_line} \n' + f'Line number: {line_number} \n' + message
 
     # Print the full traceback if the flag is set
-    if _PRINT_FULL_EXCEPTION_LOG:
+    if _PRINT_FULL_EXCEPTION_LOG or full_exception_log:
         traceback_details = ''.join(traceback.format_stack())
         message = f'Full Exception Log:\n{traceback_details}\n{message}'
 

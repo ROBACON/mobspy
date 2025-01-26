@@ -356,6 +356,22 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             self.list_of_reactants = [{'object': object_reference, 'characteristics': characteristics,
                                        'stoichiometry': stoichiometry, 'label': label}]
 
+    def get_spe_object(self):
+        if len(self.list_of_reactants) != 1:
+            simlog_error("The internal method get_queried_characteristics can only be used for "
+                         "Reacting_Species with a single ",
+                         full_exception_log=True)
+        else:
+            return self.list_of_reactants[0]['object']
+
+    def get_query_characteristics(self):
+        if len(self.list_of_reactants) != 1:
+            simlog_error("The internal method get_queried_characteristics can only be used for "
+                         "Reacting_Species with a single ",
+                         full_exception_log=True)
+        else:
+            return self.list_of_reactants[0]['characteristics']
+
     def __rmul__(self, stoichiometry):
         """
             Multiplication by the stoichiometry for reactions
@@ -1095,6 +1111,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         # This will store the quantities relating to the species counts
         self._species_counts = []
+
+    def get_spe_object(self):
+        return self
+
+    def get_query_characteristics(self):
+        return 'std$'
 
     def link_a_species(self, other_species):
         """

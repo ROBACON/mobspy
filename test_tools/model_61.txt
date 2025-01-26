@@ -12,8 +12,10 @@
       <compartment id="c1" spatialDimensions="3" size="1" units="dimensionless" constant="true"/>
     </listOfCompartments>
     <listOfSpecies>
-      <species id="A_dot_a1" compartment="c1" initialAmount="200" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="A_dot_a2" compartment="c1" initialAmount="0" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B_dot_a1_dot_b2" compartment="c1" initialAmount="300" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B_dot_a1_dot_b1" compartment="c1" initialAmount="200" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B_dot_a2_dot_b2" compartment="c1" initialAmount="0" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="B_dot_a2_dot_b1" compartment="c1" initialAmount="0" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
       <parameter id="volume" value="1" units="dimensionless" constant="true"/>
@@ -22,13 +24,13 @@
     <listOfReactions>
       <reaction id="reaction_0" reversible="false" fast="false">
         <listOfReactants>
-          <speciesReference species="A_dot_a1" stoichiometry="1" constant="true"/>
+          <speciesReference species="B_dot_a1_dot_b2" stoichiometry="1" constant="true"/>
         </listOfReactants>
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> A_dot_a1 </ci>
+              <ci> B_dot_a1_dot_b2 </ci>
               <ci> k1 </ci>
             </apply>
           </math>
@@ -36,13 +38,41 @@
       </reaction>
       <reaction id="reaction_1" reversible="false" fast="false">
         <listOfReactants>
-          <speciesReference species="A_dot_a2" stoichiometry="1" constant="true"/>
+          <speciesReference species="B_dot_a1_dot_b1" stoichiometry="1" constant="true"/>
         </listOfReactants>
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> A_dot_a2 </ci>
+              <ci> B_dot_a1_dot_b1 </ci>
+              <ci> k1 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="reaction_2" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="B_dot_a2_dot_b2" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> B_dot_a2_dot_b2 </ci>
+              <ci> k1 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="reaction_3" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="B_dot_a2_dot_b1" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> B_dot_a2_dot_b1 </ci>
               <ci> k1 </ci>
             </apply>
           </math>

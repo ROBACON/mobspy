@@ -112,20 +112,18 @@ class Simulation_Utils:
 
     def _update_species(self, arg):
 
-        if arg[0].is_species():
+        spe_string = sp_construct_species_char_list(arg[0], arg[0].get_query_characteristics(),
+                                                    self.orthogonal_vector_structure, symbol='_dot_')
 
-            spe_string = sp_construct_species_char_list(arg[0], 'std$',  self.orthogonal_vector_structure,
-                                                       symbol='_dot_')
+        if 'volume' not in self.__dict__:
+            volume = 1
+        else:
+            volume = self.__dict__['volume']
+        dimension = self.__dict__['dimension']
 
-            if 'volume' not in self.__dict__:
-                volume = 1
-            else:
-                volume = self.__dict__['volume']
-            dimension = self.__dict__['dimension']
+        spe_count = uh_convert_counts(arg[1], volume, dimension)
 
-            spe_count = uh_convert_counts(arg[1], volume, dimension)
-
-            self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
+        self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
 
 
 
