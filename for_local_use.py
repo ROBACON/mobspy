@@ -16,9 +16,10 @@ if __name__ == '__main__':
 
     B(100), B.b2(100)
     S = Simulation(B)
+    S.level = -1
     S.compile()
 
-    S.update_model([B, 200/u.l],[B.b2, 300/u.l])
+    S.update_model([All[B], 200/u.l])
 
     print(S.generate_sbml()[0])
 

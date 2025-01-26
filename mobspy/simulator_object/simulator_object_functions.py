@@ -4,6 +4,7 @@ from scipy.constants import value
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
 from mobspy.modules.species_string_generator import construct_species_char_list as sp_construct_species_char_list
+from mobspy.modules.species_string_generator import construct_all_combinations as sp_construct_all_combinations
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 
 
@@ -112,9 +113,7 @@ class Simulation_Utils:
 
     def _update_species(self, arg):
 
-        spe_string = sp_construct_species_char_list(arg[0], arg[0].get_query_characteristics(),
-                                                    self.orthogonal_vector_structure, symbol='_dot_')
-
+        # Prepare count
         if 'volume' not in self.__dict__:
             volume = 1
         else:
@@ -123,7 +122,22 @@ class Simulation_Utils:
 
         spe_count = uh_convert_counts(arg[1], volume, dimension)
 
-        self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
+        # Get query - construct all combinations - or just one
+        query = arg[0].get_query_characteristics()
+        if 'all$' in query:
+
+            spe_string_list = sp_construct_all_combinations(arg[0], query,
+                                                            self.orthogonal_vector_structure, symbol='_dot_')
+
+            for spe_string in spe_string_list:
+                self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
+
+        else:
+
+            spe_string = sp_construct_species_char_list(arg[0], query,
+                                                        self.orthogonal_vector_structure, symbol='_dot_')
+
+            self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
 
 
 

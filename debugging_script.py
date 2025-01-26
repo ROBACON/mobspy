@@ -1,6 +1,6 @@
 from test_script import *
 
-# This is here because pytest is slow - so it's a faster test that avoid the collection step.
+# This is here because pytest is too slow - so it's a faster test that avoid the collection step.
 # Pytest is used in the GitHub while pushing
 # This script is oriented towards fast debugging and development
 # Also in the future, it might be nice to add an automated way to get the test names
@@ -33,7 +33,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_assignment_similar_species, test_blocked_names, test_blocked_names_2,
              test_update_parameter_for_multi_model, test_update_parameter_through_str,
              test_update_multiple_parameters_in_expression, test_update_parameter_with_unit,
-             test_species_value_modification]
+             test_species_value_modification, test_all_value_modification]
 
 # test_no_species_in_asg
 # test_illegal_unit_op_in_assignment
