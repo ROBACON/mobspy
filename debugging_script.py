@@ -32,7 +32,8 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_assign_context_constant, test_duration_with_run, test_rev, test_dimensionless_count,
              test_assignment_similar_species, test_blocked_names, test_blocked_names_2,
              test_update_parameter_for_multi_model, test_update_parameter_through_str,
-             test_update_multiple_parameters_in_expression, test_update_parameter_with_unit]
+             test_update_multiple_parameters_in_expression, test_update_parameter_with_unit,
+             test_species_value_modification]
 
 # test_no_species_in_asg
 # test_illegal_unit_op_in_assignment

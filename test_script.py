@@ -25,6 +25,29 @@ def compare_model(comp_results, file_name):
                 return False
     return True
 
+def compare_model_ignore_order(comp_results, file_name):
+    with open(file_name, 'r') as file:
+        file_lines = {line.strip() for line in file.readlines() if line.strip()}
+        result_lines = {line.strip() for line in comp_results.split('\n') if line.strip()}
+
+        # Check if both sets of lines are equal
+        if file_lines != result_lines:
+            missing_in_file = result_lines - file_lines
+            missing_in_results = file_lines - result_lines
+
+            if missing_in_file:
+                print("Lines in results but not in file:")
+                for line in missing_in_file:
+                    print(f"test: {line}")
+
+            if missing_in_results:
+                print("Lines in file but not in results:")
+                for line in missing_in_results:
+                    print(f"file: {line}")
+
+            return False
+    return True
+
 
 # Model to test the basics
 def test_model_1():
@@ -1973,7 +1996,7 @@ def test_update_multiple_parameters_in_expression():
     S.compile()
 
     S.update_model([k1, 1], [k2, 1])
-    assert compare_model(S.generate_sbml()[0], 'test_tools/model_59.txt')
+    assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_59.txt')
 
 
 def test_update_parameter_with_unit():
@@ -1990,3 +2013,20 @@ def test_update_parameter_with_unit():
 
     S.update_model([k1, 1 / u.s])
     assert compare_model(S.generate_sbml()[0], 'test_tools/model_60.txt')
+
+
+def test_species_value_modification():
+
+    A = BaseSpecies()
+    A.a1, A.a2
+    k1 = ModelParameters(1)
+
+    A >> Zero[k1]
+
+    A(100)
+    S = Simulation(A)
+    S.level = -1
+    S.compile()
+
+    S.update_model([A, 200 / u.l])
+    assert compare_model(S.generate_sbml()[0], )

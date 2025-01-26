@@ -4,6 +4,7 @@
 import pandas as pd
 from mobspy.modules.meta_class import *
 from mobspy.modules.class_of_meta_specie_named_any import *
+import mobspy.simulation_logging as simlog
 import inspect
 
 

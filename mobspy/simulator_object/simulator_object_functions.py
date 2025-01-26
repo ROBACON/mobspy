@@ -1,7 +1,10 @@
+from pint.registry import Quantity
 from scipy.constants import value
 
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
+from mobspy.modules.species_string_generator import construct_species_char_list as sp_construct_species_char_list
+from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 
 
 def sim_remove_reaction(sim, reaction, Simulation_Constructor):
@@ -64,7 +67,7 @@ class Simulation_Utils:
                 simlog.error(f"The string {arg[0]} was not found either in parameters or species")
 
         elif is_species:
-            pass
+            self._update_species(arg)
 
         else:
             simlog.error('Placeholder error for now')
@@ -106,6 +109,24 @@ class Simulation_Utils:
         except KeyError:
             simlog.error(f'The parameter named {parameter_str} was not found in the model')
 
+
     def _update_species(self, arg):
 
-        simlog.error("Still working on this - give me a sec")
+        if arg[0].is_species():
+
+            spe_string = sp_construct_species_char_list(arg[0], 'std$',  self.orthogonal_vector_structure,
+                                                       symbol='_dot_')
+
+            if 'volume' not in self.__dict__:
+                volume = 1
+            else:
+                volume = self.__dict__['volume']
+            dimension = self.__dict__['dimension']
+
+            spe_count = uh_convert_counts(arg[1], volume, dimension)
+
+            self._list_of_models[0]['species_for_sbml'][spe_string] = spe_count
+
+
+
+
