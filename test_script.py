@@ -2052,3 +2052,18 @@ def test_all_value_modification():
     S.update_model([All[B], 200 / u.l])
 
     assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_62.txt')
+
+
+def test_new_reversible_reaction_notation():
+
+    A = BaseSpecies()
+    k1, k2 = ModelParameters(1, 1)
+
+    A >> Zero[1, 1]
+    A >> Zero[1 / (k1 + k2), k1]
+
+    A >> 2 * A[10]
+
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_63.txt')

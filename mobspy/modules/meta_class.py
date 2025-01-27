@@ -4,7 +4,9 @@
     Bear in mind that they are not actually Python meta-classes. The first design utilized this feature but know there
     are just regular classes
 """
-from mobspy.simulation_logging.log_scripts import error as simlog_error, debug as simlog_debug
+from copy import deepcopy
+
+from mobspy.simulation_logging.log_scripts import error as simlog_error, debug as simlog_debug, error
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations
 from mobspy.modules.assignments_implementation import Assign as asgi_Assign, Asg as asgi_Asg
 from pint import Quantity
@@ -42,6 +44,30 @@ class _Last_rate_storage:
         """
         cls.last_rate = item
         return object_to_return
+
+    @classmethod
+    def process_rate(cls, rate):
+
+        if isinstance(rate, (np_int_, np_float_)):
+            rate = float(rate)
+
+        if isinstance(rate, Species) \
+                or isinstance(rate, Reacting_Species) \
+                or isinstance(rate, Reactions):
+            simlog_error('Reaction rate of type ' + str(type(_Last_rate_storage.last_rate)) + ' not valid',
+                         stack_index=3)
+
+        if not (type(rate) == int or type(rate) == float
+                or callable(rate) or type(rate) == str
+                or isinstance(rate, me_OverrideQuantity)
+                or isinstance(rate, Quantity)
+                or isinstance(rate, mp_Mobspy_Parameter)
+                or rate is None
+                or isinstance(rate, me_ExpressionDefiner)):
+            simlog_error('Reaction rate of type ' + str(type(rate)) + ' not valid',
+                         stack_index=3)
+
+        return rate
 
 
 class Reactions:
@@ -95,7 +121,7 @@ class Reactions:
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __init__(self, reactants, products):
+    def __init__(self, reactants, products, rate=None):
         """
             Constructor of the reaction object. For the object construction only the reactants and products are
             necessary - the order and the rate are assigned later by the compiler
@@ -117,7 +143,37 @@ class Reactions:
                          'A reaction was defined with the assignment context activated.'
                          'The assignment context was deactivated. Please try to redefine the model')
 
-        # Add characteristics in Cts_context to each reactant and product
+        # Setup rate - consider reversible reactions
+        try:
+            flag_len = len(_Last_rate_storage.last_rate) == 2
+        except:
+            flag_len = False
+
+        if flag_len and rate is None:
+
+            store_last_rate = _Last_rate_storage.last_rate[0]
+            Reactions(reactants=products, products=reactants, rate=_Last_rate_storage.last_rate[1])
+            rate = _Last_rate_storage.process_rate(store_last_rate)
+
+        elif rate is not None and not flag_len:
+
+            rate = _Last_rate_storage.process_rate(rate)
+
+        elif rate is None and not flag_len:
+
+            rate = _Last_rate_storage.process_rate(_Last_rate_storage.last_rate)
+
+        elif rate is not None and flag_len:
+
+            rate = _Last_rate_storage.process_rate(rate)
+
+        else:
+            simlog_error('To many rate provided', stack_index=3)
+        self.rate = rate
+        if _Last_rate_storage.last_rate is not None:
+            _Last_rate_storage.last_rate = None
+
+            # Add characteristics in Cts_context to each reactant and product
         if len(Species.meta_specie_named_any_context) != 0:
             for j in Species.meta_specie_named_any_context:
                 for r in reactants:
@@ -143,29 +199,12 @@ class Reactions:
 
         # Assign default order
         self.order = None
+
+        # Define reversible reaction with two rates
+
         # Cast np to float
-        if isinstance(_Last_rate_storage.last_rate, (np_int_, np_float_)):
-            _Last_rate_storage.last_rate = float(_Last_rate_storage.last_rate)
-
-        if isinstance(_Last_rate_storage.last_rate, Species) \
-                or isinstance(_Last_rate_storage.last_rate, Reacting_Species) \
-                or isinstance(_Last_rate_storage.last_rate, Reactions):
-            simlog_error('Reaction rate of type ' + str(type(_Last_rate_storage.last_rate)) + ' not valid',
-                         stack_index=3)
-
-        if not (type(_Last_rate_storage.last_rate) == int or type(_Last_rate_storage.last_rate) == float
-                or callable(_Last_rate_storage.last_rate) or type(_Last_rate_storage.last_rate) == str
-                or isinstance(_Last_rate_storage.last_rate, me_OverrideQuantity)
-                or isinstance(_Last_rate_storage.last_rate, Quantity)
-                or isinstance(_Last_rate_storage.last_rate, mp_Mobspy_Parameter)
-                or _Last_rate_storage.last_rate is None
-                or isinstance(_Last_rate_storage.last_rate, me_ExpressionDefiner)):
-            simlog_error('Reaction rate of type ' + str(type(_Last_rate_storage.last_rate)) + ' not valid',
-                         stack_index=3)
-
-        self.rate = _Last_rate_storage.last_rate
-        if _Last_rate_storage.last_rate is not None:
-            _Last_rate_storage.last_rate = None
+        #if _Last_rate_storage.last_rate is not None:
+        #    _Last_rate_storage.last_rate = None
 
         # Here we extract all involved objects to pact them in a set
         # This is done to find the reactions associated with the species when the Compiler is started

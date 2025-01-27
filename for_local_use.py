@@ -7,21 +7,15 @@ if __name__ == '__main__':
 
     # Replace parameters using units
     A = BaseSpecies()
-    A.a1, A.a2
-    B = New(A)
-    B.b1, B.b2
-    k1 = ModelParameters(1)
+    k1, k2 = ModelParameters(1, 1)
 
-    B >> Zero [k1]
+    A >> Zero [1, 1]
+    A >> Zero [1/(k1 + k2), k1]
 
-    B(100), B.b2(100)
-    S = Simulation(B)
-    S.level = -1
-    S.compile()
+    A >> 2*A [10]
 
-    S.update_model([All[B], 200/u.l])
-
-    print(S.generate_sbml()[0])
+    S = Simulation(A)
+    print(S.compile())
 
     # print(A.get_characteristics())
 
