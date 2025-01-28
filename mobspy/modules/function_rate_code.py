@@ -15,7 +15,7 @@ from mobspy.modules.unit_handler import convert_rate as uh_convert_rate
 from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression, \
     ExpressionDefiner as mbe_ExpressionDefiner, Specific_Species_Operator as mbe_Specific_Species_Operator
 from pint import Quantity
-from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from re import split as re_split
 import timeit
 

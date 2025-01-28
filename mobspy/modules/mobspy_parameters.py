@@ -5,7 +5,7 @@ from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_Expression
 from pint import Quantity, UnitRegistry
 
 
-class _Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
+class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
     """
         This is the constructor that is called by ModelParameters to create a model parameter
         (not a simulation parameter). The user is not supposed to create parameters using this object.
@@ -28,34 +28,38 @@ class _Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter
         self._operation = str(name)
         self._parameter_set.add(self)
 
-        def unit_process(value):
-            # We convert into MobsPy units already during the definition of a parameter
-            self.value = self.convert_received_unit(value).magnitude
+        self.process_value(value)
 
-            self.original_magnitude = value.magnitude
-            self.conversion_factor = self.value / self.original_magnitude
-            self.original_unit = value.units
+    def unit_process(self, value):
+        # We convert into MobsPy units already during the definition of a parameter
+        self.value = self.convert_received_unit(value).magnitude
 
-            # For future developers, the T is there to avoid potential bugs with the . query
-            self._unit_count_op = value
-            self._unit_conc_op = value
-            self._unit_operation = value
-            self._has_units = 'T'
+        self.original_magnitude = value.magnitude
+        self.conversion_factor = self.value / self.original_magnitude
+        self.original_unit = value.units
 
-            return self.value, self.original_unit
+        # For future developers, the T is there to avoid potential bugs with the . query
+        self._unit_count_op = value
+        self._unit_conc_op = value
+        self._unit_operation = value
+        self._has_units = 'T'
+
+        return self.value, self.original_unit
+
+    def process_value(self, value):
 
         if isinstance(value, Quantity):
-            unit_process(value)
+            self.unit_process(value)
         elif type(value) == list or type(value) == tuple:
             new_list = []
             first_unit = None
             for i, val in enumerate(value):
                 if isinstance(val, Quantity) and i == 0:
-                    new_value, first_unit = unit_process(val)
+                    new_value, first_unit = self.unit_process(val)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is None:
                     simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
-                    new_value, unit = unit_process(val)
+                    new_value, unit = self.unit_process(val)
                     if unit != first_unit:
                         simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
                 else:
@@ -71,6 +75,7 @@ class _Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter
             self._unit_conc_op = 1
             self.conversion_factor = 1
             self._has_units = False
+
 
     def convert_to_original_unit(self):
         """
@@ -108,6 +113,21 @@ class _Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter
         else:
             return False
 
+    def update_value(self, new_value):
+
+        temp_set = set()
+        temp_set.add(self)
+        self.original_value = new_value
+
+        self._ms_active = True
+
+        self._parameter_set.add(self)
+
+        self.process_value(new_value)
+
+    def get_name(self):
+        return self.name
+
     def __str__(self):
         return str(self._operation)
 
@@ -124,9 +144,9 @@ def ModelParameters(*args):
         simlog.error('You must provide an initial value for every parameter variable declared', stack_index=2)
 
     if len(parameter_variable_names) > 1:
-        parameters_to_return = [_Internal_Parameter_Constructor(p, v) for p, v in zip(parameter_variable_names, args)]
+        parameters_to_return = [Internal_Parameter_Constructor(p, v) for p, v in zip(parameter_variable_names, args)]
     else:
-        parameters_to_return = _Internal_Parameter_Constructor(parameter_variable_names[0], args[0])
+        parameters_to_return = Internal_Parameter_Constructor(parameter_variable_names[0], args[0])
 
     return parameters_to_return
 
@@ -137,5 +157,5 @@ if __name__ == '__main__':
     r1 = (a + b + c)/5
     print(r1._operation)
     # print(type(r1._parameter_set))
-    # print(_Internal_Parameter_Constructor.parameter_stack)
+    # print(Internal_Parameter_Constructor.parameter_stack)
 

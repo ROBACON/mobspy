@@ -1,7 +1,7 @@
 from mobspy.simulation_logging.log_scripts import error as simlog_error
 from inspect import stack as inspect_stack
 from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
-from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from pint import Quantity
 from numpy import integer as np_int_, floating as np_float_
 

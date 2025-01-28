@@ -1,5 +1,5 @@
 from mobspy.simulation_logging.log_scripts import error as simlog_error, warning as simlog_warning
-from mobspy.modules.mobspy_parameters import _Internal_Parameter_Constructor as mp_Mobspy_Parameter
+from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor as mp_Mobspy_Parameter
 from mobspy.modules.species_string_generator import construct_all_combinations as ssg_construct_all_combinations, \
     construct_species_char_list as ssg_construct_species_char_list
 from pint import Quantity
@@ -29,7 +29,8 @@ class Compiler:
             if parameter.name in parameters_used:
                 parameters_used[parameter.name]['used_in'].add('$sbml')
             else:
-                temp = {'name': parameter.name, 'values': parameter.value, 'used_in': {'$sbml'}}
+                temp = {'name': parameter.name, 'values': parameter.value, 'used_in': {'$sbml'},
+                        'object': parameter}
                 parameters_used[parameter.name] = temp
 
             try:
@@ -138,7 +139,7 @@ class Compiler:
             species.order_references()
 
         # Start by creating the Mappings for the SBML
-        # Convert to user friendly format as well
+        # Convert to user-friendly format as well
         mappings_for_sbml = {}
         for spe_object in meta_species_to_simulate:
             mappings_for_sbml[spe_object.get_name()] = []
@@ -202,7 +203,7 @@ class Compiler:
                         = parameters_used[count['quantity'].name]['used_in'].union(set(species_strings))
                 else:
                     temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
-                            'used_in': set(species_strings)}
+                            'used_in': set(species_strings), 'object': count['quantity']}
                     parameters_used[count['quantity'].name] = temp
 
             temp_count = uh_convert_counts(count['quantity'], volume, dimension)
@@ -232,7 +233,7 @@ class Compiler:
                     parameters_used[count['quantity'].name]['used_in'].add(species_string)
                 else:
                     temp = {'name': count['quantity'].name, 'values': count['quantity'].value,
-                            'used_in': {species_string}}
+                            'used_in': {species_string}, 'object': count['quantity']}
                     parameters_used[count['quantity'].name] = temp
 
             temp_count = uh_convert_counts(count['quantity'], volume, dimension)

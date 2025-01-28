@@ -4,8 +4,8 @@
 """
 from pint import UnitRegistry, Quantity
 from scipy.constants import N_A
-from copy import deepcopy
 import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.modules.mobspy_expressions import u, OverrideQuantity
 
 
 def convert_rate(quantity, reaction_order, dimension):
@@ -18,12 +18,10 @@ def convert_rate(quantity, reaction_order, dimension):
 
         :param quantity: (int, float) converted unit into MobsPy standard units
     """
+
     volume_power = reaction_order - 1
     # For objects that cannot be deep copied
-    try:
-        converted_quantity = deepcopy(quantity)
-    except:
-        converted_quantity = quantity
+    converted_quantity = deep_copy_quantities(quantity)
 
     # Check to see if rate dimension is valid
     if dimension is None and isinstance(quantity, Quantity) and reaction_order > 1:
@@ -64,10 +62,8 @@ def convert_counts(quantity, volume, dimension):
 
         :return: converted_quantity (int, float) = converted unit into MobsPy standard units
     """
-    try:
-        converted_quantity = deepcopy(quantity)
-    except:
-        converted_quantity = quantity
+
+    converted_quantity = deep_copy_quantities(quantity)
 
     if isinstance(quantity, Quantity):
 
@@ -157,6 +153,7 @@ def convert_volume(volume, dimension):
 
         :return: the converted volume in MobsPy units
     """
+
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
         volume = volume.convert(f'decimeter ** {dimension}').magnitude
@@ -171,6 +168,7 @@ def convert_time(time):
 
         :param time: (int, float, Quantity) any time used
     """
+
     if isinstance(time, Quantity):
         if str(time.dimensionality) == '[time]':
             return time.convert('second').magnitude
@@ -191,5 +189,29 @@ def time_convert_to_other_unit(time, other_unit):
         return time
 
 
+def deep_copy_quantities(quantity):
+    """
+        Custom deepcopy function for Pint Quantity objects.
+
+        Args:
+            quantity: The Quantity object to copy.
+
+        Returns:
+            A new Quantity object with the same value and units.
+        """
+    # Extract the value and unit from the original quantity
+    if isinstance(quantity, Quantity):
+        value = quantity.magnitude
+        unit = str(quantity.units)  # Convert to string to ensure unit compatibility
+
+        # Create a new Quantity using the OverrideUnitRegistry object (u)
+        Q = value * u.unit_registry_object.__getattr__(unit)
+        return OverrideQuantity(Q)
+    else:
+        return quantity
+
+
 if __name__ == '__main__':
-    pass
+    A = 5*u.meters
+    B = deep_copy_quantities(A)
+    print(B)
