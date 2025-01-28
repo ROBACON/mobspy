@@ -4,7 +4,7 @@
 
 import pytest
 import mobspy
-from mobspy import (BaseSpecies, Simulation, New, u, ModelParameters, simlog, Assign, Rev, All, set_counts, Zero,
+from mobspy import (BaseSpecies, Simulation, New, u, ModelParameters, simlog, Assign, Rev, All, set_counts,
                     basiCO_parameter_estimation)
 # from tellurium import loada as te_load_anti
 import numpy as np
