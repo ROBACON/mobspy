@@ -806,7 +806,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         return super().__getattr__(item)
 
     # Write string operation return and unit
-    def generate_string_operation(self, skip_check=False, reaction_order=None):
+    def generate_string_operation(self, skip_check=False, reaction_order=None, dimension=None):
         """
             Converts the expression from what has been stored to a string format for the sbml file
 
@@ -815,10 +815,11 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         """
         ur = u.unit_registry_object
 
-        if self._dimension is None:
-            dimension = 3
-        else:
-            dimension = self._dimension
+        if dimension is None:
+            if self._dimension is None:
+                dimension = 3
+            else:
+                dimension = self._dimension
 
         operation = str(self._operation)
 
@@ -829,9 +830,9 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._count_in_expression = True
 
         if self._has_units == 'T' and self._expression_variables == set() and reaction_order is not None:
-            if self._unit_count_op.units == (1 / ur.second):
+            if self._unit_count_op.units == (1 / ur.second).units:
                 return operation, True
-            elif self._unit_conc_op.units == (1*ur.decimeter**(3*reaction_order)/(ur.second*ur.decimeter**dimension)):
+            elif self._unit_conc_op.units == (ur.decimeter**(dimension * (reaction_order - 1)) / ur.second):
                 return operation, False
 
         c1 = self._has_units == 'T'
