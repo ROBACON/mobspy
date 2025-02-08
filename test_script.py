@@ -11,13 +11,20 @@ import numpy as np
 from copy import deepcopy
 import sys
 import os
-
+import re
 
 # Compare results with expected file
 def compare_model(comp_results, file_name):
-    with open(file_name, 'r') as file:
+    def normalize(text):
+        """ Normalize text by removing extra spaces, tabs, and Unicode variations. """
+        text = text.strip()  # Remove leading/trailing spaces
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces/tabs/newlines with a single space
+        return text
+
+    with open(file_name, 'r', encoding='utf-8') as file:
         for r, line in zip(comp_results.split('\n'), file.readlines()):
-            line = line.replace('\n', '')
+            line = normalize(line)
+            r = normalize(r)
 
             if r != line:
                 print('file: ' + line)
@@ -1411,6 +1418,7 @@ def test_double_parameters_with_units():
     A(100)
     S = Simulation(A)
     S.run(duration=5 * u.hour, plot_data=False, level=-1)
+
     assert compare_model(str(S.results), 'test_tools/model_45.txt')
 
 

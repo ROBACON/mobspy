@@ -346,14 +346,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             :param save_data: (bool) save data or not
             :param plot_data: (bool) plot data or not
         """
-        # Level needs to be set before compilation
-        if level is not None:
-            self.level = level
-
-        # Base case - If there are no events we compile the model here
-        if self._species_for_sbml is None:
-            self.compile(verbose=False)
-
         # This is only here so the ide gives the users tips about the function argument.
         # I wish there was a way to loop over all argument without args and kargs
         pr_manually_process_each_parameter(self, duration, volume, dimension,
@@ -361,6 +353,14 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                                            start_time, r_tol, a_tol, seeds, step_size,
                                            jobs, unit_x, unit_y, output_concentration, output_event,
                                            output_file, save_data, plot_data, rate_type, plot_type)
+
+        # Level needs to be set before compilation
+        if level is not None:
+            self.level = level
+
+        # Base case - If there are no events we compile the model here
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
 
         self._assemble_multi_simulation_structure()
 
