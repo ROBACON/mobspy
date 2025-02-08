@@ -41,7 +41,7 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
 # temporary_test_removal = [test_parameter_fit_with_units, test_multiple_runs_fit, test_simple_fit]
 test_remov = [test_antimony_compose_model_gen, test_antimony_model]
 sub_test = test_list
-#sub_test = [test_antimony_compose_model_gen]
+# sub_test = [test_parameters_with_sbml]
 def perform_tests():
     any_failed = False
     for test in sub_test:

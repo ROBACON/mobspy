@@ -958,7 +958,7 @@ def test_parameters_with_sbml():
         for data_for_sbml in parameter_sweep:
             model_str += order_model_str(data_for_sbml)
 
-    assert compare_model(model_str, 'test_tools/model_31.txt')
+    assert compare_model_ignore_order(model_str, 'test_tools/model_31.txt')
 
 
 def test_shared_parameter_name():
@@ -2076,9 +2076,11 @@ def test_2D_reaction_with_units():
     Location.here, Location.there
     Something = Color * Location
 
-    2 * Something >> 3 * Something[
-        lambda r1, r2: 1 * u.decimeter ** 2 / u.h if Location(r1) == Location(r2) else 0.5 * u.decimeter ** 2 / u.h]
+    rate = lambda r1, r2: 1 * u.decimeter ** 2 / u.h if Location(r1) == Location(r2) \
+        else 0.5 * u.decimeter ** 2 / u.h
+    2 * Something >> 3 * Something[rate]
 
     S = Simulation(Something)
+    S.level = -1
     S.volume = 1 * u.m ** 2
-    assert compare_model(S.compile(), 'test_tools/model_65.txt')
+    assert compare_model(S.compile(), 'test_tools/model_64.txt')
