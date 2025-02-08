@@ -24,5 +24,5 @@ Melanie_Model.py
 testing_tight_layout.png
 *.pyc
 __pycache__/
-
-
+test_plot_images/*
+!test_plot_images/read_me.txt
