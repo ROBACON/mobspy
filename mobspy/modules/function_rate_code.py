@@ -55,7 +55,6 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
                                                      reaction_rate_function, type_of_model, is_count)
 
     elif function_rate_arguments is not None:
-
         # [''] means that it is a function that takes no arguments (empty signature)
         if function_rate_arguments != ['']:
             arguments = prepare_arguments_for_callable(combination_of_reactant_species,
@@ -87,12 +86,14 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
 
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
-                reaction_rate_string, _ = rate.generate_string_operation(skip_check=skip_check)
+                reaction_rate_string, _ = rate.generate_string_operation(skip_check=skip_check, dimension=dimension)
 
             # Having no expression variables implies it is a constant for mass - action kinetics.
             elif len(rate._expression_variables) == 0:
+
                 rate_for_mass_action, is_count = \
-                    rate.generate_string_operation(reaction_order=len(reactant_string_list), skip_check=skip_check)
+                    rate.generate_string_operation(reaction_order=len(reactant_string_list), dimension=dimension,
+                                                   skip_check=skip_check)
                 parameters_in_rate = rate._parameter_set
                 parameters_in_reaction = parameters_in_reaction.union(parameters_in_rate)
 

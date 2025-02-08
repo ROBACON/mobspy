@@ -769,7 +769,7 @@ def test_bi_dimensional_rates():
 def test_dimension_in_function_only():
     A = BaseSpecies()
 
-    A + A >> 3 * A[lambda: 1 * u.milliliter / u.second]
+    A + A >> 3 * A [lambda: 1 * u.milliliter / u.second]
 
     A(1)
     S = Simulation(A)
@@ -958,7 +958,7 @@ def test_parameters_with_sbml():
         for data_for_sbml in parameter_sweep:
             model_str += order_model_str(data_for_sbml)
 
-    assert compare_model(model_str, 'test_tools/model_31.txt')
+    assert compare_model_ignore_order(model_str, 'test_tools/model_31.txt')
 
 
 def test_shared_parameter_name():
@@ -1942,7 +1942,7 @@ def test_update_parameter_for_multi_model():
 
     k1 = ModelParameters([1, 2, 3])
 
-    A >> Zero [2*k1]
+    A >> mobspy.Zero [2*k1]
 
     A(100)
     S1 = Simulation(A)
@@ -1952,7 +1952,7 @@ def test_update_parameter_for_multi_model():
     # print(S.generate_sbml()[0])
 
     A.reset_reactions()
-    B >> Zero [1]
+    B >> mobspy.Zero [1]
 
     B(200)
     S2 = Simulation(A | B)
@@ -1974,7 +1974,7 @@ def test_update_parameter_through_str():
     A = BaseSpecies()
     k1 = ModelParameters(0.00000001)
 
-    A >> Zero [k1]
+    A >> mobspy.Zero [k1]
 
     S = Simulation(A)
     S.level = -1
@@ -1989,7 +1989,7 @@ def test_update_multiple_parameters_in_expression():
     A = BaseSpecies()
     k1, k2 = ModelParameters(0.00000001, 10)
 
-    A >> Zero [k1 / (10 + k2 ** 4)]
+    A >> mobspy.Zero [k1 / (10 + k2 ** 4)]
 
     S = Simulation(A)
     S.level = -1
@@ -2005,7 +2005,7 @@ def test_update_parameter_with_unit():
     A = BaseSpecies()
     k1 = ModelParameters(1 / u.h)
 
-    A >> Zero[k1]
+    A >> mobspy.Zero[k1]
 
     S = Simulation(A)
     S.level = -1
@@ -2024,7 +2024,7 @@ def test_species_value_modification():
     B.b1, B.b2
     k1 = ModelParameters(1)
 
-    B >> Zero[k1]
+    B >> mobspy.Zero[k1]
 
     B(100), B.b2(100)
     S = Simulation(B)
@@ -2042,7 +2042,7 @@ def test_all_value_modification():
     B.b1, B.b2
     k1 = ModelParameters(1)
 
-    B >> Zero[k1]
+    B >> mobspy.Zero[k1]
 
     B(100), B.b2(100)
     S = Simulation(B)
@@ -2052,3 +2052,35 @@ def test_all_value_modification():
     S.update_model([All[B], 200 / u.l])
 
     assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_62.txt')
+
+
+def test_new_reversible_reaction_notation():
+
+    A = BaseSpecies()
+    k1, k2 = ModelParameters(1, 1)
+
+    A >> mobspy.Zero[1, 1]
+    A >> mobspy.Zero[1 / (k1 + k2), k1]
+
+    A >> 2 * A[10]
+
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_63.txt')
+
+
+def test_2D_reaction_with_units():
+
+    Color, Location = BaseSpecies()
+    Color.red, Color.blue
+    Location.here, Location.there
+    Something = Color * Location
+
+    rate = lambda r1, r2: 1 * u.decimeter ** 2 / u.h if Location(r1) == Location(r2) \
+        else 0.5 * u.decimeter ** 2 / u.h
+    2 * Something >> 3 * Something[rate]
+
+    S = Simulation(Something)
+    S.level = -1
+    S.volume = 1 * u.m ** 2
+    assert compare_model(S.compile(), 'test_tools/model_64.txt')

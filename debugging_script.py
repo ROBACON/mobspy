@@ -33,14 +33,15 @@ test_list = [test_model_1, test_model_2, test_model_3, test_model_4, test_model_
              test_assignment_similar_species, test_blocked_names, test_blocked_names_2,
              test_update_parameter_for_multi_model, test_update_parameter_through_str,
              test_update_multiple_parameters_in_expression, test_update_parameter_with_unit,
-             test_species_value_modification, test_all_value_modification]
+             test_species_value_modification, test_all_value_modification, test_new_reversible_reaction_notation,
+             test_2D_reaction_with_units]
 
 # test_no_species_in_asg
 # test_illegal_unit_op_in_assignment
 # temporary_test_removal = [test_parameter_fit_with_units, test_multiple_runs_fit, test_simple_fit]
 test_remov = [test_antimony_compose_model_gen, test_antimony_model]
 sub_test = test_list
-#sub_test = [test_antimony_compose_model_gen]
+# sub_test = [test_parameters_with_sbml]
 def perform_tests():
     any_failed = False
     for test in sub_test:

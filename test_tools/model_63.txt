@@ -1,0 +1,20 @@
+
+Species
+A,0
+
+Mappings
+A :
+A
+
+Parameters
+k1,1
+k2,1
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A')], 'pr': [(2, 'A')], 'kin': 'A * 10'}
+reaction_1,{'re': [(1, 'A')], 'pr': [], 'kin': 'A * (1/(k1+k2))'}
+reaction_2,{'re': [(1, 'A')], 'pr': [], 'kin': 'A * 1'}
+reaction_3,{'re': [], 'pr': [(1, 'A')], 'kin': '1 * volume'}
+reaction_4,{'re': [], 'pr': [(1, 'A')], 'kin': 'k1 * volume'}
+

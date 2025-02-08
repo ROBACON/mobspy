@@ -1,0 +1,35 @@
+
+Species
+Something.blue.here,0
+Something.blue.there,0
+Something.red.here,0
+Something.red.there,0
+
+Mappings
+Something :
+Something.blue.here
+Something.blue.there
+Something.red.here
+Something.red.there
+
+Parameters
+volume,99.99999999999999
+
+Reactions
+reaction_0,{'re': [(1, 'Something.blue.here'), (1, 'Something.blue.there')], 'pr': [(2, 'Something.blue.here'), (1, 'Something.blue.there')], 'kin': 'Something.blue.here * Something.blue.there * 0.0001388888888888889 * volume^-1'}
+reaction_1,{'re': [(1, 'Something.blue.here'), (1, 'Something.red.here')], 'pr': [(2, 'Something.blue.here'), (1, 'Something.red.here')], 'kin': 'Something.blue.here * Something.red.here * 0.0002777777777777778 * volume^-1'}
+reaction_2,{'re': [(1, 'Something.blue.here'), (1, 'Something.red.there')], 'pr': [(2, 'Something.blue.here'), (1, 'Something.red.there')], 'kin': 'Something.blue.here * Something.red.there * 0.0001388888888888889 * volume^-1'}
+reaction_3,{'re': [(1, 'Something.blue.there'), (1, 'Something.blue.here')], 'pr': [(2, 'Something.blue.there'), (1, 'Something.blue.here')], 'kin': 'Something.blue.there * Something.blue.here * 0.0001388888888888889 * volume^-1'}
+reaction_4,{'re': [(1, 'Something.blue.there'), (1, 'Something.red.here')], 'pr': [(2, 'Something.blue.there'), (1, 'Something.red.here')], 'kin': 'Something.blue.there * Something.red.here * 0.0001388888888888889 * volume^-1'}
+reaction_5,{'re': [(1, 'Something.blue.there'), (1, 'Something.red.there')], 'pr': [(2, 'Something.blue.there'), (1, 'Something.red.there')], 'kin': 'Something.blue.there * Something.red.there * 0.0002777777777777778 * volume^-1'}
+reaction_6,{'re': [(1, 'Something.red.here'), (1, 'Something.blue.here')], 'pr': [(2, 'Something.red.here'), (1, 'Something.blue.here')], 'kin': 'Something.red.here * Something.blue.here * 0.0002777777777777778 * volume^-1'}
+reaction_7,{'re': [(1, 'Something.red.here'), (1, 'Something.blue.there')], 'pr': [(2, 'Something.red.here'), (1, 'Something.blue.there')], 'kin': 'Something.red.here * Something.blue.there * 0.0001388888888888889 * volume^-1'}
+reaction_8,{'re': [(1, 'Something.red.here'), (1, 'Something.red.there')], 'pr': [(2, 'Something.red.here'), (1, 'Something.red.there')], 'kin': 'Something.red.here * Something.red.there * 0.0001388888888888889 * volume^-1'}
+reaction_9,{'re': [(1, 'Something.red.there'), (1, 'Something.blue.here')], 'pr': [(2, 'Something.red.there'), (1, 'Something.blue.here')], 'kin': 'Something.red.there * Something.blue.here * 0.0001388888888888889 * volume^-1'}
+reaction_10,{'re': [(1, 'Something.red.there'), (1, 'Something.blue.there')], 'pr': [(2, 'Something.red.there'), (1, 'Something.blue.there')], 'kin': 'Something.red.there * Something.blue.there * 0.0002777777777777778 * volume^-1'}
+reaction_11,{'re': [(1, 'Something.red.there'), (1, 'Something.red.here')], 'pr': [(2, 'Something.red.there'), (1, 'Something.red.here')], 'kin': 'Something.red.there * Something.red.here * 0.0001388888888888889 * volume^-1'}
+reaction_12,{'re': [(2, 'Something.blue.here')], 'pr': [(3, 'Something.blue.here')], 'kin': 'Something.blue.here * Something.blue.here * 0.0002777777777777778 * volume^-1'}
+reaction_13,{'re': [(2, 'Something.blue.there')], 'pr': [(3, 'Something.blue.there')], 'kin': 'Something.blue.there * Something.blue.there * 0.0002777777777777778 * volume^-1'}
+reaction_14,{'re': [(2, 'Something.red.here')], 'pr': [(3, 'Something.red.here')], 'kin': 'Something.red.here * Something.red.here * 0.0002777777777777778 * volume^-1'}
+reaction_15,{'re': [(2, 'Something.red.there')], 'pr': [(3, 'Something.red.there')], 'kin': 'Something.red.there * Something.red.there * 0.0002777777777777778 * volume^-1'}
+

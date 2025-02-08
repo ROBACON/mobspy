@@ -2,26 +2,20 @@ from mobspy import *
 from mobspy import modules
 
 if __name__ == '__main__':
+    from mobspy import *
 
-    # TODO: Ask Matthias about removed tests
 
     # Replace parameters using units
-    A = BaseSpecies()
-    A.a1, A.a2
-    B = New(A)
-    B.b1, B.b2
-    k1 = ModelParameters(1)
+    Color, Location = BaseSpecies()
+    Color.red, Color.blue
+    Location.here, Location.there
+    Something = Color*Location
 
-    B >> Zero [k1]
+    2*Something >> 3*Something [lambda r1, r2: 1*u.decimeter**2/u.h if Location(r1) == Location(r2) else 0.5*u.decimeter**2/u.h]
 
-    B(100), B.b2(100)
-    S = Simulation(B)
-    S.level = -1
-    S.compile()
-
-    S.update_model([All[B], 200/u.l])
-
-    print(S.generate_sbml()[0])
+    S = Simulation(Something)
+    S.volume = 1*u.m**2
+    print(S.compile())
 
     # print(A.get_characteristics())
 
