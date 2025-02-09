@@ -15,7 +15,6 @@ text_script.py
 minority_consensus_event_figures
 linkedin_model.py
 isolate_test.py
-docs
 mobspy_jounal_models
 parameter_problem.py
 plot_config_donor.json
@@ -26,4 +25,5 @@ testing_tight_layout.png
 __pycache__/
 test_plot_images/*
 !test_plot_images/read_me.txt
-!docs/example_models/jounal_models/*
+docs/*
+!docs/example_models/
