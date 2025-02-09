@@ -471,7 +471,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         return reaction
 
     # Reacting_Species call
-
     def __call__(self, quantity):
         """
             The call operator here is used to add counts to species non-default state. This stores the characteristics
@@ -1022,6 +1021,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         # If called within a Any context, add the characteristics of the Any context to the specie called.
         # The specie becomes a reacting specie.
         if len(Species.meta_specie_named_any_context) != 0:
+
             for i in Species.meta_specie_named_any_context:
                 self.c(i)
             quantity_dict = self.add_quantities(Species.meta_specie_named_any_context.copy(), quantity)
@@ -1029,7 +1029,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         # Check if the quantity is a valid type and add the new count to the specie
         elif (type(quantity) == int or type(quantity) == float or isinstance(quantity, Quantity)
               or isinstance(quantity, mp_Mobspy_Parameter)) and not asgi_Assign.check_context():
+
             quantity_dict = self.add_quantities('std$', quantity)
+
         elif asgi_Assign.check_context():
             self.assign(quantity)
         elif isinstance(quantity, me_Specific_Species_Operator):
@@ -1061,6 +1063,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             return self
 
+    # Species add_quantities
     def add_quantities(self, characteristics, quantity):
         """
             This function was implemented because Python can't accept sets as dictionary keys
