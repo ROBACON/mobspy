@@ -26,3 +26,4 @@ testing_tight_layout.png
 __pycache__/
 test_plot_images/*
 !test_plot_images/read_me.txt
+!docs/example_models/jounal_models/*
