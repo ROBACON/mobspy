@@ -874,6 +874,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
                 if sbml_data['parameters_for_sbml']:
                     for parameter_name, parameter_value in sbml_data['parameters_for_sbml'].items():
+                        if parameter_name == 'volume':
+                            continue
                         antimony_model = antimony_model + f"    {parameter_name} = {parameter_value[0]} " \
                                                           f"dimensionless\n"
 
