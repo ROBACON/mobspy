@@ -29,4 +29,4 @@ A.l_2.nl_1 + C.l_2.phos_1 >> A.nl_2.nl_1 + C.nl_2.phos_2[lambda r: r]
 # initial conditions
 A(1000), B(1000), C(10000)
 S = Simulation(A | B | C)
-S.compile()
+print(S.compile())
