@@ -8,9 +8,9 @@ r_link, C = BaseSpecies()
 r_link.r_0, r_link.r_1
 R, L, A = New(r_link)
 
-R.r_0 + L.r_0 >> R.r_1 + L.r_1[kon, koff]
+R.r_0 + L.r_0 >> R.r_1 + L.r_1[kon, lambda r: koff*r]
 
-R.a_0 + A.r_0 >> R.a_1 + A.r_1[kAon, kAoff]
+R.a_0 + A.r_0 >> R.a_1 + A.r_1[kAon, lambda r: kAoff*r]
 
 C.assign(A.r_1.n_p - R.a_1.r_0)
 C + A.n_p.r_1 >> C + A.y_p.r_1[lambda c: kAp * c]
