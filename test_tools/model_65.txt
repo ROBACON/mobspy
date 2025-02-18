@@ -1,0 +1,17 @@
+
+Species
+L,L_0
+R,R_0
+
+Mappings
+L :
+L
+R :
+R
+
+Parameters
+L_0,100
+R_0,200
+volume,1
+
+Reactions

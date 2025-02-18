@@ -38,6 +38,7 @@ class Compiler:
             except:
                 parameters_for_sbml[parameter.name] = (parameter.value, f'dimensionless')
 
+
     @classmethod
     def override_get_item(cls, object_to_return, item):
         """
@@ -169,6 +170,7 @@ class Compiler:
 
         # Check volume:
         volume = uh_convert_volume(volume, dimension)
+        parameters_for_sbml = {'volume': (volume, f'dimensionless')}
 
         # Add the flag species used for verifying if the simulation is over
         if continuous_sim:
@@ -183,6 +185,7 @@ class Compiler:
 
         # Assignments with all do not take priority
         # This allows specific assignments to override All assignments
+        # I should encapsulate this, to make my life easier lol
         assigned_species = []
         parameters_in_counts = set()
         for count in species_counts:
@@ -245,6 +248,8 @@ class Compiler:
                 species_for_sbml[species_string] = temp_count
                 assigned_species.append(species_string)
 
+        cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_counts)
+
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
         # Species_String_Dict and a set of reaction objects in Reactions_Set
@@ -256,7 +261,6 @@ class Compiler:
                                                                              parameter_exist, parameters_in_reaction,
                                                                              skip_expression_check)
 
-        parameters_for_sbml = {'volume': (volume, f'dimensionless')}
         cls.add_to_parameters_to_sbml(parameters_used, parameters_for_sbml, parameters_in_reaction)
 
         # O(n^2) reaction check for doubles

@@ -1,0 +1,24 @@
+
+Species
+L.sl_0,0
+L.sl_1,0
+R.sr_0,0
+R.sr_1,0
+
+Mappings
+L :
+L.sl_0
+L.sl_1
+R :
+R.sr_0
+R.sr_1
+
+Parameters
+kf,0.001
+kr,0.001
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'L.sl_0'), (1, 'R.sr_0')], 'pr': [(1, 'L.sl_1'), (1, 'R.sr_1')], 'kin': 'L.sl_0 * R.sr_0 * kf * volume^-1'}
+reaction_1,{'re': [(1, 'L.sl_1'), (1, 'R.sr_1')], 'pr': [(1, 'L.sl_0'), (1, 'R.sr_0')], 'kin': '(kr*L.sl_1)'}
+

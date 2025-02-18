@@ -2092,3 +2092,27 @@ def test_2D_reaction_with_units():
     S.level = -1
     S.volume = 1 * u.m ** 2
     assert compare_model(S.compile(), 'test_tools/model_64.txt')
+
+
+def test_parameters_as_initial_values():
+
+    L, R = BaseSpecies()
+
+    L_0, R_0 = ModelParameters(100, 200)
+
+    L(L_0), R(R_0)
+    S = Simulation(L | R)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_65.txt')
+
+
+def test_parameters_in_lambda_expression():
+    L, R = BaseSpecies()
+
+    kf, kr = ModelParameters(1e-3, 1e-3)
+    L.sl_0 + R.sr_0 >> L.sl_1 + R.sr_1[kf, lambda r: kr * r]
+
+    S = Simulation(L | R)
+    S.level = -1
+    assert compare_model(S.compile(), 'test_tools/model_66.txt')
+

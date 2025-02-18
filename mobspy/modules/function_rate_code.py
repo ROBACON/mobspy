@@ -82,11 +82,13 @@ def extract_reaction_rate(combination_of_reactant_species, reactant_string_list
             if parameter_exist:
                 parameters_in_reaction = search_for_parameters_in_str(reaction_rate_string,
                                                                       parameter_exist, parameters_in_reaction)
+
         elif isinstance(rate, mbe_MobsPyExpression):
 
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
                 reaction_rate_string, _ = rate.generate_string_operation(skip_check=skip_check, dimension=dimension)
+                parameters_in_reaction = parameters_in_reaction.union(rate._parameter_set)
 
             # Having no expression variables implies it is a constant for mass - action kinetics.
             elif len(rate._expression_variables) == 0:
