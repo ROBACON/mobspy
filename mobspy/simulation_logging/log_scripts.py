@@ -30,7 +30,6 @@ def error(message, stack_index=-1, full_exception_log = False):
 
 
 def debug(message=''):
-    global global_simlog_level
     if global_simlog_level >= 2:
         message_copy = deepcopy(message)
         print(message_copy.replace('_dot_', '.'), file=sys.stderr)
@@ -38,7 +37,6 @@ def debug(message=''):
 
 
 def warning(message):
-    global global_simlog_level
     if global_simlog_level >= 1:
         message_copy = deepcopy(message)
         message.replace('_dot_', '.')
