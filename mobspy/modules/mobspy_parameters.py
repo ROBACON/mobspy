@@ -1,15 +1,18 @@
 from inspect import stack as inspect_stack
 import mobspy.simulation_logging.log_scripts as simlog
-from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_ExpressionDefiner, \
-    QuantityConverter as me_QuantityConverter
+from mobspy.modules.mobspy_expressions import (
+    ExpressionDefiner as me_ExpressionDefiner,
+    QuantityConverter as me_QuantityConverter,
+)
 from pint import Quantity, UnitRegistry
 
 
 class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
     """
-        This is the constructor that is called by ModelParameters to create a model parameter
-        (not a simulation parameter). The user is not supposed to create parameters using this object.
+    This is the constructor that is called by ModelParameters to create a model parameter
+    (not a simulation parameter). The user is not supposed to create parameters using this object.
     """
+
     # convert_received_unit
 
     parameter_stack = {}
@@ -42,12 +45,11 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         self._unit_count_op = value
         self._unit_conc_op = value
         self._unit_operation = value
-        self._has_units = 'T'
+        self._has_units = "T"
 
         return self.value, self.original_unit
 
     def process_value(self, value):
-
         if isinstance(value, Quantity):
             self.unit_process(value)
         elif type(value) == list or type(value) == tuple:
@@ -57,11 +59,15 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 if isinstance(val, Quantity) and i == 0:
                     new_value, first_unit = self.unit_process(val)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is None:
-                    simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
+                    simlog.error(
+                        "MobsPy parameters must all be the same unit", stack_index=1
+                    )
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
                     new_value, unit = self.unit_process(val)
                     if unit != first_unit:
-                        simlog.error("MobsPy parameters must all be the same unit", stack_index=1)
+                        simlog.error(
+                            "MobsPy parameters must all be the same unit", stack_index=1
+                        )
                 else:
                     new_value = val
 
@@ -76,22 +82,23 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
             self.conversion_factor = 1
             self._has_units = False
 
-
     def convert_to_original_unit(self):
         """
-            Converts the parameter from the MobsPy standard unit to the original unit of the parameter
+        Converts the parameter from the MobsPy standard unit to the original unit of the parameter
         """
         if self.has_units():
-            self.set_value(self.value/self.conversion_factor*self.original_unit)
+            self.set_value(self.value / self.conversion_factor * self.original_unit)
 
     def rename(self, new_name):
         """
-            Renames a parameter. Checks to see if name is available beforehand. It uses the parameter stack to do so
+        Renames a parameter. Checks to see if name is available beforehand. It uses the parameter stack to do so
         """
         if new_name in self.parameter_stack:
-            simlog.warning(" MobsPy uses a parameter dictionary with parameter names as keys and the respective object"
-                           " as value to keep track of created parameters. As, there is a parameter with this name"
-                           " already in the stack. The old will be deleted and replaced by this one.")
+            simlog.warning(
+                " MobsPy uses a parameter dictionary with parameter names as keys and the respective object"
+                " as value to keep track of created parameters. As, there is a parameter with this name"
+                " already in the stack. The old will be deleted and replaced by this one."
+            )
 
         del self.parameter_stack[self.name]
         self.parameter_stack[new_name] = self
@@ -99,22 +106,21 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
     def set_value(self, new_value):
         """
-            Sets value of parameter
+        Sets value of parameter
         """
         self.value = new_value
         return self
 
     def has_units(self):
         """
-            Check if is a unit based parameter or not
+        Check if is a unit based parameter or not
         """
-        if self._has_units == 'T':
+        if self._has_units == "T":
             return True
         else:
             return False
 
     def update_value(self, new_value):
-
         temp_set = set()
         temp_set.add(self)
         self.original_value = new_value
@@ -134,28 +140,35 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
 def ModelParameters(*args):
     """
-        Creates ModelParameters. Like meta-species, it uses the variable names as parameter names
+    Creates ModelParameters. Like meta-species, it uses the variable names as parameter names
     """
     code_line = inspect_stack()[1].code_context[0][:-1]
-    separated_line = code_line.split('=')[-2].replace(" ", "")
-    parameter_variable_names = separated_line.split(',')
+    separated_line = code_line.split("=")[-2].replace(" ", "")
+    parameter_variable_names = separated_line.split(",")
 
     if len(args) != len(parameter_variable_names):
-        simlog.error('You must provide an initial value for every parameter variable declared', stack_index=2)
+        simlog.error(
+            "You must provide an initial value for every parameter variable declared",
+            stack_index=2,
+        )
 
     if len(parameter_variable_names) > 1:
-        parameters_to_return = [Internal_Parameter_Constructor(p, v) for p, v in zip(parameter_variable_names, args)]
+        parameters_to_return = [
+            Internal_Parameter_Constructor(p, v)
+            for p, v in zip(parameter_variable_names, args)
+        ]
     else:
-        parameters_to_return = Internal_Parameter_Constructor(parameter_variable_names[0], args[0])
+        parameters_to_return = Internal_Parameter_Constructor(
+            parameter_variable_names[0], args[0]
+        )
 
     return parameters_to_return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     u = UnitRegistry()
     a, b, c = ModelParameters(1, [3, 4, 5], 2)
-    r1 = (a + b + c)/5
+    r1 = (a + b + c) / 5
     print(r1._operation)
     # print(type(r1._parameter_set))
     # print(Internal_Parameter_Constructor.parameter_stack)
-

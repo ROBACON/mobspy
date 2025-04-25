@@ -1,7 +1,8 @@
-""" 
+"""
 Taken from basiCO repository - https://github.com/copasi/basico - code before changes to 0.65
 It fixes the parameter estimation task, for now
 """
+
 import shutil
 
 import pandas
@@ -17,8 +18,8 @@ import basico
 from basico.callbacks import get_default_handler
 
 logger = logging.getLogger(__name__)
-AFFECTED_EXPERIMENTS = 'Affected Experiments'
-TASK_PARAMETER_ESTIMATION = 'Parameter Estimation'
+AFFECTED_EXPERIMENTS = "Affected Experiments"
+TASK_PARAMETER_ESTIMATION = "Parameter Estimation"
 
 
 class PE:
@@ -34,6 +35,7 @@ class PE:
 
 
     """
+
     CURRENT_SOLUTION = "Current Solution Statistics"
     RANDOM_SEARCH = "Random Search"
     SIMULATED_ANNEALING = "Simulated Annealing"
@@ -142,13 +144,13 @@ def num_experiment_files(**kwargs):
     :rtype: int
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     return problem.getExperimentSet().size()
 
@@ -165,13 +167,13 @@ def get_experiment_names(**kwargs):
     :rtype: [str]
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     result = []
     for i in range(problem.getExperimentSet().size()):
@@ -182,13 +184,13 @@ def get_experiment_names(**kwargs):
 
 def _get_experiment_keys(**kwargs):
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     result = []
     for i in range(problem.getExperimentSet().size()):
@@ -209,33 +211,33 @@ def num_validations_files(**kwargs):
     :rtype: int
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     return problem.getCrossValidationSet().size()
 
 
 def _role_to_string(role):
     names = {
-        COPASI.CExperiment.time: 'time',
-        COPASI.CExperiment.ignore: 'ignored',
-        COPASI.CExperiment.independent: 'independent',
-        COPASI.CExperiment.dependent: 'dependent',
+        COPASI.CExperiment.time: "time",
+        COPASI.CExperiment.ignore: "ignored",
+        COPASI.CExperiment.independent: "independent",
+        COPASI.CExperiment.dependent: "dependent",
     }
-    return names.get(role, 'ignored')
+    return names.get(role, "ignored")
 
 
 def _role_to_int(role):
     values = {
-        'time': COPASI.CExperiment.time,
-        'ignored': COPASI.CExperiment.ignore,
-        'independent': COPASI.CExperiment.independent,
-        'dependent': COPASI.CExperiment.dependent,
+        "time": COPASI.CExperiment.time,
+        "ignored": COPASI.CExperiment.ignore,
+        "independent": COPASI.CExperiment.independent,
+        "dependent": COPASI.CExperiment.dependent,
     }
     return values.get(role, COPASI.CExperiment.ignore)
 
@@ -255,27 +257,27 @@ def get_experiment(experiment, **kwargs):
     """
     if not isinstance(experiment, COPASI.CExperiment):
         model = model_io.get_model_from_dict_or_default(kwargs)
-        assert (isinstance(model, COPASI.CDataModel))
+        assert isinstance(model, COPASI.CDataModel)
 
         task = model.getTask(TASK_PARAMETER_ESTIMATION)
-        assert (isinstance(task, COPASI.CFitTask))
+        assert isinstance(task, COPASI.CFitTask)
 
         problem = task.getProblem()
-        assert (isinstance(problem, COPASI.CFitProblem))
+        assert isinstance(problem, COPASI.CFitProblem)
         exp_set = problem.getExperimentSet()
 
         if type(experiment) is int and experiment >= exp_set.size():
-            raise ValueError('Experiment index out of bounds')
+            raise ValueError("Experiment index out of bounds")
         exp = exp_set.getExperiment(experiment)
         if exp is not None:
             experiment = exp
         else:
-            raise ValueError('No experiment for: {0}'.format(experiment))
+            raise ValueError("No experiment for: {0}".format(experiment))
     return experiment
 
 
 def _get_experiment_mapping_dict(experiment, **kwargs):
-    """ Returns the mapping of the given experiment
+    """Returns the mapping of the given experiment
 
     :param experiment: copasi experiment, name or index
     :param kwargs:
@@ -291,7 +293,7 @@ def _get_experiment_mapping_dict(experiment, **kwargs):
     experiment.readColumnNames()
     names = experiment.getColumnNames()
     obj_map = experiment.getObjectMap()
-    assert (isinstance(obj_map, COPASI.CExperimentObjectMap))
+    assert isinstance(obj_map, COPASI.CExperimentObjectMap)
     rows = []
 
     last = obj_map.getLastColumn() + 1
@@ -300,25 +302,25 @@ def _get_experiment_mapping_dict(experiment, **kwargs):
     for i in range(max_col):
         role = obj_map.getRole(i)
         cn = obj_map.getObjectCN(i)
-        obj = ''
+        obj = ""
         if cn:
             obj = experiment.getObjectDataModel().getObject(COPASI.CCommonName(cn))
             if obj:
                 obj = obj.getObjectDisplayName()
 
         current = {
-            'column': i,
-            'type': _role_to_string(role),
-            'mapping': obj,
-            'cn': cn,
-            'column_name': names[i],
+            "column": i,
+            "type": _role_to_string(role),
+            "mapping": obj,
+            "cn": cn,
+            "column_name": names[i],
         }
 
         if role == COPASI.CExperiment.dependent:
             scale = obj_map.getScale(i)
             default_scale = obj_map.getDefaultScale(i)
             if scale != default_scale and not np.isnan(scale):
-                current['weight'] = scale
+                current["weight"] = scale
 
         rows.append(current)
 
@@ -344,17 +346,20 @@ def get_experiment_mapping(experiment, **kwargs):
     :rtype: pandas.DataFrame
     """
     rows = _get_experiment_mapping_dict(experiment)
-    return pandas.DataFrame(data=rows).set_index('column')
+    return pandas.DataFrame(data=rows).set_index("column")
 
 
 def _get_experiment_file(experiment, **kwargs):
     file_name_only = experiment.getFileNameOnly()
     model = experiment.getObjectDataModel()
     directory = os.path.dirname(model.getFileName())
-    return_relative = kwargs.get('return_relative', False)
+    return_relative = kwargs.get("return_relative", False)
 
     if not file_name_only:
-        raise ValueError('Invalid Experiment, no filename specified for ' + experiment.getObjectName())
+        raise ValueError(
+            "Invalid Experiment, no filename specified for "
+            + experiment.getObjectName()
+        )
 
     full_path = os.path.join(directory, os.path.basename(file_name_only))
     if os.path.isfile(full_path):
@@ -379,9 +384,9 @@ def _get_experiment_file(experiment, **kwargs):
             return os.path.relpath(file_name, directory)
         return file_name
 
-    raise_error = kwargs.get('raise_error', True)
+    raise_error = kwargs.get("raise_error", True)
     if raise_error:
-        raise ValueError('Experiment file {0} does not exist'.format(file_name_only))
+        raise ValueError("Experiment file {0} does not exist".format(file_name_only))
 
     if return_relative and directory and os.path.exists(file_name_only):
         try:
@@ -417,23 +422,26 @@ def get_data_from_experiment(experiment, **kwargs):
     original_headers = None
     num_lines = 0
     separator = experiment.getSeparator()
-    with open(experiment_file, encoding='utf-8') as f:
+    with open(experiment_file, encoding="utf-8") as f:
         for line in f:
             num_lines += 1
             if num_lines == header_row:
                 original_headers = line.strip().split(separator)
                 original_headers = dict(enumerate(original_headers))
     have_headers = header_row < num_lines
-    skip_idx = [x-1 for x in range(1, num_lines+1) if
-                not (experiment.getFirstRow() <= x <= experiment.getLastRow())]
+    skip_idx = [
+        x - 1
+        for x in range(1, num_lines + 1)
+        if not (experiment.getFirstRow() <= x <= experiment.getLastRow())
+    ]
 
-    if 'rename_headers' in kwargs:
-        rename_headers = kwargs['rename_headers']
+    if "rename_headers" in kwargs:
+        rename_headers = kwargs["rename_headers"]
     else:
         rename_headers = True
 
     if (have_headers and rename_headers) or original_headers != None:
-        skip_idx.insert(0, header_row-1)
+        skip_idx.insert(0, header_row - 1)
 
     drop_cols = []
     headers = {}
@@ -444,7 +452,7 @@ def get_data_from_experiment(experiment, **kwargs):
             role = obj_map.getRole(i)
 
             if role == COPASI.CExperiment.time:
-                headers[count] = 'Time'
+                headers[count] = "Time"
                 count += 1
 
             elif role == COPASI.CExperiment.ignore:
@@ -461,22 +469,18 @@ def get_data_from_experiment(experiment, **kwargs):
                     drop_cols.append(i)
 
     if rename_headers or not have_headers:
-        df = pandas.read_csv(experiment_file,
-                             sep=separator,
-                             header=None,
-                             skiprows=skip_idx)
+        df = pandas.read_csv(
+            experiment_file, sep=separator, header=None, skiprows=skip_idx
+        )
 
     elif original_headers is not None and not rename_headers:
-        df = pandas.read_csv(experiment_file,
-                             sep=separator,
-                             header=None,
-                             skiprows=skip_idx)
+        df = pandas.read_csv(
+            experiment_file, sep=separator, header=None, skiprows=skip_idx
+        )
         df.rename(columns=original_headers, inplace=True)
         return df
     else:
-        df = pandas.read_csv(experiment_file,
-                             sep=separator,
-                             skiprows=skip_idx)
+        df = pandas.read_csv(experiment_file, sep=separator, skiprows=skip_idx)
 
     if not rename_headers:
         return df
@@ -487,7 +491,7 @@ def get_data_from_experiment(experiment, **kwargs):
         drop_cols.append(all_columns[i])
 
     if any(drop_cols):
-        df.drop(drop_cols, axis=1, inplace=True, errors='ignore')
+        df.drop(drop_cols, axis=1, inplace=True, errors="ignore")
 
     df.rename(columns=headers, inplace=True)
 
@@ -507,13 +511,13 @@ def get_experiment_data_from_model(model=None):
     result = []
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     num_experiments = experiments.getExperimentCount()
     if num_experiments == 0:
@@ -540,13 +544,13 @@ def get_experiment_filenames(model=None):
     result = []
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     num_experiments = experiments.getExperimentCount()
     if num_experiments == 0:
@@ -559,7 +563,13 @@ def get_experiment_filenames(model=None):
     return result
 
 
-def get_fit_item_template(include_local=False, include_global=False, default_lb=0.001, default_ub=1000, model=None):
+def get_fit_item_template(
+    include_local=False,
+    include_global=False,
+    default_lb=0.001,
+    default_ub=1000,
+    model=None,
+):
     """Returns a template list of items to be used for the parameter estimation
 
     :param include_local: boolean, indicating whether to include local parameters
@@ -588,30 +598,34 @@ def get_fit_item_template(include_local=False, include_global=False, default_lb=
     result = []
 
     if include_global:
-
         for mv in model.getModel().getModelValues():
             if mv.getStatus() == COPASI.CModelEntity.Status_FIXED:
-                result.append({
-                    'name': mv.getInitialValueReference().getObjectDisplayName(),
-                    'lower': default_lb,
-                    'upper': default_ub,
-                    'start': mv.getInitialValue()
-                })
+                result.append(
+                    {
+                        "name": mv.getInitialValueReference().getObjectDisplayName(),
+                        "lower": default_lb,
+                        "upper": default_ub,
+                        "start": mv.getInitialValue(),
+                    }
+                )
 
     if include_local:
-
         from . import model_info
-        local_params = model_info.get_reaction_parameters().reset_index()
-        if 'name' in local_params:
-            for name, local, value in zip(local_params['name'], local_params['type'], local_params['value']):
 
-                if local == 'local':
-                    result.append({
-                        'name': name,
-                        'lower': default_lb,
-                        'upper': default_ub,
-                        'start': value
-                    })
+        local_params = model_info.get_reaction_parameters().reset_index()
+        if "name" in local_params:
+            for name, local, value in zip(
+                local_params["name"], local_params["type"], local_params["value"]
+            ):
+                if local == "local":
+                    result.append(
+                        {
+                            "name": name,
+                            "lower": default_lb,
+                            "upper": default_ub,
+                            "start": value,
+                        }
+                    )
 
     return result
 
@@ -640,27 +654,34 @@ def get_fit_parameters(model=None):
 
     pe_task = model.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     items = problem.getOptItemList()
     data = []
 
     for i in range(len(items)):
         item = items[i]
-        obj = model.getObject(COPASI.CCommonName(item.getObjectCN())).toObject().getObjectParent()
+        obj = (
+            model.getObject(COPASI.CCommonName(item.getObjectCN()))
+            .toObject()
+            .getObjectParent()
+        )
         name = obj.getObjectDisplayName()
-        data.append({
-            'name': name,
-            'lower': item.getLowerBound(),
-            'upper': item.getUpperBound(),
-            'start': item.getStartValue(),
-            'affected': _get_affected_experiments(item),
-            'cn': item.getObjectCN(),
-        })
+        data.append(
+            {
+                "name": name,
+                "lower": item.getLowerBound(),
+                "upper": item.getUpperBound(),
+                "start": item.getStartValue(),
+                "affected": _get_affected_experiments(item),
+                "cn": item.getObjectCN(),
+            }
+        )
 
     if not data:
         return None
 
-    return pandas.DataFrame(data=data).set_index('name')
+    return pandas.DataFrame(data=data).set_index("name")
+
 
 def get_fit_constraints(model=None):
     """Returns a data frame with all fit constraints
@@ -686,27 +707,33 @@ def get_fit_constraints(model=None):
 
     pe_task = model.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     data = []
 
     for i in range(problem.getOptConstraintSize()):
         item = problem.getOptConstraint(i).asFitConstraint()
-        obj = model.getObject(COPASI.CCommonName(item.getObjectCN())).toObject().getObjectParent()
+        obj = (
+            model.getObject(COPASI.CCommonName(item.getObjectCN()))
+            .toObject()
+            .getObjectParent()
+        )
         name = obj.getObjectDisplayName()
-        data.append({
-            'name': name,
-            'lower': item.getLowerBound(),
-            'upper': item.getUpperBound(),
-            'start': item.getStartValue(),
-            'affected': _get_affected_experiments(item),
-            'cn': item.getObjectCN(),
-        })
+        data.append(
+            {
+                "name": name,
+                "lower": item.getLowerBound(),
+                "upper": item.getUpperBound(),
+                "start": item.getStartValue(),
+                "affected": _get_affected_experiments(item),
+                "cn": item.getObjectCN(),
+            }
+        )
 
     if not data:
         return None
 
-    return pandas.DataFrame(data=data).set_index('name')
+    return pandas.DataFrame(data=data).set_index("name")
 
 
 def set_fit_parameters(fit_parameters, model=None):
@@ -735,7 +762,7 @@ def set_fit_parameters(fit_parameters, model=None):
 
     pe_task = model.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     while problem.getOptItemSize() > 0:
         problem.removeOptItem(0)
 
@@ -750,30 +777,30 @@ def set_fit_parameters(fit_parameters, model=None):
         cn = None
         name = None
 
-        if 'cn' in item:
+        if "cn" in item:
             cn = COPASI.CCommonName(item.cn)
 
-        elif 'name' in item:
-            name = item['name']
+        elif "name" in item:
+            name = item["name"]
             if not cn:
                 obj = basico.model_info._get_object(name, initial=True, model=model)
                 if obj:
                     cn = obj.getCN()
 
         if not cn:
-            logger.warning('object {0} not found'.format(name))
+            logger.warning("object {0} not found".format(name))
             continue
 
         fit_item = problem.addFitItem(cn)
-        assert (isinstance(fit_item, COPASI.CFitItem))
-        if 'lower' in item:
-            fit_item.setLowerBound(COPASI.CCommonName(str(item['lower'])))
-        if 'upper' in item:
-            fit_item.setUpperBound(COPASI.CCommonName(str(item['upper'])))
-        if 'start' in item:
-            fit_item.setStartValue(float(item['start']))
-        if 'affected' in item:
-            affected = item['affected']
+        assert isinstance(fit_item, COPASI.CFitItem)
+        if "lower" in item:
+            fit_item.setLowerBound(COPASI.CCommonName(str(item["lower"])))
+        if "upper" in item:
+            fit_item.setUpperBound(COPASI.CCommonName(str(item["upper"])))
+        if "start" in item:
+            fit_item.setStartValue(float(item["start"]))
+        if "affected" in item:
+            affected = item["affected"]
             if type(affected) is str:
                 affected = [affected]
             for name in affected:
@@ -781,7 +808,7 @@ def set_fit_parameters(fit_parameters, model=None):
                     continue
 
                 if name not in experiment_names:
-                    logger.warning('Invalid affected experiment name {0}'.format(name))
+                    logger.warning("Invalid affected experiment name {0}".format(name))
                     continue
 
                 index = experiment_names.index(name)
@@ -814,7 +841,7 @@ def set_fit_constraints(fit_constraints, model=None):
 
     pe_task = model.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     while problem.getOptConstraintSize() > 0:
         problem.removeOptConstraint(0)
@@ -830,30 +857,30 @@ def set_fit_constraints(fit_constraints, model=None):
         cn = None
         name = None
 
-        if 'cn' in item:
+        if "cn" in item:
             cn = COPASI.CCommonName(item.cn)
 
-        elif 'name' in item:
-            name = item['name']
+        elif "name" in item:
+            name = item["name"]
             if not cn:
                 obj = basico.model_info._get_object(name, initial=False, model=model)
                 if obj:
                     cn = obj.getCN()
 
         if not cn:
-            logger.warning('object {0} not found'.format(name))
+            logger.warning("object {0} not found".format(name))
             continue
 
         fit_item = problem.addFitConstraint(cn)
-        assert (isinstance(fit_item, COPASI.CFitConstraint))
-        if 'lower' in item:
-            fit_item.setLowerBound(COPASI.CCommonName(str(item['lower'])))
-        if 'upper' in item:
-            fit_item.setUpperBound(COPASI.CCommonName(str(item['upper'])))
-        if 'start' in item:
-            fit_item.setStartValue(float(item['start']))
-        if 'affected' in item:
-            affected = item['affected']
+        assert isinstance(fit_item, COPASI.CFitConstraint)
+        if "lower" in item:
+            fit_item.setLowerBound(COPASI.CCommonName(str(item["lower"])))
+        if "upper" in item:
+            fit_item.setUpperBound(COPASI.CCommonName(str(item["upper"])))
+        if "start" in item:
+            fit_item.setStartValue(float(item["start"]))
+        if "affected" in item:
+            affected = item["affected"]
             if type(affected) is str:
                 affected = [affected]
             for name in affected:
@@ -861,7 +888,7 @@ def set_fit_constraints(fit_constraints, model=None):
                     continue
 
                 if name not in experiment_names:
-                    logger.warning('Invalid affected experiment name {0}'.format(name))
+                    logger.warning("Invalid affected experiment name {0}".format(name))
                     continue
 
                 index = experiment_names.index(name)
@@ -872,7 +899,7 @@ def _get_name_for_key(key):
     factory = COPASI.CRootContainer.getKeyFactory()
     obj = factory.get(key)
     if not obj:
-        return ''
+        return ""
     return obj.getObjectName()
 
 
@@ -880,7 +907,7 @@ def _get_affected_experiments(optitem):
     # type: (COPASI.CCopasiParameterGroup) -> [str]
     result = []
     affected = optitem.getGroup(AFFECTED_EXPERIMENTS)
-    assert (isinstance(affected, COPASI.CCopasiParameterGroup))
+    assert isinstance(affected, COPASI.CCopasiParameterGroup)
     for i in range(affected.size()):
         current = affected.getParameter(i)
         result.append(_get_name_for_key(current.getStringValue()))
@@ -907,10 +934,10 @@ def get_parameters_solution(model=None):
         model = model_io.get_current_model()
     pe_task = model.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     solution = problem.getSolutionVariables()
     items = problem.getOptItemList()
-    assert (solution.size() == len(items))
+    assert solution.size() == len(items)
     data = []
 
     for i in range(solution.size()):
@@ -918,36 +945,38 @@ def get_parameters_solution(model=None):
         sol = solution.get(i)
         obj = model.getObject(COPASI.CCommonName(item.getObjectCN()))
         if obj is None:
-            logger.debug('fit item not in model, cn: {0}'.format(item.getObjectCN()))
+            logger.debug("fit item not in model, cn: {0}".format(item.getObjectCN()))
             continue
         obj = obj.toObject().getObjectParent()
         name = obj.getObjectDisplayName()
-        data.append({
-            'name': name,
-            'lower': item.getLowerBound(),
-            'upper': item.getUpperBound(),
-            'sol': sol,
-            'affected': _get_affected_experiments(item),
-        })
+        data.append(
+            {
+                "name": name,
+                "lower": item.getLowerBound(),
+                "upper": item.getUpperBound(),
+                "sol": sol,
+                "affected": _get_affected_experiments(item),
+            }
+        )
 
     if not data:
         return pandas.DataFrame()
 
-    return pandas.DataFrame(data=data).set_index('name')
+    return pandas.DataFrame(data=data).set_index("name")
 
 
 def _get_role_for_reference(reference_name):
     role_map = {
-        'Concentration': COPASI.CExperiment.dependent,
-        'ParticleNumber': COPASI.CExperiment.dependent,
-        'ParticleNumberRate': COPASI.CExperiment.dependent,
-        'InitialConcentration': COPASI.CExperiment.independent,
-        'InitialParticleNumber': COPASI.CExperiment.independent,
-        'InitialValue': COPASI.CExperiment.independent,
-        'InitialVolume': COPASI.CExperiment.independent,
-        'Rate': COPASI.CExperiment.dependent,
-        'Value': COPASI.CExperiment.dependent,
-        'Volume': COPASI.CExperiment.dependent,
+        "Concentration": COPASI.CExperiment.dependent,
+        "ParticleNumber": COPASI.CExperiment.dependent,
+        "ParticleNumberRate": COPASI.CExperiment.dependent,
+        "InitialConcentration": COPASI.CExperiment.independent,
+        "InitialParticleNumber": COPASI.CExperiment.independent,
+        "InitialValue": COPASI.CExperiment.independent,
+        "InitialVolume": COPASI.CExperiment.independent,
+        "Rate": COPASI.CExperiment.dependent,
+        "Value": COPASI.CExperiment.dependent,
+        "Volume": COPASI.CExperiment.dependent,
     }
     return role_map.get(reference_name, COPASI.CExperiment.ignore)
 
@@ -981,26 +1010,26 @@ def add_experiment(name, data, **kwargs):
     :rtype: str
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     exp_set = problem.getExperimentSet()
-    assert (isinstance(exp_set, COPASI.CExperimentSet))
+    assert isinstance(exp_set, COPASI.CExperimentSet)
     exp = exp_set.getExperiment(name)
     if exp is not None:
-        logger.error('An experiment with the name {0} already exists'.format(name))
+        logger.error("An experiment with the name {0} already exists".format(name))
         return None
 
     # save data as tsv
-    data_dir = kwargs.get('data_dir', os.path.curdir)
-    file_name = os.path.abspath(os.path.join(data_dir, name.replace(' ', '_') + '.txt'))
-    if 'file_name' in kwargs:
-        file_name = os.path.abspath(kwargs['file_name'])
+    data_dir = kwargs.get("data_dir", os.path.curdir)
+    file_name = os.path.abspath(os.path.join(data_dir, name.replace(" ", "_") + ".txt"))
+    if "file_name" in kwargs:
+        file_name = os.path.abspath(kwargs["file_name"])
 
-    assert (isinstance(data, pd.DataFrame))
-    data.to_csv(file_name, sep='\t', header=True, index=False)
+    assert isinstance(data, pd.DataFrame)
+    data.to_csv(file_name, sep="\t", header=True, index=False)
 
     # create experiment
     exp = COPASI.CExperiment(model)
@@ -1012,10 +1041,10 @@ def add_experiment(name, data, **kwargs):
     exp.setFileName(file_name)
     exp.setHeaderRow(1)
     exp.setFirstRow(1)
-    exp.setLastRow(len(data)+1)
+    exp.setLastRow(len(data) + 1)
 
     columns = data.columns.to_list()
-    if 'time' in [col.lower() for col in columns]:
+    if "time" in [col.lower() for col in columns]:
         exp.setExperimentType(COPASI.CTaskEnum.Task_timeCourse)
     else:
         exp.setExperimentType(COPASI.CTaskEnum.Task_steadyState)
@@ -1026,15 +1055,15 @@ def add_experiment(name, data, **kwargs):
     for i in range(num_cols):
         role = COPASI.CExperiment.ignore
         current = columns[i]
-        if current.lower() == 'time':
+        if current.lower() == "time":
             role = COPASI.CExperiment.time
         else:
             obj = model.findObjectByDisplayName(current)
             if obj is None:
                 logger.warning("Can't find model element for {0}".format(current))
             else:
-                assert (isinstance(obj, COPASI.CDataObject))
-                if obj.getObjectType() != 'Reference':
+                assert isinstance(obj, COPASI.CDataObject)
+                if obj.getObjectType() != "Reference":
                     try:
                         obj = obj.getValueReference()
                     except AttributeError:
@@ -1109,25 +1138,25 @@ def run_parameter_estimation(**kwargs):
     :rtype: pandas.DataFrame
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     model.getModel().compileIfNecessary()
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     if problem.getOptItemSize() == 0:
-        logger.warning('No fit parameters defined, skipping parameter estimation run')
+        logger.warning("No fit parameters defined, skipping parameter estimation run")
         return get_parameters_solution(model)
 
-    if 'scheduled' in kwargs:
-        task.setScheduled(kwargs['scheduled'])
+    if "scheduled" in kwargs:
+        task.setScheduled(kwargs["scheduled"])
 
-    if 'update_model' in kwargs:
-        task.setUpdateModel(kwargs['update_model'])
+    if "update_model" in kwargs:
+        task.setUpdateModel(kwargs["update_model"])
 
     old_create_parameter_sets = problem.getCreateParameterSets()
     # old_calculate_statistics = problem.getCalculateStatistics()
@@ -1135,50 +1164,56 @@ def run_parameter_estimation(**kwargs):
 
     # problem.setCreateParameterSets(True)
 
-    write_report = kwargs.get('write_report', True)
+    write_report = kwargs.get("write_report", True)
     report_name = task.getReport().getTarget()
     if not write_report:
-        task.getReport().setTarget('')
+        task.getReport().setTarget("")
 
-    if 'method' in kwargs:
-        method = kwargs['method']
+    if "method" in kwargs:
+        method = kwargs["method"]
         if isinstance(method, int):
             task.setMethodType(method)
         else:
             task.setMethodType(COPASI.CCopasiMethod.TypeNameToEnum(method))
 
-    if 'randomize_start_values' in kwargs:
-        problem.setRandomizeStartValues(bool(kwargs['randomize_start_values']))
+    if "randomize_start_values" in kwargs:
+        problem.setRandomizeStartValues(bool(kwargs["randomize_start_values"]))
 
-    if 'calculate_statistics' in kwargs:
-        problem.setCalculateStatistics(bool(kwargs['calculate_statistics']))
+    if "calculate_statistics" in kwargs:
+        problem.setCalculateStatistics(bool(kwargs["calculate_statistics"]))
 
-    if 'create_parametersets' in kwargs:
-        problem.setCreateParameterSets(bool(kwargs['create_parametersets']))
+    if "create_parametersets" in kwargs:
+        problem.setCreateParameterSets(bool(kwargs["create_parametersets"]))
 
-    use_initial_values = kwargs.get('use_initial_values', True)
+    use_initial_values = kwargs.get("use_initial_values", True)
 
-    if 'settings' in kwargs:
-        basico.set_task_settings(task, kwargs['settings'])
+    if "settings" in kwargs:
+        basico.set_task_settings(task, kwargs["settings"])
 
     # the parameter estimation task will not run if errors have not been
     # cleared from the error log. So we clear them here if necessary
     if COPASI.CCopasiMessage.getHighestSeverity() > COPASI.CCopasiMessage.WARNING:
-        logger.warning("Uncaptured Errors: " +
-        basico.model_info.get_copasi_messages(0, 'No output'))
+        logger.warning(
+            "Uncaptured Errors: "
+            + basico.model_info.get_copasi_messages(0, "No output")
+        )
 
     num_messages_before = COPASI.CCopasiMessage.size()
 
     task.setCallBack(get_default_handler())
     result = task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)
     if not result:
-        logger.error("Error while initializing parameter estimation: " +
-        basico.model_info.get_copasi_messages(num_messages_before, 'No output'))
+        logger.error(
+            "Error while initializing parameter estimation: "
+            + basico.model_info.get_copasi_messages(num_messages_before, "No output")
+        )
     else:
         result = task.processRaw(use_initial_values)
         if not result:
-            logger.error("Error while initializing parameter estimation: " +
-            basico.model_info.get_copasi_messages(num_messages_before))
+            logger.error(
+                "Error while initializing parameter estimation: "
+                + basico.model_info.get_copasi_messages(num_messages_before)
+            )
 
     task.restore()
 
@@ -1212,16 +1247,17 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
     :rtype: ([pandas.DataFrame],[pandas.DataFrame])
     """
     import basico
+
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
     task = dm.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     result = []
     num_experiments = experiments.getExperimentCount()
@@ -1229,12 +1265,14 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
         return result
 
     if update_parameters:
-        if 'solution' in kwargs:
-            solution = kwargs['solution']
+        if "solution" in kwargs:
+            solution = kwargs["solution"]
             if type(solution) is dict or type(solution) is list:
                 solution = pd.DataFrame(data=solution)
         else:
-            solution = run_parameter_estimation(method='Current Solution Statistics', write_report=False)
+            solution = run_parameter_estimation(
+                method="Current Solution Statistics", write_report=False
+            )
 
     exp_data = []
     sim_data = []
@@ -1245,7 +1283,9 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
         df = get_data_from_experiment(experiment, rename_headers=True)
         mapping = get_experiment_mapping(experiment)
 
-        is_steady_state = experiment.getExperimentType() == COPASI.CTaskEnum.Task_steadyState
+        is_steady_state = (
+            experiment.getExperimentType() == COPASI.CTaskEnum.Task_steadyState
+        )
         num_independent_points = df.shape[0]
         steady_state_task = dm.getTask(basico.T.STEADY_STATE)
         container = dm.getModel().getMathContainer()
@@ -1266,7 +1306,9 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
             # run steady state
             steady_state_task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)
             steady_state_task.processRaw(True)
-            data = basico.model_info._collect_data(cns=mapping[mapping.type == 'dependent']['cn'].to_list()).transpose()
+            data = basico.model_info._collect_data(
+                cns=mapping[mapping.type == "dependent"]["cn"].to_list()
+            ).transpose()
 
             for j in range(1, num_independent_points):
                 container.applyInitialValues()
@@ -1281,17 +1323,24 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
                 steady_state_task.processRaw(True)
 
                 new_row = basico.model_info._collect_data(
-                    cns=mapping[mapping.type == 'dependent']['cn'].to_list()).transpose()
+                    cns=mapping[mapping.type == "dependent"]["cn"].to_list()
+                ).transpose()
                 data = pd.concat([data, new_row], ignore_index=True)
 
         else:
             # run time course (getting only the data from the experiment)
             duration = df.iloc[-1].Time
-            cols = ['Time'] + mapping[mapping.type == 'dependent']['cn'].to_list()
+            cols = ["Time"] + mapping[mapping.type == "dependent"]["cn"].to_list()
             if values_only:
-                data = basico.run_time_course_with_output(output_selection=cols, values=df.Time.to_list(), start_time=df.iloc[0].Time)
+                data = basico.run_time_course_with_output(
+                    output_selection=cols,
+                    values=df.Time.to_list(),
+                    start_time=df.iloc[0].Time,
+                )
             else:
-                data = basico.run_time_course_with_output(output_selection=cols,duration=duration)
+                data = basico.run_time_course_with_output(
+                    output_selection=cols, duration=duration
+                )
 
         exp_data.append(df)
         sim_data.append(data)
@@ -1299,7 +1348,9 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
     return exp_data, sim_data
 
 
-def _apply_nth_change(change, columns, df, dm, exp_name, independent, model, num_independent):
+def _apply_nth_change(
+    change, columns, df, dm, exp_name, independent, model, num_independent
+):
     change_set = COPASI.DataObjectSet()
     for j in range(num_independent):
         name = independent.iloc[j].mapping
@@ -1313,10 +1364,10 @@ def _apply_nth_change(change, columns, df, dm, exp_name, independent, model, num
         obj = dm.getObject(COPASI.CCommonName(cn))
 
         if obj is None:  # not found skip
-            logger.debug('independent object not found for cn: {0}'.format(cn))
+            logger.debug("independent object not found for cn: {0}".format(cn))
             continue
 
-        if obj.getObjectName() == 'InitialConcentration':
+        if obj.getObjectName() == "InitialConcentration":
             obj.getObjectParent().setInitialConcentration(value)
         else:
             obj.getObjectParent().setInitialValue(value)
@@ -1341,8 +1392,8 @@ def _get_value_from_bound(bound):
     return value
 
 
-def _update_fit_parameters_from(dm, solution, exp_name=''):
-    """ Utility function that updates the models fit parameters for the given solution
+def _update_fit_parameters_from(dm, solution, exp_name=""):
+    """Utility function that updates the models fit parameters for the given solution
 
     :param dm: the current model
     :param solution: the computed solution dataframe
@@ -1355,7 +1406,7 @@ def _update_fit_parameters_from(dm, solution, exp_name=''):
     for j in range(solution.shape[0]):
         name = solution.iloc[j].name
         value = solution.iloc[j].sol
-        lower= _get_value_from_bound(solution.iloc[j].lower)
+        lower = _get_value_from_bound(solution.iloc[j].lower)
         upper = _get_value_from_bound(solution.iloc[j].upper)
 
         cn = params.iloc[j].cn
@@ -1377,8 +1428,7 @@ def _update_fit_parameters_from(dm, solution, exp_name=''):
             continue
 
         if type(obj) is COPASI.CDataObject:
-
-            if obj.getObjectName() == 'InitialConcentration':
+            if obj.getObjectName() == "InitialConcentration":
                 obj.getObjectParent().setInitialConcentration(value)
             elif type(obj.getObjectParent()) is COPASI.CCopasiParameter:
                 obj.setDblValue(value)
@@ -1410,13 +1460,13 @@ def plot_per_experiment(**kwargs):
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
     task = dm.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     result = []
     num_experiments = experiments.getExperimentCount()
@@ -1434,19 +1484,25 @@ def plot_per_experiment(**kwargs):
         ax.set_title(exp_name)
 
         # set independent values for that experiment
-        dependent = mapping[mapping.type == 'dependent']
+        dependent = mapping[mapping.type == "dependent"]
 
         num_dependent = dependent.shape[0]
         for j in range(num_dependent):
-            nextval = next(cycler)['color']
+            nextval = next(cycler)["color"]
             name = dependent.iloc[j].mapping
             if name not in sim_data[i].columns:
                 name = name[1:-1]
-            sim_data[i].reset_index().plot(x='Time', y=name,
-                                           label="{0} Fit".format(name), ax=ax, color=nextval)
+            sim_data[i].reset_index().plot(
+                x="Time", y=name, label="{0} Fit".format(name), ax=ax, color=nextval
+            )
             name = dependent.iloc[j].mapping
-            exp_data[i].plot.scatter(x='Time', y=name, ax=ax, color=nextval,
-                                     label='{0} Measured'.format(name))
+            exp_data[i].plot.scatter(
+                x="Time",
+                y=name,
+                ax=ax,
+                color=nextval,
+                label="{0} Measured".format(name),
+            )
         result.append((fig, ax))
 
     return result
@@ -1466,13 +1522,13 @@ def plot_per_dependent_variable(**kwargs):
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
     task = dm.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     result = []
     num_experiments = experiments.getExperimentCount()
@@ -1488,7 +1544,7 @@ def plot_per_dependent_variable(**kwargs):
         mapping = get_experiment_mapping(experiment)
 
         # set independent values for that experiment
-        dependent = mapping[mapping.type == 'dependent']
+        dependent = mapping[mapping.type == "dependent"]
         num_dependent = dependent.shape[0]
         for j in range(num_dependent):
             name = dependent.iloc[j].mapping
@@ -1505,15 +1561,21 @@ def plot_per_dependent_variable(**kwargs):
         for i in experiment_indices:
             experiment = experiments.getExperiment(i)
             exp_name = experiment.getObjectName()
-            nextval = next(cycler)['color']
+            nextval = next(cycler)["color"]
             name = dependent
             if name not in sim_data[i].columns:
                 name = name[1:-1]
 
-            sim_data[i].reset_index().plot(x='Time', y=name,
-                                           label="{0} Fit".format(exp_name), ax=ax, color=nextval)
-            exp_data[i].plot.scatter(x='Time', y=dependent, ax=ax, color=nextval,
-                                     label='{0} Measured'.format(exp_name))
+            sim_data[i].reset_index().plot(
+                x="Time", y=name, label="{0} Fit".format(exp_name), ax=ax, color=nextval
+            )
+            exp_data[i].plot.scatter(
+                x="Time",
+                y=dependent,
+                ax=ax,
+                color=nextval,
+                label="{0} Measured".format(exp_name),
+            )
         result.append((fig, ax))
 
     return result
@@ -1530,7 +1592,7 @@ def prune_simulation_results(simulation_results):
     for i in range(len(simulation_results[0])):
         s_df = simulation_results[1][i].reset_index()
         e_df = simulation_results[0][i]
-        if 'Time' in s_df.columns and 'Time' in e_df.columns:
+        if "Time" in s_df.columns and "Time" in e_df.columns:
             s_df = s_df[s_df.Time.isin(e_df.Time.to_list())]
         s_df = s_df.reset_index()
         common_cols = [c for c in e_df.columns.to_list() if c in s_df.columns.to_list()]
@@ -1540,7 +1602,9 @@ def prune_simulation_results(simulation_results):
     return simulation_results
 
 
-def get_fit_statistic(include_parameters=False, include_experiments=False, include_fitted=False, **kwargs):
+def get_fit_statistic(
+    include_parameters=False, include_experiments=False, include_fitted=False, **kwargs
+):
     """Return information about the last fit.
 
     :param include_parameters: whether to include information about the parameters in a result entry
@@ -1566,30 +1630,32 @@ def get_fit_statistic(include_parameters=False, include_experiments=False, inclu
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
     task = dm.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     function_evaluations = problem.getFunctionEvaluations()
     performed_iterations = function_evaluations > 0
     result = {
-        'obj': problem.getSolutionValue(),
-        'rms': problem.getRMS(),
-        'sd': problem.getStdDeviation(),
-        'f_evals': function_evaluations,
-        'failed_evals_exception': problem.getFailedEvaluationsExc(),
-        'failed_evals_nan': problem.getFailedEvaluationsNaN(),
-        'constraint_evals': problem.getConstraintEvaluations(),
-        'failed_constraint_evals': problem.geFailedConstraintCounter(),
-        'cpu_time': problem.getExecutionTime(),
-        'data_points': experiments.getDataPointCount(),
-        'valid_data_points': experiments.getValidValueCount(),
+        "obj": problem.getSolutionValue(),
+        "rms": problem.getRMS(),
+        "sd": problem.getStdDeviation(),
+        "f_evals": function_evaluations,
+        "failed_evals_exception": problem.getFailedEvaluationsExc(),
+        "failed_evals_nan": problem.getFailedEvaluationsNaN(),
+        "constraint_evals": problem.getConstraintEvaluations(),
+        "failed_constraint_evals": problem.geFailedConstraintCounter(),
+        "cpu_time": problem.getExecutionTime(),
+        "data_points": experiments.getDataPointCount(),
+        "valid_data_points": experiments.getValidValueCount(),
     }
-    result['evals_per_sec'] = result['cpu_time'] / function_evaluations if performed_iterations else 0
+    result["evals_per_sec"] = (
+        result["cpu_time"] / function_evaluations if performed_iterations else 0
+    )
 
     sol = problem.getSolutionVariables()
     grad = problem.getVariableGradients()
@@ -1599,24 +1665,30 @@ def get_fit_statistic(include_parameters=False, include_experiments=False, inclu
         parameters = []
         for i in range(problem.getOptItemSize()):
             current = problem.getOptItem(i)
-            assert (isinstance(current, COPASI.COptItem))
+            assert isinstance(current, COPASI.COptItem)
             obj = dm.getObject(current.getObjectCN())
-            name = obj.getObjectDisplayName() if obj is not None else 'Not Found'
-            parameters.append({
-                'name':  name,
-                'lower': current.getLowerBound(),
-                'start': current.getLastStartValue(),
-                'value': sol.get(i) if performed_iterations else np.nan,
-                'upper': current.getUpperBound(),
-                'std_dev': std.get(i)  if performed_iterations else np.nan,
-                'coeff_of_variation': abs(100 * std.get(i) / sol.get(i)) if performed_iterations else np.nan,
-                'gradient': grad.get(i) if performed_iterations else np.nan
-            })
-        result['parameters'] = parameters
+            name = obj.getObjectDisplayName() if obj is not None else "Not Found"
+            parameters.append(
+                {
+                    "name": name,
+                    "lower": current.getLowerBound(),
+                    "start": current.getLastStartValue(),
+                    "value": sol.get(i) if performed_iterations else np.nan,
+                    "upper": current.getUpperBound(),
+                    "std_dev": std.get(i) if performed_iterations else np.nan,
+                    "coeff_of_variation": abs(100 * std.get(i) / sol.get(i))
+                    if performed_iterations
+                    else np.nan,
+                    "gradient": grad.get(i) if performed_iterations else np.nan,
+                }
+            )
+        result["parameters"] = parameters
 
     if include_experiments:
         if COPASI.CVersion.VERSION.getVersionDevel() < 263:
-            raise ValueError("Newer COPASI version required to return experiment statistic")
+            raise ValueError(
+                "Newer COPASI version required to return experiment statistic"
+            )
 
         experiment_stats = []
         for i in range(experiments.getExperimentCount()):
@@ -1626,14 +1698,14 @@ def get_fit_statistic(include_parameters=False, include_experiments=False, inclu
             total_value_count = exp.getTotalValueCount()
 
             item = {
-                'name': exp.getObjectName(),
-                'valid_points': valid_value_count,
-                'total_points': total_value_count,
-                'obj': exp.getObjectiveValue(),
-                'rms': exp.getRMS(),
-                'error_mean': exp.getErrorMean(),
-                'error_mean_sd': exp.getErrorMeanSD(),
-                'dependent_data': []
+                "name": exp.getObjectName(),
+                "valid_points": valid_value_count,
+                "total_points": total_value_count,
+                "obj": exp.getObjectiveValue(),
+                "rms": exp.getRMS(),
+                "error_mean": exp.getErrorMean(),
+                "error_mean_sd": exp.getErrorMeanSD(),
+                "dependent_data": [],
             }
 
             objects = experiments.getDependentObjects()
@@ -1643,18 +1715,18 @@ def get_fit_statistic(include_parameters=False, include_experiments=False, inclu
                 count = exp.getColumnValidValueCount(obj)
                 if not count:
                     continue
-                item['dependent_data'].append(
+                item["dependent_data"].append(
                     {
-                        'name': obj.getObjectDisplayName(),
-                        'data_points': count,
-                        'obj': exp.getObjectiveValue(obj),
-                        'rms': exp.getRMS(obj),
-                        'error_mean': exp.getErrorSum(obj) / count,
+                        "name": obj.getObjectDisplayName(),
+                        "data_points": count,
+                        "obj": exp.getObjectiveValue(obj),
+                        "rms": exp.getRMS(obj),
+                        "error_mean": exp.getErrorSum(obj) / count,
                     }
                 )
             experiment_stats.append(item)
 
-        result['experiments'] = experiment_stats
+        result["experiments"] = experiment_stats
 
     if include_fitted:
         dependent = experiments.getDependentObjects()
@@ -1664,17 +1736,21 @@ def get_fit_statistic(include_parameters=False, include_experiments=False, inclu
         values = []
         for i in range(num_dependent):
             current = dependent.get(i)
-            name = current.getObjectDisplayName() if current is not None else 'Not Found'
-            values.append({
-                'name': name,
-                'data_points': experiments.getDependentDataCount().get(i),
-                'obj': experiments.getDependentObjectiveValues().get(i),
-                'rms': experiments.getDependentRMS().get(i),
-                'error_mean': experiments.getDependentErrorMean().get(i),
-                'error_mean_sd': experiments.getDependentErrorMeanSD().get(i)
-            })
+            name = (
+                current.getObjectDisplayName() if current is not None else "Not Found"
+            )
+            values.append(
+                {
+                    "name": name,
+                    "data_points": experiments.getDependentDataCount().get(i),
+                    "obj": experiments.getDependentObjectiveValues().get(i),
+                    "rms": experiments.getDependentRMS().get(i),
+                    "error_mean": experiments.getDependentErrorMean().get(i),
+                    "error_mean_sd": experiments.getDependentErrorMeanSD().get(i),
+                }
+            )
 
-        result['variables'] = values
+        result["variables"] = values
 
     return result
 
@@ -1692,13 +1768,13 @@ def remove_experiments(**kwargs):
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
     task = dm.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     experiments = problem.getExperimentSet()
-    assert (isinstance(experiments, COPASI.CExperimentSet))
+    assert isinstance(experiments, COPASI.CExperimentSet)
 
     for _ in range(experiments.size()):
         experiments.removeExperiment(0)
@@ -1718,12 +1794,13 @@ def remove_fit_parameters(**kwargs):
 
     pe_task = dm.getTask(TASK_PARAMETER_ESTIMATION)
     problem = pe_task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     while problem.getOptItemSize() > 0:
         problem.removeOptItem(0)
 
+
 def _weight_method_to_string(weight_method):
-    """ Convenience function converting a weight method to string
+    """Convenience function converting a weight method to string
 
     :param weight_method: the weight method
     :type weight_method: int
@@ -1731,15 +1808,16 @@ def _weight_method_to_string(weight_method):
     :rtype: str
     """
     weight_map = {
-        COPASI.CExperiment.MEAN: 'Mean',
-        COPASI.CExperiment.MEAN_SQUARE: 'Mean Square',
-        COPASI.CExperiment.SD: 'Standard Deviation',
-        COPASI.CExperiment.VALUE_SCALING: 'Value Scaling'
+        COPASI.CExperiment.MEAN: "Mean",
+        COPASI.CExperiment.MEAN_SQUARE: "Mean Square",
+        COPASI.CExperiment.SD: "Standard Deviation",
+        COPASI.CExperiment.VALUE_SCALING: "Value Scaling",
     }
-    return weight_map.get(weight_method, 'Mean Square')
+    return weight_map.get(weight_method, "Mean Square")
+
 
 def _weight_method_to_int(weight_method):
-    """ Convenience function converting a weight method to int
+    """Convenience function converting a weight method to int
 
     :param weight_method: the weight method
     :type weight_method: str
@@ -1747,16 +1825,16 @@ def _weight_method_to_int(weight_method):
     :rtype: int
     """
     weight_map = {
-        'Mean': COPASI.CExperiment.MEAN,
-        'Mean Square': COPASI.CExperiment.MEAN_SQUARE,
-        'Standard Deviation': COPASI.CExperiment.SD,
-        'Value Scaling': COPASI.CExperiment.VALUE_SCALING
+        "Mean": COPASI.CExperiment.MEAN,
+        "Mean Square": COPASI.CExperiment.MEAN_SQUARE,
+        "Standard Deviation": COPASI.CExperiment.SD,
+        "Value Scaling": COPASI.CExperiment.VALUE_SCALING,
     }
     return weight_map.get(weight_method, COPASI.CExperiment.MEAN_SQUARE)
 
 
 def get_experiment_dict(experiment, **kwargs):
-    """ Returns all information about the experiment as dictionary
+    """Returns all information about the experiment as dictionary
 
     :param experiment: copasi experiment, experiment name or index
     :param kwargs: optional arguments
@@ -1774,43 +1852,44 @@ def get_experiment_dict(experiment, **kwargs):
     """
     experiment = get_experiment(experiment, **kwargs)
 
-    kwargs['raise_error'] = kwargs.get('raise_error', False)
-    kwargs['return_relative'] = kwargs.get('return_relative', True)
+    kwargs["raise_error"] = kwargs.get("raise_error", False)
+    kwargs["return_relative"] = kwargs.get("return_relative", True)
     filename = _get_experiment_file(experiment, **kwargs)
 
     result = {
-        'name': experiment.getObjectName(),
-        'filename': filename,
-        'type': basico.T.STEADY_STATE if experiment.getExperimentType() == COPASI.CTaskEnum.Task_steadyState else
-                basico.T.TIME_COURSE,
-        'separator': experiment.getSeparator(),
-        'first_row': experiment.getFirstRow(),
-        'last_row': experiment.getLastRow(),
-        'weight_method': _weight_method_to_string(experiment.getWeightMethod()),
-        'normalize_per_experiment': experiment.getNormalizeWeightsPerExperiment()
+        "name": experiment.getObjectName(),
+        "filename": filename,
+        "type": basico.T.STEADY_STATE
+        if experiment.getExperimentType() == COPASI.CTaskEnum.Task_steadyState
+        else basico.T.TIME_COURSE,
+        "separator": experiment.getSeparator(),
+        "first_row": experiment.getFirstRow(),
+        "last_row": experiment.getLastRow(),
+        "weight_method": _weight_method_to_string(experiment.getWeightMethod()),
+        "normalize_per_experiment": experiment.getNormalizeWeightsPerExperiment(),
     }
 
     if experiment.getHeaderRow() < experiment.getLastRow():
-        result['header_row'] = experiment.getHeaderRow()
+        result["header_row"] = experiment.getHeaderRow()
 
     mapping = _get_experiment_mapping_dict(experiment, **kwargs)
 
     # rename / clear up things
     for entry in mapping:
-        if 'column_name' in entry:
-            if entry['column_name']:
-                entry['column'] = entry['column_name']
-            del entry['column_name']
-        if entry['cn'] == '':
-            del entry['cn']
-        if entry['mapping'] == '':
-            del entry['mapping']
+        if "column_name" in entry:
+            if entry["column_name"]:
+                entry["column"] = entry["column_name"]
+            del entry["column_name"]
+        if entry["cn"] == "":
+            del entry["cn"]
+        if entry["mapping"] == "":
+            del entry["mapping"]
 
-        if 'mapping' in entry:
-            entry['object'] = entry['mapping']
-            del entry['mapping']
+        if "mapping" in entry:
+            entry["object"] = entry["mapping"]
+            del entry["mapping"]
 
-    result['mapping'] = mapping
+    result["mapping"] = mapping
 
     return result
 
@@ -1834,19 +1913,20 @@ def save_experiments_to_dict(**kwargs):
     """
     experiments = []
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
     exp_set = problem.getExperimentSet()
 
     for i in range(exp_set.size()):
         experiments.append(get_experiment_dict(exp_set.getExperiment(i), **kwargs))
 
     return experiments
+
 
 def save_experiments_to_yaml(filename=None, **kwargs):
     """Saves the experiment to yaml
@@ -1860,18 +1940,20 @@ def save_experiments_to_yaml(filename=None, **kwargs):
     :return: the yaml string
     """
     experiments = save_experiments_to_dict(**kwargs)
-    yaml_str = yaml.safe_dump(experiments, indent=2, sort_keys=False, default_flow_style=False )
+    yaml_str = yaml.safe_dump(
+        experiments, indent=2, sort_keys=False, default_flow_style=False
+    )
     if not filename:
-         return yaml_str
+        return yaml_str
 
-    with open(filename, 'w', encoding='utf-8') as out_file:
+    with open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(yaml_str)
 
     return yaml_str
 
 
 def load_experiments_from_yaml(experiment_description, **kwargs):
-    """ Loads all experiments from the specified experiment description
+    """Loads all experiments from the specified experiment description
 
     All existing experiments will be replaced with the ones from the specified file.
 
@@ -1885,7 +1967,7 @@ def load_experiments_from_yaml(experiment_description, **kwargs):
     """
 
     if os.path.exists(experiment_description):
-        with open(experiment_description, 'r') as stream:
+        with open(experiment_description, "r") as stream:
             experiments = yaml.safe_load(stream)
     else:
         experiments = yaml.safe_load(experiment_description)
@@ -1894,7 +1976,7 @@ def load_experiments_from_yaml(experiment_description, **kwargs):
 
 
 def load_experiments_from_dict(experiments, **kwargs):
-    """ Loads all experiments from the specified experiment description
+    """Loads all experiments from the specified experiment description
 
     All existing experiments will be replaced with the ones from the specified file.
 
@@ -1921,8 +2003,9 @@ def load_experiments_from_dict(experiments, **kwargs):
     # update fit items, as the affected experiments might need updating
     set_fit_parameters(fit_items, model=model)
 
+
 def _get_nth_line_from_file(filename, n, max_line=None):
-    with open(filename, 'r') as stream:
+    with open(filename, "r") as stream:
         for i, line in enumerate(stream):
             if i + 1 == n:
                 return line.strip()
@@ -1933,54 +2016,56 @@ def _get_nth_line_from_file(filename, n, max_line=None):
 
 def _get_first_column(mappings, column):
     for entry in mappings:
-        if entry['column'] == column:
+        if entry["column"] == column:
             return entry
     return None
 
 
 def add_experiment_from_dict(exp_dict, **kwargs):
-    """ Adds an experiment from dictionary
+    """Adds an experiment from dictionary
 
     :param exp_dict:
     :return:
     """
     model = model_io.get_model_from_dict_or_default(kwargs)
-    assert (isinstance(model, COPASI.CDataModel))
+    assert isinstance(model, COPASI.CDataModel)
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
-    assert (isinstance(task, COPASI.CFitTask))
+    assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
-    assert (isinstance(problem, COPASI.CFitProblem))
+    assert isinstance(problem, COPASI.CFitProblem)
 
     exp_set = problem.getExperimentSet()
-    assert (isinstance(exp_set, COPASI.CExperimentSet))
+    assert isinstance(exp_set, COPASI.CExperimentSet)
 
-    data_file_name = exp_dict['filename']
+    data_file_name = exp_dict["filename"]
 
     abs_data_file_name = data_file_name
     if not os.path.isabs(data_file_name):
-        abs_data_file_name = os.path.join(os.path.dirname(model.getFileName()), data_file_name)
+        abs_data_file_name = os.path.join(
+            os.path.dirname(model.getFileName()), data_file_name
+        )
 
     if not os.path.exists(abs_data_file_name):
-        if 'data_dir' in kwargs:
-            abs_data_file_name = os.path.join(kwargs['data_dir'], data_file_name)
+        if "data_dir" in kwargs:
+            abs_data_file_name = os.path.join(kwargs["data_dir"], data_file_name)
         else:
             abs_data_file_name = os.path.abspath(data_file_name)
 
     if not os.path.exists(abs_data_file_name):
         raise IOError("File not found: " + data_file_name)
 
-    experiment = COPASI.CExperiment(model, exp_dict['name'])
-    experiment.setFirstRow(exp_dict['first_row'])
-    experiment.setLastRow(exp_dict['last_row'])
-    if 'header_row' in exp_dict:
-        experiment.setHeaderRow(exp_dict['header_row'])
+    experiment = COPASI.CExperiment(model, exp_dict["name"])
+    experiment.setFirstRow(exp_dict["first_row"])
+    experiment.setLastRow(exp_dict["last_row"])
+    if "header_row" in exp_dict:
+        experiment.setHeaderRow(exp_dict["header_row"])
     experiment.setFileName(data_file_name)
-    experiment.setNormalizeWeightsPerExperiment(exp_dict['normalize_per_experiment'])
-    experiment.setExperimentType(basico.T.to_enum(exp_dict['type']))
-    experiment.setSeparator(exp_dict['separator'])
-    experiment.setWeightMethod(_weight_method_to_int(exp_dict['weight_method']))
+    experiment.setNormalizeWeightsPerExperiment(exp_dict["normalize_per_experiment"])
+    experiment.setExperimentType(basico.T.to_enum(exp_dict["type"]))
+    experiment.setSeparator(exp_dict["separator"])
+    experiment.setWeightMethod(_weight_method_to_int(exp_dict["weight_method"]))
     columnNumber = experiment.guessColumnNumber()
     experiment.setNumColumns(columnNumber)
 
@@ -1995,35 +2080,40 @@ def add_experiment_from_dict(exp_dict, **kwargs):
     ## instead we use:
 
     names = None
-    if  'header_row' in exp_dict:
-        names = _get_nth_line_from_file(abs_data_file_name, int(exp_dict['header_row']), int(exp_dict['last_row']))
+    if "header_row" in exp_dict:
+        names = _get_nth_line_from_file(
+            abs_data_file_name, int(exp_dict["header_row"]), int(exp_dict["last_row"])
+        )
     if names is not None:
-        names = names.split(exp_dict['separator'])
+        names = names.split(exp_dict["separator"])
     else:
         names = [i for i in range(columnNumber)]
 
-    max_col = min(len(names), len(exp_dict['mapping']))
+    max_col = min(len(names), len(exp_dict["mapping"]))
     obj_map.setNumCols(max_col)
     experiment.setNumColumns(max_col)
     for i in range(max_col):
-        mapping = _get_first_column(exp_dict['mapping'], names[i])
+        mapping = _get_first_column(exp_dict["mapping"], names[i])
         if mapping is None:
             obj_map.setRole(i, COPASI.CExperiment.ignore)
             continue
-        role = _role_to_int(mapping['type'])
+        role = _role_to_int(mapping["type"])
         obj_map.setRole(i, role)
-        need_initial = True if mapping['type'] == 'independent' else False
-        cn = mapping['cn'] if 'cn' in mapping else \
-                basico.model_info.get_cn(mapping['object'], initial=need_initial ) if 'object' in mapping else \
-                None
+        need_initial = True if mapping["type"] == "independent" else False
+        cn = (
+            mapping["cn"]
+            if "cn" in mapping
+            else basico.model_info.get_cn(mapping["object"], initial=need_initial)
+            if "object" in mapping
+            else None
+        )
         if cn is not None:
             obj_map.setObjectCN(i, str(cn))
-        if role == COPASI.CExperiment.dependent and 'weight' in mapping:
-            obj_map.setScale(i, float(mapping['weight']))
+        if role == COPASI.CExperiment.dependent and "weight" in mapping:
+            obj_map.setScale(i, float(mapping["weight"]))
 
     exp_set.addExperiment(experiment)
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     get_default_handler()
