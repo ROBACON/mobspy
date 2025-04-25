@@ -6,6 +6,7 @@ are just regular classes
 """
 
 from copy import deepcopy
+from typing import Self
 
 from mobspy.simulation_logging.log_scripts import (
     error as simlog_error,
@@ -112,7 +113,7 @@ class Reactions:
     """
 
     @staticmethod
-    def __create_reactants_string(list_of_reactants):
+    def __create_reactants_string(list_of_reactants) -> str:
         """
         Just a simple way to simlog.debug reactions for debbuging
         Not relevant for simulation
@@ -136,7 +137,7 @@ class Reactions:
 
         return reaction_string
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Prints the meta-reaction in the format A + B -> C + D
         """
@@ -154,7 +155,7 @@ class Reactions:
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __init__(self, reactants, products, rate=None):
+    def __init__(self, reactants, products, rate=None) -> None:
         """
         Constructor of the reaction object. For the object construction only the reactants and products are
         necessary - the order and the rate are assigned later by the compiler
@@ -390,7 +391,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         """
         self.context_finish_for_reacting_specie()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String representation of the list of reactants
         """
@@ -425,7 +426,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         Species.check_if_valid_characteristic(self, item)
         return self.__getattr__(item)
 
-    def label(self, label):
+    def label(self, label) -> Self:
         """
         Label function implementation. This function assigns labels to meta-species to be matched by the compiler
         later
@@ -449,7 +450,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __init__(self, object_reference, characteristics, stoichiometry=1, label=None):
+    def __init__(self, object_reference, characteristics, stoichiometry=1, label=None) -> None:
         """
         Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
         have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
