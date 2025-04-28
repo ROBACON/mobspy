@@ -76,7 +76,9 @@ def extract_reaction_rate(
         )
 
     elif isinstance(reaction_rate_function, mbe_ExpressionDefiner) and parameter_exist:
-        parameters_in_reaction = parameters_in_reaction.union(reaction_rate_function._parameter_set)
+        parameters_in_reaction = parameters_in_reaction.union(
+            reaction_rate_function._parameter_set
+        )
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list, reaction_rate_function, type_of_model, is_count
         )
@@ -96,13 +98,17 @@ def extract_reaction_rate(
         else:
             rate = reaction_rate_function()
 
-        rate, dimension, is_count = uh_convert_rate(rate, len(reactant_string_list), dimension)
+        rate, dimension, is_count = uh_convert_rate(
+            rate, len(reactant_string_list), dimension
+        )
 
         if rate == 0:
             return 0, parameters_in_reaction
 
         if type(rate) == int or type(rate) == float:
-            reaction_rate_string = basic_kinetics_string(reactant_string_list, rate, type_of_model, is_count)
+            reaction_rate_string = basic_kinetics_string(
+                reactant_string_list, rate, type_of_model, is_count
+            )
         elif type(rate) == str:
             reaction_rate_string = rate
             # Remove dollar sign symbols from expression object
@@ -116,8 +122,12 @@ def extract_reaction_rate(
         elif isinstance(rate, mbe_MobsPyExpression):
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
-                reaction_rate_string, _ = rate.generate_string_operation(skip_check=skip_check, dimension=dimension)
-                parameters_in_reaction = parameters_in_reaction.union(rate._parameter_set)
+                reaction_rate_string, _ = rate.generate_string_operation(
+                    skip_check=skip_check, dimension=dimension
+                )
+                parameters_in_reaction = parameters_in_reaction.union(
+                    rate._parameter_set
+                )
 
             # Having no expression variables implies it is a constant for mass - action kinetics.
             elif len(rate._expression_variables) == 0:
@@ -127,7 +137,9 @@ def extract_reaction_rate(
                     skip_check=skip_check,
                 )
                 parameters_in_rate = rate._parameter_set
-                parameters_in_reaction = parameters_in_reaction.union(parameters_in_rate)
+                parameters_in_reaction = parameters_in_reaction.union(
+                    parameters_in_rate
+                )
 
                 reaction_rate_string = basic_kinetics_string(
                     reactant_string_list, rate_for_mass_action, type_of_model, is_count
@@ -135,16 +147,24 @@ def extract_reaction_rate(
 
         elif isinstance(rate, mp_Mobspy_Parameter):
             parameters_in_reaction.add(rate)
-            reaction_rate_string = basic_kinetics_string(reactant_string_list, str(rate), type_of_model)
+            reaction_rate_string = basic_kinetics_string(
+                reactant_string_list, str(rate), type_of_model
+            )
         elif rate is None:
-            simlog_error("There is a reaction rate missing for the following reactants: \n" + str(reactant_string_list))
+            simlog_error(
+                "There is a reaction rate missing for the following reactants: \n"
+                + str(reactant_string_list)
+            )
         else:
             simlog_error(
                 f"The rate function {reaction_rate_function}, returned a non-valid value. \n"
                 + "Only int, floats and str are accepted"
             )
     elif reaction_rate_function is None:
-        simlog_error("There is a reaction rate missing for the following reactants: \n" + str(reactant_string_list))
+        simlog_error(
+            "There is a reaction rate missing for the following reactants: \n"
+            + str(reactant_string_list)
+        )
     elif type(reaction_rate_function) == str:
         parameters_in_reaction = search_for_parameters_in_str(
             reaction_rate_function, parameter_exist, parameters_in_reaction
@@ -152,7 +172,9 @@ def extract_reaction_rate(
         reaction_rate_string = reaction_rate_function
     else:
         simlog_debug(type(reaction_rate_function))
-        simlog_error(f"The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported")
+        simlog_error(
+            f"The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported"
+        )
 
     return reaction_rate_string, parameters_in_reaction
 
@@ -252,7 +274,9 @@ def prepare_arguments_for_callable(
 
     if rate_function_arguments is not None:
         i = 0
-        for i, (species, reactant_string) in enumerate(zip(combination_of_reactant_species, reactant_string_list)):
+        for i, (species, reactant_string) in enumerate(
+            zip(combination_of_reactant_species, reactant_string_list)
+        ):
             try:
                 species = species["object"]
                 argument_dict[rate_function_arguments[i]] = mbe_MobsPyExpression(
@@ -270,16 +294,22 @@ def prepare_arguments_for_callable(
         if i != 0:
             while len(argument_dict) < len(rate_function_arguments):
                 i += 1
-                argument_dict[rate_function_arguments[i]] = mbe_Specific_Species_Operator("$Null", mc_Zero)
+                argument_dict[rate_function_arguments[i]] = (
+                    mbe_Specific_Species_Operator("$Null", mc_Zero)
+                )
         elif i == 0:
             while len(argument_dict) < len(rate_function_arguments):
-                argument_dict[rate_function_arguments[i]] = mbe_Specific_Species_Operator("$Null", mc_Zero)
+                argument_dict[rate_function_arguments[i]] = (
+                    mbe_Specific_Species_Operator("$Null", mc_Zero)
+                )
                 i += 1
 
     return argument_dict
 
 
-def search_for_parameters_in_str(reaction_rate_string, parameters_exist, parameters_in_reaction):
+def search_for_parameters_in_str(
+    reaction_rate_string, parameters_exist, parameters_in_reaction
+):
     """Searches for MobsPy Parameter names in a string reaction rate. Uses the parameters_exit stack.
     If it finds a parameter it adds it to the set parameters_in_reaction
 
@@ -289,7 +319,9 @@ def search_for_parameters_in_str(reaction_rate_string, parameters_exist, paramet
     :return: parameters_in_reaction set of parameters already in reaction
     """
     split_operation = re_split(r", |-|!|\*|\+|/|\)|\(| ", reaction_rate_string)
-    split_operation = [x.replace(" ", "") for x in split_operation if x.replace(" ", "") != ""]
+    split_operation = [
+        x.replace(" ", "") for x in split_operation if x.replace(" ", "") != ""
+    ]
 
     for name in split_operation:
         if name in parameters_exist:

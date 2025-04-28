@@ -450,7 +450,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __init__(self, object_reference, characteristics, stoichiometry=1, label=None) -> None:
+    def __init__(
+        self, object_reference, characteristics, stoichiometry=1, label=None
+    ) -> None:
         """
         Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
         have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and

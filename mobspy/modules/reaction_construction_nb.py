@@ -168,7 +168,9 @@ def construct_order_structure(species_order_list, current_species_string_list):
         lists of species
     """
     cyclic_dict = {}
-    for species_object, species_string in zip(species_order_list, current_species_string_list):
+    for species_object, species_string in zip(
+        species_order_list, current_species_string_list
+    ):
         try:
             cyclic_dict[species_object].append(species_string)
         except KeyError:
@@ -226,8 +228,9 @@ def construct_single_reaction_for_sbml(
 
     :return: to_return (dict) = dictionary that packs the reactants products and rate
     """
-    to_return = {"re": [], "pr": [], "kin": reaction_rate}
+    to_return: dict = {"re": [], "pr": [], "kin": reaction_rate}
     reactant_count_dict = mcu_count_string_dictionary(reactant_species_string_list)
+    # print('p', product_species_string_list)
     product_count_dict = mcu_count_string_dictionary(product_species_string_list)
 
     for key in reactant_count_dict:
@@ -331,18 +334,26 @@ def create_all_reactions(
     # Initiate expressions
     with crs_Unit_Context_Setter():
         for reaction in reactions:
-            base_species_order, reactant_species_combination_list = get_involved_species(
-                reaction, meta_species_in_model
+            base_species_order, reactant_species_combination_list = (
+                get_involved_species(reaction, meta_species_in_model)
             )
 
-            for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
-                reactant_species_string_combination_list = construct_reactant_structures(
-                    combination_of_reactant_species, ref_characteristics_to_object
+            for combination_of_reactant_species in iterator_for_combinations(
+                reactant_species_combination_list
+            ):
+                reactant_species_string_combination_list = (
+                    construct_reactant_structures(
+                        combination_of_reactant_species, ref_characteristics_to_object
+                    )
                 )
 
-                for reactant_string_list in iterator_for_combinations(reactant_species_string_combination_list):
+                for reactant_string_list in iterator_for_combinations(
+                    reactant_species_string_combination_list
+                ):
                     product_object_list = construct_product_structure(reaction)
-                    order_structure = construct_order_structure(base_species_order, reactant_string_list)
+                    order_structure = construct_order_structure(
+                        base_species_order, reactant_string_list
+                    )
 
                     if reaction.order is None:
                         product_species_species_string_combination_list = Default(
@@ -352,11 +363,13 @@ def create_all_reactions(
                             ref_characteristics_to_object,
                         )
                     else:
-                        product_species_species_string_combination_list = reaction.order(
-                            order_structure,
-                            product_object_list,
-                            meta_species_in_model,
-                            ref_characteristics_to_object,
+                        product_species_species_string_combination_list = (
+                            reaction.order(
+                                order_structure,
+                                product_object_list,
+                                meta_species_in_model,
+                                ref_characteristics_to_object,
+                            )
                         )
 
                     for product_string_list in iterator_for_combinations(
@@ -364,7 +377,9 @@ def create_all_reactions(
                     ):
                         reaction_rate_arguments = None
                         if callable(reaction.rate):
-                            reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
+                            reaction_rate_arguments = construct_rate_function_arguments(
+                                reaction.rate, reaction
+                            )
 
                         reactant_strings = [
                             "_dot_".join([reactant[0].get_name()] + reactant[1:])
@@ -374,16 +389,18 @@ def create_all_reactions(
                         ]
 
                         try:
-                            rate_string, parameters_in_reaction = fr_extract_reaction_rate(
-                                combination_of_reactant_species,
-                                reactant_strings,
-                                reaction.rate,
-                                type_of_model,
-                                dimension,
-                                reaction_rate_arguments,
-                                parameter_exist,
-                                parameters_in_reaction,
-                                skip_check,
+                            rate_string, parameters_in_reaction = (
+                                fr_extract_reaction_rate(
+                                    combination_of_reactant_species,
+                                    reactant_strings,
+                                    reaction.rate,
+                                    type_of_model,
+                                    dimension,
+                                    reaction_rate_arguments,
+                                    parameter_exist,
+                                    parameters_in_reaction,
+                                    skip_check,
+                                )
                             )
                         except TypeError as e:
                             simlog_error(f"On reaction {reaction} \n" + str(e))
@@ -391,8 +408,10 @@ def create_all_reactions(
                         if rate_string == 0:
                             continue
 
-                        reactions_for_sbml["reaction_" + str(len(reactions_for_sbml))] = (
-                            construct_single_reaction_for_sbml(reactant_strings, product_string_list, rate_string)
+                        reactions_for_sbml[
+                            "reaction_" + str(len(reactions_for_sbml))
+                        ] = construct_single_reaction_for_sbml(
+                            reactant_strings, product_string_list, rate_string
                         )
 
     return reactions_for_sbml, parameters_in_reaction

@@ -5,8 +5,10 @@ from collections.abc import Sequence
 import mobspy.simulation_logging.log_scripts as simlog
 
 
-def count_stoichiometry(lst: Sequence[tuple[float, str] | str]) -> dict[str, float | int]:
-    to_return = {}
+def count_stoichiometry(
+    lst: Sequence[tuple[float, str] | str],
+) -> dict[str, float | int]:
+    to_return: dict[str, float | int] = {}
 
     for e in lst:
         stoichiometry, species = (1, e) if isinstance(e, str) else e
@@ -39,7 +41,14 @@ def check_orthogonality_between_references(references):
             if i == j:
                 continue
 
-            if len(reference1.get_characteristics().intersection(reference2.get_characteristics())) != 0:
+            if (
+                len(
+                    reference1.get_characteristics().intersection(
+                        reference2.get_characteristics()
+                    )
+                )
+                != 0
+            ):
                 simlog.error(
                     "The same characteristic can only be shared through inheritance. "
                     + f"There are two characteristics directly added to two meta-species \n"
@@ -48,7 +57,9 @@ def check_orthogonality_between_references(references):
                 )
 
 
-def complete_characteristics_with_first_values(spe_object, characteristics, characteristics_to_object):
+def complete_characteristics_with_first_values(
+    spe_object, characteristics, characteristics_to_object
+):
     """This creates a string with the species object name and the set of all first characteristics added
     to it's base species used to construct it
     It allows us to search for the proper string in the model using the result of this function

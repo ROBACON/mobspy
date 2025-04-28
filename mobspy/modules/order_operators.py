@@ -45,7 +45,9 @@ class __Operator_Base:
 
     # Transform product function
     @staticmethod
-    def transform_species_string(species_string, characteristics_to_transform, ref_characteristics_to_object):
+    def transform_species_string(
+        species_string, characteristics_to_transform, ref_characteristics_to_object
+    ):
         """This function handles the characteristic change due to a chemical reaction. It receives a string in the
         MobsPy format and the characteristic one has written on the product side of the reaction
         MobsPy them converts the characteristics in the same position as that one (that have been directly
@@ -91,7 +93,7 @@ class __Operator_Base:
         :param meta_species_in_model: (list) list of meta-species in model
         as values
         """
-        to_return = []
+        to_return: list = []
         for species in species_referenced_by:
             to_return += ssg_construct_all_combinations(
                 species, characteristics, ref_characteristics_to_object, symbol="_dot_"
@@ -151,7 +153,8 @@ class __Operator_Base:
 
         products = []
         for species, label, characteristics, stoichiometry in [
-            (e["species"], e["label"], e["characteristics"], e["stoichiometry"]) for e in product_species
+            (e["species"], e["label"], e["characteristics"], e["stoichiometry"])
+            for e in product_species
         ]:
             if "all$" in characteristics:
                 species_is_referenced_by = []
@@ -172,10 +175,12 @@ class __Operator_Base:
 
             # Simple round robin
             try:
-                species_to_transform_string = order_dictionary[(species, label)][round_robin_index[(species, label)]]
-                round_robin_index[(species, label)] = (round_robin_index[(species, label)] + 1) % len(
-                    order_dictionary[(species, label)]
-                )
+                species_to_transform_string = order_dictionary[(species, label)][
+                    round_robin_index[(species, label)]
+                ]
+                round_robin_index[(species, label)] = (
+                    round_robin_index[(species, label)] + 1
+                ) % len(order_dictionary[(species, label)])
 
                 # Return in list of lists format for combination later
                 products.append(
@@ -208,24 +213,28 @@ class __Operator_Base:
                     # Find all the species that reference the one in the reaction
                     products.append(
                         (
-                            stoichiometry,
-                            self.find_all_string_references_to_born_species(
-                                species_is_referenced_by,
-                                characteristics,
-                                ref_characteristics_to_object,
-                            ),
+                            [
+                                (stoichiometry, s)
+                                for s in self.find_all_string_references_to_born_species(
+                                    species_is_referenced_by,
+                                    characteristics,
+                                    ref_characteristics_to_object,
+                                )
+                            ]
                         )
                     )
                 else:
                     # Find only default state of the species
                     products.append(
                         (
-                            stoichiometry,
-                            self.find_all_default_references_to_born_species(
-                                species_is_referenced_by,
-                                characteristics,
-                                ref_characteristics_to_object,
-                            ),
+                            [
+                                (stoichiometry, s)
+                                for s in self.find_all_default_references_to_born_species(
+                                    species_is_referenced_by,
+                                    characteristics,
+                                    ref_characteristics_to_object,
+                                )
+                            ]
                         )
                     )
 
@@ -332,7 +341,9 @@ class __Set_Reversible_Rate:
         """
         try:
             if len(both_rates) != 2:
-                simlog.error("The reversible reaction must receive 2 rates", stack_index=2)
+                simlog.error(
+                    "The reversible reaction must receive 2 rates", stack_index=2
+                )
         except TypeError:
             simlog.error("The reversible reaction must receive 2 rates", stack_index=2)
 
@@ -358,7 +369,9 @@ class __Reversible_Base:
         :param reaction: (Reaction object) object from the reaction class
         """
         reaction_direct = reaction
-        reaction_reverse = Reactions(reaction_direct.products, reaction_direct.reactants)
+        reaction_reverse = Reactions(
+            reaction_direct.products, reaction_direct.reactants
+        )
         self.rate_setter.set_reactions(reaction_direct, reaction_reverse)
         return self.rate_setter
 
