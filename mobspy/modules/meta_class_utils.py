@@ -1,29 +1,25 @@
-"""
-This model stores function used by the meta_class.py module
-"""
+"""This model stores function used by the meta_class.py module"""
+
+from collections.abc import Sequence
 
 import mobspy.simulation_logging.log_scripts as simlog
 
 
-def count_string_dictionary(list_of_strings):
-    """
-    Count the number of instances in a list and return them in a dictionary where the keys are the strings and
-    the value the number of times it appeared in the list
-    """
+def count_stoichiometry(lst: Sequence[tuple[float, str] | str]) -> dict[str, float | int]:
     to_return = {}
 
-    for e in list_of_strings:
-        try:
-            to_return[e] += 1
-        except KeyError:
-            to_return[e] = 1
+    for e in lst:
+        stoichiometry, species = (1, e) if isinstance(e, str) else e
+        if species not in to_return:
+            to_return[species] = 0
+
+        to_return[species] += stoichiometry
 
     return to_return
 
 
 def combine_references(species1, species2):
-    """
-    Combine the sets of references of two species
+    """Combine the sets of references of two species
 
     :param species1: (Meta-species object)
     :param species2: (Meta-species object)
@@ -32,8 +28,7 @@ def combine_references(species1, species2):
 
 
 def check_orthogonality_between_references(references):
-    """
-    Check if meta-species objects inside a reference do not have characteristics in common
+    """Check if meta-species objects inside a reference do not have characteristics in common
     The sets of characteristics directly added to species must be independent
 
     :param references: (set) set of meta-species objects to check for independence
@@ -44,27 +39,17 @@ def check_orthogonality_between_references(references):
             if i == j:
                 continue
 
-            if (
-                len(
-                    reference1.get_characteristics().intersection(
-                        reference2.get_characteristics()
-                    )
-                )
-                != 0
-            ):
+            if len(reference1.get_characteristics().intersection(reference2.get_characteristics())) != 0:
                 simlog.error(
-                    f"The same characteristic can only be shared through inheritance. "
+                    "The same characteristic can only be shared through inheritance. "
                     + f"There are two characteristics directly added to two meta-species \n"
                     f"Repetition in: {reference1}, {reference2}"
                     f"Characteristics: {reference1.get_characteristics()}, {reference2.get_characteristics()}"
                 )
 
 
-def complete_characteristics_with_first_values(
-    spe_object, characteristics, characteristics_to_object
-):
-    """
-    This creates a string with the species object name and the set of all first characteristics added
+def complete_characteristics_with_first_values(spe_object, characteristics, characteristics_to_object):
+    """This creates a string with the species object name and the set of all first characteristics added
     to it's base species used to construct it
     It allows us to search for the proper string in the model using the result of this function
     It's used to set the quantities using the call method in Species and Reacting_Species
@@ -96,8 +81,7 @@ def complete_characteristics_with_first_values(
 
 
 def unite_characteristics(species):
-    """
-    This function unites the characteristics of all the given species
+    """This function unites the characteristics of all the given species
 
     :param species: (list of species or List_Species object)
     """
@@ -111,8 +95,7 @@ def unite_characteristics(species):
 
 
 def create_orthogonal_vector_structure(species):
-    """
-    This creates the independent state-structure for the model
+    """This creates the independent state-structure for the model
     It is just a dictionary where the keys are characteristics and the values are meta-species objects that have
     been directly added to that object (no inheritance or New)
     It simplifies the code by allowing to easily keep track of the 'axis' of each characteristic. Allowing
@@ -133,7 +116,7 @@ def create_orthogonal_vector_structure(species):
                     pass
                 else:
                     simlog.error(
-                        f"The same characteristic can only be shared through inheritance. "
+                        "The same characteristic can only be shared through inheritance. "
                         + f"There are two characteristics directly added to two meta-species \n"
                         f"Repetition in: {spe}, {ref_characteristics_to_object[cha]} \n"
                         f"Characteristics: {spe.get_characteristics()}, "

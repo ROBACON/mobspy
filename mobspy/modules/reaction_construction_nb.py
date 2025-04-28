@@ -1,32 +1,30 @@
-"""
-This module is responsible for the construction of all individual reactions from a meta-reaction
-"""
+"""This module is responsible for the construction of all individual reactions from a meta-reaction."""
 
+from collections.abc import Sequence
 from copy import deepcopy
-from mobspy.modules.function_rate_code import (
-    extract_reaction_rate as fr_extract_reaction_rate,
-)
-from itertools import product as itertools_product
-from mobspy.modules.meta_class import Reactions
-from mobspy.modules.species_string_generator import (
-    construct_all_combinations as ssg_construct_all_combinations,
-)
 from inspect import signature as inspect_signature
-from mobspy.modules.order_operators import Default
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from itertools import product as itertools_product
 
 # from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.context_related_scripts import (
     Unit_Context_Setter as crs_Unit_Context_Setter,
 )
-from mobspy.modules.meta_class_utils import (
-    count_string_dictionary as mcu_count_string_dictionary,
+from mobspy.modules.function_rate_code import (
+    extract_reaction_rate as fr_extract_reaction_rate,
 )
+from mobspy.modules.meta_class import Reactions
+from mobspy.modules.meta_class_utils import (
+    count_stoichiometry as mcu_count_string_dictionary,
+)
+from mobspy.modules.order_operators import Default
+from mobspy.modules.species_string_generator import (
+    construct_all_combinations as ssg_construct_all_combinations,
+)
+from mobspy.simulation_logging.log_scripts import error as simlog_error
 
 
 def iterator_for_combinations(list_of_lists: list[list]):
-    """
-    Iterate through all the combinations of a list of lists
+    """Iterate through all the combinations of a list of lists
     [[A,B,C], [D, F, E], [G]] means:
     ADG, AFG, AEG, BDG, BFG, BEG, CDG, CFG, CEG .....
 
@@ -38,8 +36,7 @@ def iterator_for_combinations(list_of_lists: list[list]):
 
 
 def copy_reaction(reaction):
-    """
-    Just copies a meta-reaction
+    """Just copies a meta-reaction
     Deepcopy is not working because it calls __getattr__ on the species with a private method
 
     Parameters:
@@ -77,8 +74,7 @@ def copy_reaction(reaction):
 
 
 def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
-    """
-    If query references two independent characteristics from the in meta-species it would result in an empty set
+    """If query references two independent characteristics from the in meta-species it would result in an empty set
     Like Ecoli.live.dead - (assuming live and dead belong to the same meta-species characteristics set)
     If that ever happens inside a meta-reaction we just pop an error
 
@@ -136,8 +132,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
 
 def construct_reactant_structures(reactant_species, ref_characteristics_to_object):
-    """
-    This function finds the corresponding strings according to the reactant meta-species with or without a query
+    """This function finds the corresponding strings according to the reactant meta-species with or without a query
     pack then in a list and return
 
     :param reactant_species: (meta-species object) species objects of the involved species
@@ -159,8 +154,7 @@ def construct_reactant_structures(reactant_species, ref_characteristics_to_objec
 
 
 def construct_order_structure(species_order_list, current_species_string_list):
-    """
-    Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
+    """Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
     The meta-species objects are the keys of this dictionary and a lists of species strings currently being used
     in the reaction are the values - Allowing the product to find it's corresponding species-string in a future
     step
@@ -174,9 +168,7 @@ def construct_order_structure(species_order_list, current_species_string_list):
         lists of species
     """
     cyclic_dict = {}
-    for species_object, species_string in zip(
-        species_order_list, current_species_string_list
-    ):
+    for species_object, species_string in zip(species_order_list, current_species_string_list):
         try:
             cyclic_dict[species_object].append(species_string)
         except KeyError:
@@ -186,8 +178,7 @@ def construct_order_structure(species_order_list, current_species_string_list):
 
 
 def construct_product_structure(reaction):
-    """
-    This function unpacks the products in a meta-reaction
+    """This function unpacks the products in a meta-reaction
 
     :param: reaction meta-reaction currently being analysed
 
@@ -196,25 +187,35 @@ def construct_product_structure(reaction):
     """
     product_list = []
     for product in reaction.products:
-        for _ in range(product["stoichiometry"]):
+        if isinstance(product["stoichiometry"], float):
             product_list.append(
                 {
                     "species": product["object"],
                     "label": product["label"],
                     "characteristics": product["characteristics"],
+                    "stoichiometry": product["stoichiometry"],
                 }
             )
+        else:
+            for _ in range(product["stoichiometry"]):
+                product_list.append(
+                    {
+                        "species": product["object"],
+                        "label": product["label"],
+                        "characteristics": product["characteristics"],
+                        "stoichiometry": 1,
+                    }
+                )
 
     return product_list
 
 
 def construct_single_reaction_for_sbml(
     reactant_species_string_list: list[str],
-    product_species_string_list: list[str],
+    product_species_string_list: Sequence[tuple[float, str]],
     reaction_rate: str,
 ) -> dict:
-    """
-    This function constructs the reactions for SBML for the conversion by the model builder script
+    """This function constructs the reactions for SBML for the conversion by the model builder script
     It follows the following structure 're':[('stoichmetry', reactantant_string) ....
     The reaction rate must be a string containing the reaction kinetics
     This returns a single reaction to be appended by the reactions_for_sbml dictionary
@@ -226,7 +227,6 @@ def construct_single_reaction_for_sbml(
     :return: to_return (dict) = dictionary that packs the reactants products and rate
     """
     to_return = {"re": [], "pr": [], "kin": reaction_rate}
-
     reactant_count_dict = mcu_count_string_dictionary(reactant_species_string_list)
     product_count_dict = mcu_count_string_dictionary(product_species_string_list)
 
@@ -240,8 +240,7 @@ def construct_single_reaction_for_sbml(
 
 
 def get_involved_species(reaction, meta_species_in_model):
-    """
-    This extracts all the involved meta-species inside a reaction
+    """This extracts all the involved meta-species inside a reaction
     This function is responsible for implementing the inheritance mechanism, by finding within each meta-species
     references set, if they reference the meta-species in the reaction
 
@@ -292,7 +291,7 @@ def construct_rate_function_arguments(rate_function, reaction):
         simlog_error(
             f"Rate arguments must not contain = or *. \n"
             f"Error in reaction {reaction}. \n"
-            f"Error in rate function {rate_function} in signature {str(inspect_signature(rate_function))}"
+            f"Error in rate function {rate_function} in signature {inspect_signature(rate_function)!s}"
         )
 
     rate_function_arguments = str(rate_function_arguments).replace("(", "")
@@ -312,8 +311,7 @@ def create_all_reactions(
     parameters_in_reaction,
     skip_check,
 ):
-    """
-    This function creates all reactions
+    """This function creates all reactions
     Returns the reactions_for_sbml and parameters_for_sbml dictionary
     Those will be used by another module to create the SBML file
 
@@ -333,26 +331,18 @@ def create_all_reactions(
     # Initiate expressions
     with crs_Unit_Context_Setter():
         for reaction in reactions:
-            base_species_order, reactant_species_combination_list = (
-                get_involved_species(reaction, meta_species_in_model)
+            base_species_order, reactant_species_combination_list = get_involved_species(
+                reaction, meta_species_in_model
             )
 
-            for combination_of_reactant_species in iterator_for_combinations(
-                reactant_species_combination_list
-            ):
-                reactant_species_string_combination_list = (
-                    construct_reactant_structures(
-                        combination_of_reactant_species, ref_characteristics_to_object
-                    )
+            for combination_of_reactant_species in iterator_for_combinations(reactant_species_combination_list):
+                reactant_species_string_combination_list = construct_reactant_structures(
+                    combination_of_reactant_species, ref_characteristics_to_object
                 )
 
-                for reactant_string_list in iterator_for_combinations(
-                    reactant_species_string_combination_list
-                ):
+                for reactant_string_list in iterator_for_combinations(reactant_species_string_combination_list):
                     product_object_list = construct_product_structure(reaction)
-                    order_structure = construct_order_structure(
-                        base_species_order, reactant_string_list
-                    )
+                    order_structure = construct_order_structure(base_species_order, reactant_string_list)
 
                     if reaction.order is None:
                         product_species_species_string_combination_list = Default(
@@ -362,13 +352,11 @@ def create_all_reactions(
                             ref_characteristics_to_object,
                         )
                     else:
-                        product_species_species_string_combination_list = (
-                            reaction.order(
-                                order_structure,
-                                product_object_list,
-                                meta_species_in_model,
-                                ref_characteristics_to_object,
-                            )
+                        product_species_species_string_combination_list = reaction.order(
+                            order_structure,
+                            product_object_list,
+                            meta_species_in_model,
+                            ref_characteristics_to_object,
                         )
 
                     for product_string_list in iterator_for_combinations(
@@ -376,9 +364,7 @@ def create_all_reactions(
                     ):
                         reaction_rate_arguments = None
                         if callable(reaction.rate):
-                            reaction_rate_arguments = construct_rate_function_arguments(
-                                reaction.rate, reaction
-                            )
+                            reaction_rate_arguments = construct_rate_function_arguments(reaction.rate, reaction)
 
                         reactant_strings = [
                             "_dot_".join([reactant[0].get_name()] + reactant[1:])
@@ -388,18 +374,16 @@ def create_all_reactions(
                         ]
 
                         try:
-                            rate_string, parameters_in_reaction = (
-                                fr_extract_reaction_rate(
-                                    combination_of_reactant_species,
-                                    reactant_strings,
-                                    reaction.rate,
-                                    type_of_model,
-                                    dimension,
-                                    reaction_rate_arguments,
-                                    parameter_exist,
-                                    parameters_in_reaction,
-                                    skip_check,
-                                )
+                            rate_string, parameters_in_reaction = fr_extract_reaction_rate(
+                                combination_of_reactant_species,
+                                reactant_strings,
+                                reaction.rate,
+                                type_of_model,
+                                dimension,
+                                reaction_rate_arguments,
+                                parameter_exist,
+                                parameters_in_reaction,
+                                skip_check,
                             )
                         except TypeError as e:
                             simlog_error(f"On reaction {reaction} \n" + str(e))
@@ -407,10 +391,8 @@ def create_all_reactions(
                         if rate_string == 0:
                             continue
 
-                        reactions_for_sbml[
-                            "reaction_" + str(len(reactions_for_sbml))
-                        ] = construct_single_reaction_for_sbml(
-                            reactant_strings, product_string_list, rate_string
+                        reactions_for_sbml["reaction_" + str(len(reactions_for_sbml))] = (
+                            construct_single_reaction_for_sbml(reactant_strings, product_string_list, rate_string)
                         )
 
     return reactions_for_sbml, parameters_in_reaction
@@ -418,4 +400,3 @@ def create_all_reactions(
 
 if __name__ == "__main__":
     pass
-
