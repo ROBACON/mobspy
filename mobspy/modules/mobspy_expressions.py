@@ -595,6 +595,12 @@ class OverrideUnitRegistry:
         self.unit_registry_object = UnitRegistry()
         self._ms_active = False
 
+    def __call__(self, *args, **kwargs):
+        q_object = self.unit_registry_object(*args, **kwargs)
+        owq_obj = OverrideQuantity(q_object)
+        owq_obj._ms_active = self._ms_active
+        return owq_obj
+
     def __getattr__(self, item):
         # Convert here
         if item == "h":
