@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 """
-    Picks and translates a python model into an
-    SBML readable by Copasi. New models must
-    be references here as well.
+Picks and translates a python model into an
+SBML readable by Copasi. New models must
+be references here as well.
 """
-
 
 from mobspy.sbml_simulator.SBMLWriter import create_model
 from libsbml import writeSBMLToString as sbml_writeSBMLToString
@@ -28,7 +27,3 @@ def build(species, parameters, reactions, events, assignments):
     # Convert sbml document into a string for basico
     sbml_str = sbml_writeSBMLToString(doc)
     return sbml_str
-
-
-
-

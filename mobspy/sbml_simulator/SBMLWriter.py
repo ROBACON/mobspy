@@ -1,6 +1,7 @@
 """
-    This module is responsible for converting a model_str into a SBML format
+This module is responsible for converting a model_str into a SBML format
 """
+
 import libsbml as sbml
 
 
@@ -93,9 +94,7 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
     check(unit.setKind(sbml.UNIT_KIND_SECOND), "set unit kind")
     check(unit.setExponent(-1), "set unit exponent")
     check(unit.setScale(0), "set unit scale")
-    check(
-        unit.setMultiplier(1), "set unit multiplier"
-    )
+    check(unit.setMultiplier(1), "set unit multiplier")
 
     # Create a compartment inside this model
 
@@ -105,9 +104,7 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
     check(c1.setConstant(True), 'set compartment "constant"')
     check(c1.setSize(1), 'set compartment "size"')
     check(c1.setSpatialDimensions(3), "set compartment dimensions")
-    check(
-        c1.setUnits("dimensionless"), "set compartment size units"
-    )
+    check(c1.setUnits("dimensionless"), "set compartment size units")
 
     # Create species inside this model, set the required attributes
     # for each species in SBML Level 3 (which are the 'id', 'compartment',
@@ -188,7 +185,10 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
         )
         check(t.setPersistent(False), "default not persistent")
         check(t.setInitialValue(False), "default not initially true")
-        check(e.getTrigger().getMath(), 'Problem when creating the trigger condition. The trigger will not work.')
+        check(
+            e.getTrigger().getMath(),
+            "Problem when creating the trigger condition. The trigger will not work.",
+        )
         # print( '> ' + sbml.formulaToString(e.getTrigger().getMath()) )
 
         d = model.createDelay()
@@ -203,9 +203,8 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
             check(ea.setMath(sbml.parseL3Formula(ass[1])), "set math")
 
     for _, asg in assignments.items():
-
-        species_id = asg['species']
-        expression = asg['expression']
+        species_id = asg["species"]
+        expression = asg["expression"]
 
         # Create an AssignmentRule for species
         assignment_rule = model.createAssignmentRule()

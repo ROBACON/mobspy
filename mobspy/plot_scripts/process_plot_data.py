@@ -5,11 +5,11 @@ import mobspy.plot_params.example_plot_reader as epr
 
 def query_plot_data(species, data):
     """
-        Performs a query of the plot data, when one wishes to plot species with characteristics
-        It creates a new data structure with the results from the query added to it for the plotting structure
+    Performs a query of the plot data, when one wishes to plot species with characteristics
+    It creates a new data structure with the results from the query added to it for the plotting structure
 
-        :param species: (str) Species name in string format
-        :param data: (dict) Data in MobsPy dictionary format
+    :param species: (str) Species name in string format
+    :param data: (dict) Data in MobsPy dictionary format
     """
     new_data = deepcopy(data)
 
@@ -34,19 +34,19 @@ def query_plot_data(species, data):
 
 def check_plot_parameters(species, plot_params):
     """
-        Performs a check of the plot_parameters given. To see if the parameters are correctly named
+    Performs a check of the plot_parameters given. To see if the parameters are correctly named
 
-        :param species: (str) Species in str format
-        :param plot_params: (dict) Plot parameter dictionary
+    :param species: (str) Species in str format
+    :param plot_params: (dict) Plot parameter dictionary
     """
     dictionary = epr.get_example_plot_parameters()
 
-    if 'Time' in plot_params:
-        simlog.error('Time must not be a plot parameter name')
+    if "Time" in plot_params:
+        simlog.error("Time must not be a plot parameter name")
 
     for spe in species:
         if spe in dictionary.keys():
-            simlog.error(f'Plotting is impossible, species {spe} is a parameter name')
+            simlog.error(f"Plotting is impossible, species {spe} is a parameter name")
 
     # Check if parameters are valid
     validated_keys = set()
@@ -61,14 +61,13 @@ def check_plot_parameters(species, plot_params):
         if key in validated_keys:
             continue
         else:
-            spe_name = key.split('.')[0]
+            spe_name = key.split(".")[0]
             if spe_name not in species:
-                simlog.warning(f'Parameter {key} not supported')
+                simlog.warning(f"Parameter {key} not supported")
             validated_keys.add(key)
 
 
 def time_filter_operation(low, high, time_data, data):
-
     new_time_data = []
     new_data = []
 
@@ -85,7 +84,6 @@ def time_filter_operation(low, high, time_data, data):
 
 
 def y_filter_operation(low_y, high_y, time_data, data):
-
     new_time_data = []
     new_data = []
 
@@ -99,8 +97,3 @@ def y_filter_operation(low_y, high_y, time_data, data):
             continue
 
     return new_time_data, new_data
-
-
-
-
-

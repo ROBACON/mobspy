@@ -1,10 +1,14 @@
-from mobspy.modules.mobspy_expressions import ExpressionDefiner as me_ExpressionDefiner, u
+from mobspy.modules.mobspy_expressions import (
+    ExpressionDefiner as me_ExpressionDefiner,
+    u,
+)
 import inspect
+
 
 def expression_compilation_initiation():
     """
-        First find all ExpressionDefiner objects in the stack.
-        Then, sets _ms_active to True to change the behavior of quantities and units in expressions
+    First find all ExpressionDefiner objects in the stack.
+    Then, sets _ms_active to True to change the behavior of quantities and units in expressions
     """
     u._ms_active = True
 
@@ -28,9 +32,9 @@ def expression_compilation_initiation():
 
 def expression_compilation_finish(expressions):
     """
-        Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()
+    Sets _ms_active to false for all expressions found in the stack by expression_compilation_initiation()
 
-        :param expressions: all expressions found in stack at the moment of reaction compilation
+    :param expressions: all expressions found in stack at the moment of reaction compilation
     """
     u._ms_active = False
 
