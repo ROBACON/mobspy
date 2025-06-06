@@ -118,7 +118,7 @@ def convert_to_concentration(data, converted_data, volume_list, time_list):
     Converts output data from counts to concentration according to simulation volume
 
     :param data: simulation data
-    :param converted_data: data converted to rquested units
+    :param converted_data: data converted to requested units
     :param volume_list: list of volumes of all simulations (more than one if concatenated)
     :param time_list: list of durations of each simulation (to check for respective volume in results)
     """
