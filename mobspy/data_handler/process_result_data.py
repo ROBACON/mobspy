@@ -4,14 +4,23 @@ mobspy.data_handler.process_result_data.py
 Handles converting the output data from a simulation into desired-units or concentration
 """
 
-from typing import Any
+from typing import Any, TypedDict
 from mobspy.modules.mobspy_expressions import u
 from scipy.constants import N_A
 from copy import deepcopy
 import mobspy.simulation_logging.log_scripts as simlog
 
 
-def extract_time_and_volume_list(list_of_params) -> tuple[list[float], list[float], bool]:
+class Parameters(TypedDict):
+    volume: float
+    duration: float
+    _end_condition: None | bool
+    unit_x: str | None
+    unit_y: str | None
+    output_concentration: bool
+
+
+def extract_time_and_volume_list(list_of_params: list[Parameters]) -> tuple[list[float], list[float], bool]:
     """
     This function extracts the list of durations from all concatenated simulations (or one for single simulation)
     It also extracts the respective volumes at each simulation. It does not work if their is a change in volume

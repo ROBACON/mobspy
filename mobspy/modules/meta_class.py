@@ -706,7 +706,7 @@ class List_Species:
     :param list_of_species: (Species) Meta-species list to store the meta-species
     """
 
-    def __init__(self, iterable: Sequence["Species"]) -> None:
+    def __init__(self, iterable: Sequence["Species"] | set["Species"]) -> None:
         """
         Constructor not usually used - but a list_of_species is given one can construct the List_Species from it
         It is advised to use the | operator
@@ -783,7 +783,7 @@ class List_Species:
         :return: List_Species with no repeated elements
         """
         set_species = set(self._list_species)
-        return List_Species(list(set_species))
+        return List_Species(set_species)
 
     def insert(self, index: int, item: "Species") -> None:
         self._list_species.insert(index, item)

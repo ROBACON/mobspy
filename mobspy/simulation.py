@@ -219,7 +219,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         # Must copy to avoid reference assignment
         # Change model to include linked species
         model_pre_link = List_Species(model)
-        model_pos_link = set()
+        model_pos_link: set[Species] = set()
         for spe in model_pre_link:
             model_pos_link.add(spe)
             model_pos_link = model_pos_link.union(spe._linked_species)
@@ -458,7 +458,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         simlog.debug("Starting Simulator")
         jobs = self.set_job_number(self.parameters)
-        simulation_function = lambda x: sbml_simulate(jobs, self._list_of_parameters, x)
+        def simulation_function(x):
+            return sbml_simulate(jobs, self._list_of_parameters, x)
         results = joblib.Parallel(n_jobs=jobs, prefer="threads")(
             joblib.delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
         )
