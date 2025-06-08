@@ -4,6 +4,7 @@ mobspy.data_handler.process_result_data.py
 Handles converting the output data from a simulation into desired-units or concentration
 """
 
+from typing import Any
 from mobspy.modules.mobspy_expressions import u
 from scipy.constants import N_A
 from copy import deepcopy
@@ -59,7 +60,7 @@ def extract_time_and_volume_list(list_of_params):
 
 
 def convert_data_to_desired_unit(
-    data, time_list, volume_list, unit_x=None, unit_y=None, output_concentration=False
+    data, time_list, volume_list, unit_x: str | None = None, unit_y: str | None = None, output_concentration: bool=False
 ):
     """Converts the simulation output data from the MobsPy standard units
     to the desired units specified by the user
@@ -77,7 +78,7 @@ def convert_data_to_desired_unit(
     converted_data = deepcopy(data)
 
     if unit_x is not None:
-        new_time = []
+        new_time: list[float] = []
         for time in data["Time"]:
             quantity = time * ur.seconds
             new_time.append(quantity.to(unit_x).magnitude)
@@ -113,7 +114,7 @@ def convert_data_to_desired_unit(
     return converted_data
 
 
-def convert_to_concentration(data, converted_data, volume_list, time_list):
+def convert_to_concentration(data, converted_data, volume_list: list[float], time_list):
     """
     Converts output data from counts to concentration according to simulation volume
 
@@ -122,7 +123,7 @@ def convert_to_concentration(data, converted_data, volume_list, time_list):
     :param volume_list: list of volumes of all simulations (more than one if concatenated)
     :param time_list: list of durations of each simulation (to check for respective volume in results)
     """
-    new_data = {}
+    new_data: dict[str, Any] = {}
     for key in data:
         new_data[key] = []
 
