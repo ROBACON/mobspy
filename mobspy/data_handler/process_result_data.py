@@ -11,7 +11,7 @@ from copy import deepcopy
 import mobspy.simulation_logging.log_scripts as simlog
 
 
-def extract_time_and_volume_list(list_of_params):
+def extract_time_and_volume_list(list_of_params) -> tuple[list[float], list[float], bool]:
     """
     This function extracts the list of durations from all concatenated simulations (or one for single simulation)
     It also extracts the respective volumes at each simulation. It does not work if their is a change in volume
@@ -23,7 +23,7 @@ def extract_time_and_volume_list(list_of_params):
     """
     no_fixed_volume = False
     no_fixed_dur = False
-    initial_volume = list_of_params[0]["volume"]
+    initial_volume: float = list_of_params[0]["volume"]
     for par in list_of_params:
         if par["_end_condition"] is not None:
             no_fixed_dur = True
@@ -39,9 +39,9 @@ def extract_time_and_volume_list(list_of_params):
             " conditional duration. The output will be printed in counts instead"
         )
 
-    volume_list = []
-    previous_time = list_of_params[0]["duration"]
-    sim_time_list = [previous_time]
+    volume_list: list[float] = []
+    previous_time: float = list_of_params[0]["duration"]
+    sim_time_list: list[float] = [previous_time]
     if no_fixed_volume:
         for i, par in enumerate(list_of_params):
             volume_list.append(par["volume"])
@@ -49,7 +49,7 @@ def extract_time_and_volume_list(list_of_params):
             if i == 1:
                 continue
             else:
-                current_time = previous_time + list_of_params[i]["duration"]
+                current_time: float = previous_time + list_of_params[i]["duration"]
                 sim_time_list.append(current_time)
                 previous_time = current_time
     else:
