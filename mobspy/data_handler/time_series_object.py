@@ -3,8 +3,7 @@ This module implements the class that stores the results from a MobsPy simulatio
 """
 
 import pandas as pd
-from mobspy.modules.meta_class import *
-from mobspy.modules.class_of_meta_specie_named_any import *
+from mobspy.modules.meta_class import Species, Reacting_Species
 import mobspy.simulation_logging as simlog
 import inspect
 
@@ -29,15 +28,11 @@ class MobsPyList_of_TS:
     def check_parameters_for_deepcopy(self):
         for i, d in enumerate(self.ts_parameters):
             for par, val in d.items():
-                if not (
-                    type(val) == int
-                    or type(val) == float
-                    or type(val) == str
-                    or type(val) == bool
-                ):
+                if not isinstance(val, (int, float, str, bool,)):
+                    # cast to str
                     self.ts_parameters[i][par] = str(val)
 
-    def __init__(self, list_of_mspy_ts, model_parameter_objects=None, fres=False):
+    def __init__(self, list_of_mspy_ts, model_parameter_objects=None, fres: bool=False) -> None:
         """Creates the MobsPy timeseries object
 
         :param data_dict: (dict) resulting dictionary from simulation
@@ -89,31 +84,29 @@ class MobsPyList_of_TS:
             "models": self.ts_models,
         }
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Length of MobsPy Time Series is equal to the number of runs from simulation
         """
         return len(self.ts_data)
 
-    def __str__(self):
-        tr = ""
+    def __str__(self) -> str:
+        tr: str = ""
         for i, (data, params) in enumerate(zip(self.ts_data, self.ts_model_parameters)):
             if self.ts_model_parameters != {}:
-                tr = tr + f"Model Parameters {params} \n"
-
-            tr = tr + f"Time Series {i}: \n"
-            tr = tr + str(data) + "\n \n"
-
+                tr += f"Model Parameters {params} \n"
+            tr += f"Time Series {i}: \n"
+            tr += f"{data}\n \n"
         return tr
 
-    def add_ts_to_data(self, time_series):
+    def add_ts_to_data(self, time_series) -> None:
         """
         Add a new time series to the TS data. Used for stochastic plotting
         the average and standard deviation
 
         :param time_series: (dict) dictionary with species strings as keys and run as value
         """
-        if type(time_series) == dict:
+        if isinstance(time_series, dict):
             self.ts_data += [time_series]
 
     def __getitem__(self, item):
@@ -132,8 +125,8 @@ class MobsPyList_of_TS:
             )
 
         series_index = None
-        if type(item) == tuple:
-            if len(item) > 2 or type(item[1]) != int:
+        if isinstance(item, tuple):
+            if len(item) != 2 or not isinstance(item[1], int):
                 simlog.error(
                     "Only len 2 and ints allowed in tuple-based assignments",
                     stack_index=2,
@@ -142,9 +135,9 @@ class MobsPyList_of_TS:
             item = item[0]
 
         to_return = []
-        if type(item) == int:
+        if isinstance(item, int):
             return self.ts_data[item]
-        elif type(item) == str:
+        elif isinstance(item, str):
             try:
                 for ts in self.ts_data:
                     to_return.append(ts[item])
@@ -202,7 +195,7 @@ class MobsPyList_of_TS:
                     if reactant_full_name.issubset(set(key.split("."))):
                         to_return = _sum_element_by_element(to_return, time_series[key])
                         found_flag = True
-        elif type(item) == str:
+        elif isinstance(item, str):
             for key in time_series:
                 if set(item.split(".")).issubset(set(key.split("."))):
                     to_return = _sum_element_by_element(to_return, time_series[key])
@@ -225,19 +218,22 @@ class MobsPyList_of_TS:
         """
         Returns the maximum time in all the time-series stored for a given species
         """
-        if type(species) != str:
+        if not isinstance(species, str):
             species = species.get_name()
-        max_length = 0
+        max_length: int = 0
         max_ts = None
         for ts in self.ts_data:
             if species in ts.keys():
                 if len(ts) > max_length:
                     max_length = len(ts)
                     max_ts = ts
+        if max_ts is None:
+            msg = "Could not find maximal time series."
+            raise ValueError(msg)
         return max_ts["Time"]
 
-    def return_pandas(self):
-        to_return = []
+    def return_pandas(self) -> list[pd.DataFrame]:
+        to_return: list[pd.DataFrame] = []
 
         for ts in self.ts_data:
             to_return.append(pd.DataFrame.from_dict(ts))

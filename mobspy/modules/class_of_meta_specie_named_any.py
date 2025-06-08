@@ -59,7 +59,7 @@ class Context_specie_named_any(Species):
         """
         self.context_finish_for_meta_specie_named_any()
 
-    def context_initiator_for_meta_specie_named_any(self):
+    def context_initiator_for_meta_specie_named_any(self) -> None:
         """
         This adds the current context in _list_of_nested_any_contexts,
         and then updates the Any context in all meta-species.
@@ -73,7 +73,7 @@ class Context_specie_named_any(Species):
             )
         )
 
-    def context_finish_for_meta_specie_named_any(self):
+    def context_finish_for_meta_specie_named_any(self) -> None:
         """
         This removes the context which is ending from _list_of_nested_any_contexts and updates the current Any context.
         Then, it updates the Any context in all meta-species.
