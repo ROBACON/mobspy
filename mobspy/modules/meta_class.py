@@ -5,6 +5,7 @@ Bear in mind that they are not actually Python meta-classes. The first design ut
 are just regular classes
 """
 
+from collections.abc import Sequence
 from copy import deepcopy
 from typing import Self
 
@@ -385,7 +386,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         self.context_initiator_for_reacting_specie()
         return 0
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         """
         Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when exiting.
         """
@@ -451,7 +452,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         return _Last_rate_storage.override_get_item(self, item)
 
     def __init__(
-        self, object_reference, characteristics, stoichiometry=1, label=None
+        self, object_reference, characteristics, stoichiometry: int | float = 1, label: int | float | str | None = None
     ) -> None:
         """
         Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
@@ -461,7 +462,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         :param object_reference: (Species) meta-species object reference or (int, float, Quantity) for event
         assignments with meta-species values
         :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
-        :param stoichiometry: (int) stoichiometry value of the meta-species in the reaction
+        :param stoichiometry: (int, float) stoichiometry value of the meta-species in the reaction
         :param label: (int, float, str) value for the label for matching used in this reaction
         """
         super(Reacting_Species, self).__init__()
@@ -586,10 +587,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             "object"
         ].get_simulation_context()
         if (
-            type(quantity) == int
-            or type(quantity) == float
-            or isinstance(quantity, Quantity)
-            or isinstance(quantity, mp_Mobspy_Parameter)
+            isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
         ) and not asgi_Assign.check_context():
             if len(self.list_of_reactants) != 1:
                 simlog_error(
@@ -612,7 +610,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         # If called within an event context, make sure that the call is a count assignment only
         if simulation_under_context is not None:
             try:
-                if type(quantity) == str:
+                if isinstance(quantity, str):
                     quantity_dict = species_object.add_quantities(
                         characteristics, quantity
                     )
@@ -708,14 +706,14 @@ class List_Species:
     :param list_of_species: (Species) Meta-species list to store the meta-species
     """
 
-    def __init__(self, iterable):
+    def __init__(self, iterable: Sequence["Species"]) -> None:
         """
         Constructor not usually used - but a list_of_species is given one can construct the List_Species from it
         It is advised to use the | operator
 
         :param list_of_species: (Species) Meta-species list to store the meta-species
         """
-        self._list_species = []
+        self._list_species: list[Species] = []
         for item in iterable:
             if isinstance(item, Species):
                 self._list_species.append(item)
@@ -724,7 +722,7 @@ class List_Species:
                     "Only Species can used to construct List_Species", stack_index=2
                 )
 
-    def append(self, species):
+    def append(self, species: "Species") -> None:
         """
         Add species to the list_of_species
 
@@ -735,7 +733,7 @@ class List_Species:
         else:
             self._list_species.append(species)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String representation of the List_Species just the list of meta-species
         """
@@ -744,7 +742,7 @@ class List_Species:
             to_return.append(spe.get_name())
         return str(to_return)
 
-    def __or__(self, other):
+    def __or__(self, other: "Species | List_Species") -> Self:
         """
         Implementation of the | operator. Adds species to the Parallel species
 
@@ -766,34 +764,31 @@ class List_Species:
         for spe in self._list_species:
             yield spe
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._list_species)
 
-    def is_in(self, item):
-        if item in self._list_species:
-            return True
-        else:
-            return False
+    def is_in(self, item) -> bool:
+        return item in self._list_species
 
-    def __setitem__(self, index, item):
+    def __setitem__(self, index: int, item: "Species") -> None:
         self._list_species[index] = item
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> "Species":
         return self._list_species[item]
 
-    def remove_repeated_elements(self):
+    def remove_repeated_elements(self) -> "List_Species":
         """
         This function creates a List_Species with no repetitions. The order of elements is lost
 
         :return: List_Species with no repeated elements
         """
         set_species = set(self._list_species)
-        return List_Species(set_species)
+        return List_Species(list(set_species))
 
-    def insert(self, index, item):
+    def insert(self, index: int, item: "Species") -> None:
         self._list_species.insert(index, item)
 
-    def extend(self, other):
+    def extend(self, other: "List_Species") -> None:
         if isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
 
@@ -915,7 +910,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         to_str = "(" + to_str + ")"
         return to_str
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String representation, just returns the species name
         """
@@ -937,7 +932,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return self.__getattr__(item)
 
     # Def labels
-    def label(self, label):
+    def label(self, label: int | float | str) -> Reacting_Species:
         """
         Label function implementation. This function matches equal meta-species if they have equal labels
         Here it returns a Reacting_Species as labels need to be used in reactions
@@ -948,7 +943,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return Reacting_Species(self, set(), label=label)
 
     # Get data from species for debugging Compiler
-    def show_reactions(self):
+    def show_reactions(self) -> None:
         """
         Prints the reactions inside the object
         """
@@ -957,7 +952,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             for reaction in reference.get_reactions():
                 simlog_debug(reaction)
 
-    def show_characteristics(self):
+    def show_characteristics(self) -> None:
         """
         Prints the directly characteristics inside the object
         """
@@ -967,7 +962,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 simlog_debug(str(reference) + ": ")
                 reference.simlog.debug_characteristics()
 
-    def show_references(self):
+    def show_references(self) -> None:
         """
         Prints the objects this object has inherited from (including self)
         """
@@ -978,14 +973,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 simlog_debug(" " + str(reference) + " ")
         simlog_debug("}")
 
-    def show_quantities(self):
+    def show_quantities(self) -> None:
         """
         Shows the species counts stored in this object
         """
         print(self._species_counts)
 
     # Creation of List_Species For Simulation ##################
-    def __or__(self, other):
+    def __or__(self, other:  "Species | List_Species") -> "List_Species":
         """
         Creates an instance of List_Species using the | operator
 
@@ -1040,6 +1035,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                     f"Stoichiometry can only be an int or float - Received {stoichiometry}",
                     stack_index=2,
                 )
+                raise ValueError("wrong stoichiometry")
             return r
         else:
             # Here is not stoichiometry but other
@@ -1086,8 +1082,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             simlog_error(
                 f"At: {code_line} \n"
                 + f"Line number: {line_number} \n"
-                + f"There must be a rate in the end of the reaction. "
-                f"Avoid comments in the same line as the reaction."
+                + "There must be a rate in the end of the reaction. "
+                "Avoid comments in the same line as the reaction."
             )
 
     def __rshift__(self, other):
