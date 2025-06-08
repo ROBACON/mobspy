@@ -18,6 +18,7 @@ class Parameters(TypedDict):
     unit_x: str | None
     unit_y: str | None
     output_concentration: bool
+    rate_type: str
 
 
 def extract_time_and_volume_list(list_of_params: list[Parameters]) -> tuple[list[float], list[float], bool]:
