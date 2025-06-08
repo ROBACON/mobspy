@@ -60,7 +60,7 @@ def extract_time_and_volume_list(list_of_params) -> tuple[list[float], list[floa
 
 
 def convert_data_to_desired_unit(
-    data, time_list, volume_list, unit_x: str | None = None, unit_y: str | None = None, output_concentration: bool=False
+    data, time_list: list[float], volume_list: list[float], unit_x: str | None = None, unit_y: str | None = None, output_concentration: bool=False
 ):
     """Converts the simulation output data from the MobsPy standard units
     to the desired units specified by the user
@@ -114,7 +114,7 @@ def convert_data_to_desired_unit(
     return converted_data
 
 
-def convert_to_concentration(data, converted_data, volume_list: list[float], time_list):
+def convert_to_concentration(data, converted_data, volume_list: list[float], time_list: list[float]):
     """
     Converts output data from counts to concentration according to simulation volume
 

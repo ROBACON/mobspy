@@ -37,7 +37,7 @@ from mobspy.modules.unit_handler import (
 from mobspy.parameters.default_reader import get_default_parameters
 from mobspy.parameters.example_reader import get_example_parameters
 from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
-from mobspy.plot_params.example_plot_reader import get_example_plot_parameters
+# from mobspy.plot_params.example_plot_reader import get_example_plot_parameters
 from pint import Quantity
 from mobspy.parameter_scripts.parameter_reader import (
     parameter_process as pr_parameter_process,
@@ -50,7 +50,7 @@ from mobspy.parameter_scripts.parametric_sweeps import (
     generate_all_sbml_models as ps_generate_all_sbml_models,
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries,
 )
-from joblib import Parallel as joblib_Parallel, delayed as joblib_delayed
+import joblib
 from mobspy.sbml_simulator.run import simulate as sbml_simulate
 from mobspy.data_handler.process_result_data import (
     extract_time_and_volume_list as dh_extract_time_and_volume_list,
@@ -71,7 +71,7 @@ from mobspy.plot_scripts.default_plots import (
 from mobspy.sbml_simulator.builder import build as sbml_build
 from os.path import splitext as os_path_splitext
 from random import randint as rd_randint
-import re
+# import re
 
 
 class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
@@ -89,7 +89,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
     def event_context_finish(self) -> None:
         """
-        Removes the context in all meta-species and resets some varaiables. Called each time an event context is finished.
+        Removes the context in all meta-species and resets some variables. Called each time an event context is finished.
         """
         self._event_time = 0
         Species.reset_simulation_context()
@@ -459,8 +459,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         simlog.debug("Starting Simulator")
         jobs = self.set_job_number(self.parameters)
         simulation_function = lambda x: sbml_simulate(jobs, self._list_of_parameters, x)
-        results = joblib_Parallel(n_jobs=jobs, prefer="threads")(
-            joblib_delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
+        results = joblib.Parallel(n_jobs=jobs, prefer="threads")(
+            joblib.delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
         )
 
         simlog.debug("Simulation is Over")
@@ -532,13 +532,13 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         tc = self.parameters["output_concentration"] if flag_concentration else False
 
         if ta or tb or tc:
-            all_processed_data = joblib_Parallel(n_jobs=jobs, prefer="threads")(
-                joblib_delayed(convert_all_ts_to_correct_format)(ts, params, True)
+            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, True)
                 for ts, params in flatt_ts
             )
         else:
-            all_processed_data = joblib_Parallel(n_jobs=jobs, prefer="threads")(
-                joblib_delayed(convert_all_ts_to_correct_format)(ts, params, False)
+            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, False)
                 for ts, params in flatt_ts
             )
 
