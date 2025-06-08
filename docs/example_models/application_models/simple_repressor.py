@@ -10,8 +10,8 @@ from mobspy import *
 Chemical, Promoter, Protein = BaseSpecies()
 
 Rev[Chemical + Promoter.inactive >> Promoter.active][2, 1]
-Promoter >> Promoter + Protein [lambda promoter: 1 if promoter.inactive else 0]
-Protein >> Zero [0.1]
+Promoter >> Promoter + Protein[lambda promoter: 1 if promoter.inactive else 0]
+Protein >> Zero[0.1]
 Promoter.inactive(100), Chemical(1000)
 
 # Simulation

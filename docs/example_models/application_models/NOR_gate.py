@@ -13,10 +13,10 @@ def NOR_GATE(A_conc, B_conc):
     # Here we define the Protein to be produced, the Promoter that will act as the gate
     # A and B are the inputs any of them can inactivate the Promoter so they inherit from Repressor
     Repressor, Promoter, Protein = BaseSpecies()
-    Repressor + Promoter.active >> Promoter.inactive [0.5]
+    Repressor + Promoter.active >> Promoter.inactive[0.5]
     A, B = New(Repressor)
-    Promoter >> Promoter + Protein [lambda promoter: 1 if promoter.active else 0]
-    Protein >> Zero [2]
+    Promoter >> Promoter + Protein[lambda promoter: 1 if promoter.active else 0]
+    Protein >> Zero[2]
 
     Promoter(100)
     A(A_conc), B(B_conc)
@@ -26,7 +26,7 @@ def NOR_GATE(A_conc, B_conc):
     MySim.save_data = False
     MySim.plot_data = False
     MySim.run()
-    return MySim.fres['Protein'][-1]
+    return MySim.fres["Protein"][-1]
 
 
 heatmap = []
@@ -40,5 +40,7 @@ for a in [0, 25, 50, 75, 100]:
 for line in heatmap:
     print(line)
 
-fig = px.imshow(heatmap, x=[0, 25, 50, 75, 100], y=[0, 25, 50, 75, 100], labels=dict(x='b', y='a'))
+fig = px.imshow(
+    heatmap, x=[0, 25, 50, 75, 100], y=[0, 25, 50, 75, 100], labels=dict(x="b", y="a")
+)
 fig.show()

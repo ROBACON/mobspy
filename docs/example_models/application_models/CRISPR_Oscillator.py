@@ -26,7 +26,7 @@ gRNA = New(CasBinding)
 G = ListSpecies(3, gRNA)
 P = ListSpecies(3, Promoter)
 
-rev_rt = (1.8e-3/(u.nanomolar * u.second), 2.3e-2 / u.minute)
+rev_rt = (1.8e-3 / (u.nanomolar * u.second), 2.3e-2 / u.minute)
 Rev[gRNA.no_cas + dCas >> gRNA.cas][rev_rt]
 gRNA.no_cas >> Zero[0.0069 / u.second]
 
@@ -48,25 +48,24 @@ gRNA_rep_List = [G[-1], G[0], G[1]]
 for Prom, Grna in zip(P, gRNA_rep_List):
     dna_rt1 = 1.2e-2 * u.liter / (u.nanomoles * u.second)
     dna_rt2 = 2.3e-2 / u.minute
-    Prom.active + Grna.cas >> Prom.inactive [dna_rt1]
-    Prom.inactive >> 2 * Prom.active + Grna.cas [dna_rt2]
+    Prom.active + Grna.cas >> Prom.inactive[dna_rt1]
+    Prom.inactive >> 2 * Prom.active + Grna.cas[dna_rt2]
 
 # Rev defines a reversible reaction in both senses
 Rev[Zero >> dCas][1 / u.minute, 2.3e-2 / u.minute]
 
 for i in range(3):
     P[i].active(1)
-G[0].no_cas(0), G[1].no_cas(40*u.nanomolar), G[2].no_cas(1*u.nanomolar)
-dCas(43*u.nanomolar)
+G[0].no_cas(0), G[1].no_cas(40 * u.nanomolar), G[2].no_cas(1 * u.nanomolar)
+dCas(43 * u.nanomolar)
 
 MySim = Simulation(G | P | dCas)
-MySim.volume = 1*u.femtoliter
+MySim.volume = 1 * u.femtoliter
 
 # 40 nanomolar, 1
 # dCas 43nm
 # MySim.plot_data = False
-MySim.duration = 650*u.hours
+MySim.duration = 650 * u.hours
 MySim.step_size = 100
-MySim.unit_x = 'hours'
+MySim.unit_x = "hours"
 MySim.run()
-

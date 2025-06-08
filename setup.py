@@ -14,16 +14,23 @@ with open("mobspy/_version.py") as fh:
 
 setuptools.setup(
     name="mobspy",
-#    use_scm_version=True,
-    setup_requires=['setuptools_scm'],
+    #    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
     packages=setuptools.find_packages(include=["mobspy", "mobspy.*"]),
     version=version,
     description="A Query-Based Language for Chemical Reaction Networks",
-    keywords=["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "specification language"],
+    keywords=[
+        "CRN",
+        "microbiology",
+        "synthetic biology",
+        "simulation",
+        "SBML",
+        "specification language",
+    ],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ROBACON/mobspy",
     python_requires=">=3.11",
     install_requires=install_requires,
-    extras_require={'test': extra_requires}
+    extras_require={"test": extra_requires},
 )

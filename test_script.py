@@ -4,8 +4,20 @@
 
 import pytest
 import mobspy
-from mobspy import (BaseSpecies, Simulation, New, u, ModelParameters, simlog, Assign, Rev, All, set_counts,
-                    basiCO_parameter_estimation)
+from mobspy import (
+    BaseSpecies,
+    Simulation,
+    New,
+    u,
+    ModelParameters,
+    simlog,
+    Assign,
+    Rev,
+    All,
+    set_counts,
+    basiCO_parameter_estimation,
+)
+
 # from tellurium import loada as te_load_anti
 import numpy as np
 from copy import deepcopy
@@ -13,29 +25,35 @@ import sys
 import os
 import re
 
+
 # Compare results with expected file
 def compare_model(comp_results, file_name):
     def normalize(text):
-        """ Normalize text by removing extra spaces, tabs, and Unicode variations. """
+        """Normalize text by removing extra spaces, tabs, and Unicode variations."""
         text = text.strip()  # Remove leading/trailing spaces
-        text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces/tabs/newlines with a single space
+        text = re.sub(
+            r"\s+", " ", text
+        )  # Replace multiple spaces/tabs/newlines with a single space
         return text
 
-    with open(file_name, 'r', encoding='utf-8') as file:
-        for r, line in zip(comp_results.split('\n'), file.readlines()):
+    with open(file_name, "r", encoding="utf-8") as file:
+        for r, line in zip(comp_results.split("\n"), file.readlines()):
             line = normalize(line)
             r = normalize(r)
 
             if r != line:
-                print('file: ' + line)
-                print('test: ' + r)
+                print("file: " + line)
+                print("test: " + r)
                 return False
     return True
 
+
 def compare_model_ignore_order(comp_results, file_name):
-    with open(file_name, 'r') as file:
+    with open(file_name, "r") as file:
         file_lines = {line.strip() for line in file.readlines() if line.strip()}
-        result_lines = {line.strip() for line in comp_results.split('\n') if line.strip()}
+        result_lines = {
+            line.strip() for line in comp_results.split("\n") if line.strip()
+        }
 
         # Check if both sets of lines are equal
         if file_lines != result_lines:
@@ -63,7 +81,7 @@ def test_model_1():
     MySim = Simulation(A | B | C)
     MySim.level = -1
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_1.txt')
+    assert compare_model(results, "test_tools/model_1.txt")
 
 
 # Model to test basic inheritance
@@ -74,9 +92,9 @@ def test_model_2():
     Cat(1 * u.mol), Dog(1 * u.mol)
     MySim = Simulation(Cat | Dog | Herbivore)
     MySim.level = -1
-    MySim.volume = 1 * u.meter ** 2
+    MySim.volume = 1 * u.meter**2
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_2.txt')
+    assert compare_model(results, "test_tools/model_2.txt")
 
 
 # Model to test species multiplication
@@ -89,7 +107,7 @@ def test_model_3():
     MySim = Simulation(Music)
     MySim.level = -1
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_3.txt')
+    assert compare_model(results, "test_tools/model_3.txt")
 
 
 # Model to test inheritance queries
@@ -102,7 +120,7 @@ def test_model_4():
     MySim = Simulation(B1 | B2 | V1 | V2)
     MySim.level = -1
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_4.txt')
+    assert compare_model(results, "test_tools/model_4.txt")
 
 
 # Model to test round-robin and stoichiometry
@@ -114,7 +132,7 @@ def test_model_5():
     MySim = Simulation(B | C)
     MySim.level = -1
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_5.txt')
+    assert compare_model(results, "test_tools/model_5.txt")
 
 
 def test_model_6():
@@ -127,22 +145,24 @@ def test_model_6():
     MySim = Simulation(B | C)
     MySim.level = -1
     results = MySim.compile()
-    assert compare_model(results, 'test_tools/model_6.txt')
+    assert compare_model(results, "test_tools/model_6.txt")
 
 
 def test_model_7():
-    def oscillator(beta_m=5, beta_p=10, gamma_m=1, gamma_p=0.01, k=1, n=4, leaky=0.0001):
+    def oscillator(
+        beta_m=5, beta_p=10, gamma_m=1, gamma_p=0.01, k=1, n=4, leaky=0.0001
+    ):
         Mortal, Creator = BaseSpecies(2)
 
         mRNA = Mortal * Creator
         Protein = New(Mortal)
 
         # Repression reactions
-        for m, p in zip(['m1', 'm2', 'm3'], ['x2', 'x3', 'x1']):
-            Protein.c(p) >> Protein.c(p) + mRNA.c(m)[lambda pro: f'{beta_m}/(1 + ({pro}/{k})^{n})']
+        for m, p in zip(["m1", "m2", "m3"], ["x2", "x3", "x1"]):
+            Protein.c(p) >> Protein.c(p) + mRNA.c(m)[lambda pro: f"{beta_m}/(1 + ({pro}/{k})^{n})"]
 
         # Production reactions
-        for m, p in zip(['m1', 'm2', 'm3'], ['x1', 'x2', 'x3']):
+        for m, p in zip(["m1", "m2", "m3"], ["x1", "x2", "x3"]):
             mRNA.c(m) >> mRNA.c(m) + Protein.c(p)[beta_p]
 
         # We need the rate of degradation to be different from proteins and mRNA
@@ -154,7 +174,7 @@ def test_model_7():
         MySim.level = -1
         return MySim.compile()
 
-    assert compare_model(oscillator(), 'test_tools/model_7.txt')
+    assert compare_model(oscillator(), "test_tools/model_7.txt")
 
 
 # Model to test well defined orthogonal spaces
@@ -176,13 +196,13 @@ def test_orthogonal_spaces():
 def test_dimensional_inconsistency():
     try:
         A, B, C = BaseSpecies(3)
-        A(1 * u.mol / u.meter ** 3) + B(1 * u.mol / u.meter ** 2) >> C[1]
+        A(1 * u.mol / u.meter**3) + B(1 * u.mol / u.meter**2) >> C[1]
         MySim = Simulation(A | B | C)
         MySim.level = -1
         MySim.compile()
         assert False
     except SystemExit:
-        print('Dimensional inconsistency model Ok')
+        print("Dimensional inconsistency model Ok")
         assert True
 
 
@@ -213,14 +233,14 @@ def test_hybrid_sim():
     A + B >> mobspy.Zero[0.01]
 
     S2 = Simulation(A | B)
-    S2.method = 'stochastic'
+    S2.method = "stochastic"
     S2.duration = (A <= 0) | (B <= 0)
     S2.level = -1
 
     Sim = S1 + S2
     Sim.run()
 
-    assert compare_model(Sim.compile(), 'test_tools/model_8.txt')
+    assert compare_model(Sim.compile(), "test_tools/model_8.txt")
     assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0
 
 
@@ -276,7 +296,7 @@ def test_event_type():
         E(1)
 
     S.duration = 5
-    assert compare_model(S.compile(), 'test_tools/model_15.txt')
+    assert compare_model(S.compile(), "test_tools/model_15.txt")
 
 
 def test_reacting_species_event():
@@ -296,7 +316,7 @@ def test_reacting_species_event():
         A.a1(100)
 
     S.duration = 5
-    assert compare_model(S.compile(), 'test_tools/model_9.txt')
+    assert compare_model(S.compile(), "test_tools/model_9.txt")
 
 
 def test_unit_event_test():
@@ -309,7 +329,7 @@ def test_unit_event_test():
     with S.event_condition(A < 0.5 * u.mol):
         A(1 * u.mol)
     S.duration = 3
-    assert compare_model(S.compile(), 'test_tools/model_10.txt')
+    assert compare_model(S.compile(), "test_tools/model_10.txt")
 
 
 def test_reaction_deactivation():
@@ -335,7 +355,11 @@ def test_reaction_deactivation():
     Sim = S1 + S2
     Sim.run()
 
-    assert Sim.fres[A][0] < Sim.fres[A][-1] and Sim.fres[R][0] == 1 and Sim.fres[R][-1] == 0
+    assert (
+        Sim.fres[A][0] < Sim.fres[A][-1]
+        and Sim.fres[R][0] == 1
+        and Sim.fres[R][-1] == 0
+    )
 
 
 def test_count_assignment():
@@ -352,8 +376,11 @@ def test_count_assignment():
     S.plot_data = False
     S.duration = 5
     S.run()
-    assert compare_model(S.compile(), 'test_tools/model_11.txt') \
-           and 150 > S.fres[B][-1] > 100 and S.fres[A][-1] == 200
+    assert (
+        compare_model(S.compile(), "test_tools/model_11.txt")
+        and 150 > S.fres[B][-1] > 100
+        and S.fres[A][-1] == 200
+    )
 
 
 # def test_complex_cell_model():
@@ -415,7 +442,7 @@ def test_Zero_rate_reactions():
     Combination >> mobspy.Zero[lambda r1: 0 if r1.b2 else 1]
     S = Simulation(Combination)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_12.txt')
+    assert compare_model(S.compile(), "test_tools/model_12.txt")
 
 
 def test_double_rate():
@@ -430,7 +457,7 @@ def test_double_rate():
     A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_13.txt')
+    assert compare_model(S.compile(), "test_tools/model_13.txt")
 
 
 def test_single_rate():
@@ -443,8 +470,8 @@ def test_single_rate():
 
     A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
-    S.level = - 1
-    assert compare_model(S.compile(), 'test_tools/model_14.txt')
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_14.txt")
 
 
 def test_triple_rate():
@@ -460,7 +487,7 @@ def test_triple_rate():
     A + B >> mobspy.Zero[rate]
     S = Simulation(A | B)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_13.txt')
+    assert compare_model(S.compile(), "test_tools/model_13.txt")
 
 
 def test_stochastic_event_duration():
@@ -471,7 +498,7 @@ def test_stochastic_event_duration():
     S1 = Simulation(A | B)
     S1.save_data = False
     S1.plot_data = False
-    S1.method = 'stochastic'
+    S1.method = "stochastic"
     S1.duration = (A <= 0) | (B <= 0)
     S1.level = -1
     S1.run()
@@ -518,7 +545,7 @@ def test_logic_operator_syntax():
     S.level = -1
     with S.event_condition(r1):
         A(100)
-    assert compare_model(S.compile(), 'test_tools/model_16.txt')
+    assert compare_model(S.compile(), "test_tools/model_16.txt")
 
     if test_failed:
         assert False
@@ -530,7 +557,7 @@ def test_stack_position():
     A, B, C = New(Cell)
     S = Simulation(A | B | C)
     S.level = -1
-    compare_model(S.compile(), 'test_tools/model_17.txt')
+    compare_model(S.compile(), "test_tools/model_17.txt")
 
     def hi():
         Cell = BaseSpecies()
@@ -539,7 +566,7 @@ def test_stack_position():
 
         S = Simulation(A | B | C)
         S.level = -1
-        compare_model(S.compile(), 'test_tools/model_17.txt')
+        compare_model(S.compile(), "test_tools/model_17.txt")
 
     hi()
 
@@ -552,11 +579,11 @@ def test_stack_position():
 def test_empty_arguments():
     A, B = BaseSpecies()
 
-    A >> mobspy.Zero[lambda: f'{A}*0.01']
+    A >> mobspy.Zero[lambda: f"{A}*0.01"]
     S = Simulation(A)
     S.duration = 5
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_18.txt')
+    assert compare_model(S.compile(), "test_tools/model_18.txt")
 
 
 def test_conditional_between_meta_species():
@@ -575,8 +602,8 @@ def test_conditional_between_meta_species():
     with S.event_condition(Azi.a1 <= Byy.b1):
         Azi(200)
     S.duration = 10
-    S.method = 'stochastic'
-    assert compare_model(S.compile(), 'test_tools/model_19.txt')
+    S.method = "stochastic"
+    assert compare_model(S.compile(), "test_tools/model_19.txt")
     S.run()
     for i in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
         assert S.fres[Azi][i] > S.fres[Byy][i]
@@ -588,14 +615,14 @@ def test_conditional_between_meta_species_2():
     A >> mobspy.Zero[1]
     B >> mobspy.Zero[0.1]
 
-    r1 = ((A < B) & (A < B) | (A < B))
+    r1 = (A < B) & (A < B) | (A < B)
 
     A(200), B(50)
     S = Simulation(A | B)
     with S.event_condition(r1):
         A(200)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_20.txt')
+    assert compare_model(S.compile(), "test_tools/model_20.txt")
 
 
 def test_event_reaction_not_allowed():
@@ -624,7 +651,7 @@ def all_test():
 
     S = Simulation(C)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_21.txt')
+    assert compare_model(S.compile(), "test_tools/model_21.txt")
 
 
 def all_test_2():
@@ -637,7 +664,7 @@ def all_test_2():
 
     S = Simulation(C | D)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_22.txt')
+    assert compare_model(S.compile(), "test_tools/model_22.txt")
 
 
 def test_error_mult():
@@ -656,10 +683,10 @@ def test_set_counts():
     B = New(A)
     B.b1, B.b2
 
-    model = set_counts({All['B.a1']: 100, C: 200 * u.mols, 'A.a1': 100, A.a2: 50})
+    model = set_counts({All["B.a1"]: 100, C: 200 * u.mols, "A.a1": 100, A.a2: 50})
     S = Simulation(model)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_23.txt')
+    assert compare_model(S.compile(), "test_tools/model_23.txt")
 
 
 def test_bool_error():
@@ -701,18 +728,18 @@ def test_event_all():
     with S.event_time(0):
         set_counts({All[Baka]: 10, Baka.b1.a2: 20})
         Baka.a1.b1(30)
-    assert compare_model(S.compile(), 'test_tools/model_24.txt')
+    assert compare_model(S.compile(), "test_tools/model_24.txt")
     S.duration = 5
     S.step_size = 1
     S.run()
     assert S.fres[Baka.a1.b1][0] == 30
     assert S.fres[Baka.b1.a2][0] == 20
     assert S.fres[Baka.a1.b2][0] == 10
-    assert S.fres['Baka.a1.b1'][0] == 30
-    assert S.fres['Baka.b1.a2'][0] == 20
-    assert S.fres['Baka.a1.b2'][0] == 10
+    assert S.fres["Baka.a1.b1"][0] == 30
+    assert S.fres["Baka.b1.a2"][0] == 20
+    assert S.fres["Baka.a1.b2"][0] == 10
     for key in S.fres:
-        if key == 'Time':
+        if key == "Time":
             continue
         assert S.fres[key][-1] < 1
 
@@ -749,46 +776,52 @@ def test_crash_after_modification():
 
 def test_unit_bi_dimension():
     A = BaseSpecies()
-    A(5 / u.m ** 2)
+    A(5 / u.m**2)
     S = Simulation(A)
-    S.volume = 2 * u.m ** 2
+    S.volume = 2 * u.m**2
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_25.txt')
+    assert compare_model(S.compile(), "test_tools/model_25.txt")
 
 
 def test_bi_dimensional_rates():
     Ball, Child, Bacteria = BaseSpecies(3)
 
-    Ball(10 / u.meter ** 2)
-    Child(1 / u.meter ** 2)
+    Ball(10 / u.meter**2)
+    Child(1 / u.meter**2)
     Bacteria(1 * u.mol)
 
     Bacteria >> mobspy.Zero[1 * u.mol / u.second]
-    Ball + Child + Child >> Ball + Child[1e-3 * (u.meter ** 4) / u.hour]
-    Ball + Child >> Ball[1e-3 * (u.meter ** 2) / u.hour]
+    Ball + Child + Child >> Ball + Child[1e-3 * (u.meter**4) / u.hour]
+    Ball + Child >> Ball[1e-3 * (u.meter**2) / u.hour]
 
     S = Simulation(Ball | Child | Bacteria)
-    S.volume = 2 * u.m ** 2
+    S.volume = 2 * u.m**2
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_26.txt')
+    assert compare_model(S.compile(), "test_tools/model_26.txt")
 
 
 def test_dimension_in_function_only():
     A = BaseSpecies()
 
-    A + A >> 3 * A [lambda: 1 * u.milliliter / u.second]
+    A + A >> 3 * A[lambda: 1 * u.milliliter / u.second]
 
     A(1)
     S = Simulation(A)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_27.txt')
+    assert compare_model(S.compile(), "test_tools/model_27.txt")
 
 
 def test_multiple_simulation_counts():
     Age, Color, Size = BaseSpecies()
 
-    Age.young, Age.old,
-    Color.blue, Color.red,
+    (
+        Age.young,
+        Age.old,
+    )
+    (
+        Color.blue,
+        Color.red,
+    )
     Size.small, Size.big
 
     Tree = Age * Color * Size
@@ -796,13 +829,13 @@ def test_multiple_simulation_counts():
     Tree(100), Tree.red.big(150), All[Tree](10), All[Tree.big](100)
     S = Simulation(Tree)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_28.txt')
+    assert compare_model(S.compile(), "test_tools/model_28.txt")
 
     Tree.reset_quantities()
-    model = set_counts({All[Tree]: 30, 'Tree.blue.old': 100})
+    model = set_counts({All[Tree]: 30, "Tree.blue.old": 100})
     S = Simulation(model)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_29.txt')
+    assert compare_model(S.compile(), "test_tools/model_29.txt")
 
 
 def test_string_events_assignment():
@@ -813,15 +846,15 @@ def test_string_events_assignment():
     S = Simulation(A)
     S.level = -1
     with S.event_time(5):
-        All[A](f'{A} + 1')
+        All[A](f"{A} + 1")
 
     with S.event_time(10):
-        All[A.a1](f'{A} + 1')
+        All[A.a1](f"{A} + 1")
 
     with S.event_time(15):
-        A.a1(f'{A} + 1')
+        A.a1(f"{A} + 1")
 
-    compare_model(S.compile(), 'test_tools/model_30.txt')
+    compare_model(S.compile(), "test_tools/model_30.txt")
 
 
 def test_plotting():
@@ -838,24 +871,24 @@ def test_plotting():
 
     S = Simulation(Tree)
     S.level = -1
-    S.method = 'stochastic'
+    S.method = "stochastic"
     S.plot_data = False
     S.repetitions = 3
     S.step_size = 0.25
     S.duration = 3
     S.run()
-    S.plot_config.save_to = 'test_plot_images/stochastic_tree.png'
+    S.plot_config.save_to = "test_plot_images/stochastic_tree.png"
     S.plot_stochastic(Tree.not_sick, Tree.sick)
 
-    S.plot_config.save_to = 'test_plot_images/deterministic_tree.png'
+    S.plot_config.save_to = "test_plot_images/deterministic_tree.png"
     S.plot(Tree.not_sick, Tree.sick)
 
-    S.plot_config.save_to = 'test_plot_images/constant_tree.png'
+    S.plot_config.save_to = "test_plot_images/constant_tree.png"
     S.plot()
 
-    assert os.path.exists('test_plot_images/stochastic_tree.png')
-    assert os.path.exists('test_plot_images/deterministic_tree.png')
-    assert os.path.exists('test_plot_images/constant_tree.png')
+    assert os.path.exists("test_plot_images/stochastic_tree.png")
+    assert os.path.exists("test_plot_images/deterministic_tree.png")
+    assert os.path.exists("test_plot_images/constant_tree.png")
 
 
 def test_volume_after_sim():
@@ -874,54 +907,58 @@ def test_volume_after_sim():
 
 
 def order_model_str(data_for_sbml):
-    species_for_sbml = data_for_sbml['species_for_sbml']
-    mappings_for_sbml = data_for_sbml['mappings']
-    parameters_for_sbml = data_for_sbml['parameters_for_sbml']
-    reactions_for_sbml = data_for_sbml['reactions_for_sbml']
-    events_for_sbml = data_for_sbml['events_for_sbml']
+    species_for_sbml = data_for_sbml["species_for_sbml"]
+    mappings_for_sbml = data_for_sbml["mappings"]
+    parameters_for_sbml = data_for_sbml["parameters_for_sbml"]
+    reactions_for_sbml = data_for_sbml["reactions_for_sbml"]
+    events_for_sbml = data_for_sbml["events_for_sbml"]
 
-    model_str = '\n'
-    model_str += 'Species' + '\n'
+    model_str = "\n"
+    model_str += "Species" + "\n"
     species_alpha = list(sorted(species_for_sbml.keys()))
     for spe in species_alpha:
-        model_str += spe.replace('_dot_', '.') + ',' + str(species_for_sbml[spe]) + '\n'
+        model_str += spe.replace("_dot_", ".") + "," + str(species_for_sbml[spe]) + "\n"
 
-    model_str += '\n'
-    model_str += 'Mappings' + '\n'
+    model_str += "\n"
+    model_str += "Mappings" + "\n"
     mappings_alpha = list(sorted(mappings_for_sbml.keys()))
     for map in mappings_alpha:
-        model_str += map + ' :' + '\n'
+        model_str += map + " :" + "\n"
         for element in sorted(mappings_for_sbml[map]):
-            model_str += element + '\n'
+            model_str += element + "\n"
 
-    model_str += '\n'
-    model_str += 'Parameters' + '\n'
+    model_str += "\n"
+    model_str += "Parameters" + "\n"
     parameters_alpha = list(sorted(parameters_for_sbml.keys()))
     for par in parameters_alpha:
-        model_str += par + ',' + str(parameters_for_sbml[par][0]) + '\n'
+        model_str += par + "," + str(parameters_for_sbml[par][0]) + "\n"
 
-    model_str += '\n'
-    model_str += 'Reactions' + '\n'
+    model_str += "\n"
+    model_str += "Reactions" + "\n"
     remove_phantom_reactions = deepcopy(reactions_for_sbml)
     to_remove = []
     for reaction in remove_phantom_reactions:
-        if 'phantom' in reaction:
+        if "phantom" in reaction:
             to_remove.append(reaction)
     for r in to_remove:
         remove_phantom_reactions.pop(r, None)
-    reaction_alpha = [str(x[1]).replace('_dot_', '.') for x in
-                      list(sorted(remove_phantom_reactions.items(), key=lambda x: str(x[1])))]
+    reaction_alpha = [
+        str(x[1]).replace("_dot_", ".")
+        for x in list(sorted(remove_phantom_reactions.items(), key=lambda x: str(x[1])))
+    ]
 
     for i, reac in enumerate(reaction_alpha):
-        model_str += 'reaction_' + str(i) + ',' + reac + '\n'
+        model_str += "reaction_" + str(i) + "," + reac + "\n"
 
     if events_for_sbml != {}:
-        model_str += '\n'
-        model_str += 'Events' + '\n'
+        model_str += "\n"
+        model_str += "Events" + "\n"
         list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
         list_to_sort = sorted(list_to_sort)
         for i in range(len(list_to_sort)):
-            model_str += ('event_' + str(i) + ',' + list_to_sort[i] + '\n').replace('_dot_', '.')
+            model_str += ("event_" + str(i) + "," + list_to_sort[i] + "\n").replace(
+                "_dot_", "."
+            )
 
     return model_str
 
@@ -931,7 +968,7 @@ def test_parameters_with_sbml():
     A.a1, A.a2
     a, b, c, d, f, h = ModelParameters([1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2])
 
-    A >> 2 * A[lambda: f'5*(b + c)/10']
+    A >> 2 * A[lambda: f"5*(b + c)/10"]
 
     All[A](a)
     S1 = Simulation(A)
@@ -940,7 +977,7 @@ def test_parameters_with_sbml():
         A.a2(d)
 
     with S1.event_time(2):
-        A.a1('a + b')
+        A.a1("a + b")
 
     with S1.event_time(f):
         A.a1(d)
@@ -960,23 +997,23 @@ def test_parameters_with_sbml():
     S.level = -1
     S.run()
 
-    model_str = ''
+    model_str = ""
     for parameter_sweep in S1.sbml_data_list:
         for data_for_sbml in parameter_sweep:
             model_str += order_model_str(data_for_sbml)
 
-    assert compare_model_ignore_order(model_str, 'test_tools/model_31.txt')
+    assert compare_model_ignore_order(model_str, "test_tools/model_31.txt")
 
 
 def test_shared_parameter_name():
     try:
         A = BaseSpecies()
         a = ModelParameters([1, 2])
-        a.rename('A')
+        a.rename("A")
 
         A >> 2 * A[a]
 
-        set_counts({'A': a})
+        set_counts({"A": a})
         S = Simulation(A)
         S.level = -1
         S.plot_data = False
@@ -992,10 +1029,10 @@ def test_set_counts_parameters():
 
     A >> 2 * A[a]
 
-    set_counts({'A': a})
+    set_counts({"A": a})
     S = Simulation(A)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_32.txt')
+    assert compare_model(S.compile(), "test_tools/model_32.txt")
 
 
 def test_repeated_parameters():
@@ -1034,20 +1071,26 @@ def initial_expression_test():
     D = New(A)
 
     A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / r)]
-    A + B >> mobspy.Zero[lambda r1, r2: (1 * u.millimolar / u.hour) * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)]
+    (
+        A + B
+        >> mobspy.Zero[
+            lambda r1, r2: (1 * u.millimolar / u.hour)
+            * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)
+        ]
+    )
     Hey >> mobspy.Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
     D >> 2 * D[lambda r: 20 / u.hour * r]
 
     S = Simulation(A | B | Hey | D)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_33.txt')
+    assert compare_model(S.compile(), "test_tools/model_33.txt")
 
 
 def test_wrong_dimension_error():
     try:
         A, B = BaseSpecies()
 
-        A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / u.decimeter ** 3 / r)]
+        A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / u.decimeter**3 / r)]
 
         S = Simulation(A)
         S.level = -1
@@ -1059,7 +1102,7 @@ def test_wrong_dimension_error():
     try:
         A, B = BaseSpecies()
 
-        A >> 2 * A[lambda r: (1 / (u.hour * u.decimeter ** 3)) * (1 + 10 / r)]
+        A >> 2 * A[lambda r: (1 / (u.hour * u.decimeter**3)) * (1 + 10 / r)]
 
         S = Simulation(A)
         S.level = -1
@@ -1076,7 +1119,7 @@ def test_more_than_used():
 
     S = Simulation(A)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_34.txt')
+    assert compare_model(S.compile(), "test_tools/model_34.txt")
 
 
 def zero_rate_test():
@@ -1086,7 +1129,7 @@ def zero_rate_test():
 
     S = Simulation(A)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_35.txt')
+    assert compare_model(S.compile(), "test_tools/model_35.txt")
 
 
 def test_wrong_rate():
@@ -1112,7 +1155,7 @@ def test_conversion_outside():
 
     MySim = Simulation(Cell)
     MySim.level = -1
-    assert compare_model(MySim.compile(), 'test_tools/model_36.txt')
+    assert compare_model(MySim.compile(), "test_tools/model_36.txt")
 
 
 def test_first_characteristic_in_reacting_species():
@@ -1121,12 +1164,12 @@ def test_first_characteristic_in_reacting_species():
     B = New(A)
 
     for a in [1, 2, 3]:
-        mobspy.Zero >> B.something.c('at_' + str(a))[1]
+        mobspy.Zero >> B.something.c("at_" + str(a))[1]
 
     B(1)
     S = Simulation(B)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_37.txt')
+    assert compare_model(S.compile(), "test_tools/model_37.txt")
 
 
 def test_model_reference():
@@ -1137,7 +1180,7 @@ def test_model_reference():
     S1 = Simulation(A | B)
 
     r1 = [str(spe) for spe in S1.model]
-    assert sorted(r1) == ['A', 'B']
+    assert sorted(r1) == ["A", "B"]
 
     S1.duration = 0.5
 
@@ -1146,8 +1189,8 @@ def test_model_reference():
     S2 = Simulation(A | B | C)
     r1 = [str(spe) for spe in S1.model]
     r2 = [str(spe) for spe in S2.model]
-    assert sorted(r1) == ['A', 'B']
-    assert sorted(r2) == ['A', 'B', 'C']
+    assert sorted(r1) == ["A", "B"]
+    assert sorted(r2) == ["A", "B", "C"]
 
 
 def test_sbml_generation():
@@ -1158,10 +1201,10 @@ def test_sbml_generation():
     A(100)
     S = Simulation(A)
     S.level = -1
-    text = ''
+    text = ""
     for sbml in S.generate_sbml():
         text += sbml
-    assert compare_model(text, 'test_tools/model_38.txt')
+    assert compare_model(text, "test_tools/model_38.txt")
 
 
 def test_multi_sim_sbml():
@@ -1175,10 +1218,10 @@ def test_multi_sim_sbml():
     S = S1 + S2
     S.level = -1
 
-    text = ''
+    text = ""
     for sbml in S.generate_sbml():
         text += sbml
-    assert compare_model(text, 'test_tools/model_39.txt')
+    assert compare_model(text, "test_tools/model_39.txt")
 
 
 def test_inline_comment():
@@ -1210,7 +1253,7 @@ def test_with_statement_any_and_species_characteristics():
     S1 = Simulation(Tree | Grass)
     S1.level = -1
 
-    assert compare_model(S1.compile(), 'test_tools/model_40.txt')
+    assert compare_model(S1.compile(), "test_tools/model_40.txt")
 
     Age, Color, Dense = BaseSpecies()
     Age.old, Age.young
@@ -1231,7 +1274,7 @@ def test_with_statement_any_and_species_characteristics():
     S2 = Simulation(Tree | Grass)
     S2.level = -1
 
-    assert compare_model(S2.compile(), 'test_tools/model_41.txt')
+    assert compare_model(S2.compile(), "test_tools/model_41.txt")
 
 
 def test_with_statement_on_any_and_event():
@@ -1243,7 +1286,7 @@ def test_with_statement_on_any_and_event():
     with mobspy.Any.a2, S.event_condition(A <= 0):
         A(100)
 
-    assert compare_model(S.compile(), 'test_tools/model_42.txt')
+    assert compare_model(S.compile(), "test_tools/model_42.txt")
 
 
 def test_matching_characteristic_rate():
@@ -1256,7 +1299,7 @@ def test_matching_characteristic_rate():
 
     S = Simulation(B | C)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_43.txt')
+    assert compare_model(S.compile(), "test_tools/model_43.txt")
 
 
 def test_changes_after_compilation():
@@ -1269,11 +1312,11 @@ def test_changes_after_compilation():
     descr = Sim.compile()
     Sim.plot_data = False
     Sim.duration = 30 * u.hour
-    Sim.volume = 1 * u.m ** 3
+    Sim.volume = 1 * u.m**3
     Sim.run()
 
-    assert Sim._parameters_for_sbml['volume'][0] > 100
-    assert Sim.fres['Time'][-1] > 100
+    assert Sim._parameters_for_sbml["volume"][0] > 100
+    assert Sim.fres["Time"][-1] > 100
 
 
 def test_proper_unit_context_exit():
@@ -1331,11 +1374,11 @@ def test_run_args():
     A(100)
     S = Simulation(A)
     S.run(duration=1, volume=10, plot_data=False, level=-1, step_size=0.25, jobs=2)
-    assert S.__dict__['parameters']['duration'] == 1
-    assert S.__dict__['parameters']['plot_data'] is False
-    assert S.__dict__['parameters']['step_size'] == 0.25
-    assert S.__dict__['parameters']['level'] == -1
-    assert S.__dict__['parameters']['jobs'] == 2
+    assert S.__dict__["parameters"]["duration"] == 1
+    assert S.__dict__["parameters"]["plot_data"] is False
+    assert S.__dict__["parameters"]["step_size"] == 0.25
+    assert S.__dict__["parameters"]["level"] == -1
+    assert S.__dict__["parameters"]["jobs"] == 2
 
 
 def test_unit_args():
@@ -1343,13 +1386,21 @@ def test_unit_args():
     A >> mobspy.Zero[1 / u.year]
     A(1 * u.mol)
     S = Simulation(A)
-    S.level = - 1
-    S.run(duration=10 * u.year, step_size=1 * u.year, unit_x=u.year, unit_y=u.mol, jobs=1, level=-1, plot_data=False)
+    S.level = -1
+    S.run(
+        duration=10 * u.year,
+        step_size=1 * u.year,
+        unit_x=u.year,
+        unit_y=u.mol,
+        jobs=1,
+        level=-1,
+        plot_data=False,
+    )
 
-    assert S.fres['Time'][-1] > 9.9
-    assert S.fres['Time'][1] > 0.99
-    assert str(S.__dict__['parameters']['unit_x']) == str(1 * u.year)
-    assert str(S.__dict__['parameters']['unit_y']) == str(1 * u.mol)
+    assert S.fres["Time"][-1] > 9.9
+    assert S.fres["Time"][1] > 0.99
+    assert str(S.__dict__["parameters"]["unit_x"]) == str(1 * u.year)
+    assert str(S.__dict__["parameters"]["unit_y"]) == str(1 * u.mol)
 
 
 def test_multi_parameters_in_run():
@@ -1359,11 +1410,16 @@ def test_multi_parameters_in_run():
     S1 = Simulation(A)
     S2 = Simulation(A)
     S = S1 + S2
-    S.run(duration=[2, 3], simulation_method=['deterministic', 'stochastic'], level=-1, plot_data=False)
-    assert S1.__dict__['parameters']['simulation_method'] == 'deterministic'
-    assert S2.__dict__['parameters']['simulation_method'] == 'stochastic'
-    assert S1.__dict__['parameters']['duration'] == 2
-    assert S2.__dict__['parameters']['duration'] == 3
+    S.run(
+        duration=[2, 3],
+        simulation_method=["deterministic", "stochastic"],
+        level=-1,
+        plot_data=False,
+    )
+    assert S1.__dict__["parameters"]["simulation_method"] == "deterministic"
+    assert S2.__dict__["parameters"]["simulation_method"] == "stochastic"
+    assert S1.__dict__["parameters"]["duration"] == 2
+    assert S2.__dict__["parameters"]["duration"] == 3
 
 
 def test_output_concentration_in_multi_sim():
@@ -1395,7 +1451,7 @@ def test_parameter_operation_in_rate():
     A(100), B(200)
     S1 = Simulation(A | B)
     S1.level = -1
-    assert compare_model(S1.compile(), 'test_tools/model_44.txt')
+    assert compare_model(S1.compile(), "test_tools/model_44.txt")
 
 
 def test_multi_parameter_with_expression():
@@ -1419,7 +1475,7 @@ def test_double_parameters_with_units():
     S = Simulation(A)
     S.run(duration=5 * u.hour, plot_data=False, level=-1)
 
-    assert compare_model(str(S.results), 'test_tools/model_45.txt')
+    assert compare_model(str(S.results), "test_tools/model_45.txt")
 
 
 def test_parameters_with_units():
@@ -1535,7 +1591,7 @@ def test_numpy_in_expression_function():
     A(100)
     S = Simulation(A | B | C | D)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_46.txt')
+    assert compare_model(S.compile(), "test_tools/model_46.txt")
 
 
 def test_numpy_with_units():
@@ -1553,11 +1609,10 @@ def test_numpy_with_units():
         B >> mobspy.Zero[a / u.hour]
     S = Simulation(A | B | C | D)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_47.txt')
+    assert compare_model(S.compile(), "test_tools/model_47.txt")
 
 
 def test_numpy_in_rates():
-
     np_array = np.array([1])
     for a in np_array:
         b = a
@@ -1574,7 +1629,6 @@ def test_numpy_in_rates():
 
 
 def test_numpy_in_counts():
-
     np_array = np.array([200])
     for a in np_array:
         b = a
@@ -1591,7 +1645,6 @@ def test_numpy_in_counts():
 
 
 def test_numpy_in_set_counts():
-
     np_array = np.array([200])
     for a in np_array:
         b = a
@@ -1613,13 +1666,13 @@ def test_multi_methods_plot():
     S1 = Simulation(A)
 
     S2 = Simulation(A)
-    S2.method = 'stochastic'
+    S2.method = "stochastic"
 
     S = S1 + S2
     S.level = -1
     S.repetitions = 10
     S.compile()
-    assert S2.__dict__['parameters']['plot_type'] == 'stochastic'
+    assert S2.__dict__["parameters"]["plot_type"] == "stochastic"
 
 
 def test_unit_x_conversion():
@@ -1634,13 +1687,12 @@ def test_unit_x_conversion():
     S.duration = 1 * u.h
     S.unit_x = u.h
     S.run(plot_data=False)
-    assert round(S.fres['Time'][-1]) == 1
+    assert round(S.fres["Time"][-1]) == 1
 
 
 def test_Silicon_valley():
-
     A = BaseSpecies()
-    A.name('\tA')
+    A.name("\tA")
 
     A >> mobspy.Zero[1]
 
@@ -1649,11 +1701,10 @@ def test_Silicon_valley():
     S.plot_data = False
     S.duration = 1
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_48.txt')
+    assert compare_model(S.compile(), "test_tools/model_48.txt")
 
 
 def test_replacing_species_name_in_expression():
-
     Resource, R = BaseSpecies()
 
     death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)
@@ -1663,13 +1714,12 @@ def test_replacing_species_name_in_expression():
     S.duration = 10
     S.step_size = 5
     S.plot_data = False
-    S.level = - 1
+    S.level = -1
     S.run()
     assert True
 
 
 def test_basic_assignment():
-
     A, B = BaseSpecies()
 
     A.assign(2 * B)
@@ -1696,7 +1746,6 @@ def test_basic_assignment():
 
 
 def test_all_asgn_ops():
-
     A, B, C, D = BaseSpecies()
 
     A.a1.assign(B * 5)
@@ -1704,15 +1753,15 @@ def test_all_asgn_ops():
     A.a3.assign(B - C)
     A.a4.assign(B / C)
     A.a5.assign(B / 200)
-    A.a6.assign(B ** 2)
-    A.a7.assign(B ** D)
+    A.a6.assign(B**2)
+    A.a7.assign(B**D)
 
     B(200), C(100), D(2)
     S = Simulation(A | B | C | D)
     S.duration = 10
     S.step_size = 5
     S.plot_data = False
-    S.level = - 1
+    S.level = -1
     S.run()
 
     assert S.fres[A.a1][-1] == 1000
@@ -1734,7 +1783,7 @@ def test_all_asgn_ops():
 #         S = Simulation(A)
 #         S.level = -1
 #         S.compile()
-    
+
 #     except SystemExit:
 #         assert True
 
@@ -1748,125 +1797,122 @@ def text_complex_assignments():
 
     S = Simulation(A | B | C | D)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_49.txt')
+    assert compare_model(S.compile(), "test_tools/model_49.txt")
 
 
 def text_assign_context_exit():
-        try:
-            simlog.global_simlog_level = -1
-            A, B = BaseSpecies()
-
-            A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
-        except SystemExit:
-            pass
-        try:
-            simlog.global_simlog_level = -1
-            A >> mobspy.Zero [1]
-        except SystemExit:
-            pass
+    try:
+        simlog.global_simlog_level = -1
         A, B = BaseSpecies()
 
-        A >> mobspy.Zero [1]
-        B.assign(A/2)
-        S = Simulation(A | B)
-        S.plot_data = False
-        S.level = -1
-        S.duration = 10
-        S.step_size = 5
-        S.run()
-        assert True
+        A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
+    except SystemExit:
+        pass
+    try:
+        simlog.global_simlog_level = -1
+        A >> mobspy.Zero[1]
+    except SystemExit:
+        pass
+    A, B = BaseSpecies()
+
+    A >> mobspy.Zero[1]
+    B.assign(A / 2)
+    S = Simulation(A | B)
+    S.plot_data = False
+    S.level = -1
+    S.duration = 10
+    S.step_size = 5
+    S.run()
+    assert True
 
 
 def text_even_more_complex_assignments():
-        Hi = BaseSpecies()
-        Hi.h1, Hi.h2
-        A, B, C, D = New(Hi)
+    Hi = BaseSpecies()
+    Hi.h1, Hi.h2
+    A, B, C, D = New(Hi)
 
-        A.assign(B * ((C + 5) / D))
+    A.assign(B * ((C + 5) / D))
 
-        S = Simulation(A | B | C | D)
-        S.level = -1
-        assert compare_model(S.compile(), 'test_tools/model_50.txt')
+    S = Simulation(A | B | C | D)
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_50.txt")
 
 
 def test_assign_context_complex():
-        # model 51
-        A, B, C, D = BaseSpecies()
-        B.b1, B.b2, B.b3
-        C.c1, C.c2
-        D.d1, D.d2
+    # model 51
+    A, B, C, D = BaseSpecies()
+    B.b1, B.b2, B.b3
+    C.c1, C.c2
+    D.d1, D.d2
 
-        with Assign:
-            All[B]((C + D**2)*D)
+    with Assign:
+        All[B]((C + D**2) * D)
 
-        S = Simulation(A | B | C | D)
-        S.level = -1
-        assert compare_model(S.compile(), 'test_tools/model_51.txt')
+    S = Simulation(A | B | C | D)
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_51.txt")
 
 
 def test_assign_context_constant():
-        # model 52
-        A = BaseSpecies()
-        with Assign:
-            A(5)
-        S = Simulation(A)
-        S.level = -1
-        assert compare_model(S.compile(), 'test_tools/model_52.txt')
+    # model 52
+    A = BaseSpecies()
+    with Assign:
+        A(5)
+    S = Simulation(A)
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_52.txt")
 
 
 def test_duration_with_run():
-
     A, B = BaseSpecies()
 
     A + B >> mobspy.Zero[0.01]
 
     A(10), B(5)
     S = Simulation(A | B)
-    S.method = 'stochastic'
+    S.method = "stochastic"
     S.duration = (A <= 0) | (B <= 0)
     S.run(level=-1, plot_data=False)
     assert S.fres[B][-1] == 0
 
 
 def test_rev():
-
     A, B, C = BaseSpecies()
 
-    Rev[A + 4*B >> C][1, 2]
-    Rev[A + 4 * B >> C][lambda r1, r2: (100-r1)*(100-r2), lambda r: r**3]
+    Rev[A + 4 * B >> C][1, 2]
+    Rev[A + 4 * B >> C][lambda r1, r2: (100 - r1) * (100 - r2), lambda r: r**3]
 
     S = Simulation(A | B | C)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_53.txt')
+    assert compare_model(S.compile(), "test_tools/model_53.txt")
 
 
 def test_dimensionless_count():
     # model 54
-    a = 100*u.l/u.l
+    a = 100 * u.l / u.l
     A = BaseSpecies()
 
-    A >> mobspy.Zero [1]
+    A >> mobspy.Zero[1]
 
     A(a)
     S = Simulation(A)
     S.duration = 10
-    S.level = - 1
-    assert compare_model(S.compile(), 'test_tools/model_54.txt')
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_54.txt")
 
 
 def test_assignment_similar_species():
     # model 55
     A, R, Raa = BaseSpecies()
 
-    A.assign(R*Raa)
+    A.assign(R * Raa)
 
     S = Simulation(A | R | Raa)
-    S.level = - 1
-    assert compare_model(S.compile(), 'test_tools/model_55.txt')
+    S.level = -1
+    assert compare_model(S.compile(), "test_tools/model_55.txt")
 
 
 def test_blocked_names():
-
     try:
         _S0 = BaseSpecies()
 
@@ -1877,7 +1923,6 @@ def test_blocked_names():
 
 
 def test_blocked_names_2():
-
     # Used for Model 56
     try:
         _S1 = BaseSpecies()
@@ -1893,7 +1938,8 @@ def test_blocked_names_2():
 
     S = Simulation(S0 | S1 | S2)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_56.txt')
+    assert compare_model(S.compile(), "test_tools/model_56.txt")
+
 
 def test_antimony_model():
     A, TestSpe = BaseSpecies()
@@ -1913,6 +1959,7 @@ def test_antimony_model():
     # assert results[0][1] == 2
     # assert results[-1][1] > 1
     # assert results[-1][2] < 0.01
+
 
 def test_antimony_compose_model_gen():
     A, B, C = BaseSpecies()
@@ -1950,7 +1997,7 @@ def test_update_parameter_for_multi_model():
 
     k1 = ModelParameters([1, 2, 3])
 
-    A >> mobspy.Zero [2*k1]
+    A >> mobspy.Zero[2 * k1]
 
     A(100)
     S1 = Simulation(A)
@@ -1960,7 +2007,7 @@ def test_update_parameter_for_multi_model():
     # print(S.generate_sbml()[0])
 
     A.reset_reactions()
-    B >> mobspy.Zero [1]
+    B >> mobspy.Zero[1]
 
     B(200)
     S2 = Simulation(A | B)
@@ -1973,42 +2020,39 @@ def test_update_parameter_for_multi_model():
     # S.run()
     S.update_model([k1, 1])
 
-    sbml = S.generate_sbml()[0] + '\n' + S.generate_sbml()[1]
-    assert compare_model(sbml, 'test_tools/model_57.txt')
+    sbml = S.generate_sbml()[0] + "\n" + S.generate_sbml()[1]
+    assert compare_model(sbml, "test_tools/model_57.txt")
 
 
 def test_update_parameter_through_str():
-
     A = BaseSpecies()
     k1 = ModelParameters(0.00000001)
 
-    A >> mobspy.Zero [k1]
+    A >> mobspy.Zero[k1]
 
     S = Simulation(A)
     S.level = -1
     S.compile()
 
-    S.update_model(['k1', 1])
-    assert compare_model(S.generate_sbml()[0],'test_tools/model_58.txt')
+    S.update_model(["k1", 1])
+    assert compare_model(S.generate_sbml()[0], "test_tools/model_58.txt")
 
 
 def test_update_multiple_parameters_in_expression():
-
     A = BaseSpecies()
     k1, k2 = ModelParameters(0.00000001, 10)
 
-    A >> mobspy.Zero [k1 / (10 + k2 ** 4)]
+    A >> mobspy.Zero[k1 / (10 + k2**4)]
 
     S = Simulation(A)
     S.level = -1
     S.compile()
 
     S.update_model([k1, 1], [k2, 1])
-    assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_59.txt')
+    assert compare_model_ignore_order(S.generate_sbml()[0], "test_tools/model_59.txt")
 
 
 def test_update_parameter_with_unit():
-
     # Replace parameters using units
     A = BaseSpecies()
     k1 = ModelParameters(1 / u.h)
@@ -2020,11 +2064,10 @@ def test_update_parameter_with_unit():
     S.compile()
 
     S.update_model([k1, 1 / u.s])
-    assert compare_model(S.generate_sbml()[0], 'test_tools/model_60.txt')
+    assert compare_model(S.generate_sbml()[0], "test_tools/model_60.txt")
 
 
 def test_species_value_modification():
-
     # Replace parameters using units
     A = BaseSpecies()
     A.a1, A.a2
@@ -2040,10 +2083,10 @@ def test_species_value_modification():
     S.compile()
 
     S.update_model([B, 200 / u.l], [B.b2, 300 / u.l])
-    assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_61.txt')
+    assert compare_model_ignore_order(S.generate_sbml()[0], "test_tools/model_61.txt")
+
 
 def test_all_value_modification():
-
     A = BaseSpecies()
     A.a1, A.a2
     B = New(A)
@@ -2059,11 +2102,10 @@ def test_all_value_modification():
 
     S.update_model([All[B], 200 / u.l])
 
-    assert compare_model_ignore_order(S.generate_sbml()[0], 'test_tools/model_62.txt')
+    assert compare_model_ignore_order(S.generate_sbml()[0], "test_tools/model_62.txt")
 
 
 def test_new_reversible_reaction_notation():
-
     A = BaseSpecies()
     k1, k2 = ModelParameters(1, 1)
 
@@ -2074,28 +2116,29 @@ def test_new_reversible_reaction_notation():
 
     S = Simulation(A)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_63.txt')
+    assert compare_model(S.compile(), "test_tools/model_63.txt")
 
 
 def test_2D_reaction_with_units():
-
     Color, Location = BaseSpecies()
     Color.red, Color.blue
     Location.here, Location.there
     Something = Color * Location
 
-    rate = lambda r1, r2: 1 * u.decimeter ** 2 / u.h if Location(r1) == Location(r2) \
-        else 0.5 * u.decimeter ** 2 / u.h
+    rate = (
+        lambda r1, r2: 1 * u.decimeter**2 / u.h
+        if Location(r1) == Location(r2)
+        else 0.5 * u.decimeter**2 / u.h
+    )
     2 * Something >> 3 * Something[rate]
 
     S = Simulation(Something)
     S.level = -1
-    S.volume = 1 * u.m ** 2
-    assert compare_model(S.compile(), 'test_tools/model_64.txt')
+    S.volume = 1 * u.m**2
+    assert compare_model(S.compile(), "test_tools/model_64.txt")
 
 
 def test_parameters_as_initial_values():
-
     L, R = BaseSpecies()
 
     L_0, R_0 = ModelParameters(100, 200)
@@ -2103,7 +2146,7 @@ def test_parameters_as_initial_values():
     L(L_0), R(R_0)
     S = Simulation(L | R)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_65.txt')
+    assert compare_model(S.compile(), "test_tools/model_65.txt")
 
 
 def test_parameters_in_lambda_expression():
@@ -2114,5 +2157,4 @@ def test_parameters_in_lambda_expression():
 
     S = Simulation(L | R)
     S.level = -1
-    assert compare_model(S.compile(), 'test_tools/model_66.txt')
-
+    assert compare_model(S.compile(), "test_tools/model_66.txt")

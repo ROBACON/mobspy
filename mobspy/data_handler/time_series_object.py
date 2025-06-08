@@ -28,11 +28,21 @@ class MobsPyList_of_TS:
     def check_parameters_for_deepcopy(self):
         for i, d in enumerate(self.ts_parameters):
             for par, val in d.items():
-                if not isinstance(val, (int, float, str, bool,)):
+                if not isinstance(
+                    val,
+                    (
+                        int,
+                        float,
+                        str,
+                        bool,
+                    ),
+                ):
                     # cast to str
                     self.ts_parameters[i][par] = str(val)
 
-    def __init__(self, list_of_mspy_ts, model_parameter_objects=None, fres: bool=False) -> None:
+    def __init__(
+        self, list_of_mspy_ts, model_parameter_objects=None, fres: bool = False
+    ) -> None:
         """Creates the MobsPy timeseries object
 
         :param data_dict: (dict) resulting dictionary from simulation

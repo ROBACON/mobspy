@@ -6,7 +6,9 @@ ptet = RegulatedPromoter("ptet", ["tetr"], leak=True)
 # constitutive promoter
 pconst = Promoter("pconst")
 # the Combinations A and B or just A or just B be transcribed
-pcomb = CombinatorialPromoter("pcomb", ["arac","laci"], leak=False, tx_capable_list=[["arac"], ["laci"]])
+pcomb = CombinatorialPromoter(
+    "pcomb", ["arac", "laci"], leak=False, tx_capable_list=[["arac"], ["laci"]]
+)
 # regular RBS
 utr1 = RBS("UTR1")
 # regular RBS
@@ -28,11 +30,29 @@ cfp = CDS("CFP", "CFP")
 t16 = Terminator("t16")
 
 # Combine the parts together in a DNA_construct with their directions
-construct = DNA_construct([[ptet, "forward"], [utr1, "forward"], [gfp, "forward"], [t16, "forward"],
-                           [t16, "reverse"], [rfp, "reverse"], [utr1, "reverse"], [pconst, "reverse"]])
+construct = DNA_construct(
+    [
+        [ptet, "forward"],
+        [utr1, "forward"],
+        [gfp, "forward"],
+        [t16, "forward"],
+        [t16, "reverse"],
+        [rfp, "reverse"],
+        [utr1, "reverse"],
+        [pconst, "reverse"],
+    ]
+)
 
 # some very basic parameters are defined - these are sufficient for the whole model to compile!
-parameters = {"cooperativity": 2, "kb": 100, "ku": 10, "ktx": .05, "ktl": .2, "kdeg": 2, "kint": .05}
+parameters = {
+    "cooperativity": 2,
+    "kb": 100,
+    "ku": 10,
+    "ktx": 0.05,
+    "ktl": 0.2,
+    "kdeg": 2,
+    "kint": 0.05,
+}
 
 # Place the construct in a context (TxTlExtract models a bacterial lysate
 # with machinery like Ribosomes and Polymerases modelled explicitly)
