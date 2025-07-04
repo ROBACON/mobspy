@@ -129,7 +129,8 @@ class Reactions:
             else:
                 reaction_string += str(r["object"])
 
-            reaction_string += "." + ".".join(r["characteristics"])
+            if len(r["characteristics"]) > 0:
+                reaction_string += "." + ".".join(r["characteristics"])
 
             if i != len(list_of_reactants) - 1:
                 reaction_string += " "
