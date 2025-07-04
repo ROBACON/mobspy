@@ -59,11 +59,7 @@ def extract_reaction_rate(
     :return: reaction_rate_string (str) the reaction kinetics as a string for SBML
     """
     is_count = False
-    if (
-        type(reaction_rate_function) == int
-        or type(reaction_rate_function) == float
-        or isinstance(reaction_rate_function, Quantity)
-    ):
+    if isinstance(reaction_rate_function, (int, float, Quantity)):
         # Function is a constant function number int here
         reaction_rate_function, dimension, is_count = uh_convert_rate(
             reaction_rate_function, len(reactant_string_list), dimension
@@ -179,7 +175,7 @@ def extract_reaction_rate(
     return reaction_rate_string, parameters_in_reaction
 
 
-def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=False):
+def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=False) -> str:
     """This constructs the bases for mass-action kinetics. Both for stochastic and deterministic depending on the type
     of model
 
@@ -217,7 +213,7 @@ def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=Fals
     return kinetics_string
 
 
-def stochastic_string(reactant_name, number):
+def stochastic_string(reactant_name, number) -> str:
     """This function returns the stochastic string expression for mass action kinetics
     For instance the reaction 2A -> 3A would imply A*(A-1)/2
     It only does so for one reactant, so it must be called for all reactants in the reaction
@@ -227,7 +223,7 @@ def stochastic_string(reactant_name, number):
 
     :return: to_return_string (str) the mass action kinetics string expression for only that species
     """
-    to_return_string = ""
+    to_return_string: str = ""
     for i in range(number):
         if i == 0:
             to_return_string = reactant_name
@@ -237,7 +233,7 @@ def stochastic_string(reactant_name, number):
     return to_return_string
 
 
-def deterministic_string(reactant_name, number):
+def deterministic_string(reactant_name, number) -> str:
     """This function returns the deterministic string expression for mass action kinetics
     For instance the reaction 2A -> 3A would imply A*A
     It only does so for one reactant, so it must be called for all reactants in the reaction
