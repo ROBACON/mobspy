@@ -802,13 +802,16 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         self._parameter_set = set()
         self._has_units = "T"
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self._ms_active:
             return str(self._operation)
         else:
             return str(self.q_object)
+        
+    def __repr__(self) -> str:
+        return str(self.q_object)
 
-    def set_ms_active(self, ms_active):
+    def set_ms_active(self, ms_active) -> None:
         """
         ms_active is the boolean responsible for activating the context. This function can be used to set it
 
@@ -1042,8 +1045,8 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 def check_if_non_expression_operated(other):
     if (
         not isinstance(other, ExpressionDefiner)
-        and not type(other) == int
-        and not type(other) == float
+        and not isinstance(other, int)
+        and not isinstance(other, float)
         and not isinstance(other, Quantity)
         and not isinstance(other, (np_int_, np_float_))
     ):
