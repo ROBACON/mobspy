@@ -45,6 +45,20 @@ from mobspy.modules.meta_class_utils import (
 import re
 
 
+def _get_multiline_code_context(stack_frame):
+    """
+    Extract multi-line code context for reaction parsing.
+    Handles cases where formatters split >> operators across lines.
+    """
+    code_context = stack_frame.code_context
+    if not code_context:
+        return ""
+    
+    # Join all lines and remove trailing newline
+    full_context = ''.join(code_context).rstrip('\n')
+    return full_context
+
+
 # Easter Egg: I finished the first version on a sunday at the BnF in Paris
 # If anyone is reading this, I highly recommend you study there, it is quite a nice place
 
@@ -552,8 +566,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
         :param other: (Species or Reacting Species) product side of the reaction being added
         """
-        code_line = inspect_stack()[1].code_context[0][:-1]
-        line_number = inspect_stack()[1].lineno
+        stack_frame = inspect_stack()[1]
+        code_line = _get_multiline_code_context(stack_frame)
+        line_number = stack_frame.lineno
         Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):
@@ -864,7 +879,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         :return: True if characteristic is allowed false if not
         """
         black_list = {"list_of_reactants", "first_characteristic"}
-        if char[0] == "_" and char != "__sphinx_mock__":
+        # Allow pytest and other testing framework attributes, plus Python dunder attributes
+        system_attrs = {"_pytestfixturefunction", "__sphinx_mock__"}
+        # Allow all Python dunder (double underscore) attributes
+        if char[0] == "_" and char not in system_attrs and not (char.startswith("__") and char.endswith("__")):
             simlog_error(
                 f"Characteristic name {char} in object {affected_object} is not allowed."
                 f" Please pick another name",
@@ -1072,13 +1090,18 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
         # Check that line ends with a ']' and after that only ')', ',', whitespace and comments
-        pattern = r"\][\s\)\],]*(#.*)?$"
+        # Updated to handle multiline cases where newlines may appear before the closing bracket
+        pattern = r"\][\s\n\)\],]*(#.*)?$"
         set_pattern = r"Set\s*\[.*>>.*\]"
 
         if re.search(set_pattern, code_line):
             return True
 
         # Make sure the reaction rate is present.
+        # If code_line ends with '>>' it might be a multiline reaction, so skip validation
+        if code_line.rstrip().endswith('>>'):
+            return True
+            
         if not bool(re.search(pattern, code_line)):
             simlog_error(
                 f"At: {code_line} \n"
@@ -1096,8 +1119,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         :return: the reaction
         """
         myself = Reacting_Species(self, set())
-        code_line = inspect_stack()[1].code_context[0][:-1]
-        line_number = inspect_stack()[1].lineno
+        stack_frame = inspect_stack()[1]
+        code_line = _get_multiline_code_context(stack_frame)
+        line_number = stack_frame.lineno
         Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):
