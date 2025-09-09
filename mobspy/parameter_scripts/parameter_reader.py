@@ -3,11 +3,7 @@ This module is responsible for processing the parameters given to MobsPy before 
 """
 
 import json
-import sys
 from datetime import datetime
-import os
-from pathlib import Path
-import numpy as np
 import mobspy.simulation_logging.log_scripts as simlog
 from pint import Quantity
 import mobspy.modules.unit_handler as uh
@@ -28,7 +24,7 @@ def read_json(json_file_name):
     with open(json_file_name, "r") as file:
         try:
             json_data = json.load(file)
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             simlog.error("Error reading file")
             exit(1)
 
@@ -117,7 +113,7 @@ def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
         )
 
     value = uh.convert_volume(value, dimension)
-    parameters_for_sbml["volume"] = (value, f"dimensionless")
+    parameters_for_sbml["volume"] = (value, "dimensionless")
     return value
 
 

@@ -6,13 +6,11 @@ are just regular classes
 """
 
 from collections.abc import Sequence
-from copy import deepcopy
 from typing import Self
 
 from mobspy.simulation_logging.log_scripts import (
-    error as simlog_error,
     debug as simlog_debug,
-    error,
+    error as simlog_error,
 )
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
@@ -28,7 +26,6 @@ from mobspy.modules.logic_operator_objects import (
 )
 from mobspy.modules.mobspy_expressions import (
     OverrideQuantity as me_OverrideQuantity,
-    MobsPyExpression as me_MobsPyExpression,
     Specific_Species_Operator as me_Specific_Species_Operator,
     ExpressionDefiner as me_ExpressionDefiner,
 )
@@ -1219,8 +1216,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             )
         elif type(quantity) == Reacting_Species:
             simlog_error(
-                f"Assignments of counts using meta-species are only allowed under events in "
-                f"simulation context",
+                "Assignments of counts using meta-species are only allowed under events in "
+                "simulation context",
                 stack_index=2,
             )
         elif Species.get_simulation_context() is None:
@@ -1547,7 +1544,7 @@ def _Create_Species(species, code_line, number_or_names=None):
         if number_or_names is not None:
             if number_of_properties != number_or_names:
                 simlog_error(
-                    f"The number of properties is not equal to the number of variables",
+                    "The number of properties is not equal to the number of variables",
                     stack_index=3,
                 )
     elif type(number_or_names) == list:

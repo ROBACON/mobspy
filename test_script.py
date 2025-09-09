@@ -2,7 +2,6 @@
 # It also test the calculation capabilities
 # It uses some simple model and assertions
 
-import pytest
 import mobspy
 from mobspy import (
     BaseSpecies,
@@ -15,13 +14,11 @@ from mobspy import (
     Rev,
     All,
     set_counts,
-    basiCO_parameter_estimation,
 )
 
 # from tellurium import loada as te_load_anti
 import numpy as np
 from copy import deepcopy
-import sys
 import os
 import re
 
@@ -968,7 +965,7 @@ def test_parameters_with_sbml():
     A.a1, A.a2
     a, b, c, d, f, h = ModelParameters([1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2])
 
-    A >> 2 * A[lambda: f"5*(b + c)/10"]
+    A >> 2 * A[lambda: "5*(b + c)/10"]
 
     All[A](a)
     S1 = Simulation(A)

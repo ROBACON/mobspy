@@ -166,7 +166,7 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
 
         math_ast = sbml.parseL3Formula(reactions[r_str]["kin"])
         kinetic_law = r.createKineticLaw()
-        check(math_ast, f"create AST for rate expression")
+        check(math_ast, "create AST for rate expression")
         check(kinetic_law, "create kinetic law")
         check(kinetic_law.setMath(math_ast), "set math on kinetic law")
 

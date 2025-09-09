@@ -1,7 +1,5 @@
 from mobspy import *
 import os
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
 
 # n_0 = 10 - dimensionless
 # lysis_0 = 2

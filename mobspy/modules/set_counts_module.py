@@ -87,7 +87,7 @@ def set_counts(count_dic):
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
                     simlog_error(
-                        f"There are two different meta-species with the same name. Set_counts cannot resolve",
+                        "There are two different meta-species with the same name. Set_counts cannot resolve",
                         stack_index=2,
                     )
             if not already_found:

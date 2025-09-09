@@ -1,13 +1,7 @@
-import json
-import os.path
 import math
-import mobspy.plot_scripts.statistics_calculations as spd
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.plot_scripts.process_plot_data as ppd
 import numpy as np
-import pickle as pkl
-from pathlib import Path
-import inspect
 import matplotlib.pyplot as plt
 import mobspy.modules.unit_handler as uh
 from pint import Quantity

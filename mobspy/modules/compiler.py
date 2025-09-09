@@ -24,7 +24,6 @@ from mobspy.modules.event_functions import (
 )
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
-    Asg as asgi_Asg,
 )
 from copy import deepcopy
 
@@ -59,12 +58,12 @@ class Compiler:
             try:
                 parameters_for_sbml[parameter.name] = (
                     parameter.value[0],
-                    f"dimensionless",
+                    "dimensionless",
                 )
             except:
                 parameters_for_sbml[parameter.name] = (
                     parameter.value,
-                    f"dimensionless",
+                    "dimensionless",
                 )
 
     @classmethod
@@ -173,9 +172,9 @@ class Compiler:
                 )
             if species.get_name() in names_used:
                 simlog_error(
-                    f"Names must be unique for all species\n"
+                    "Names must be unique for all species\n"
                     + f"The repeated name is {species.get_name()} in position {i}\n"
-                    + f"Another possibility could be a repeated meta-species in the model"
+                    + "Another possibility could be a repeated meta-species in the model"
                 )
             names_used.add(species.get_name())
 
@@ -229,7 +228,7 @@ class Compiler:
 
         # Check volume:
         volume = uh_convert_volume(volume, dimension)
-        parameters_for_sbml = {"volume": (volume, f"dimensionless")}
+        parameters_for_sbml = {"volume": (volume, "dimensionless")}
 
         # Add the flag species used for verifying if the simulation is over
         if continuous_sim:

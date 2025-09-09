@@ -11,7 +11,6 @@ from numpy import (
     multiply as np_multiply,
     divide as np_divide,
 )
-import time
 
 
 # @TODO change _ms_active to context based name

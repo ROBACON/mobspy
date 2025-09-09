@@ -1,5 +1,3 @@
-import sys, os
-import matplotlib.pyplot as plt
 from mobspy import *
 
 

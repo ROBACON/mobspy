@@ -3,7 +3,7 @@ Main MobsPy module. It stocks the Simulation class which is responsible for simu
 """
 
 # For user imports
-from mobspy.modules.meta_class import BaseSpecies, ListSpecies, New, Zero
+from mobspy.modules.meta_class import BaseSpecies, New, Zero, Species, List_Species, Reacting_Species
 from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.mobspy_parameters import ModelParameters
 from mobspy.modules.assignments_implementation import Assign
@@ -12,6 +12,7 @@ from mobspy.modules.class_of_meta_specie_named_any import Any
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
     basiCO_parameter_estimation,
 )
+import mobspy.simulation_logging.log_scripts as simlog
 
 # Module imports
 from mobspy.modules.meta_class_utils import (
@@ -156,7 +157,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             if type(trigger) == bool or type(trigger) == float or type(trigger) == int:
                 simlog.error(
                     f"MobsPy has received an invalid trigger type: {type(trigger)} \n"
-                    + f"Please make sure you are not using the operator == for creating event conditions \n",
+                    + "Please make sure you are not using the operator == for creating event conditions \n",
                     stack_index=3,
                 )
             self._conditional_event = True
@@ -706,8 +707,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                     if type(value) == bool:
                         simlog.error(
                             f"MobsPy has received an invalid trigger type: {type(value)} \n"
-                            + f"Please make sure you are not using the operator == for "
-                            + f"creating event conditions \n",
+                            + "Please make sure you are not using the operator == for "
+                            + "creating event conditions \n",
                             stack_index=2,
                         )
 
@@ -1035,7 +1036,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 new_reaction = {
                     "re": reaction["re"],
                     "pr": reaction["pr"],
-                    "kin": reaction["kin"].replace("volume", f"_vol"),
+                    "kin": reaction["kin"].replace("volume", "_vol"),
                 }
                 new_sbml_file["reactions_for_sbml"][re_name] = new_reaction
 
@@ -1147,7 +1148,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                         else:
                             antimony_model = antimony_model + f" + {r[1]}"
 
-                    antimony_model = antimony_model + f" -> "
+                    antimony_model = antimony_model + " -> "
                     for i, p in enumerate(reaction_data["pr"]):
                         if i == 0 and p[0] > 1:
                             antimony_model = antimony_model + f" {p[0]} {p[1]}"
@@ -1230,8 +1231,8 @@ class SimulationComposition:
                             ):
                                 simlog.error(
                                     f"Species {spe1.get_name()} was modified through simulations. \n"
-                                    + f"Although reactions can be removed, the characteristics inherited must"
-                                    f" remain the same"
+                                    + "Although reactions can be removed, the characteristics inherited must"
+                                    " remain the same"
                                 )
 
     def __len__(self) -> int:

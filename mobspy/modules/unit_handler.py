@@ -3,7 +3,7 @@ This module is responsible for dealing with units in the modules directory level
 MobsPy standard units are Decimeter (Liter) - Second - Count
 """
 
-from pint import UnitRegistry, Quantity
+from pint import Quantity
 from scipy.constants import N_A
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_expressions import u, OverrideQuantity
@@ -33,10 +33,10 @@ def convert_rate(quantity, reaction_order, dimension):
     if isinstance(quantity, Quantity):
         try:
             if str(quantity.dimensionality) == "1 / [time]":
-                converted_quantity = converted_quantity.convert(f"1/seconds")
+                converted_quantity = converted_quantity.convert("1/seconds")
                 return converted_quantity.magnitude, dimension, True
             elif str(quantity.dimensionality) == "[substance] / [time]":
-                converted_quantity = converted_quantity.convert(f"moles/seconds")
+                converted_quantity = converted_quantity.convert("moles/seconds")
                 return converted_quantity.magnitude * N_A, dimension, True
             elif "[substance]" in str(quantity.dimensionality):
                 converted_quantity = converted_quantity.convert(

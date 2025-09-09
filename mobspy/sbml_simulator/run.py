@@ -6,7 +6,6 @@ basico = ipm_LazyImporter("basico")
 from joblib import Parallel, delayed
 import mobspy.simulation_logging.log_scripts as simlog
 import mobspy.sbml_simulator.builder as sbml_builder
-from copy import deepcopy
 
 
 # def simulate(list_of_params, models)
@@ -343,10 +342,10 @@ def __remap_species(data, mapping, species_not_mapped):
 
         except TypeError:
             simlog.warning(
-                f"Copasi removes A >> A species from reaction calculations and does not provide an output"
+                "Copasi removes A >> A species from reaction calculations and does not provide an output"
             )
             simlog.warning(
-                f"Please check the output data to see if this is the problem"
+                "Please check the output data to see if this is the problem"
             )
             for key in data:
                 print(key, data[key])

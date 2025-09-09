@@ -1,5 +1,3 @@
-from pint.registry import Quantity
-from scipy.constants import value
 
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor

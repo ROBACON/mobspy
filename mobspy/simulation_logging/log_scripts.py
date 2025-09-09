@@ -2,7 +2,6 @@ from copy import deepcopy
 import inspect
 import sys
 import traceback
-import mobspy.modules.mobspy_expressions as me
 
 global_simlog_level = 3
 

@@ -1,4 +1,3 @@
-import sys, os
 from mobspy import *
 
 """
