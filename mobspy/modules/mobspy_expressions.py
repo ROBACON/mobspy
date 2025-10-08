@@ -802,11 +802,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         self._has_units = "T"
 
     def __str__(self) -> str:
-        if self._ms_active:
-            return str(self._operation)
-        else:
-            return str(self.q_object)
-        
+        # Always return the full quantity with units for user-facing output
+        return str(self.q_object)
+
     def __repr__(self) -> str:
         return str(self.q_object)
 
