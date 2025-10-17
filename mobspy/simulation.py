@@ -152,13 +152,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 simlog.error(
                     "Equality comparison operator (==) not allowed for MobsPy events \n"
                     + "Please use (A <= n) & (A >= n) if necessary",
-                    stack_index=3,
                 )
             if type(trigger) == bool or type(trigger) == float or type(trigger) == int:
                 simlog.error(
                     f"MobsPy has received an invalid trigger type: {type(trigger)} \n"
                     + "Please make sure you are not using the operator == for creating event conditions \n",
-                    stack_index=3,
                 )
             self._conditional_event = True
             self._event_handler()
@@ -709,7 +707,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                             f"MobsPy has received an invalid trigger type: {type(value)} \n"
                             + "Please make sure you are not using the operator == for "
                             + "creating event conditions \n",
-                            stack_index=2,
                         )
 
                 if name == "duration" and isinstance(
@@ -727,7 +724,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             elif name in white_list:
                 pass
             else:
-                simlog.error(f"Parameter {name} is not supported", stack_index=2)
+                simlog.error(f"Parameter {name} is not supported")
 
     def __getattribute__(self, item):
         ta = item == "results" and self.__dict__["results"] == {}
@@ -735,7 +732,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         if ta or tb:
             simlog.error(
                 "The results were accessed before the execution of the simulation",
-                stack_index=2,
             )
 
         if item == "plot_config":
@@ -776,13 +772,13 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         """
         if type(config) == str:
             if os_path_splitext(config)[1] != ".json":
-                simlog.error("Wrong file extension", stack_index=3)
+                simlog.error("Wrong file extension")
             parameters_to_config = pr_read_json(config)
         elif type(config) == dict:
             parameters_to_config = config
         else:
             simlog.error(
-                "Parameters must be python dictionary or json file", stack_index=3
+                "Parameters must be python dictionary or json file"
             )
         return parameters_to_config
 
@@ -820,7 +816,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             else:
                 simlog.error(
                     "Only species objects or strings for plotting arguments",
-                    stack_index=4,
                 )
 
         return species_strings, self.results, self.plot_parameters
@@ -1256,7 +1251,6 @@ class SimulationComposition:
         else:
             simlog.error(
                 "Simulation compositions can only be performed with other simulations",
-                stack_index=3,
             )
         self.results = None
         self.fres = None
@@ -1289,7 +1283,6 @@ class SimulationComposition:
                 except:
                     simlog.error(
                         f"The parameter {name} was assigned non-accepted type.",
-                        stack_index=2,
                     )
 
                 for par, sim in zip(value, self):
@@ -1310,7 +1303,6 @@ class SimulationComposition:
                 simlog.error(
                     "From 2.4.4 duration must be assigned to each simulation individually or a list "
                     "with all durations must be assigned to the concatenated simulation",
-                    stack_index=2,
                 )
 
             for par, sim in zip(value, self):

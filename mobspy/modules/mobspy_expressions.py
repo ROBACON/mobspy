@@ -108,7 +108,6 @@ class Specific_Species_Operator(Bool_Override):
         else:
             simlog.error(
                 "Concatenation of is_a and dot operator not supported. Please use them separately",
-                stack_index=2,
             )
 
     def add(self, characteristic):
@@ -457,7 +456,6 @@ class ExpressionDefiner:
                     "The units cannot be resolved. "
                     "Ex: This error is cased by summing two number with different units "
                     "(1/u.s) + 1*(u.l/u.s), \nor other impossible unit operations",
-                    stack_index=3,
                 )
 
         if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):

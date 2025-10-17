@@ -60,13 +60,13 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                     new_value, first_unit = self.unit_process(val)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is None:
                     simlog.error(
-                        "MobsPy parameters must all be the same unit", stack_index=1
+                        "MobsPy parameters must all be the same unit"
                     )
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
                     new_value, unit = self.unit_process(val)
                     if unit != first_unit:
                         simlog.error(
-                            "MobsPy parameters must all be the same unit", stack_index=1
+                            "MobsPy parameters must all be the same unit"
                         )
                 else:
                     new_value = val
@@ -149,7 +149,6 @@ def ModelParameters(*args):
     if len(args) != len(parameter_variable_names):
         simlog.error(
             "You must provide an initial value for every parameter variable declared",
-            stack_index=2,
         )
 
     if len(parameter_variable_names) > 1:

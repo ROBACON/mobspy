@@ -92,7 +92,6 @@ class _Last_rate_storage:
                 "Reaction rate of type "
                 + str(type(_Last_rate_storage.last_rate))
                 + " not valid",
-                stack_index=3,
             )
 
         if not (
@@ -107,7 +106,7 @@ class _Last_rate_storage:
             or isinstance(rate, me_ExpressionDefiner)
         ):
             simlog_error(
-                "Reaction rate of type " + str(type(rate)) + " not valid", stack_index=3
+                "Reaction rate of type " + str(type(rate)) + " not valid"
             )
 
         return rate
@@ -217,7 +216,7 @@ class Reactions:
             rate = _Last_rate_storage.process_rate(rate)
 
         else:
-            simlog_error("To many rate provided", stack_index=3)
+            simlog_error("To many rate provided")
         self.rate = rate
         if _Last_rate_storage.last_rate is not None:
             _Last_rate_storage.last_rate = None
@@ -238,12 +237,11 @@ class Reactions:
             try:
                 to_test_context_object = products[0]["object"]
             except IndexError:
-                simlog_error("No Meta-Species detected in the reaction", stack_index=3)
+                simlog_error("No Meta-Species detected in the reaction")
 
         if Species.get_simulation_context() is not None:
             simlog_error(
                 "Reactions cannot be defined under event context. Only species counts",
-                stack_index=3,
             )
 
         self.reactants = reactants
@@ -281,7 +279,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Addition not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __radd__(self, other):
@@ -290,7 +287,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Addition not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __sub__(self, other):
@@ -299,7 +295,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Subtraction not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __rsub__(self, other):
@@ -308,7 +303,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Subtraction not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __truediv__(self, other):
@@ -317,7 +311,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Division not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __rtruediv__(self, other):
@@ -326,7 +319,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Division not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __pow__(self, other):
@@ -335,7 +327,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Division not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __rpow__(self, other):
@@ -344,7 +335,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Division not implemented for meta-species in this context",
-                stack_index=2,
             )
 
     def __mul__(self, other):
@@ -353,7 +343,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Multiplication not implemented for meta-species in this sense",
-                stack_index=2,
             )
 
     def __rmul__(self, other):
@@ -362,7 +351,6 @@ class Assignment_Opp_Imp:
         else:
             simlog_error(
                 "Multiplication not implemented for meta-species in this sense",
-                stack_index=2,
             )
 
 
@@ -423,7 +411,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 simlog_error(
                     "Please separate the species when using string based assignments under event context"
                     "Ex: str(A) + str(B)",
-                    stack_index=2,
                 )
             return str(self.list_of_reactants)
 
@@ -451,7 +438,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             simlog_error(
                 "Labels cannot be assigned to multiple reacting species at the same time.",
-                stack_index=2,
             )
         return self
 
@@ -522,7 +508,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             else:
                 simlog_error(
                     f"Stoichiometry can only be an int or float - Received {stoichiometry}",
-                    stack_index=2,
                 )
             return self
         else:
@@ -544,7 +529,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             except AttributeError:
                 simlog_error(
                     f"Addition between meta-species and types {type(other)} is not supported",
-                    stack_index=2,
                 )
             return self
         else:
@@ -605,11 +589,10 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             if len(self.list_of_reactants) != 1:
                 simlog_error(
                     "Assignment used incorrectly. Only one species at a time",
-                    stack_index=2,
                 )
             quantity_dict = species_object.add_quantities(characteristics, quantity)
         # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Internal_Parameter_Constructor):
-        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters', stack_index=2)
+        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters')
         elif asgi_Assign.check_context():
             dummy_rsp = species_object
             dummy_rsp = [dummy_rsp.c(char) for char in characteristics][-1]
@@ -617,7 +600,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         elif simulation_under_context is None:
             simlog_error(
                 f"Reactant_Species count assignment does not support the type {type(quantity)}",
-                stack_index=2,
             )
 
         # If called within an event context, make sure that the call is a count assignment only
@@ -732,7 +714,7 @@ class List_Species:
                 self._list_species.append(item)
             else:
                 simlog_error(
-                    "Only Species can used to construct List_Species", stack_index=2
+                    "Only Species can used to construct List_Species"
                 )
 
     def append(self, species: "Species") -> None:
@@ -742,7 +724,7 @@ class List_Species:
         :param species: (Species) meta-species to be added to the List_Species
         """
         if not isinstance(species, Species):
-            simlog_error("Only Species can be appended", stack_index=2)
+            simlog_error("Only Species can be appended")
         else:
             self._list_species.append(species)
 
@@ -768,7 +750,7 @@ class List_Species:
             self._list_species = self._list_species + other._list_species
         else:
             simlog_error(
-                "Operator must only be used in Species on List_Species", stack_index=2
+                "Operator must only be used in Species on List_Species"
             )
 
         return self
@@ -883,7 +865,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             simlog_error(
                 f"Characteristic name {char} in object {affected_object} is not allowed."
                 f" Please pick another name",
-                stack_index=3,
             )
 
         if (
@@ -894,7 +875,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             simlog_error(
                 f"Characteristic name {char} in object {affected_object} is not allowed. "
                 f"Please pick another name",
-                stack_index=3,
             )
             return False
         else:
@@ -1009,7 +989,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return List_Species([self, other])
         else:
             simlog_error(
-                "Only Species and List_Species can be concatenated", stack_index=2
+                "Only Species and List_Species can be concatenated"
             )
 
     # Both are defined bellow to be consistent with List_Species behavior
@@ -1049,7 +1029,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             else:
                 simlog_error(
                     f"Stoichiometry can only be an int or float - Received {stoichiometry}",
-                    stack_index=2,
                 )
                 raise ValueError("wrong stoichiometry")
             return r
@@ -1212,19 +1191,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                     return cha
             simlog_error(
                 f"{quantity} contains no characteristics from {self._name}",
-                stack_index=2,
             )
         elif type(quantity) == Reacting_Species:
             simlog_error(
                 "Assignments of counts using meta-species are only allowed under events in "
                 "simulation context",
-                stack_index=2,
             )
         elif Species.get_simulation_context() is None:
             simlog_error(
                 f"Species count assignment does not support the type {type(quantity)}"
                 f" if not under a simulation context",
-                stack_index=2,
             )
 
         # If called within an event context, make sure that the call is a count assignment only
@@ -1444,7 +1420,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             simlog_error(
                 "A different Simulation Object was assigned to a meta-species object under context \n"
                 "Please use only one Simulation Object per context assignment",
-                stack_index=6,
             )
 
     @classmethod
@@ -1531,12 +1506,11 @@ def _Create_Species(species, code_line, number_or_names=None):
             if number_or_names < 1:
                 simlog_error(
                     "Please use strictly positive integers for number of properties",
-                    stack_index=3,
                 )
         elif type(number_or_names) == list:
             pass
         else:
-            simlog_error("Only numbers or lists of strings accepted", stack_index=3)
+            simlog_error("Only numbers or lists of strings accepted")
 
     if number_or_names is None or type(number_or_names) == int:
         number_of_properties, compiled_names = compile_species_number_line(code_line)
@@ -1545,7 +1519,6 @@ def _Create_Species(species, code_line, number_or_names=None):
             if number_of_properties != number_or_names:
                 simlog_error(
                     "The number of properties is not equal to the number of variables",
-                    stack_index=3,
                 )
     elif type(number_or_names) == list:
         number_of_properties = len(number_or_names)

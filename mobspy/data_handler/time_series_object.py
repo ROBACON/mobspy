@@ -131,7 +131,6 @@ class MobsPyList_of_TS:
                 "Now data can be accessed through the following syntax: \n"
                 "S.results[Meta-Species Object] or S.results[Meta-Species string name] \n"
                 "Both can perform queries",
-                stack_index=2,
             )
 
         series_index = None
@@ -139,7 +138,6 @@ class MobsPyList_of_TS:
             if len(item) != 2 or not isinstance(item[1], int):
                 simlog.error(
                     "Only len 2 and ints allowed in tuple-based assignments",
-                    stack_index=2,
                 )
             series_index = item[1]
             item = item[0]

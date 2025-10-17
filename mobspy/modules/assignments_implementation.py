@@ -271,5 +271,4 @@ class Asg:
     def __getattr__(self, item):
         simlog_error(
             "Assignments must be the last query in the stack - Ex: A.young.blue.assign()",
-            stack_index=2,
         )

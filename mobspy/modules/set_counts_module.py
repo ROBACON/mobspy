@@ -37,7 +37,6 @@ def set_counts(count_dic):
         else:
             simlog_error(
                 f"Reactant_species count assignment does not support the type {type(item)}",
-                stack_index=2,
             )
     count_dic = new_count_dict
 
@@ -82,18 +81,15 @@ def set_counts(count_dic):
                     else:
                         simlog_error(
                             "Characteristics not found in species with equal name",
-                            stack_index=2,
                         )
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
                     simlog_error(
                         "There are two different meta-species with the same name. Set_counts cannot resolve",
-                        stack_index=2,
                     )
             if not already_found:
                 simlog_error(
                     f"Meta-species with the following name {key} not found",
-                    stack_index=2,
                 )
         else:
             try:
@@ -102,7 +98,6 @@ def set_counts(count_dic):
                         if len(key.list_of_reactants) != 1:
                             simlog_error(
                                 "Assignment used incorrectly. Only one species at a time",
-                                stack_index=2,
                             )
                         model.add(key.list_of_reactants[0]["object"])
                     if isinstance(key, Species):
@@ -110,7 +105,7 @@ def set_counts(count_dic):
                     key(item)
             except AttributeError:
                 simlog_error(
-                    "Keys must be either meta-species or strings", stack_index=2
+                    "Keys must be either meta-species or strings"
                 )
 
     return List_Species(model)

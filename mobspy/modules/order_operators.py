@@ -40,7 +40,6 @@ class __Operator_Base:
         except AttributeError:
             simlog.error(
                 "All can only be used on species, reacting species and strings under set_count",
-                stack_index=2,
             )
 
     # Transform product function
@@ -342,10 +341,10 @@ class __Set_Reversible_Rate:
         try:
             if len(both_rates) != 2:
                 simlog.error(
-                    "The reversible reaction must receive 2 rates", stack_index=2
+                    "The reversible reaction must receive 2 rates"
                 )
         except TypeError:
-            simlog.error("The reversible reaction must receive 2 rates", stack_index=2)
+            simlog.error("The reversible reaction must receive 2 rates")
 
         self.reaction_direct.rate = both_rates[0]
         self.reaction_reverse.rate = both_rates[1]
@@ -402,7 +401,6 @@ class _Set_Reaction_Method:
         if reaction.rate is None:
             simlog.error(
                 "A reaction rate was not found in the reaction used in the Set Operator",
-                stack_index=3,
             )
 
         self.reaction = reaction
