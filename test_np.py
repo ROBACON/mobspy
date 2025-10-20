@@ -23,7 +23,7 @@ Reactions
 reaction_0,{'re': [(1, 'A')], 'pr': [(1, 'B')], 'kin': 'A * 1.0'}
 """
 
-    A, B = BaseSpecies(2)
+    A, B = BaseSpecies()
     params = np.array([10.0, 1.0])
 
     # use numpy to init params

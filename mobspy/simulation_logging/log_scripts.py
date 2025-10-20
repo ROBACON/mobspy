@@ -4,7 +4,7 @@ import traceback
 
 # Configure the logger for MobsPy
 logger = logging.getLogger('mobspy')
-logger.setLevel(logging.DEBUG)  # Logger accepts all levels
+logger.setLevel(logging.INFO)  # Logger accepts all levels
 
 # Create console handler with formatting
 _console_handler = logging.StreamHandler(sys.stderr)
@@ -110,4 +110,4 @@ def warning(message: str) -> None:
 # Old system: 0=ERROR, 1=WARNING, 2+=DEBUG
 # Note: This is a module attribute, setting it won't automatically update the logger
 # Use set_log_level() instead for dynamic changes
-global_simlog_level: int = 3  # Default corresponds to DEBUG level
+# global_simlog_level: int = 1  # Default level

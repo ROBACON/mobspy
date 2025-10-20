@@ -83,7 +83,7 @@ def test_model_1():
 
 # Model to test basic inheritance
 def test_model_2():
-    Carnivore, Herbivore = BaseSpecies(2)
+    Carnivore, Herbivore = BaseSpecies()
     Cat, Dog = New(Carnivore, 2)
     Carnivore + Herbivore(1 * u.mol) >> Carnivore[1]
     Cat(1 * u.mol), Dog(1 * u.mol)
@@ -110,7 +110,7 @@ def test_model_3():
 # Model to test inheritance queries
 # All bacterias are infected by any virus here
 def test_model_4():
-    Bacteria, Virus = BaseSpecies(2)
+    Bacteria, Virus = BaseSpecies()
     B1, B2 = New(Bacteria, 2)
     V1, V2 = New(Virus, 2)
     Bacteria.not_infected + Virus >> Bacteria.infected[1]
@@ -122,7 +122,7 @@ def test_model_4():
 
 # Model to test round-robin and stoichiometry
 def test_model_5():
-    A = BaseSpecies(1)
+    A = BaseSpecies()
     B, C = New(A, 2)
     A >> 2 * A[1]
     2 * A >> 3 * A[1]
@@ -134,7 +134,7 @@ def test_model_5():
 
 def test_model_6():
     # This model tests species that are not referenced in the reactants (we call them Born Species)
-    A = BaseSpecies(1)
+    A = BaseSpecies()
     B = New(A)
     C = New(A)
     B.b1, B.b2, C.c1, C.c2
