@@ -388,9 +388,9 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         unit_y=None,
         output_concentration=None,
         output_event=None,
-        output_file=None,
-        save_data=None,
-        plot_data=None,
+        output_file: str | None=None,
+        save_data: bool=False,
+        plot_data: bool=True,
     ) -> None:
         """
         runs the simulation, the arguments for this function can be set using the get item method or this way

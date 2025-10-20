@@ -210,9 +210,7 @@ def test_average_value():
 
     MySim = Simulation(E)
     MySim.save_data = False
-    MySim.plot_data = False
-    MySim.level = -1
-    MySim.run()
+    MySim.run(plot_data = False)
 
 
 def test_hybrid_sim():
@@ -224,7 +222,6 @@ def test_hybrid_sim():
     S1.save_data = False
     S1.plot_data = False
     S1.duration = 3
-    S1.level = -1
 
     A.reset_reactions()
     A + B >> mobspy.Zero[0.01]
@@ -233,9 +230,10 @@ def test_hybrid_sim():
     S2.method = "stochastic"
     S2.duration = (A <= 0) | (B <= 0)
     S2.level = -1
+    S2.plot_data = False
 
     Sim = S1 + S2
-    Sim.run()
+    Sim.run(plot_data = False)
 
     assert compare_model(Sim.compile(), "test_tools/model_8.txt")
     assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0
@@ -249,14 +247,13 @@ def test_concatenated_simulation():
     S1 = Simulation(A)
     S1.plot_data = False
     S1.duration = 5
-    S1.level = -1
 
     B >> mobspy.Zero[1]
 
     B(50)
     S2 = Simulation(B)
     S2.duration = 5
-    S2.level = -1
+    S2.plot_data = False
 
     C >> mobspy.Zero[1]
 
@@ -266,7 +263,7 @@ def test_concatenated_simulation():
     S3.level = -1
 
     S = S1 + S2 + S3
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] < 1 and S.fres[B][-1] < 1 and S.fres[C][-1] < 1
 
 
@@ -350,7 +347,7 @@ def test_reaction_deactivation():
         R(0)
 
     Sim = S1 + S2
-    Sim.run()
+    Sim.run(plot_data = False)
 
     assert (
         Sim.fres[A][0] < Sim.fres[A][-1]
@@ -372,7 +369,7 @@ def test_count_assignment():
     S.level = -1
     S.plot_data = False
     S.duration = 5
-    S.run()
+    S.run(plot_data = False)
     assert (
         compare_model(S.compile(), "test_tools/model_11.txt")
         and 150 > S.fres[B][-1] > 100
@@ -498,7 +495,7 @@ def test_stochastic_event_duration():
     S1.method = "stochastic"
     S1.duration = (A <= 0) | (B <= 0)
     S1.level = -1
-    S1.run()
+    S1.run(plot_data = False)
     R = S1.fres
     assert R[A][0] > 0 and R[B][0] > 0 and R[A][-1] == 0 and R[B][-1] == 0
 
@@ -601,7 +598,7 @@ def test_conditional_between_meta_species():
     S.duration = 10
     S.method = "stochastic"
     assert compare_model(S.compile(), "test_tools/model_19.txt")
-    S.run()
+    S.run(plot_data = False)
     for i in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
         assert S.fres[Azi][i] > S.fres[Byy][i]
 
@@ -728,7 +725,7 @@ def test_event_all():
     assert compare_model(S.compile(), "test_tools/model_24.txt")
     S.duration = 5
     S.step_size = 1
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[Baka.a1.b1][0] == 30
     assert S.fres[Baka.b1.a2][0] == 20
     assert S.fres[Baka.a1.b2][0] == 10
@@ -751,7 +748,7 @@ def test_one_value_concatenation_sim():
     S2.duration = 5
     S2.step_size = 1
     S2.duration = (A <= 0) | (B <= 0)
-    S2.run()
+    S2.run(plot_data = False)
     assert len(S2.fres[A]) == 1
 
 
@@ -765,7 +762,7 @@ def test_crash_after_modification():
         S2 = Simulation(A)
         S = S1 + S2
         S.level = -1
-        S.run()
+        S.run(plot_data = False)
         assert False
     except SystemExit:
         assert True
@@ -873,7 +870,7 @@ def test_plotting():
     S.repetitions = 3
     S.step_size = 0.25
     S.duration = 3
-    S.run()
+    S.run(plot_data = False)
     S.plot_config.save_to = "test_plot_images/stochastic_tree.png"
     S.plot_stochastic(Tree.not_sick, Tree.sick)
 
@@ -899,7 +896,7 @@ def test_volume_after_sim():
     S.output_concentration = False
     S.level = -1
     S.volume = 1 * u.milliliter
-    S.run()
+    S.run(plot_data = False)
     assert int(S.fres[A][-1]) == 42
 
 
@@ -992,7 +989,7 @@ def test_parameters_with_sbml():
     S = S1 + S2
     S.plot_data = False
     S.level = -1
-    S.run()
+    S.run(plot_data = False)
 
     model_str = ""
     for parameter_sweep in S1.sbml_data_list:
@@ -1014,7 +1011,7 @@ def test_shared_parameter_name():
         S = Simulation(A)
         S.level = -1
         S.plot_data = False
-        S.run()
+        S.run(plot_data = False)
         assert False
     except:
         assert True
@@ -1307,10 +1304,9 @@ def test_changes_after_compilation():
     Sim = Simulation(A | B)
     Sim.level = -1
     descr = Sim.compile()
-    Sim.plot_data = False
     Sim.duration = 30 * u.hour
     Sim.volume = 1 * u.m**3
-    Sim.run()
+    Sim.run(plot_data = False)
 
     assert Sim._parameters_for_sbml["volume"][0] > 100
     assert Sim.fres["Time"][-1] > 100
@@ -1435,7 +1431,7 @@ def test_output_concentration_in_multi_sim():
     S.level = -1
     S.plot_data = False
     S.output_concentration = True
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] < 10
     assert S.fres[B][-1] < 10
 
@@ -1621,7 +1617,7 @@ def test_numpy_in_rates():
     S.level = -1
     S.plot_data = False
     S.step_size = 30
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] <= 10
 
 
@@ -1637,7 +1633,7 @@ def test_numpy_in_counts():
     S.level = -1
     S.plot_data = False
     S.step_size = 30
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] <= 10
 
 
@@ -1653,7 +1649,7 @@ def test_numpy_in_set_counts():
     S.level = -1
     S.plot_data = False
     S.step_size = 30
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] <= 10
 
 
@@ -1712,7 +1708,7 @@ def test_replacing_species_name_in_expression():
     S.step_size = 5
     S.plot_data = False
     S.level = -1
-    S.run()
+    S.run(plot_data = False)
     assert True
 
 
@@ -1723,11 +1719,10 @@ def test_basic_assignment():
 
     B(100)
     S = Simulation(A | B)
-    S.plot_data = False
     S.duration = 10
     S.step_size = 5
     S.level = -1
-    S.run()
+    S.run(plot_data = False)
     assert S.fres[A][-1] == 200
 
 
@@ -1757,9 +1752,8 @@ def test_all_asgn_ops():
     S = Simulation(A | B | C | D)
     S.duration = 10
     S.step_size = 5
-    S.plot_data = False
     S.level = -1
-    S.run()
+    S.run(plot_data = False)
 
     assert S.fres[A.a1][-1] == 1000
     assert S.fres[A.a2][-1] == 300
@@ -1815,11 +1809,10 @@ def text_assign_context_exit():
     A >> mobspy.Zero[1]
     B.assign(A / 2)
     S = Simulation(A | B)
-    S.plot_data = False
     S.level = -1
     S.duration = 10
     S.step_size = 5
-    S.run()
+    S.run(plot_data = False)
     assert True
 
 

@@ -267,11 +267,9 @@ def manually_process_each_parameter(
     if output_file is not None:
         simulation_object.output_file = output_file
 
-    if save_data is not None:
-        simulation_object.save_data = save_data
+    simulation_object.save_data = save_data
 
-    if plot_data is not None:
-        simulation_object.plot_data = plot_data
+    simulation_object.plot_data = plot_data
 
     if rate_type is not None:
         simulation_object.rate_type = rate_type

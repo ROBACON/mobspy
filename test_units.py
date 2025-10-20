@@ -69,7 +69,29 @@ def test_def_by_quantity():
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
-    # MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL)    
+    # MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL)
+
+
+def test_def_by_quantity():
+    A0 = 1 / u.mL
+    rate_constant = 1 / u.min
+    duration = 5 * u.min
+
+    def rate_fn(a):
+        assert str(A0) == '1.0 / milliliter', str(A0)
+        assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+        return rate_constant
+
+    A = BaseSpecies()
+    A(A0)
+    
+    A >> 2 * A [rate_fn]
+
+    MySim = Simulation(A)
+    MySim.volume = 1 * u.mL
+    MySim.compile()
+    MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL, plot_data = False)
+
 
 
 if __name__ == "__main__":
