@@ -122,51 +122,6 @@ class Reactions:
     :param order: (Order Operator) reaction order operator - default in a Round-Robin base
     :param rate: (int, float, callable, Quantity) reaction rate
     """
-
-    @staticmethod
-    def __create_reactants_string(list_of_reactants) -> str:
-        """
-        Just a simple way to simlog.debug reactions for debbuging
-        Not relevant for simulation
-        Important: here reactants are used interchangeably with products, this works for a list_of_products too
-
-        :param list_of_reactants: (list of Species) list of products or reactants in the reaction
-        """
-        reaction_string = ""
-        for i, r in enumerate(list_of_reactants):
-            if r["stoichiometry"] > 1:
-                reaction_string += str(r["stoichiometry"]) + "*" + str(r["object"])
-            else:
-                reaction_string += str(r["object"])
-
-            if len(r["characteristics"]) > 0:
-                reaction_string += "." + ".".join(r["characteristics"])
-
-            if i != len(list_of_reactants) - 1:
-                reaction_string += " "
-                reaction_string += "+"
-                reaction_string += " "
-
-        return reaction_string
-
-    def __str__(self) -> str:
-        """
-        Prints the meta-reaction in the format A + B -> C + D
-        """
-        return (
-            self.__create_reactants_string(self.reactants)
-            + " -> "
-            + self.__create_reactants_string(self.products)
-        )
-
-    def __getitem__(self, item):
-        """
-        Override of __getitem__ for dealing with reaction rates
-
-        :param item: (int, float, callable, Quantity) = reaction rate
-        """
-        return _Last_rate_storage.override_get_item(self, item)
-
     def __init__(self, reactants, products, rate=None) -> None:
         """
         Constructor of the reaction object. For the object construction only the reactants and products are
@@ -262,6 +217,52 @@ class Reactions:
             reactant["object"].add_reaction(self)
         for product in products:
             product["object"].add_reaction(self)
+
+
+
+    @staticmethod
+    def __create_reactants_string(list_of_reactants) -> str:
+        """
+        Just a simple way to simlog.debug reactions for debbuging
+        Not relevant for simulation
+        Important: here reactants are used interchangeably with products, this works for a list_of_products too
+
+        :param list_of_reactants: (list of Species) list of products or reactants in the reaction
+        """
+        reaction_string = ""
+        for i, r in enumerate(list_of_reactants):
+            if r["stoichiometry"] > 1:
+                reaction_string += str(r["stoichiometry"]) + "*" + str(r["object"])
+            else:
+                reaction_string += str(r["object"])
+
+            if len(r["characteristics"]) > 0:
+                reaction_string += "." + ".".join(r["characteristics"])
+
+            if i != len(list_of_reactants) - 1:
+                reaction_string += " "
+                reaction_string += "+"
+                reaction_string += " "
+
+        return reaction_string
+
+    def __str__(self) -> str:
+        """
+        Prints the meta-reaction in the format A + B -> C + D
+        """
+        return (
+            self.__create_reactants_string(self.reactants)
+            + " -> "
+            + self.__create_reactants_string(self.products)
+        )
+
+    def __getitem__(self, item):
+        """
+        Override of __getitem__ for dealing with reaction rates
+
+        :param item: (int, float, callable, Quantity) = reaction rate
+        """
+        return _Last_rate_storage.override_get_item(self, item)
 
     def set_rate(self, rate):
         """
@@ -378,6 +379,36 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         species2 = Species("B")
         reaction = species1 >> species2  # Creates a Reaction object.
     """
+    def __init__(
+        self,
+        object_reference,
+        characteristics,
+        stoichiometry: int | float = 1,
+        label: int | float | str | None = None
+    ) -> None:
+        """
+        Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
+        have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
+        finally a label if used.
+
+        :param object_reference: (Species) meta-species object reference or (int, float, Quantity) for event
+        assignments with meta-species values
+        :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
+        :param stoichiometry: (int, float) stoichiometry value of the meta-species in the reaction
+        :param label: (int, float, str) value for the label for matching used in this reaction
+        """
+        super(Reacting_Species, self).__init__()
+        if object_reference.get_name() == "_S0" and characteristics == set():
+            self.list_of_reactants = []
+        else:
+            self.list_of_reactants = [
+                {
+                    "object": object_reference,
+                    "characteristics": characteristics,
+                    "stoichiometry": stoichiometry,
+                    "label": label,
+                }
+            ]
 
     def __enter__(self):
         """
@@ -449,33 +480,6 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __init__(
-        self, object_reference, characteristics, stoichiometry: int | float = 1, label: int | float | str | None = None
-    ) -> None:
-        """
-        Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
-        have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
-        finally a label if used.
-
-        :param object_reference: (Species) meta-species object reference or (int, float, Quantity) for event
-        assignments with meta-species values
-        :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
-        :param stoichiometry: (int, float) stoichiometry value of the meta-species in the reaction
-        :param label: (int, float, str) value for the label for matching used in this reaction
-        """
-        super(Reacting_Species, self).__init__()
-        if object_reference.get_name() == "_S0" and characteristics == set():
-            self.list_of_reactants = []
-        else:
-            self.list_of_reactants = [
-                {
-                    "object": object_reference,
-                    "characteristics": characteristics,
-                    "stoichiometry": stoichiometry,
-                    "label": label,
-                }
-            ]
-
     def get_spe_object(self):
         if len(self.list_of_reactants) != 1:
             simlog_error(
@@ -539,6 +543,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             return Reacting_Species.__add__(self, other)
         else:
             return asgi_Assign.add(other, self)
+
+    def __invert__(self):
+        return self.c('not$')
 
     def __rshift__(self, other):
         """
@@ -847,6 +854,33 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         keys and the counts of values
     """
 
+    # __init__ should be at the top of a class definition for easy access to the attributes names (sorry people)
+    def __init__(self, name):
+        """
+        Object constructor - We recommend using BaseSpecies instead
+
+        :param name: (str) Name of the species (can be placeholder if named with N$)
+        """
+        super(Species, self).__init__()
+        self.name(name)
+        self._characteristics = set()
+        self._references = {self}
+        self._ordered_references = []
+        self._reference_index_dictionary = {}
+        self._unit = ""
+        self._assignments = {}
+        self._linked_species = set()
+
+        # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
+        self.first_characteristic = None
+
+        # Each object stores the reactions it is involved in
+        self._reactions = set()
+
+        # This will store the quantities relating to the species counts
+        self._species_counts = []
+
+
     @classmethod
     def check_if_valid_characteristic(cls, affected_object, char):
         """
@@ -1062,6 +1096,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return Species.__add__(self, other)
         else:
             return asgi_Assign.add(other, self)
+
+    def __invert__(self):
+        return self.c('not$')
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
@@ -1295,31 +1332,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         mcu_check_orthogonality_between_references(new_entity.get_references())
 
         return new_entity
-
-    def __init__(self, name):
-        """
-        Object constructor - We recommend using BaseSpecies instead
-
-        :param name: (str) Name of the species (can be placeholder if named with N$)
-        """
-        super(Species, self).__init__()
-        self.name(name)
-        self._characteristics = set()
-        self._references = {self}
-        self._ordered_references = []
-        self._reference_index_dictionary = {}
-        self._unit = ""
-        self._assignments = {}
-        self._linked_species = set()
-
-        # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
-        self.first_characteristic = None
-
-        # Each object stores the reactions it is involved in
-        self._reactions = set()
-
-        # This will store the quantities relating to the species counts
-        self._species_counts = []
 
     def get_spe_object(self):
         return self

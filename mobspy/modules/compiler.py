@@ -1,3 +1,6 @@
+from mobspy.modules.compiler_operator_functions import (
+    create_all_not_reactions as cof_create_all_not_reactions
+)
 from mobspy.simulation_logging.log_scripts import (
     error as simlog_error,
     warning as simlog_warning,
@@ -325,6 +328,9 @@ class Compiler:
         cls.add_to_parameters_to_sbml(
             parameters_used, parameters_for_sbml, parameters_in_counts
         )
+
+        # Invert the not$ operators in all reactions
+        reactions_set = cof_create_all_not_reactions(reactions_set)
 
         # BaseSpecies reactions for SBML with theirs respective parameters and rates
         # What do I have so far
