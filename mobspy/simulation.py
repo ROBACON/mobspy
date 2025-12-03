@@ -389,8 +389,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         output_concentration=None,
         output_event=None,
         output_file: str | None=None,
-        save_data: bool=False,
-        plot_data: bool=True,
+        save_data: bool | None=None,
+        plot_data: bool | None=None,
     ) -> None:
         """
         runs the simulation, the arguments for this function can be set using the get item method or this way
@@ -422,27 +422,27 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         # I wish there was a way to loop over all argument without args and kargs
         pr_manually_process_each_parameter(
             self,
-            duration,
-            volume,
-            dimension,
-            repetitions,
-            level,
-            simulation_method,
-            start_time,
-            r_tol,
-            a_tol,
-            seeds,
-            step_size,
-            jobs,
-            unit_x,
-            unit_y,
-            output_concentration,
-            output_event,
-            output_file,
-            save_data,
-            plot_data,
-            rate_type,
-            plot_type,
+            duration=duration,
+            volume=volume,
+            dimension=dimension,
+            repetitions=repetitions,
+            level=level,
+            simulation_method=simulation_method,
+            start_time=start_time,
+            r_tol=r_tol,
+            a_tol=a_tol,
+            seeds=seeds,
+            step_size=step_size,
+            jobs=jobs,
+            unit_x=unit_x,
+            unit_y=unit_y,
+            output_concentration=output_concentration,
+            output_event=output_event,
+            output_file=output_file,
+            save_data=save_data,
+            plot_data=plot_data,
+            rate_type=rate_type,
+            plot_type=plot_type,
         )
 
         # Level needs to be set before compilation
@@ -569,7 +569,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             else:
                 self.plot_deterministic()
 
-    def save_data(self, file=None):
+    def save_data(self, file: str | None=None) -> None:
         """
         Saves the simulation result data to a file in json format
 
@@ -577,7 +577,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         """
         self._save_data(file=file)
 
-    def _save_data(self, file=None):
+    def _save_data(self, file: str | None=None) -> None:
         """
         Save results manually into file. Useful for jupyter notebook users
 

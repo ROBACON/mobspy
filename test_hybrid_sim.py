@@ -40,7 +40,6 @@ def test_hybrid_sim():
     S2 = Simulation(A | B)
     S2.method = "stochastic"
     S2.duration = (A <= 0) | (B <= 0)
-    S2.level = -1
     S2.plot_data = False
 
     Sim = S1 + S2
@@ -48,3 +47,7 @@ def test_hybrid_sim():
 
     assert compare_model(Sim.compile(), "test_tools/model_8.txt")
     assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0
+
+
+if __name__ == "__main__":
+    test_hybrid_sim()

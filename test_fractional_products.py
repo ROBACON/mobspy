@@ -64,6 +64,7 @@ def test_stochastic():
 def test_stochastic_variable():
     """Test fractional products in stochastic simulation.
     The yield coefficient is defined as a variable."""
+    # TODO: currently coefficients 0.5 to 1.0 + integer are supported
     A, B, C = BaseSpecies()
     A(10)
     B(1)
