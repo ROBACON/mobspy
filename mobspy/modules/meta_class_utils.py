@@ -1,9 +1,7 @@
 """This model stores function used by the meta_class.py module"""
 
 from collections.abc import Sequence
-
 import mobspy.simulation_logging.log_scripts as simlog
-
 
 def count_stoichiometry(
     lst: Sequence[tuple[float, str] | str],
