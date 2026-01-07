@@ -418,6 +418,8 @@ class ExpressionDefiner:
         # Dimension
         self._dimension = None
 
+        self.species_list_operation_order = []
+
     def create_from_new_operation(
         self, other, symbol, count_op, conc_op, direct_sense=True, operation=None
     ):
@@ -514,6 +516,15 @@ class ExpressionDefiner:
         except AttributeError:
             pass
 
+        # Accumulate species in operation order
+        new_species_list_operation_order = list(getattr(self, 'species_list_operation_order', []))
+        try:
+            for spe in other.species_list_operation_order:
+                if spe not in new_species_list_operation_order:
+                    new_species_list_operation_order.append(spe)
+        except AttributeError:
+            pass
+
         if isinstance(other, ExpressionDefiner):
             new_parameter_set = self._parameter_set.union(other._parameter_set)
         elif isinstance(other, MobsPyExpression):
@@ -579,6 +590,7 @@ class ExpressionDefiner:
             count_in_expression=_count_in_expression,
             concentration_in_expression=_concentration_in_expression,
             has_units=_has_units,
+            species_list_operation_order=new_species_list_operation_order
         )
 
 
@@ -848,9 +860,15 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         count_in_expression=True,
         concentration_in_expression=False,
         has_units=False,
+        species_list_operation_order = None
     ):
         super().__init__(species_string, species_object)
         self._generate_necessary_attributes()
+
+        if species_list_operation_order is None:
+            self.species_list_operation_order = []
+        else:
+            self.species_list_operation_order = species_list_operation_order
 
         self._ms_active = True
 
@@ -1053,6 +1071,7 @@ def check_if_non_expression_operated(other):
             concentration_in_model=False,
             count_in_expression=False,
             concentration_in_expression=False,
+            species_list_operation_order= [other] if hasattr(other, 'get_spe_object') else []
         )
     return other
 

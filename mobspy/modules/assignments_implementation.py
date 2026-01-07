@@ -52,47 +52,61 @@ class Assignment_Operator:
 
     @staticmethod
     def check_arguments(first, second):
+        spe_list_first = []
+        spe_list_second = []
+
+        # Only extract species if it's actually a Species or Reacting_Species
+        if hasattr(first, 'get_spe_object'):
+            spe_list_first = [first]
+
+        if hasattr(second, 'get_spe_object'):
+            spe_list_second = [second]
+
         if type(first) == int or type(first) == float:
             first = mbe_MobsPyExpression(
                 str(first),
-                None,
+                species_object= None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
+                species_list_operation_order=spe_list_first
             )
 
         if type(second) == int or type(second) == float:
             second = mbe_MobsPyExpression(
                 str(second),
-                None,
+                species_object= None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
+                species_list_operation_order= spe_list_second
             )
 
         if not isinstance(first, mbe_MobsPyExpression):
             first = mbe_MobsPyExpression(
                 "($asg_" + str(first) + ")",
-                None,
+                species_object=None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
+                species_list_operation_order=spe_list_first
             )
         if not isinstance(second, mbe_MobsPyExpression):
             second = mbe_MobsPyExpression(
                 "($asg_" + str(second) + ")",
-                None,
+                species_object=None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
+                species_list_operation_order=spe_list_second
             )
         return first, second
 

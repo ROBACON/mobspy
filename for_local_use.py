@@ -1,12 +1,12 @@
 from mobspy import *
+from mobspy.modules.ode_operator import dt
 
 if __name__ == "__main__":
 
     A, B = BaseSpecies()
-    A.a1, A.a2, A.a3, B.b1, B.b2
-    C = A*B
 
-    ~C.a1 >> Zero [10]
+    dt[A] >> -0.1*A
 
-    S = Simulation(A | C)
-    print(S.compile())
+    A(100)
+    S = Simulation(A)
+    print(S.generate_sbml()[0])
