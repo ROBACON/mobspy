@@ -48,4 +48,22 @@ def test_ode_neg_test():
     assert compare_model(S.compile(), "test_tools/model_ode_neg_test.txt")
 
 
+def test_ode_compartments():
+
+    """ODE combined with regular CRN reactions"""
+    A = BaseSpecies()
+    A.c1, A.c2
+
+    Zero >> A.c1[1]
+    A.c1 >> A.c2[1]
+
+    # ODE for A
+    dt[A] >> -0.1 * A
+
+    S = Simulation(A)
+    assert compare_model(S.compile(), "test_tools/model_ode_compartments.txt")
+
+
+
+
 
