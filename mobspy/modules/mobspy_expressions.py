@@ -361,6 +361,14 @@ class ExpressionDefiner:
         else:
             return self.non_expression_rpow(other)
 
+    def __neg__(self):
+        if self._ms_active:
+            other = check_if_non_expression_operated(-1)
+            count_op, conc_op = self.execute_quantity_op(-1, "__mul__")
+            return self.create_from_new_operation(other, "*", count_op, conc_op, False)
+        else:
+            return self.non_expression_neg()
+
     def combine_binary_attributes(self, other, attribute):
         """
         Or gates to binary True or False attributes from self and other

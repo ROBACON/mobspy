@@ -1,5 +1,5 @@
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.meta_class import Species
+from mobspy.modules.meta_class import Species, Reacting_Species
 from mobspy.simulation_logging.log_scripts import error as simlog_error
 
 
@@ -9,7 +9,7 @@ def generate_ODE_reaction_rate(list_of_used_species, expression):
 
     # Convert $asg_X to $pos_N based on position in list
     for i, spe in enumerate(list_of_used_species):
-        spe_name = spe.get_name()
+        spe_name = str(spe)
         expr_string = expr_string.replace(f"($asg_{spe_name})", f"$_pos_{i}")
 
     # Create the parameter argument r1, r2, r3
@@ -39,6 +39,9 @@ class ODEBinding:
         self.state_variable = state_variable
 
     def __rshift__(self, expression):
+        if isinstance(expression, Species) or isinstance(expression, Reacting_Species):
+            expression = Assign.mul(1, expression)
+
         Assign.reset_context()
 
         species_list_operation_order = expression.species_list_operation_order
@@ -62,7 +65,7 @@ class DifferentialOperator:
     """Differential operator for ODE syntax: dt[A] >> expression."""
 
     def __getitem__(self, item):
-        if isinstance(item, Species):
+        if isinstance(item, Species) or isinstance(item, Reacting_Species):
             Assign.set_context()  # Turn ON before expression is evaluated
             return ODEBinding(item)
         else:

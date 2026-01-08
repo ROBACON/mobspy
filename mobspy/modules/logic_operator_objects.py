@@ -215,7 +215,7 @@ class SpeciesComparator:
         else:
             return id(self) == id(other)
 
-    def __neg__(self, other):
+    def __ne__(self, other):
         return id(self) != id(other)
 
     def __hash__(self):
