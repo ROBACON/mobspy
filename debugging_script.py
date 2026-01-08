@@ -50,7 +50,7 @@ test_list = [
     test_shared_parameter_name,
     test_set_counts_parameters,
     test_repeated_parameters,
-    initial_expression_test,
+    test_initial_expression,
     test_wrong_dimension_error,
     test_more_than_used,
     zero_rate_test,

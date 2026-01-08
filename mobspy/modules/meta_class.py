@@ -1110,9 +1110,17 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if re.search(set_pattern, code_line):
             return True
 
+        # If line doesn't contain '>>', it's a multiline reaction, so we don't parse it
+        if '>>' not in code_line:
+            return True
+
         # Make sure the reaction rate is present.
         # If code_line ends with '>>' it might be a multiline reaction, so skip validation
         if code_line.rstrip().endswith('>>'):
+            return True
+
+        # If code_line ends with '[' it's a multiline rate, skip validation
+        if code_line.rstrip().endswith('['):
             return True
             
         if not bool(re.search(pattern, code_line)):

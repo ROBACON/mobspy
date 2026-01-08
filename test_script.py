@@ -1016,7 +1016,7 @@ def test_repeated_parameters():
         assert True
 
 
-def initial_expression_test():
+def test_initial_expression():
     A, B, Hey = BaseSpecies()
     D = New(A)
 
