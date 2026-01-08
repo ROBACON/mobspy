@@ -2,6 +2,7 @@ from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
 from mobspy.modules.ode_operator import dt
 from mobspy import *
 from testutils import compare_model, compare_model_ignore_order
+from mobspy.modules.functions import ms_exp
 
 def test_ode_syntax_basic():
     A = BaseSpecies()
@@ -98,6 +99,17 @@ def test_ode_inheritance():
     Human(100), Animal(50)
     S = Simulation(Human | Animal)
     assert compare_model(S.compile(), "test_tools/model_ode_inheritance.txt")
+
+
+def test_ode_with_functions():
+    A = BaseSpecies()
+
+    dt[A] >> 1 / (1 + ms_exp(A / 1000))
+
+    A(100)
+    S = Simulation(A)
+    assert compare_model(S.compile(), "test_tools/model_ode_with_functions.txt")
+
 
 
 
