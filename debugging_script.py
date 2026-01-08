@@ -1,4 +1,6 @@
 from test_script import *
+from test_ode_syntax import *
+import sys
 
 # This is here because pytest is too slow - so it's a faster test that avoid the collection step.
 # Pytest is used in the GitHub while pushing
@@ -30,8 +32,8 @@ test_list = [
     test_conditional_between_meta_species,
     test_conditional_between_meta_species_2,
     test_event_reaction_not_allowed,
-    all_test,
-    all_test_2,
+    test_all,
+    test_2_all,
     test_error_mult,
     test_set_counts,
     test_bool_error,
@@ -45,11 +47,10 @@ test_list = [
     test_string_events_assignment,
     test_plotting,
     test_volume_after_sim,
-    test_parameters_with_sbml,
     test_shared_parameter_name,
     test_set_counts_parameters,
     test_repeated_parameters,
-    initial_expression_test,
+    test_initial_expression,
     test_wrong_dimension_error,
     test_more_than_used,
     zero_rate_test,
@@ -105,6 +106,14 @@ test_list = [
     test_2D_reaction_with_units,
     test_parameters_as_initial_values,
     test_parameters_in_lambda_expression,
+    test_ode_syntax_basic,
+    test_ode_syntax_two_species,
+    test_ode_applied_to_species,
+    test_ode_neg_test,
+    test_ode_compartments,
+    test_ode_complex_expressions,
+    test_ode_inheritance,
+    test_ode_with_functions
 ]
 
 # test_no_species_in_asg
@@ -117,14 +126,22 @@ sub_test = test_list
 # sub_test = [test_parameters_with_sbml]
 def perform_tests():
     any_failed = False
+    failed_tests = []
     for test in sub_test:
         try:
             test()
             print(f"Test {test} passed")
         except:
-            print("\033[91m" + f"Test {test} failed" + "\033[0m", file=sys.stderr)
+            message = "\033[91m" + f"Test {test} failed" + "\033[0m"
+            print(message, file=sys.stderr)
             any_failed = True
+            failed_tests.append(message)
     if any_failed:
+        print()
+        print("The following tests failed", file=sys.stderr)
+        for t in failed_tests:
+            print(t, file=sys.stderr)
+
         assert False
 
 

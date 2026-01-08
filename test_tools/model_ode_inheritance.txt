@@ -1,0 +1,18 @@
+
+Species
+Animal,50
+Human,100
+
+Mappings
+Animal :
+Animal
+Human :
+Human
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Animal')], 'pr': [(2, 'Animal')], 'kin': '(-0.1*Animal)'}
+reaction_1,{'re': [(1, 'Human')], 'pr': [(2, 'Human')], 'kin': '(-0.1*Human)'}
+

@@ -14,7 +14,6 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
     """
 
     # convert_received_unit
-
     parameter_stack = {}
 
     def __init__(self, name, value):

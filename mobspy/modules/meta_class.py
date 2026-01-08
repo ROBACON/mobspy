@@ -547,6 +547,13 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __invert__(self):
         return self.c('not$')
 
+    def __neg__(self):
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(-1, self)
+        else:
+            simlog_error("The negative operator was applied to a Reacting Species in the wrong context")
+
+
     def __rshift__(self, other):
         """
         The >> operator for defining reactions. It passes two instances of reacting species to construct the
@@ -1100,6 +1107,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def __invert__(self):
         return self.c('not$')
 
+    def __neg__(self):
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(-1, self)
+        else:
+            simlog_error("The negative operator was applied to a Species in the wrong context")
+
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
         # Check that line ends with a ']' and after that only ')', ',', whitespace and comments
@@ -1110,9 +1123,17 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if re.search(set_pattern, code_line):
             return True
 
+        # If line doesn't contain '>>', it's a multiline reaction, so we don't parse it
+        if '>>' not in code_line:
+            return True
+
         # Make sure the reaction rate is present.
         # If code_line ends with '>>' it might be a multiline reaction, so skip validation
         if code_line.rstrip().endswith('>>'):
+            return True
+
+        # If code_line ends with '[' it's a multiline rate, skip validation
+        if code_line.rstrip().endswith('['):
             return True
             
         if not bool(re.search(pattern, code_line)):
