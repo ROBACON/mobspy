@@ -160,15 +160,13 @@ class __Operator_Base:
                 for spe_obe in model:
                     if species in spe_obe.get_references():
                         species_is_referenced_by.append(spe_obe)
+                all_strings = self.find_all_string_references_to_born_species(
+                    species_is_referenced_by,
+                    characteristics,
+                    ref_characteristics_to_object,
+                )
                 products.append(
-                    (
-                        stoichiometry,
-                        self.find_all_string_references_to_born_species(
-                            species_is_referenced_by,
-                            characteristics,
-                            ref_characteristics_to_object,
-                        ),
-                    )
+                    [(stoichiometry, s) for s in all_strings]
                 )
                 continue
 

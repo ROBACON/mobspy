@@ -10,7 +10,7 @@ def generate_ODE_reaction_rate(list_of_used_species, expression):
     # Convert $asg_X to $pos_N based on position in list
     for i, spe in enumerate(list_of_used_species):
         spe_name = spe.get_name()
-        expr_string = expr_string.replace(f"($asg_{spe_name})", f"$pos_{i}")
+        expr_string = expr_string.replace(f"($asg_{spe_name})", f"$_pos_{i}")
 
     # Create the parameter argument r1, r2, r3
     n = len(list_of_used_species)
@@ -23,7 +23,7 @@ def generate_ODE_reaction_rate(list_of_used_species, expression):
 
     replace_lines = ""
     for i in range(n):
-        replace_lines += f'result = result.replace("$pos_{i}", str({param_names[i]}))\n\t'
+        replace_lines += f'result = result.replace("$_pos_{i}", str({param_names[i]}))\n\t'
     func_code += replace_lines
     func_code += "return result"
 
@@ -53,10 +53,9 @@ class ODEBinding:
             else:
                 reactants = reactants + spe
 
-        R = reactants >> reactants + self.state_variable [rate_fn]
-
+        reactants >> self.state_variable + reactants [rate_fn]
         # Returns the reaction, even though it doesn't matter
-        return R
+        return self
 
 
 class DifferentialOperator:

@@ -1,0 +1,16 @@
+
+Species
+A,100
+B,50
+
+Mappings
+A :
+A
+B :
+B
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'A'), (1, 'B')], 'pr': [(2, 'A'), (1, 'B')], 'kin': '((-0.1*A)+(0.05*B))'}

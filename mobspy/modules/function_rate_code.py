@@ -110,11 +110,6 @@ def extract_reaction_rate(
             # Remove dollar sign symbols from expression object
             reaction_rate_string = reaction_rate_string.replace("$", "")
 
-            if parameter_exist:
-                parameters_in_reaction = search_for_parameters_in_str(
-                    reaction_rate_string, parameter_exist, parameters_in_reaction
-                )
-
         elif isinstance(rate, mbe_MobsPyExpression):
             # Having an expression variable implies it is a constructed expression - not mass action
             if len(rate._expression_variables) > 0:
@@ -162,9 +157,6 @@ def extract_reaction_rate(
             + str(reactant_string_list)
         )
     elif type(reaction_rate_function) == str:
-        parameters_in_reaction = search_for_parameters_in_str(
-            reaction_rate_function, parameter_exist, parameters_in_reaction
-        )
         reaction_rate_string = reaction_rate_function
     else:
         simlog_debug(type(reaction_rate_function))
@@ -303,6 +295,7 @@ def prepare_arguments_for_callable(
     return argument_dict
 
 
+# @TODO this function needs to be deprecated - Please slowly remove form the code
 def search_for_parameters_in_str(
     reaction_rate_string, parameters_exist, parameters_in_reaction
 ):
