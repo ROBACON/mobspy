@@ -1,6 +1,8 @@
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Species, Reacting_Species
 from mobspy.simulation_logging.log_scripts import error as simlog_error
+import re
+from inspect import stack as inspect_stack
 
 
 def generate_ODE_reaction_rate(list_of_used_species, expression):
@@ -39,6 +41,15 @@ class ODEBinding:
         self.state_variable = state_variable
 
     def __rshift__(self, expression):
+        if isinstance(expression, Reacting_Species):
+            if len(expression.list_of_reactants) > 1:
+                simlog_error(
+                    message = "ODE expressions must be built within the dt[...] >> context.\n"
+                    "Expressions like 'C = A + B' followed by 'dt[X] >> C' are not valid.\n"
+                    "Use: dt[X] >> A + B",
+                    full_exception_log = True
+                )
+
         if isinstance(expression, Species) or isinstance(expression, Reacting_Species):
             expression = Assign.mul(1, expression)
 
@@ -64,8 +75,34 @@ class ODEBinding:
 class DifferentialOperator:
     """Differential operator for ODE syntax: dt[A] >> expression."""
 
+    @staticmethod
+    def _compile_ode_syntax(code_line, line_number):
+        """Validate that ODE syntax uses >> operator."""
+        """Validate that ODE syntax uses >> operator."""
+        # Check that dt[...] is followed by >>
+        if not re.search(r'dt\s*\[.*\]\s*>>', code_line):
+            simlog_error(
+                f"At: {code_line}\n"
+                f"Line number: {line_number}\n"
+                "ODE syntax requires '>>' operator right after dt[Species] in the same line\n"
+                "Use: dt[Species] >> expression"
+            )
+
+    def __setitem__(self, key, value):
+        simlog_error(
+            message = "ODE syntax requires '>>' operator, not '=', right after dt[Species] in the same line\n"
+            "Use: dt[Species] >> expression",
+            full_exception_log = True
+        )
+
     def __getitem__(self, item):
         if isinstance(item, Species) or isinstance(item, Reacting_Species):
+            stack_frame = inspect_stack()[1]
+            code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
+            line_number = stack_frame.lineno
+
+            self._compile_ode_syntax(code_line, line_number)
+
             Assign.set_context()  # Turn ON before expression is evaluated
             return ODEBinding(item)
         else:

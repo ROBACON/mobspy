@@ -90,7 +90,7 @@ def test_ode_inheritance():
 
     """ODE applied to parent affects all children"""
     Mortal = BaseSpecies()
-    Human, Animal = New(Mortal, 2)
+    Human, Animal = New(Mortal)
 
     # Decay applied to Mortal affects both Human and Animal
     dt[Mortal] >> -0.1 * Mortal
