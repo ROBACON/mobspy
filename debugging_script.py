@@ -107,7 +107,9 @@ test_list = [
     test_parameters_as_initial_values,
     test_parameters_in_lambda_expression,
     test_ode_syntax_basic,
-    test_ode_syntax_two_species
+    test_ode_syntax_two_species,
+    test_ode_applied_to_species,
+    test_ode_neg_test
 ]
 
 # test_no_species_in_asg

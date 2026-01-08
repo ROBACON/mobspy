@@ -1,0 +1,18 @@
+
+Species
+Neg,0
+NegR.comp1,0
+
+Mappings
+Neg :
+Neg
+NegR :
+NegR.comp1
+
+Parameters
+volume,1
+
+Reactions
+reaction_0,{'re': [(1, 'Neg')], 'pr': [(2, 'Neg')], 'kin': '(-1*Neg)'}
+reaction_1,{'re': [(1, 'NegR.comp1')], 'pr': [(2, 'NegR.comp1')], 'kin': '(-1*NegR.comp1)'}
+

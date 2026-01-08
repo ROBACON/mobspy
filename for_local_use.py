@@ -5,18 +5,18 @@ from testutils import compare_model, compare_model_ignore_order
 
 if __name__ == "__main__":
 
-    A = BaseSpecies()
-    B = BaseSpecies()
-    B.b1
+    def ode_neg_test():
+        Neg, NegR = BaseSpecies()
+        NegR.comp1
 
-    dt[A] >> A
-    dt[B.b1] >> B.b1
+        dt[Neg] >> -Neg
+        dt[NegR] >> -NegR.comp1
 
-    S = Simulation(B)
-    print(S.compile())
+        S = Simulation(Neg | NegR)
+        assert compare_model(S.compile(), "test_tools/model_ode_neg_test.txt")
+    ode_neg_test()
+
     exit()
-
-
 
     def ode_with_meta_species_multiplication():
         """

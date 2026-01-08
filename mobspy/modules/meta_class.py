@@ -547,6 +547,13 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __invert__(self):
         return self.c('not$')
 
+    def __neg__(self):
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(-1, self)
+        else:
+            simlog_error("The negative operator was applied to a Reacting Species in the wrong context")
+
+
     def __rshift__(self, other):
         """
         The >> operator for defining reactions. It passes two instances of reacting species to construct the
@@ -1099,6 +1106,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     def __invert__(self):
         return self.c('not$')
+
+    def __neg__(self):
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(-1, self)
+        else:
+            simlog_error("The negative operator was applied to a Species in the wrong context")
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):

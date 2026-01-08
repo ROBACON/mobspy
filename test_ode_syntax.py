@@ -23,3 +23,29 @@ def test_ode_syntax_two_species():
     S = Simulation(A | B)
     assert compare_model(S.compile(), "test_tools/model_ode_syntax_two_species.txt")
 
+def test_ode_applied_to_species():
+
+    A = BaseSpecies()
+    B = BaseSpecies()
+    B.b1
+
+    dt[A] >> A
+    dt[B.b1] >> B.b1
+
+    S = Simulation(A | B)
+    assert compare_model(S.compile(), "test_tools/model_ode_applied_to_species.txt")
+
+
+def test_ode_neg_test():
+
+    Neg, NegR = BaseSpecies()
+    NegR.comp1
+
+    dt[Neg] >> -Neg
+    dt[NegR] >> -NegR.comp1
+
+    S = Simulation(Neg | NegR)
+    assert compare_model(S.compile(), "test_tools/model_ode_neg_test.txt")
+
+
+
