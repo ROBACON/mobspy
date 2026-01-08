@@ -64,6 +64,41 @@ def test_ode_compartments():
     assert compare_model(S.compile(), "test_tools/model_ode_compartments.txt")
 
 
+def test_ode_complex_expressions():
+
+    """ODE with various complex expressions: Hill functions, Michaelis-Menten, feedback loops"""
+    A, B, C, D = BaseSpecies()
+
+    # Hill-style repression: production inhibited by B
+    dt[A] >> 100 / (1 + B ** 2) - 0.1 * A
+
+    # Michaelis-Menten with multiple substrates
+    dt[B] >> (A * C) / (10 + A + C) - B / (5 + B)
+
+    # Nested fractions and mixed operations
+    dt[C] >> (A / (1 + A)) * (B / (1 + B)) - 0.05 * C * D
+
+    # Complex feedback with powers and sums
+    dt[D] >> (A ** 2 + B ** 2) / (100 + A ** 2 + B ** 2) * (1 - D / 1000)
+
+    A(10), B(10), C(10), D(10)
+    S = Simulation(A | B | C | D)
+    assert compare_model(S.compile(), "test_tools/model_ode_complex_expressions.txt")
+
+
+def test_ode_inheritance():
+
+    """ODE applied to parent affects all children"""
+    Mortal = BaseSpecies()
+    Human, Animal = New(Mortal, 2)
+
+    # Decay applied to Mortal affects both Human and Animal
+    dt[Mortal] >> -0.1 * Mortal
+
+    Human(100), Animal(50)
+    S = Simulation(Human | Animal)
+    assert compare_model(S.compile(), "test_tools/model_ode_inheritance.txt")
+
 
 
 

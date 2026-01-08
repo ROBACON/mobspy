@@ -109,7 +109,10 @@ test_list = [
     test_ode_syntax_basic,
     test_ode_syntax_two_species,
     test_ode_applied_to_species,
-    test_ode_neg_test
+    test_ode_neg_test,
+    test_ode_compartments,
+    test_ode_complex_expressions,
+    test_ode_inheritance
 ]
 
 # test_no_species_in_asg
