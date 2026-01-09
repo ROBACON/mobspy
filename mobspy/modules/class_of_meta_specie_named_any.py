@@ -31,10 +31,13 @@ class Context_specie_named_any(Species):
         :raise simlog.error: if the Any specie is given a characteristic outside of a context.
         :return self: to allow for assigning multiple characteristics to the Any specie in the same line.
         """
+        if item.startswith('_'):
+            raise AttributeError(item)
+
         code_line = inspect_stack()[1].code_context[0][:-1]
         code_line = code_line.split(" ")
         is_with = [x for x in code_line if x != ""][0]
-        if is_with == "with" or item == "__sphinx_mock__":
+        if is_with == "with":
             pass
         else:
             print(is_with, item, code_line)
