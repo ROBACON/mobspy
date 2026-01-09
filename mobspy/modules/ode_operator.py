@@ -40,12 +40,12 @@ class ODEBinding:
     def __init__(self, state_variable):
         self.state_variable = state_variable
 
-    def __rshift__(self, expression):
+    def __iadd__(self, expression):
         if isinstance(expression, Reacting_Species):
             if len(expression.list_of_reactants) > 1:
                 simlog_error(
-                    message = "ODE expressions must be built within the dt[...] >> context.\n"
-                    "Expressions like 'C = A + B' followed by 'dt[X] >> C' are not valid.\n"
+                    message = "ODE expressions must be built within the dt[...] += context.\n"
+                    "Expressions like 'C = A + B' followed by 'dt[X] += C' are not valid.\n"
                     "Use: dt[X] >> A + B",
                     full_exception_log = True
                 )
@@ -77,22 +77,27 @@ class DifferentialOperator:
 
     @staticmethod
     def _compile_ode_syntax(code_line, line_number):
-        """Validate that ODE syntax uses >> operator."""
-        """Validate that ODE syntax uses >> operator."""
-        # Check that dt[...] is followed by >>
-        if not re.search(r'dt\s*\[.*\]\s*>>', code_line):
+        """Validate that ODE syntax"""
+        # Check that dt[...] is followed by +=
+        if not re.search(r'dt\s*\[.*\]\s*\+=', code_line):
             simlog_error(
                 f"At: {code_line}\n"
                 f"Line number: {line_number}\n"
-                "ODE syntax requires '>>' operator right after dt[Species] in the same line\n"
-                "Use: dt[Species] >> expression"
+                "ODE syntax requires '+=' operator right after dt[Species] in the same line\n"
+                "Use: dt[Species] += expression"
             )
-
+    
     def __setitem__(self, key, value):
+        stack_frame = inspect_stack()[1]
+        code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
+
+        if re.search(r'dt\s*\[.*\]\s*\+=', code_line):
+            return  # Valid += syntax, nothing to do
+
         simlog_error(
-            message = "ODE syntax requires '>>' operator, not '=', right after dt[Species] in the same line\n"
-            "Use: dt[Species] >> expression",
-            full_exception_log = True
+            message="ODE syntax requires '+=' operator, not '=', right after dt[Species] in the same line\n"
+                    "Use: dt[Species] += expression",
+            full_exception_log=True
         )
 
     def __getitem__(self, item):
