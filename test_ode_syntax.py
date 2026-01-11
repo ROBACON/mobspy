@@ -111,6 +111,16 @@ def test_ode_with_functions():
     assert compare_model(S.compile(), "test_tools/model_ode_with_functions.txt")
 
 
+def test_ode_neg():
+
+    A = BaseSpecies()
+
+    dt[A] -= A
+
+    S = Simulation(A)
+    assert compare_model(S.compile(), "test_tools/model_ode_neg.txt")
+
+
 
 
 

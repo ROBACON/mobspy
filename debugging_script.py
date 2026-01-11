@@ -113,7 +113,8 @@ test_list = [
     test_ode_compartments,
     test_ode_complex_expressions,
     test_ode_inheritance,
-    test_ode_with_functions
+    test_ode_with_functions,
+    test_ode_neg
 ]
 
 # test_no_species_in_asg
