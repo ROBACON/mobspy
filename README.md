@@ -115,7 +115,7 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 For now MobsPy is not thread-safe and it's not compatible with numpy and deepcopy
 
 # Release info
-Varsion 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features
+Version 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features
 
 Version 2.5.0 -  Added generate antimony function that translates a MobsPy model to antimony. Thank you Hebert Sauro and Lucian Smith for the discussions and help.
 
