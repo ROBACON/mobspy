@@ -104,8 +104,6 @@ def set_counts(count_dic):
                         model.add(key)
                     key(item)
             except AttributeError:
-                simlog_error(
-                    "Keys must be either meta-species or strings"
-                )
+                simlog_error("Keys must be either meta-species or strings")
 
     return List_Species(model)

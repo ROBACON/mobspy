@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 import mobspy.simulation_logging.log_scripts as simlog
 
+
 def count_stoichiometry(
     lst: Sequence[tuple[float, str] | str],
 ) -> dict[str, float | int]:

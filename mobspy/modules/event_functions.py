@@ -14,6 +14,7 @@ from mobspy.modules.function_rate_code import (
 
 # @TODO remove search parameters in string - don't use it anymore - slowly deprecate this function
 
+
 def format_event_dictionary_for_sbml(
     species_for_sbml,
     event_list,

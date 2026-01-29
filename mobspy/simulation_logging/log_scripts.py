@@ -3,7 +3,7 @@ import sys
 import traceback
 
 # Configure the logger for MobsPy
-logger = logging.getLogger('mobspy')
+logger = logging.getLogger("mobspy")
 logger.setLevel(logging.INFO)  # Logger accepts all levels
 
 # Create console handler with formatting
@@ -15,10 +15,10 @@ class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds color to warning and error messages"""
 
     COLORS: dict[str, str] = {
-        'WARNING': '\033[93m',  # Yellow
-        'ERROR': '\033[91m',     # Red
-        'CRITICAL': '\033[91m',  # Red
-        'RESET': '\033[0m'
+        "WARNING": "\033[93m",  # Yellow
+        "ERROR": "\033[91m",  # Red
+        "CRITICAL": "\033[91m",  # Red
+        "RESET": "\033[0m",
     }
 
     def format(self, record: logging.LogRecord) -> str:
@@ -28,7 +28,7 @@ class ColoredFormatter(logging.Formatter):
         return log_message
 
 
-_formatter = ColoredFormatter('%(levelname)s: %(message)s')
+_formatter = ColoredFormatter("%(levelname)s: %(message)s")
 _console_handler.setFormatter(_formatter)
 logger.addHandler(_console_handler)
 

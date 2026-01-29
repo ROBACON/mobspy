@@ -58,15 +58,11 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 if isinstance(val, Quantity) and i == 0:
                     new_value, first_unit = self.unit_process(val)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is None:
-                    simlog.error(
-                        "MobsPy parameters must all be the same unit"
-                    )
+                    simlog.error("MobsPy parameters must all be the same unit")
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
                     new_value, unit = self.unit_process(val)
                     if unit != first_unit:
-                        simlog.error(
-                            "MobsPy parameters must all be the same unit"
-                        )
+                        simlog.error("MobsPy parameters must all be the same unit")
                 else:
                     new_value = val
 

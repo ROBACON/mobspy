@@ -56,34 +56,34 @@ class Assignment_Operator:
         spe_list_second = []
 
         # Only extract species if it's actually a Species or Reacting_Species
-        if hasattr(first, 'get_spe_object'):
+        if hasattr(first, "get_spe_object"):
             spe_list_first = [first]
 
-        if hasattr(second, 'get_spe_object'):
+        if hasattr(second, "get_spe_object"):
             spe_list_second = [second]
 
         if type(first) == int or type(first) == float:
             first = mbe_MobsPyExpression(
                 str(first),
-                species_object= None,
+                species_object=None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
-                species_list_operation_order=spe_list_first
+                species_list_operation_order=spe_list_first,
             )
 
         if type(second) == int or type(second) == float:
             second = mbe_MobsPyExpression(
                 str(second),
-                species_object= None,
+                species_object=None,
                 dimension=None,
                 count_in_model=True,
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
-                species_list_operation_order= spe_list_second
+                species_list_operation_order=spe_list_second,
             )
 
         if not isinstance(first, mbe_MobsPyExpression):
@@ -95,7 +95,7 @@ class Assignment_Operator:
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
-                species_list_operation_order=spe_list_first
+                species_list_operation_order=spe_list_first,
             )
         if not isinstance(second, mbe_MobsPyExpression):
             second = mbe_MobsPyExpression(
@@ -106,7 +106,7 @@ class Assignment_Operator:
                 concentration_in_model=False,
                 count_in_expression=False,
                 concentration_in_expression=False,
-                species_list_operation_order=spe_list_second
+                species_list_operation_order=spe_list_second,
             )
         return first, second
 

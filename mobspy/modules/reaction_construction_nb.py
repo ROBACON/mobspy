@@ -350,7 +350,6 @@ def create_all_reactions(
                 for reactant_string_list in iterator_for_combinations(
                     reactant_species_string_combination_list
                 ):
-
                     product_object_list = construct_product_structure(reaction)
                     order_structure = construct_order_structure(
                         base_species_order, reactant_string_list

@@ -25,7 +25,9 @@ def generate_ODE_reaction_rate(list_of_used_species, expression):
 
     replace_lines = ""
     for i in range(n):
-        replace_lines += f'result = result.replace("$_pos_{i}", str({param_names[i]}))\n\t'
+        replace_lines += (
+            f'result = result.replace("$_pos_{i}", str({param_names[i]}))\n\t'
+        )
     func_code += replace_lines
     func_code += "return result"
 
@@ -58,9 +60,9 @@ class ODEBinding:
             if len(expression.list_of_reactants) > 1:
                 simlog_error(
                     message=f"ODE expressions must be built within the dt[...] {operator} context.\n"
-                            f"Expressions like 'C = A + B' followed by 'dt[X] {operator} C' are not valid.\n"
-                            f"Use: dt[X] {operator} A + B",
-                    full_exception_log=True
+                    f"Expressions like 'C = A + B' followed by 'dt[X] {operator} C' are not valid.\n"
+                    f"Use: dt[X] {operator} A + B",
+                    full_exception_log=True,
                 )
 
         if isinstance(expression, Species) or isinstance(expression, Reacting_Species):
@@ -99,16 +101,14 @@ class ODEBinding:
         return self._process_ode_expression(expression, is_birth=False)
 
 
-
 class DifferentialOperator:
     """Differential operator for ODE syntax: dt[A] >> expression."""
-
 
     @staticmethod
     def _compile_ode_syntax(code_line, line_number):
         """Validate that ODE syntax uses += or -="""
         # Check that dt[...] is followed by += or -=
-        if not re.search(r'dt\s*\[.*\]\s*(\+\=|\-\=)', code_line):
+        if not re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
             simlog_error(
                 f"At: {code_line}\n"
                 f"Line number: {line_number}\n"
@@ -121,14 +121,14 @@ class DifferentialOperator:
         stack_frame = inspect_stack()[1]
         code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
 
-        if re.search(r'dt\s*\[.*\]\s*(\+\=|\-\=)', code_line):
+        if re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
             return  # Valid += or -= syntax, nothing to do
 
         simlog_error(
             message="ODE syntax requires '+=' or '-=' operator, not '=', right after dt[Species] in the same line\n"
-                    "Use: dt[Species] += expression (for birth)\n"
-                    "Use: dt[Species] -= expression (for death)",
-            full_exception_log=True
+            "Use: dt[Species] += expression (for birth)\n"
+            "Use: dt[Species] -= expression (for death)",
+            full_exception_log=True,
         )
 
     def __getitem__(self, item):

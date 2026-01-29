@@ -344,9 +344,7 @@ def __remap_species(data, mapping, species_not_mapped):
             simlog.warning(
                 "Copasi removes A >> A species from reaction calculations and does not provide an output"
             )
-            simlog.warning(
-                "Please check the output data to see if this is the problem"
-            )
+            simlog.warning("Please check the output data to see if this is the problem")
             for key in data:
                 print(key, data[key])
             exit(1)

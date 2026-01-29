@@ -167,7 +167,9 @@ def extract_reaction_rate(
     return reaction_rate_string, parameters_in_reaction
 
 
-def basic_kinetics_string(reactants, reaction_rate, type_of_model, is_count=False) -> str:
+def basic_kinetics_string(
+    reactants, reaction_rate, type_of_model, is_count=False
+) -> str:
     """This constructs the bases for mass-action kinetics. Both for stochastic and deterministic depending on the type
     of model
 

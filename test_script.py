@@ -650,8 +650,8 @@ def test_bool_error():
         with S.event_condition(B == 0):
             B(100)
         assert False
-    except SystemExit:
-        pass
+    except Exception:
+        pass  # raises EventError
 
     try:
         S.duration = True

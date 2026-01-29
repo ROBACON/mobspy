@@ -165,9 +165,7 @@ class __Operator_Base:
                     characteristics,
                     ref_characteristics_to_object,
                 )
-                products.append(
-                    [(stoichiometry, s) for s in all_strings]
-                )
+                products.append([(stoichiometry, s) for s in all_strings])
                 continue
 
             # Simple round robin
@@ -338,9 +336,7 @@ class __Set_Reversible_Rate:
         """
         try:
             if len(both_rates) != 2:
-                simlog.error(
-                    "The reversible reaction must receive 2 rates"
-                )
+                simlog.error("The reversible reaction must receive 2 rates")
         except TypeError:
             simlog.error("The reversible reaction must receive 2 rates")
 

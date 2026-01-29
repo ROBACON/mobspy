@@ -50,9 +50,9 @@ def _get_multiline_code_context(stack_frame):
     code_context = stack_frame.code_context
     if not code_context:
         return ""
-    
+
     # Join all lines and remove trailing newline
-    full_context = ''.join(code_context).rstrip('\n')
+    full_context = "".join(code_context).rstrip("\n")
     return full_context
 
 
@@ -105,9 +105,7 @@ class _Last_rate_storage:
             or rate is None
             or isinstance(rate, me_ExpressionDefiner)
         ):
-            simlog_error(
-                "Reaction rate of type " + str(type(rate)) + " not valid"
-            )
+            simlog_error("Reaction rate of type " + str(type(rate)) + " not valid")
 
         return rate
 
@@ -122,6 +120,7 @@ class Reactions:
     :param order: (Order Operator) reaction order operator - default in a Round-Robin base
     :param rate: (int, float, callable, Quantity) reaction rate
     """
+
     def __init__(self, reactants, products, rate=None) -> None:
         """
         Constructor of the reaction object. For the object construction only the reactants and products are
@@ -217,8 +216,6 @@ class Reactions:
             reactant["object"].add_reaction(self)
         for product in products:
             product["object"].add_reaction(self)
-
-
 
     @staticmethod
     def __create_reactants_string(list_of_reactants) -> str:
@@ -379,12 +376,13 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         species2 = Species("B")
         reaction = species1 >> species2  # Creates a Reaction object.
     """
+
     def __init__(
         self,
         object_reference,
         characteristics,
         stoichiometry: int | float = 1,
-        label: int | float | str | None = None
+        label: int | float | str | None = None,
     ) -> None:
         """
         Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
@@ -545,14 +543,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             return asgi_Assign.add(other, self)
 
     def __invert__(self):
-        return self.c('not$')
+        return self.c("not$")
 
     def __neg__(self):
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         else:
-            simlog_error("The negative operator was applied to a Reacting Species in the wrong context")
-
+            simlog_error(
+                "The negative operator was applied to a Reacting Species in the wrong context"
+            )
 
     def __rshift__(self, other):
         """
@@ -727,9 +726,7 @@ class List_Species:
             if isinstance(item, Species):
                 self._list_species.append(item)
             else:
-                simlog_error(
-                    "Only Species can used to construct List_Species"
-                )
+                simlog_error("Only Species can used to construct List_Species")
 
     def append(self, species: "Species") -> None:
         """
@@ -763,9 +760,7 @@ class List_Species:
         elif isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
         else:
-            simlog_error(
-                "Operator must only be used in Species on List_Species"
-            )
+            simlog_error("Operator must only be used in Species on List_Species")
 
         return self
 
@@ -887,7 +882,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         # This will store the quantities relating to the species counts
         self._species_counts = []
 
-
     @classmethod
     def check_if_valid_characteristic(cls, affected_object, char):
         """
@@ -902,7 +896,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         # Allow pytest and other testing framework attributes, plus Python dunder attributes
         system_attrs = {"_pytestfixturefunction", "__sphinx_mock__"}
         # Allow all Python dunder (double underscore) attributes
-        if char[0] == "_" and char not in system_attrs and not (char.startswith("__") and char.endswith("__")):
+        if (
+            char[0] == "_"
+            and char not in system_attrs
+            and not (char.startswith("__") and char.endswith("__"))
+        ):
             simlog_error(
                 f"Characteristic name {char} in object {affected_object} is not allowed."
                 f" Please pick another name",
@@ -1017,7 +1015,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         print(self._species_counts)
 
     # Creation of List_Species For Simulation ##################
-    def __or__(self, other:  "Species | List_Species") -> "List_Species":
+    def __or__(self, other: "Species | List_Species") -> "List_Species":
         """
         Creates an instance of List_Species using the | operator
 
@@ -1029,9 +1027,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         elif isinstance(other, Species):
             return List_Species([self, other])
         else:
-            simlog_error(
-                "Only Species and List_Species can be concatenated"
-            )
+            simlog_error("Only Species and List_Species can be concatenated")
 
     # Both are defined bellow to be consistent with List_Species behavior
     def __iter__(self):
@@ -1105,13 +1101,15 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return asgi_Assign.add(other, self)
 
     def __invert__(self):
-        return self.c('not$')
+        return self.c("not$")
 
     def __neg__(self):
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         else:
-            simlog_error("The negative operator was applied to a Species in the wrong context")
+            simlog_error(
+                "The negative operator was applied to a Species in the wrong context"
+            )
 
     @classmethod
     def _compile_defined_reaction(cls, code_line, line_number):
@@ -1124,18 +1122,18 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return True
 
         # If line doesn't contain '>>', it's a multiline reaction, so we don't parse it
-        if '>>' not in code_line:
+        if ">>" not in code_line:
             return True
 
         # Make sure the reaction rate is present.
         # If code_line ends with '>>' it might be a multiline reaction, so skip validation
-        if code_line.rstrip().endswith('>>'):
+        if code_line.rstrip().endswith(">>"):
             return True
 
         # If code_line ends with '[' it's a multiline rate, skip validation
-        if code_line.rstrip().endswith('['):
+        if code_line.rstrip().endswith("["):
             return True
-            
+
         if not bool(re.search(pattern, code_line)):
             simlog_error(
                 f"At: {code_line} \n"

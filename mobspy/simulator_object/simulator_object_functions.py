@@ -1,4 +1,3 @@
-
 import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
 from mobspy.modules.species_string_generator import (

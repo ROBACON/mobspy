@@ -1,5 +1,5 @@
 from mobspy.modules.compiler_operator_functions import (
-    create_all_not_reactions as cof_create_all_not_reactions
+    create_all_not_reactions as cof_create_all_not_reactions,
 )
 from mobspy.simulation_logging.log_scripts import (
     error as simlog_error,

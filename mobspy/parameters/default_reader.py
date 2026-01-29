@@ -3,7 +3,6 @@ This model is responsible for storing MobsPy default parameters
 """
 
 
-
 # This was just created to avoid potential directory compatibilities
 def get_default_parameters():
     default_parameters = {
