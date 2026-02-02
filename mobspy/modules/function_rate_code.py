@@ -27,12 +27,9 @@ from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
 from mobspy.modules.unit_handler import convert_rate as uh_convert_rate
-from mobspy.simulation_logging.log_scripts import (
-    debug as simlog_debug,
-)
-from mobspy.simulation_logging.log_scripts import (
-    error as simlog_error,
-)
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 
 
 def extract_reaction_rate(
@@ -142,25 +139,25 @@ def extract_reaction_rate(
                 reactant_string_list, str(rate), type_of_model
             )
         elif rate is None:
-            simlog_error(
+            _logger.error(
                 "There is a reaction rate missing for the following reactants: \n"
                 + str(reactant_string_list)
             )
         else:
-            simlog_error(
+            _logger.error(
                 f"The rate function {reaction_rate_function}, returned a non-valid value. \n"
                 + "Only int, floats and str are accepted"
             )
     elif reaction_rate_function is None:
-        simlog_error(
+        _logger.error(
             "There is a reaction rate missing for the following reactants: \n"
             + str(reactant_string_list)
         )
     elif type(reaction_rate_function) == str:
         reaction_rate_string = reaction_rate_function
     else:
-        simlog_debug(type(reaction_rate_function))
-        simlog_error(
+        _logger.debug(type(reaction_rate_function))
+        _logger.error(
             f"The {type(reaction_rate_function)}, from {reaction_rate_function} is not supported"
         )
 

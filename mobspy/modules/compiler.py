@@ -1,10 +1,9 @@
 from mobspy.modules.compiler_operator_functions import (
     create_all_not_reactions as cof_create_all_not_reactions,
 )
-from mobspy.simulation_logging.log_scripts import (
-    error as simlog_error,
-    warning as simlog_warning,
-)
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
@@ -160,21 +159,21 @@ class Compiler:
         black_listed_names = {"Time", "Rev", "All"}
         for i, species in enumerate(meta_species_to_simulate):
             if "_dot_" in species.get_name():
-                simlog_error(
+                _logger.error(
                     f"In species: {species.get_name()} \n _dot_ cannot be used in meta-species names"
                 )
             if species.get_name() in black_listed_names:
-                simlog_error(
+                _logger.error(
                     f"The name {species.get_name()} is not allowed for meta-species please change it"
                 )
             if "$" in species.get_name():
-                simlog_error(
+                _logger.error(
                     f"In species: {species.get_name()} \n"
                     f"An error has occurred and one of the species was either not named or named with the "
                     f"restricted $ symbol"
                 )
             if species.get_name() in names_used:
-                simlog_error(
+                _logger.error(
                     "Names must be unique for all species\n"
                     + f"The repeated name is {species.get_name()} in position {i}\n"
                     + "Another possibility could be a repeated meta-species in the model"
@@ -279,7 +278,7 @@ class Compiler:
             temp_count = uh_convert_counts(count["quantity"], volume, dimension)
             for spe_str in species_strings:
                 if type(temp_count) == float and not type_of_model == "deterministic":
-                    simlog_warning(
+                    _logger.warning(
                         "The stochastic simulation rounds floats to integers"
                     )
                     species_for_sbml[spe_str] = int(temp_count)
@@ -318,7 +317,7 @@ class Compiler:
 
             temp_count = uh_convert_counts(count["quantity"], volume, dimension)
             if type(temp_count) == float and not type_of_model == "deterministic":
-                simlog_warning("The stochastic simulation rounds floats to integers")
+                _logger.warning("The stochastic simulation rounds floats to integers")
                 species_for_sbml[species_string] = int(temp_count)
                 assigned_species.append(species_string)
             else:
@@ -362,7 +361,7 @@ class Compiler:
                     and reactions_for_sbml[r1]["pr"] == reactions_for_sbml[r2]["pr"]
                     and reactions_for_sbml[r1]["kin"] == reactions_for_sbml[r2]["kin"]
                 ):
-                    simlog_warning(
+                    _logger.warning(
                         "The following reaction: \n"
                         + f"{reactions_for_sbml[r1]} \n"
                         + "Is doubled. Was that intentional? \n"
@@ -390,7 +389,7 @@ class Compiler:
         # Check to see if parameters are names are repeated or used as meta-species
         for p in parameters_for_sbml:
             if p in names_used:
-                simlog_error(
+                _logger.error(
                     "Parameters names must be unique and they must not share a name with a species"
                 )
             names_used.add(p)
@@ -438,7 +437,7 @@ class Compiler:
                     continue
                 else:
                     if p1.name == p2.name:
-                        simlog_error(
+                        _logger.error(
                             "There are two different Parameter Objects with the same name"
                         )
 

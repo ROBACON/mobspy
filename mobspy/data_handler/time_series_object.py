@@ -4,7 +4,9 @@ This module implements the class that stores the results from a MobsPy simulatio
 
 import pandas as pd
 from mobspy.modules.meta_class import Species, Reacting_Species
-import mobspy.simulation_logging as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import inspect
 
 

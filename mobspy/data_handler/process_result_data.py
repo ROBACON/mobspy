@@ -8,7 +8,9 @@ from typing import Any, TypedDict
 from mobspy.modules.mobspy_expressions import u
 from scipy.constants import N_A
 from copy import deepcopy
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 
 
 class Parameters(TypedDict):

@@ -1,4 +1,6 @@
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 from inspect import stack as inspect_stack
 from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
 from mobspy.modules.mobspy_parameters import (
@@ -35,7 +37,7 @@ def set_counts(count_dic):
         elif isinstance(item, (np_int_, np_float_)):
             new_count_dict[key] = float(item)
         else:
-            simlog_error(
+            _logger.error(
                 f"Reactant_species count assignment does not support the type {type(item)}",
             )
     count_dic = new_count_dict
@@ -79,16 +81,16 @@ def set_counts(count_dic):
                     if temp_set.issubset(spe.get_all_characteristics()):
                         spe.add_quantities(str_characteristics, item)
                     else:
-                        simlog_error(
+                        _logger.error(
                             "Characteristics not found in species with equal name",
                         )
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
-                    simlog_error(
+                    _logger.error(
                         "There are two different meta-species with the same name. Set_counts cannot resolve",
                     )
             if not already_found:
-                simlog_error(
+                _logger.error(
                     f"Meta-species with the following name {key} not found",
                 )
         else:
@@ -96,7 +98,7 @@ def set_counts(count_dic):
                 if isinstance(key, Species) or isinstance(key, Reacting_Species):
                     if not isinstance(key, Species):
                         if len(key.list_of_reactants) != 1:
-                            simlog_error(
+                            _logger.error(
                                 "Assignment used incorrectly. Only one species at a time",
                             )
                         model.add(key.list_of_reactants[0]["object"])
@@ -104,6 +106,6 @@ def set_counts(count_dic):
                         model.add(key)
                     key(item)
             except AttributeError:
-                simlog_error("Keys must be either meta-species or strings")
+                _logger.error("Keys must be either meta-species or strings")
 
     return List_Species(model)

@@ -1,5 +1,7 @@
 from copy import deepcopy
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import mobspy.plot_params.example_plot_reader as epr
 
 

@@ -5,7 +5,9 @@ MobsPy standard units are Decimeter (Liter) - Second - Count
 
 from pint import Quantity
 from scipy.constants import N_A
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 from mobspy.modules.mobspy_expressions import u, OverrideQuantity
 
 

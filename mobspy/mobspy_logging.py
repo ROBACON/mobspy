@@ -7,7 +7,25 @@ allowing for better control over log levels, formatting, and output destinations
 
 import logging
 import sys
-from typing import Optional, Dict, Any
+import traceback
+from typing import Optional, Any
+
+
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter that adds color to warning and error messages."""
+
+    COLORS: dict[str, str] = {
+        "WARNING": "\033[93m",  # Yellow
+        "ERROR": "\033[91m",  # Red
+        "CRITICAL": "\033[91m",  # Red
+        "RESET": "\033[0m",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_message = super().format(record)
+        if record.levelname in self.COLORS:
+            return f"{self.COLORS[record.levelname]}{log_message}{self.COLORS['RESET']}"
+        return log_message
 
 
 class MobsPyLogger:
@@ -36,23 +54,39 @@ class MobsPyLogger:
 
     def _configure_default_logging(self) -> None:
         """Set up default logging configuration with console handler."""
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setLevel(logging.DEBUG)
 
-        formatter = logging.Formatter(
+        formatter = ColoredFormatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         console_handler.setFormatter(formatter)
 
         self.logger.addHandler(console_handler)
+        self.logger.propagate = False
 
-    def set_log_level(self, level: int) -> None:
+    def _format_message(self, message: str) -> str:
+        """
+        Format message by replacing _dot_ with . for readability.
+
+        Args:
+            message: The message to format
+
+        Returns:
+            Formatted message
+        """
+        return str(message).replace("_dot_", ".")
+
+    def set_log_level(self, level: int | str) -> None:
         """
         Set the logging level for all handlers.
 
         Args:
-            level: Logging level (e.g., logging.DEBUG, logging.INFO, logging.WARNING)
+            level: Logging level constant (logging.DEBUG, logging.INFO, etc.),
+                   integer (10, 20, 30, 40, 50), or string ('DEBUG', 'INFO', etc.)
         """
+        if isinstance(level, str):
+            level = getattr(logging, level.upper())
         for handler in self.logger.handlers:
             handler.setLevel(level)
 
@@ -76,27 +110,46 @@ class MobsPyLogger:
 
     def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log a debug message."""
-        self.logger.debug(message, *args, **kwargs)
+        formatted_message = self._format_message(message)
+        self.logger.debug(formatted_message, *args, stacklevel=2, **kwargs)
 
     def info(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log an info message."""
-        self.logger.info(message, *args, **kwargs)
+        formatted_message = self._format_message(message)
+        self.logger.info(formatted_message, *args, stacklevel=2, **kwargs)
 
     def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log a warning message."""
-        self.logger.warning(message, *args, **kwargs)
+        formatted_message = self._format_message(message)
+        self.logger.warning(formatted_message, *args, stacklevel=2, **kwargs)
 
-    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
-        """Log an error message."""
-        self.logger.error(message, *args, **kwargs)
+    def error(self, message: str, *args: Any, full_exception_log: bool = False, **kwargs: Any) -> None:
+        """
+        Log an error message and exit the program.
+
+        Args:
+            message: The error message to log
+            full_exception_log: If True, include full traceback
+        """
+        formatted_message = self._format_message(message)
+
+        # Include full traceback if requested
+        if full_exception_log:
+            traceback_details: str = "".join(traceback.format_stack())
+            formatted_message = f"Full Exception Log:\n{traceback_details}\n{formatted_message}"
+
+        self.logger.error(formatted_message, *args, stacklevel=2, **kwargs)
+        sys.exit(1)
 
     def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log a critical message."""
-        self.logger.critical(message, *args, **kwargs)
+        formatted_message = self._format_message(message)
+        self.logger.critical(formatted_message, *args, stacklevel=2, **kwargs)
 
     def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log an exception with traceback."""
-        self.logger.exception(message, *args, **kwargs)
+        formatted_message = self._format_message(message)
+        self.logger.exception(formatted_message, *args, stacklevel=2, **kwargs)
 
 
 # Global logger instance

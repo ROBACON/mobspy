@@ -1,6 +1,8 @@
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Species, Reacting_Species
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 import re
 from inspect import stack as inspect_stack
 
@@ -58,7 +60,7 @@ class ODEBinding:
         # Validation
         if isinstance(expression, Reacting_Species):
             if len(expression.list_of_reactants) > 1:
-                simlog_error(
+                _logger.error(
                     message=f"ODE expressions must be built within the dt[...] {operator} context.\n"
                     f"Expressions like 'C = A + B' followed by 'dt[X] {operator} C' are not valid.\n"
                     f"Use: dt[X] {operator} A + B",
@@ -109,7 +111,7 @@ class DifferentialOperator:
         """Validate that ODE syntax uses += or -="""
         # Check that dt[...] is followed by += or -=
         if not re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
-            simlog_error(
+            _logger.error(
                 f"At: {code_line}\n"
                 f"Line number: {line_number}\n"
                 "ODE syntax requires '+=' or '-=' operator right after dt[Species] in the same line\n"
@@ -124,7 +126,7 @@ class DifferentialOperator:
         if re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
             return  # Valid += or -= syntax, nothing to do
 
-        simlog_error(
+        _logger.error(
             message="ODE syntax requires '+=' or '-=' operator, not '=', right after dt[Species] in the same line\n"
             "Use: dt[Species] += expression (for birth)\n"
             "Use: dt[Species] -= expression (for death)",
@@ -142,7 +144,7 @@ class DifferentialOperator:
             Assign.set_context()  # Turn ON before expression is evaluated
             return ODEBinding(item)
         else:
-            simlog_error("MobsPy ODE object must only be applied on a species")
+            _logger.error("MobsPy ODE object must only be applied on a species")
 
 
 dt = DifferentialOperator()

@@ -4,7 +4,9 @@ This module is responsible for processing the parameters given to MobsPy before 
 
 import json
 from datetime import datetime
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 from pint import Quantity
 import mobspy.modules.unit_handler as uh
 import inspect

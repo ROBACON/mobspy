@@ -35,6 +35,7 @@ import logging
 
 # Initialize logger
 logger = get_logger(__name__)
+simlog = logger  # Alias for consistency with the rest of the codebase
 
 # Module imports
 from mobspy.modules.meta_class_utils import (
@@ -50,7 +51,6 @@ from contextlib import contextmanager
 from mobspy.parameter_estimation_data_loader.data_loader import (
     Experimental_Data_Holder as pdl_Experimental_Data_Holder,
 )
-import mobspy.simulation_logging.log_scripts as simlog
 from mobspy.modules.meta_class import Species, Reacting_Species, List_Species
 from inspect import stack as inspect_stack
 from mobspy.modules.unit_handler import (

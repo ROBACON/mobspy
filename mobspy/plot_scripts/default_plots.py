@@ -2,7 +2,9 @@ import mobspy.plot_scripts.statistics_calculations as sc
 from copy import deepcopy
 import mobspy.plot_scripts.hierarchical_plot as hp
 import json
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import mobspy.plot_scripts.process_plot_data as ppd
 from pint import Quantity
 

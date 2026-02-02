@@ -1,5 +1,7 @@
 import math
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import mobspy.plot_scripts.process_plot_data as ppd
 import numpy as np
 import matplotlib.pyplot as plt

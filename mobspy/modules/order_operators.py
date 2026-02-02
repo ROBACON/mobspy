@@ -7,7 +7,9 @@ It has also the implementation of the Rev operator, since that is a also a react
 
 from copy import deepcopy
 
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 from mobspy.modules.meta_class import Reactions, Species
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,

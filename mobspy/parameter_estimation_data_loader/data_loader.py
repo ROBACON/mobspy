@@ -1,4 +1,6 @@
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import mobspy.data_handler.time_series_object as tso
 
 

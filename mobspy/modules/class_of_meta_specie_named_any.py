@@ -4,7 +4,9 @@ The class_of_meta_specie_named_any.py model is responsible for defining the Cont
 
 from mobspy.modules.meta_class import Species
 from inspect import stack as inspect_stack
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 
 
 class Context_specie_named_any(Species):
@@ -41,7 +43,7 @@ class Context_specie_named_any(Species):
             pass
         else:
             print(is_with, item, code_line)
-            simlog_error(
+            _logger.error(
                 "Characteristics cannot be added to the Any specie outside of a context"
             )
         self._set_of_characteristics_currently_under_the_any_context.add(item)
@@ -100,32 +102,32 @@ class Context_specie_named_any(Species):
         The call operator is overloaded as the Any specie cannot be called, as it is not supposed to
         be used this way. Thus, it raises an error when called.
         """
-        simlog_error("The Any specie cannot be called")
+        _logger.error("The Any specie cannot be called")
 
     def __add__(self, other):
         """
         The add operator is overloaded as the Any specie cannot be added. Thus, it raises an error when added.
         """
-        simlog_error("The Any specie cannot be added")
+        _logger.error("The Any specie cannot be added")
 
     def __radd__(self, other):
         """
         The add operator is overloaded as the Any specie cannot be added. Thus it raises an error when added.
         """
-        simlog_error("The Any specie cannot be added")
+        _logger.error("The Any specie cannot be added")
 
     def __rmul__(self, other):
         """
         The multiplication operator is overloaded as the Any specie cannot be multiplied.
         Thus it raises an error when multiplied.
         """
-        simlog_error("The Any specie cannot be multiplied")
+        _logger.error("The Any specie cannot be multiplied")
 
     def __rshift__(self, other):
         """
         The >> operator is overloaded so that  it raises an error when used.
         """
-        simlog_error("The >> operator cannot be used on the Any specie")
+        _logger.error("The >> operator cannot be used on the Any specie")
 
 
 # Any is the only object of the Any_specie class that will be used. It is defined here.

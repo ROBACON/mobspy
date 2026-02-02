@@ -4,7 +4,9 @@ from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImpo
 
 basico = ipm_LazyImporter("basico")
 from joblib import Parallel, delayed
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 import mobspy.sbml_simulator.builder as sbml_builder
 
 

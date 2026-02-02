@@ -1,5 +1,7 @@
 from inspect import stack as inspect_stack
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 from mobspy.modules.mobspy_expressions import (
     ExpressionDefiner as me_ExpressionDefiner,
     QuantityConverter as me_QuantityConverter,

@@ -1,7 +1,9 @@
 from mobspy.modules.meta_class import Species, Reacting_Species
 from mobspy.modules.mobspy_expressions import MobsPyExpression, OverrideQuantity
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 import math
 
 
@@ -42,12 +44,12 @@ class MathFunctionWrapper:
 
     def __call__(self, expression):
         if not Assign.check_context():
-            simlog_error("The expression functions must only be called ")
+            _logger.error("The expression functions must only be called ")
 
         # MobsPy Expressions
         if isinstance(expression, MobsPyExpression):
             if expression._has_units == "T":
-                simlog_error(
+                _logger.error(
                     "At this current version, MobsPy functions do not support "
                 )
 
@@ -60,7 +62,7 @@ class MathFunctionWrapper:
         ) and Assign.check_context():
             if isinstance(expression, Reacting_Species):
                 if len(expression.list_of_reactants) > 1:
-                    simlog_error(
+                    _logger.error(
                         message="Reacting species with multiple reactants should not be applied to a function",
                         full_exception_log=True,
                     )
@@ -70,7 +72,7 @@ class MathFunctionWrapper:
             return self._create_expression(expression, new_operation)
 
         else:
-            simlog_error(
+            _logger.error(
                 message="MobsPy functions were called on a non-valid context",
                 full_exception_log=True,
             )

@@ -20,7 +20,9 @@ from mobspy.modules.order_operators import Default
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 
 
 def iterator_for_combinations(list_of_lists: list[list]):
@@ -91,7 +93,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
 
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog_error(
+                    _logger.error(
                         f"Illegal reaction: {reaction}. \n"
                         "There is a query with two characteristics "
                         f"{ref_characteristics_to_object[cha].get_characteristics()} from the same"
@@ -105,7 +107,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
-                        simlog_error(
+                        _logger.error(
                             f"A base object for characteristic {cha} was not found in the species supplied to the "
                             f"simulator \n"
                             "Perhaps a species is missing ? "
@@ -116,7 +118,7 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
             for cha in product["characteristics"]:
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    simlog_error(
+                    _logger.error(
                         f"Illegal reaction: {reaction}. \n"
                         "There is a transformation with two characteristics "
                         f"{ref_characteristics_to_object[cha].get_characteristics()} from the same"
@@ -275,7 +277,7 @@ def get_involved_species(reaction, meta_species_in_model):
                     flag_absent_reactant = True
 
             if not flag_absent_reactant:
-                simlog_error(
+                _logger.error(
                     f"Species {reactant['object']} or any inheritors were not found in model \n"
                     f"For reaction {reaction} \n"
                     f"Please add the species or remove the reaction"
@@ -291,7 +293,7 @@ def construct_rate_function_arguments(rate_function, reaction):
 
     black_list = ["*", "="]
     if any(i in rate_function_arguments for i in black_list):
-        simlog_error(
+        _logger.error(
             f"Rate arguments must not contain = or *. \n"
             f"Error in reaction {reaction}. \n"
             f"Error in rate function {rate_function} in signature {inspect_signature(rate_function)!s}"
@@ -403,7 +405,7 @@ def create_all_reactions(
                                 )
                             )
                         except TypeError as e:
-                            simlog_error(f"On reaction {reaction} \n" + str(e))
+                            _logger.error(f"On reaction {reaction} \n" + str(e))
 
                         if rate_string == 0:
                             continue

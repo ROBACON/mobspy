@@ -1,10 +1,13 @@
 """
-Tests for the logging module (mobspy/simulation_logging/log_scripts.py)
+Tests for the logging module (mobspy/mobspy_logging.py)
 """
 
 import logging
 import pytest
-from mobspy.simulation_logging import log_scripts
+from mobspy.mobspy_logging import get_logger
+
+# Get a test logger instance
+log_scripts = get_logger("test_logger")
 
 
 def test_debug_function_exists():
@@ -93,7 +96,8 @@ def test_log_level_affects_output():
 
 def test_colored_formatter_exists():
     """Test that ColoredFormatter class exists"""
-    assert hasattr(log_scripts, 'ColoredFormatter')
+    import mobspy.mobspy_logging
+    assert hasattr(mobspy.mobspy_logging, 'ColoredFormatter')
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
     construct_species_char_list as ssg_construct_species_char_list,
@@ -108,7 +110,7 @@ def format_event_dictionary_for_sbml(
             for e in ev["trigger"].operation:
                 if type(e) == dict:
                     if e["object"] not in meta_species_to_simulate:
-                        simlog_error(
+                        _logger.error(
                             f"Meta species {e['object']} was used in an event but is not in the model"
                         )
             reformed_event_list.append(
@@ -129,7 +131,7 @@ def format_event_dictionary_for_sbml(
                 assignments.append((key, str(event["event_counts"][key])))
                 species_in_events.add(key)
             else:
-                simlog_error(
+                _logger.error(
                     f"Species {key} used in an event assignment but it is not in the model"
                 )
 

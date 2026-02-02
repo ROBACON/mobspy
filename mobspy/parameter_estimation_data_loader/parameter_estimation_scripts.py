@@ -1,4 +1,6 @@
-import mobspy.simulation_logging.log_scripts as simlog
+from mobspy.mobspy_logging import get_logger
+
+simlog = get_logger(__name__)
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 
 basico = ipm_LazyImporter("basico")

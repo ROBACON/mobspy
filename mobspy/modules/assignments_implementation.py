@@ -1,5 +1,7 @@
 from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
-from mobspy.simulation_logging.log_scripts import error as simlog_error
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
     construct_species_char_list as ssg_construct_species_char_list,
@@ -154,7 +156,7 @@ class Assignment_Operator:
                 f"{expression_tuple[1].replace('$asg_', '')} failed\n"
                 f"One of the meta-species in the assignment expression was not found in the model"
             )
-            simlog_error(error_message)
+            _logger.error(error_message)
 
         if len(spe_str) == 1:
             str_comb = ssg_construct_all_combinations(
@@ -283,6 +285,6 @@ class Asg:
         Assign.reset_context()
 
     def __getattr__(self, item):
-        simlog_error(
+        _logger.error(
             "Assignments must be the last query in the stack - Ex: A.young.blue.assign()",
         )
