@@ -100,7 +100,15 @@ def test_print_vs_str():
     duration = 5 * u.min
 
     def rate_fn(a):
-        print(A0, ",", rate_constant, ",", duration)
+        def fn_a0():
+            return 1 / u.mL
+        outside_a0 = fn_a0()
+        
+        print(f"{A0=}")
+        print(f"{outside_a0=}")
+        print(str(outside_a0))
+        print(f"{fn_a0()=}")
+
         assert str(A0) == '1.0 / milliliter', str(A0)
         assert str(rate_constant) == '1.0 / minute', str(rate_constant)
         return rate_constant
