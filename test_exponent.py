@@ -45,7 +45,3 @@ def test():
 
 if __name__ == "__main__":
     test()
-
-if __name__ == "__main__":
-    test_exponent()
-    test_default()
