@@ -1,41 +1,33 @@
-"""Simple tests for exponents in MobsPy."""
-from mobspy import BaseSpecies, Simulation, u, New
+"""Test in order to check the exponent in Mobspy"""
+from test_exponent_model import Model, InitialQuantities
+from mobspy import u
 
-infection_by_antibio_sender = 3e-11 *u.mL / u.min
-k_tet = 1208585 *u.counts / u.mL
-n_tet = 1.0
-qty_sender = 1000 *u.counts / u.mL
-qty_tet = 1e10 *u.counts / u.mL
+def test_exponent():
+    qty_sender = 1000 * u.counts / u.mL
+    qty_tet = 1e10 * u.counts / u.mL
 
-def test():
+    qty_initial = InitialQuantities(
+        qty_sender=qty_sender,
+        qty_tet=qty_tet,
+    )
+    model = Model()
 
-    def antibio_uptake_senders(tet, b):
-        #breakpoint()
-        mu_monod = (infection_by_antibio_sender)*(k_tet**n_tet/((k_tet**n_tet)+qty_sender**n_tet))
-        rate_monod = mu_monod * b
-        #test_rate = (infection_by_antibio_sender)*(k_tet/((k_tet)+qty_sender))
-        return rate_monod #test_rate
+    S = model.get_simulation_exp(qty_initial)
+    S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
 
-    # Base species definition
-    Antibiotic = BaseSpecies()
+def test_default():
+    qty_sender = 1000 * u.counts / u.mL
+    qty_tet = 1e10 * u.counts / u.mL
 
-    Tet = New(Antibiotic)
-    Tet(qty_tet)
+    qty_initial = InitialQuantities(
+        qty_sender=qty_sender,
+        qty_tet=qty_tet,
+    )
+    model = Model()
 
-    tet = BaseSpecies()
-    tet.tetF, tet.tetT
-
-    Bacterium = tet
-    Sender = New(Bacterium)
-
-    Sender(qty_sender)
-
-    # Reaction
-    Tet + Sender.tetF >> Sender.tetT [antibio_uptake_senders] 
-
-    return Simulation( Sender | Tet )
-
+    S = model.get_simulation_default(qty_initial)
+    S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
 
 if __name__ == "__main__":
-    S = test()
-    S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
+    test_exponent()
+    test_default()
