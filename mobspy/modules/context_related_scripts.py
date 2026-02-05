@@ -43,7 +43,6 @@ def expression_compilation_finish(expressions):
 
     for expression in expressions:
         expression._ms_active = False
-        logger.debug(f"Resetting _ms_active=False for id={id(expression)}")
 
 
 class Unit_Context_Setter:

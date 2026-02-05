@@ -376,7 +376,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             # Set log level based on parameters
             log_level = self.parameters.get("level", logging.INFO)
             logger.set_log_level(log_level)
-            logger.debug("Compiling model")
 
             pr_parameter_process(self.parameters)
             if self.parameters["method"] is not None:
@@ -560,7 +559,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         self._assemble_multi_simulation_structure()
 
-        simlog.debug("Starting Simulator")
         jobs = self.set_job_number(self.parameters)
 
         def simulation_function(x):
@@ -569,8 +567,6 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         results = joblib.Parallel(n_jobs=jobs, prefer="threads")(
             joblib.delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
         )
-
-        simlog.debug("Simulation is Over")
 
         if (
             self.parameters["unit_y"] is None

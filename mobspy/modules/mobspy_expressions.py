@@ -751,24 +751,55 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             simlog.error("Numpy operation not yet supported by MobsPy")
 
     def non_expression_add(self, other):
-        q_object = Quantity.__add__(self.q_object, other.q_object)
+        if isinstance(other, OverrideQuantity):
+            # Don't delegate to other.__radd__ to avoid infinite loops
+            # Just perform the operation directly
+            q_object = Quantity.__add__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            return other.__radd__(self)
+        else:
+            q_object = Quantity.__add__(self.q_object, other)
         return OverrideQuantity(q_object)
 
     def non_expression_radd(self, other):
-        q_object = Quantity.__radd__(self.q_object, other.q_object)
+        if isinstance(other, OverrideQuantity):
+            # Don't delegate to other.__add__ to avoid infinite loops
+            # Just perform the operation directly
+            q_object = Quantity.__radd__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            return other.__add__(self)
+        else:
+            q_object = Quantity.__radd__(self.q_object, other)
         return OverrideQuantity(q_object)
 
     def non_expression_sub(self, other):
-        q_object = Quantity.__sub__(self.q_object, other.q_object)
+        if isinstance(other, OverrideQuantity):
+            # Don't delegate to other.__rsub__ to avoid infinite loops
+            # Just perform the operation directly
+            q_object = Quantity.__sub__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            return other.__rsub__(self)
+        else:
+            q_object = Quantity.__sub__(self.q_object, other)
         return OverrideQuantity(q_object)
 
     def non_expression_rsub(self, other):
-        q_object = Quantity.__rsub__(self.q_object, other.q_object)
+        if isinstance(other, OverrideQuantity):
+            # Don't delegate to other.__sub__ to avoid infinite loops
+            # Just perform the operation directly
+            q_object = Quantity.__rsub__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            return other.__sub__(self)
+        else:
+            q_object = Quantity.__rsub__(self.q_object, other)
         return OverrideQuantity(q_object)
 
     def non_expression_mul(self, other):
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__mul__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            # If multiplying with an expression, delegate to its __rmul__
+            return other.__rmul__(self)
         else:
             q_object = Quantity.__mul__(self.q_object, other)
         return OverrideQuantity(q_object)
@@ -776,6 +807,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def non_expression_rmul(self, other):
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__rmul__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            # If multiplying with an expression, delegate to its __mul__
+            return other.__mul__(self)
         else:
             q_object = Quantity.__rmul__(self.q_object, other)
         return OverrideQuantity(q_object)
@@ -783,6 +817,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def non_expression_truediv(self, other):
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__truediv__(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner):
+            # If dividing by an expression, delegate to its __rtruediv__
+            return other.__rtruediv__(self)
         else:
             q_object = Quantity.__truediv__(self.q_object, other)
         return OverrideQuantity(q_object)
