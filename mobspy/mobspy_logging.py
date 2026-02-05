@@ -123,7 +123,9 @@ class MobsPyLogger:
         formatted_message = self._format_message(message)
         self.logger.warning(formatted_message, *args, stacklevel=2, **kwargs)
 
-    def error(self, message: str, *args: Any, full_exception_log: bool = False, **kwargs: Any) -> None:
+    def error(
+        self, message: str, *args: Any, full_exception_log: bool = False, **kwargs: Any
+    ) -> None:
         """
         Log an error message and exit the program.
 
@@ -136,7 +138,9 @@ class MobsPyLogger:
         # Include full traceback if requested
         if full_exception_log:
             traceback_details: str = "".join(traceback.format_stack())
-            formatted_message = f"Full Exception Log:\n{traceback_details}\n{formatted_message}"
+            formatted_message = (
+                f"Full Exception Log:\n{traceback_details}\n{formatted_message}"
+            )
 
         self.logger.error(formatted_message, *args, stacklevel=2, **kwargs)
         sys.exit(1)

@@ -24,6 +24,7 @@ import re
 
 from testutils import compare_model, compare_model_ignore_order
 
+
 def test_hybrid_sim():
     A, B = BaseSpecies(2)
     A >> 2 * A[1]
@@ -43,7 +44,7 @@ def test_hybrid_sim():
     S2.plot_data = False
 
     Sim = S1 + S2
-    Sim.run(plot_data = False)
+    Sim.run(plot_data=False)
 
     assert compare_model(Sim.compile(), "test_tools/model_8.txt")
     assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0

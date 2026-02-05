@@ -27,3 +27,8 @@ test_plot_images/*
 !test_plot_images/read_me.txt
 docs/*
 !docs/example_models/
+.env/
+.venv/
+env/
+venv/
+ENV/

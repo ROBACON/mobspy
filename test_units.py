@@ -12,59 +12,59 @@ def test_def_by_str():
     A0 = u(config["A0"])
     rate_constant = u(config["rate_constant"])
 
-    assert str(A0) == '1.0 / milliliter', str(A0)
-    assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+    assert str(A0) == "1.0 / milliliter", str(A0)
+    assert str(rate_constant) == "1.0 / minute", str(rate_constant)
 
-    print('test_def_by_str: outside of function:', rate_constant)
-    print('test_def_by_str: outside of function:', type(rate_constant))
+    print("test_def_by_str: outside of function:", rate_constant)
+    print("test_def_by_str: outside of function:", type(rate_constant))
 
     duration = 5 * u.min
 
     def rate_fn(a):
-        print('test_def_by_str: in function:', rate_constant)
-        print('test_def_by_str: in function:', type(rate_constant))
+        print("test_def_by_str: in function:", rate_constant)
+        print("test_def_by_str: in function:", type(rate_constant))
 
-        assert str(A0) == '1.0 / milliliter', str(A0)
-        assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+        assert str(A0) == "1.0 / milliliter", str(A0)
+        assert str(rate_constant) == "1.0 / minute", str(rate_constant)
 
         return rate_constant
 
     A = BaseSpecies()
     A(A0)
-    
-    A >> 2 * A [rate_fn]
+
+    A >> 2 * A[rate_fn]
 
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
-    # MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL)    
-        
+    # MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL)
+
 
 def test_def_by_quantity():
     A0 = 1 / u.mL
     rate_constant = 1 / u.min
-    
-    assert str(A0) == '1.0 / milliliter', str(A0)
-    assert str(rate_constant) == '1.0 / minute', str(rate_constant)
 
-    print('test_def_by_quantity: outside of function:', rate_constant)
-    print('test_def_by_quantity: outside of function:', type(rate_constant))
+    assert str(A0) == "1.0 / milliliter", str(A0)
+    assert str(rate_constant) == "1.0 / minute", str(rate_constant)
+
+    print("test_def_by_quantity: outside of function:", rate_constant)
+    print("test_def_by_quantity: outside of function:", type(rate_constant))
 
     duration = 5 * u.min
 
     def rate_fn(a):
-        print('test_def_by_quantity: in function:', rate_constant)
-        print('test_def_by_quantity: in function:', type(rate_constant))
+        print("test_def_by_quantity: in function:", rate_constant)
+        print("test_def_by_quantity: in function:", type(rate_constant))
 
-        assert str(A0) == '1.0 / milliliter', str(A0)
-        assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+        assert str(A0) == "1.0 / milliliter", str(A0)
+        assert str(rate_constant) == "1.0 / minute", str(rate_constant)
 
         return rate_constant
 
     A = BaseSpecies()
     A(A0)
-    
-    A >> 2 * A [rate_fn]
+
+    A >> 2 * A[rate_fn]
 
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
@@ -78,20 +78,19 @@ def test_def_by_quantity():
     duration = 5 * u.min
 
     def rate_fn(a):
-        assert str(A0) == '1.0 / milliliter', str(A0)
-        assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+        assert str(A0) == "1.0 / milliliter", str(A0)
+        assert str(rate_constant) == "1.0 / minute", str(rate_constant)
         return rate_constant
 
     A = BaseSpecies()
     A(A0)
-    
-    A >> 2 * A [rate_fn]
+
+    A >> 2 * A[rate_fn]
 
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
-    MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL, plot_data = False)
-
+    MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL, plot_data=False)
 
 
 def test_print_vs_str():
@@ -102,27 +101,27 @@ def test_print_vs_str():
     def rate_fn(a):
         def fn_a0():
             return 1 / u.mL
+
         outside_a0 = fn_a0()
-        
+
         print(f"{A0=}")
         print(f"{outside_a0=}")
         print(str(outside_a0))
         print(f"{fn_a0()=}")
 
-        assert str(A0) == '1.0 / milliliter', str(A0)
-        assert str(rate_constant) == '1.0 / minute', str(rate_constant)
+        assert str(A0) == "1.0 / milliliter", str(A0)
+        assert str(rate_constant) == "1.0 / minute", str(rate_constant)
         return rate_constant
 
     A = BaseSpecies()
     A(A0)
-    
-    A >> 2 * A [rate_fn]
+
+    A >> 2 * A[rate_fn]
 
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
-    MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL, plot_data = False)
-
+    MySim.run(duration=duration, unit_x=u.min, unit_y=1 / u.mL, plot_data=False)
 
 
 if __name__ == "__main__":

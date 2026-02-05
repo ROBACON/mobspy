@@ -1,5 +1,6 @@
 import re
 
+
 # Compare results with expected file
 def compare_model(comp_results, file_name):
     def normalize(text):

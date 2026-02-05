@@ -75,7 +75,6 @@ def test_error_with_full_exception_log():
     # Test passes if SystemExit is raised
 
 
-
 def test_log_level_affects_output():
     """Test that changing log level affects which messages are shown"""
     # Set to ERROR level
@@ -97,7 +96,8 @@ def test_log_level_affects_output():
 def test_colored_formatter_exists():
     """Test that ColoredFormatter class exists"""
     import mobspy.mobspy_logging
-    assert hasattr(mobspy.mobspy_logging, 'ColoredFormatter')
+
+    assert hasattr(mobspy.mobspy_logging, "ColoredFormatter")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from mobspy import BaseSpecies, Simulation
 
+
 def test_numpy():
     expected = """
 Species
@@ -28,12 +29,13 @@ reaction_0,{'re': [(1, 'A')], 'pr': [(1, 'B')], 'kin': 'A * 1.0'}
 
     # use numpy to init params
     A(params[0])
-    A >> B [params[1]]
-    
+    A >> B[params[1]]
+
     MySim = Simulation(A | B)
     MySim.level = -1
-    result = MySim.compile()    
+    result = MySim.compile()
     assert result == expected
+
 
 if __name__ == "__main__":
     test_numpy()

@@ -262,9 +262,9 @@ class Compiler:
                 parameters_in_counts.add(count["quantity"])
                 if count["quantity"].name in parameters_used:
                     parameters_used[count["quantity"].name]["used_in"] = (
-                        parameters_used[count["quantity"].name]["used_in"].union(
-                            set(species_strings)
-                        )
+                        parameters_used[
+                            count["quantity"].name
+                        ]["used_in"].union(set(species_strings))
                     )
                 else:
                     temp = {
