@@ -1,35 +1,52 @@
+from __future__ import annotations
+
+from typing import Any
+
 from mobspy.mobspy_logging import get_logger
 
 _logger = get_logger(__name__)
-from inspect import stack as inspect_stack
-from mobspy.modules.meta_class import List_Species, Species, Reacting_Species
-from mobspy.modules.mobspy_parameters import (
+from inspect import stack as inspect_stack  # noqa: E402
+
+from numpy import floating as np_float_  # noqa: E402
+from numpy import integer as np_int_  # noqa: E402
+from pint import Quantity  # noqa: E402
+
+from mobspy.modules.meta_class import (  # noqa: E402
+    List_Species,
+    Reacting_Species,
+    Species,
+)
+from mobspy.modules.mobspy_parameters import (  # noqa: E402
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
-from pint import Quantity
-from numpy import integer as np_int_, floating as np_float_
 
 
-def set_counts(count_dic):
-    """
-    Adds counts to meta-species using a given dictionary. Keys from this dictionary can be either meta-species
-    objects or strings. Items must be the assign counts to species
+def set_counts(count_dic: dict[Any, Any]) -> List_Species:
+    """Adds counts to meta-species using a given dictionary.
 
-    :param count_dic: Dictionary where keys can be either meta-species or strings
+    Keys from this dictionary can be either meta-species objects or
+    strings. Items must be the assigned counts to species.
+
+    :param count_dic: Dictionary where keys can be either
+        meta-species or strings
     :raise simlog.error:
-        - If a count is assigned to a Reacting_Species with more than one meta-species.
-        - If there are two species with the same name and a string assignment is performed.
+        - If a count is assigned to a Reacting_Species with more
+          than one meta-species.
+        - If there are two species with the same name and a string
+          assignment is performed.
         - If the keys are not strings or meta-species.
         - If the counts are not Quantities, Floats or Ints.
         - If the species was not found in the stack.
-    :return: List_Species object. All meta-species that had a count assigned in this dictionary will be returned
-        as a List_Species which can be passed as a model to the simulation object
+    :return: List_Species object. All meta-species that had a count
+        assigned in this dictionary will be returned as a
+        List_Species which can be passed as a model to the
+        simulation object
     """
-    new_count_dict = {}
+    new_count_dict: dict[Any, Any] = {}
     for key, item in count_dic.items():
         if (
-            type(item) == int
-            or type(item) == float
+            type(item) == int  # noqa: SIM101, E721
+            or type(item) == float  # noqa: E721
             or isinstance(item, Quantity)
             or isinstance(item, mp_Mobspy_Parameter)
         ):
@@ -38,38 +55,40 @@ def set_counts(count_dic):
             new_count_dict[key] = float(item)
         else:
             _logger.error(
-                f"Reactant_species count assignment does not support the type {type(item)}",
+                "Reactant_species count assignment does not"
+                f" support the type {type(item)}",
             )
     count_dic = new_count_dict
 
-    def find_species():
-        found_species = set()
+    def find_species() -> set[Species]:
+        found_species: set[Species] = set()
 
         for i in range(len(inspect_stack())):
             local_names = inspect_stack()[i][0].f_locals
             global_names = inspect_stack()[i][0].f_globals
-            for key, item in global_names.items():
+            for key, item in global_names.items():  # noqa: B007
                 try:
-                    if isinstance(item, Species) and type(item) != type:
+                    if isinstance(item, Species) and type(item) != type:  # noqa: E721
                         found_species.add(item)
                 except AttributeError:
                     pass
-            for key, item in local_names.items():
+            for key, item in local_names.items():  # noqa: B007
                 try:
-                    if isinstance(item, Species) and type(item) != type:
+                    if isinstance(item, Species) and type(item) != type:  # noqa: E721
                         found_species.add(item)
                 except AttributeError:
                     pass
 
         return found_species
 
+    all_found_species: set[Species] = set()
     for key in count_dic:
-        if type(key) == str:
+        if type(key) == str:  # noqa: E721
             all_found_species = find_species()
 
-    model = set()
+    model: set[Any] = set()
     for key, item in count_dic.items():
-        if type(key) == str:
+        if type(key) == str:  # noqa: E721
             already_found = False
             str_name = key.split(".")[0]
             str_characteristics = set(key.split(".")[1:])
@@ -87,7 +106,8 @@ def set_counts(count_dic):
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
                     _logger.error(
-                        "There are two different meta-species with the same name. Set_counts cannot resolve",
+                        "There are two different meta-species with"
+                        " the same name. Set_counts cannot resolve",
                     )
             if not already_found:
                 _logger.error(
@@ -95,11 +115,12 @@ def set_counts(count_dic):
                 )
         else:
             try:
-                if isinstance(key, Species) or isinstance(key, Reacting_Species):
+                if isinstance(key, Species) or isinstance(key, Reacting_Species):  # noqa: SIM101
                     if not isinstance(key, Species):
                         if len(key.list_of_reactants) != 1:
                             _logger.error(
-                                "Assignment used incorrectly. Only one species at a time",
+                                "Assignment used incorrectly."
+                                " Only one species at a time",
                             )
                         model.add(key.list_of_reactants[0]["object"])
                     if isinstance(key, Species):

@@ -1,10 +1,16 @@
-from mobspy.modules.meta_class import Species, Reacting_Species
-from mobspy.modules.mobspy_expressions import MobsPyExpression, OverrideQuantity
-from mobspy.modules.assignments_implementation import Assign
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from mobspy.mobspy_logging import get_logger
+from mobspy.modules.assignments_implementation import Assign
+from mobspy.modules.meta_class import Reacting_Species, Species
+from mobspy.modules.mobspy_expressions import MobsPyExpression
+
+if TYPE_CHECKING:
+    pass
 
 _logger = get_logger(__name__)
-import math
 
 
 class MathFunctionWrapper:
@@ -20,10 +26,12 @@ class MathFunctionWrapper:
     so I need to leave this for future needs
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name  # COPASI function name: 'exp', 'sin', 'cos', etc.
 
-    def _create_expression(self, expression, new_operation):
+    def _create_expression(
+        self, expression: MobsPyExpression, new_operation: str
+    ) -> MobsPyExpression:
         """Create new MobsPyExpression with this function applied."""
         return MobsPyExpression(
             species_string="$Null",
@@ -42,7 +50,7 @@ class MathFunctionWrapper:
             species_list_operation_order=list(expression.species_list_operation_order),
         )
 
-    def __call__(self, expression):
+    def __call__(self, expression: Any) -> MobsPyExpression | None:
         if not Assign.check_context():
             _logger.error("The expression functions must only be called ")
 
@@ -58,12 +66,14 @@ class MathFunctionWrapper:
 
         # Species passed
         elif (
-            isinstance(expression, Species) or isinstance(expression, Reacting_Species)
+            isinstance(expression, Species) or isinstance(expression, Reacting_Species)  # noqa: SIM101
         ) and Assign.check_context():
-            if isinstance(expression, Reacting_Species):
+            if isinstance(expression, Reacting_Species):  # noqa: SIM102
                 if len(expression.list_of_reactants) > 1:
                     _logger.error(
-                        message="Reacting species with multiple reactants should not be applied to a function",
+                        message="Reacting species with multiple"
+                        " reactants should not be applied"
+                        " to a function",
                         full_exception_log=True,
                     )
 
@@ -76,6 +86,7 @@ class MathFunctionWrapper:
                 message="MobsPy functions were called on a non-valid context",
                 full_exception_log=True,
             )
+        return None
 
 
 # Create all the COPASI-compatible math functions

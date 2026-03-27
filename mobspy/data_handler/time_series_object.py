@@ -2,32 +2,49 @@
 This module implements the class that stores the results from a MobsPy simulation
 """
 
+from __future__ import annotations
+
+import inspect
+from typing import TYPE_CHECKING, Any
+
 import pandas as pd
-from mobspy.modules.meta_class import Species, Reacting_Species
+
 from mobspy.mobspy_logging import get_logger
+from mobspy.modules.meta_class import Reacting_Species, Species
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from mobspy.modules.mobspy_parameters import (
+        Internal_Parameter_Constructor,
+    )
+    from mobspy.types import TimeSeriesDataDict
 
 simlog = get_logger(__name__)
-import inspect
 
 
 class MobsPyTimeSeries:
-    def __init__(self, data_dict, model_parameters=None):
+    def __init__(
+        self,
+        data_dict: TimeSeriesDataDict,
+        model_parameters: dict[str, Any] | None = None,
+    ) -> None:
         """Creates the MobsPy timeseries object
 
         :param data_dict: (dict) resulting dictionary from simulation
         {'data': ...., 'params':....., 'models':.......}
         """
-        self.ts_data = data_dict["data"]
-        self.ts_parameters = data_dict["params"]
-        self.ts_models = data_dict["models"]
+        self.ts_data: dict[str, list[float]] = data_dict["data"]
+        self.ts_parameters: dict[str, Any] = data_dict["params"]
+        self.ts_models: list[str] = data_dict["models"]
         if model_parameters is None:
-            self.ts_model_parameters = {}
+            self.ts_model_parameters: dict[str, Any] = {}
         else:
             self.ts_model_parameters = model_parameters
 
 
 class MobsPyList_of_TS:
-    def check_parameters_for_deepcopy(self):
+    def check_parameters_for_deepcopy(self) -> None:
         for i, d in enumerate(self.ts_parameters):
             for par, val in d.items():
                 if not isinstance(
@@ -43,7 +60,12 @@ class MobsPyList_of_TS:
                     self.ts_parameters[i][par] = str(val)
 
     def __init__(
-        self, list_of_mspy_ts, model_parameter_objects=None, fres: bool = False
+        self,
+        list_of_mspy_ts: list[MobsPyTimeSeries],
+        model_parameter_objects: (
+            dict[str, Internal_Parameter_Constructor] | None
+        ) = None,
+        fres: bool = False,
     ) -> None:
         """Creates the MobsPy timeseries object
 
@@ -51,8 +73,10 @@ class MobsPyList_of_TS:
         {'data': ...., 'params':....., 'models':.......}
         """
 
-        self.ts_data = [dict(x.ts_data) for x in list_of_mspy_ts]
-        self.ts_parameters = [dict(x.ts_parameters) for x in list_of_mspy_ts]
+        self.ts_data: list[dict[str, Any]] = [dict(x.ts_data) for x in list_of_mspy_ts]
+        self.ts_parameters: list[dict[str, Any]] = [
+            dict(x.ts_parameters) for x in list_of_mspy_ts
+        ]
 
         # This lines are here to allow the object to be deepcopiable
         for ts_par in self.ts_parameters:
@@ -61,15 +85,15 @@ class MobsPyList_of_TS:
             if ts_par["unit_y"] is not None:
                 ts_par["unit_y"] = str(ts_par["unit_y"])
 
-        self.ts_models = [list(x.ts_models) for x in list_of_mspy_ts]
-        self.ts_model_parameters = [
+        self.ts_models: list[list[str]] = [list(x.ts_models) for x in list_of_mspy_ts]
+        self.ts_model_parameters: list[dict[str, Any]] = [
             dict(x.ts_model_parameters) for x in list_of_mspy_ts
         ]
 
         self.check_parameters_for_deepcopy()
 
         if model_parameter_objects is not None:
-            need_conversion_dict = set()
+            need_conversion_dict: set[str] = set()
             for par, par_object in model_parameter_objects.items():
                 if par_object._has_units == "T":
                     need_conversion_dict.add(par)
@@ -84,9 +108,9 @@ class MobsPyList_of_TS:
                         self.ts_model_parameters[i][par_name] / cf
                     )
 
-        self.fres = fres
+        self.fres: bool = fres
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """
         :return: data in dict format {'data': ...., 'params':....., 'models':.......}
         """
@@ -104,34 +128,47 @@ class MobsPyList_of_TS:
 
     def __str__(self) -> str:
         tr: str = ""
-        for i, (data, params) in enumerate(zip(self.ts_data, self.ts_model_parameters)):
+        for i, (data, params) in enumerate(
+            zip(self.ts_data, self.ts_model_parameters, strict=False)
+        ):
             if self.ts_model_parameters != {}:
                 tr += f"Model Parameters {params} \n"
             tr += f"Time Series {i}: \n"
             tr += f"{data}\n \n"
         return tr
 
-    def add_ts_to_data(self, time_series) -> None:
+    def add_ts_to_data(self, time_series: dict[str, list[float]]) -> None:
         """
         Add a new time series to the TS data. Used for stochastic plotting
         the average and standard deviation
 
-        :param time_series: (dict) dictionary with species strings as keys and run as value
+        :param time_series: (dict) dictionary with species strings
+            as keys and run as value
         """
         if isinstance(time_series, dict):
             self.ts_data += [time_series]
 
-    def __getitem__(self, item):
+    _GetItemKey = (
+        int
+        | str
+        | tuple[str | Species | Reacting_Species, int]
+        | Species
+        | Reacting_Species
+    )
+
+    def __getitem__(self, item: _GetItemKey) -> Any:
         """
-        Implements run retrieval using a meta-species object. Returns one run if there is only one
-        time-series and returns multiple runs if there are multiple time series
+        Implements run retrieval using a meta-species object.
+        Returns one run if there is only one time-series and
+        returns multiple runs if there are multiple time series
         """
         code_line = inspect.stack()[1].code_context[0][:-1]
         if "['runs']" in code_line:
             simlog.error(
                 "As of version 2.0.1 MobsPy has changed the data output format. \n"
                 "Now data can be accessed through the following syntax: \n"
-                "S.results[Meta-Species Object] or S.results[Meta-Species string name] \n"
+                "S.results[Meta-Species Object] or "
+                "S.results[Meta-Species string name] \n"
                 "Both can perform queries",
             )
 
@@ -177,17 +214,20 @@ class MobsPyList_of_TS:
         else:
             return to_return[0]
 
-    def _sum_reacting_species_data(self, item, ts_index):
+    def _sum_reacting_species_data(
+        self, item: str | Reacting_Species, ts_index: int
+    ) -> list[float]:
         """
-        Maps meta-species according to characteristics ex: A.a1 = A.a1.b1 + A.a1.b2 + A.a1.b3
+        Maps meta-species according to characteristics.
+        Ex: A.a1 = A.a1.b1 + A.a1.b2 + A.a1.b3
 
         :param item: Meta-species object or string to be retrieved
         :ts_index: Index of the time series to perform the sum
         """
 
-        def _sum_element_by_element(l1, l2):
-            rt = []
-            for e1, e2 in zip(l1, l2):
+        def _sum_element_by_element(l1: list[float], l2: list[float]) -> list[float]:
+            rt: list[float] = []
+            for e1, e2 in zip(l1, l2, strict=False):
                 rt.append(e1 + e2)
             return rt
 
@@ -216,27 +256,24 @@ class MobsPyList_of_TS:
 
         return to_return
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         if not self.fres:
-            for ts in self.ts_data:
-                yield ts
+            yield from self.ts_data
         else:
-            for key in self.ts_data[0]:
-                yield key
+            yield from self.ts_data[0]
 
-    def get_max_time_for_species(self, species):
+    def get_max_time_for_species(self, species: str | Species) -> list[float]:
         """
         Returns the maximum time in all the time-series stored for a given species
         """
         if not isinstance(species, str):
             species = species.get_name()
         max_length: int = 0
-        max_ts = None
+        max_ts: dict[str, Any] | None = None
         for ts in self.ts_data:
-            if species in ts.keys():
-                if len(ts) > max_length:
-                    max_length = len(ts)
-                    max_ts = ts
+            if species in ts and len(ts) > max_length:
+                max_length = len(ts)
+                max_ts = ts
         if max_ts is None:
             msg = "Could not find maximal time series."
             raise ValueError(msg)

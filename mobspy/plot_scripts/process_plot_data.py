@@ -1,23 +1,29 @@
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import Any
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
-import mobspy.plot_params.example_plot_reader as epr
+import mobspy.plot_params.example_plot_reader as epr  # noqa: E402
 
 
-def query_plot_data(species, data):
+def query_plot_data(species: set[str] | list[str], data: Any) -> tuple[list[str], Any]:
     """
-    Performs a query of the plot data, when one wishes to plot species with characteristics
-    It creates a new data structure with the results from the query added to it for the plotting structure
+    Performs a query of the plot data, when one wishes to plot
+    species with characteristics. It creates a new data structure
+    with the results from the query added to it for the plotting
+    structure
 
     :param species: (str) Species name in string format
     :param data: (dict) Data in MobsPy dictionary format
     """
     new_data = deepcopy(data)
 
-    species_to_plot = set()
+    species_to_plot: set[str] = set()
     for time_series in data.ts_data:
-        for key in time_series.keys():
+        for key in time_series.keys():  # noqa: SIM118
             if key in species:
                 species_to_plot.add(key)
 
@@ -30,13 +36,14 @@ def query_plot_data(species, data):
 
         species_to_plot.add(spe)
 
-    species_to_plot = sorted([spe for spe in species])
-    return species_to_plot, new_data
+    species_to_plot_list = sorted([spe for spe in species])
+    return species_to_plot_list, new_data
 
 
-def check_plot_parameters(species, plot_params):
+def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> None:
     """
-    Performs a check of the plot_parameters given. To see if the parameters are correctly named
+    Performs a check of the plot_parameters given. To see if the
+    parameters are correctly named
 
     :param species: (str) Species in str format
     :param plot_params: (dict) Plot parameter dictionary
@@ -47,11 +54,11 @@ def check_plot_parameters(species, plot_params):
         simlog.error("Time must not be a plot parameter name")
 
     for spe in species:
-        if spe in dictionary.keys():
+        if spe in dictionary.keys():  # noqa: SIM118
             simlog.error(f"Plotting is impossible, species {spe} is a parameter name")
 
     # Check if parameters are valid
-    validated_keys = set()
+    validated_keys: set[str] = set()
     for key in plot_params:
         if key not in dictionary and key not in species:
             continue
@@ -69,11 +76,13 @@ def check_plot_parameters(species, plot_params):
             validated_keys.add(key)
 
 
-def time_filter_operation(low, high, time_data, data):
-    new_time_data = []
-    new_data = []
+def time_filter_operation(
+    low: float, high: float, time_data: list[float], data: list[float]
+) -> tuple[list[float], list[float]]:
+    new_time_data: list[float] = []
+    new_data: list[float] = []
 
-    for t, d in zip(time_data, data):
+    for t, d in zip(time_data, data):  # noqa: B905
         if t < low:
             continue
         elif low < t < high:
@@ -85,11 +94,13 @@ def time_filter_operation(low, high, time_data, data):
     return new_time_data, new_data
 
 
-def y_filter_operation(low_y, high_y, time_data, data):
-    new_time_data = []
-    new_data = []
+def y_filter_operation(
+    low_y: float, high_y: float, time_data: list[float], data: list[float]
+) -> tuple[list[float], list[float]]:
+    new_time_data: list[float] = []
+    new_data: list[float] = []
 
-    for t, d in zip(time_data, data):
+    for t, d in zip(time_data, data):  # noqa: B905
         if d < low_y:
             continue
         elif low_y <= d <= high_y:

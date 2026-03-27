@@ -1,101 +1,155 @@
-"""
-Main MobsPy module. It stocks the Simulation class which is responsible for simulating a Model
+"""Main MobsPy module.
+
+It stocks the Simulation class which is responsible for
+simulating a Model.
 """
 
-# For user imports
-from mobspy.modules.meta_class import (
-    BaseSpecies,
-    New,
-    Zero,
-    Species,
-    List_Species,
-    Reacting_Species,
+from __future__ import annotations
+
+import logging
+from collections.abc import Generator
+from contextlib import contextmanager
+from copy import deepcopy
+from inspect import stack as inspect_stack
+from json import dump as json_dump
+from json import load as json_load
+from os.path import splitext as os_path_splitext
+from random import randint as rd_randint
+from typing import TYPE_CHECKING
+from typing import Any as TypingAny
+
+import joblib
+from pint import Quantity
+
+from mobspy.data_handler.process_result_data import (
+    convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
 )
-from mobspy.modules.set_counts_module import set_counts
-from mobspy.modules.mobspy_parameters import ModelParameters
-from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.order_operators import All, Default, Rev, Set
-from mobspy.modules.class_of_meta_specie_named_any import Any
-from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
-    basiCO_parameter_estimation,
+from mobspy.data_handler.process_result_data import (
+    extract_time_and_volume_list as dh_extract_time_and_volume_list,
+)
+from mobspy.data_handler.time_series_object import (
+    MobsPyList_of_TS,
+    MobsPyTimeSeries,
 )
 from mobspy.exceptions import (
-    MobsPyError,
     CompilationError,
-    SimulationError,
-    ParameterError,
-    ReactionError,
     EventError,
+    MobsPyError,  # noqa: F401
+    ParameterError,
+    ReactionError,  # noqa: F401
+    SimulationError,
     ValidationError,
 )
 from mobspy.mobspy_logging import get_logger
-from typing import Union, Generator, Any as TypingAny
-from pint import Quantity
-import logging
-
-# Initialize logger
-logger = get_logger(__name__)
-simlog = logger  # Alias for consistency with the rest of the codebase
-
-# Module imports
-from mobspy.modules.meta_class_utils import (
-    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
+from mobspy.modules.assignments_implementation import (
+    Assign,  # noqa: F401
 )
-from mobspy.modules.mobspy_expressions import u
+from mobspy.modules.class_of_meta_specie_named_any import (
+    Any,  # noqa: F401
+)
+from mobspy.modules.compiler import Compiler
 from mobspy.modules.logic_operator_objects import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
-from mobspy.modules.compiler import Compiler
-from copy import deepcopy
-from contextlib import contextmanager
+from mobspy.modules.meta_class import (
+    BaseSpecies,  # noqa: F401
+    List_Species,
+    New,  # noqa: F401
+    Reacting_Species,
+    Species,
+    Zero,  # noqa: F401
+)
+from mobspy.modules.meta_class_utils import (
+    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
+)
+from mobspy.modules.mobspy_expressions import u  # noqa: F401
+from mobspy.modules.mobspy_parameters import (
+    ModelParameters,  # noqa: F401
+)
+from mobspy.modules.order_operators import (
+    All,  # noqa: F401
+    Default,
+    Rev,  # noqa: F401
+    Set,  # noqa: F401
+)
+from mobspy.modules.set_counts_module import set_counts  # noqa: F401
+from mobspy.modules.unit_handler import (
+    convert_time as uh_convert_time,
+)
+from mobspy.modules.unit_handler import (
+    extract_length_dimension as uh_extract_length_dimension,
+)
 from mobspy.parameter_estimation_data_loader.data_loader import (
     Experimental_Data_Holder as pdl_Experimental_Data_Holder,
 )
-from mobspy.modules.meta_class import Species, Reacting_Species, List_Species
-from inspect import stack as inspect_stack
-from mobspy.modules.unit_handler import (
-    convert_time as uh_convert_time,
-    extract_length_dimension as uh_extract_length_dimension,
+from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
+    basiCO_parameter_estimation,  # noqa: F401
 )
-from mobspy.parameters.default_reader import get_default_parameters
-from mobspy.parameters.example_reader import get_example_parameters
-from mobspy.plot_params.default_plot_reader import get_default_plot_parameters
-
-# from mobspy.plot_params.example_plot_reader import get_example_plot_parameters
-from pint import Quantity
+from mobspy.parameter_scripts.parameter_reader import (
+    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,  # noqa: E501
+)
+from mobspy.parameter_scripts.parameter_reader import (
+    convert_volume_after_compilation as pr_convert_volume_after_compilation,
+)
+from mobspy.parameter_scripts.parameter_reader import (
+    manually_process_each_parameter as pr_manually_process_each_parameter,
+)
 from mobspy.parameter_scripts.parameter_reader import (
     parameter_process as pr_parameter_process,
-    manually_process_each_parameter as pr_manually_process_each_parameter,
-    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,
-    convert_volume_after_compilation as pr_convert_volume_after_compilation,
+)
+from mobspy.parameter_scripts.parameter_reader import (
     read_json as pr_read_json,
 )
 from mobspy.parameter_scripts.parametric_sweeps import (
     generate_all_sbml_models as ps_generate_all_sbml_models,
+)
+from mobspy.parameter_scripts.parametric_sweeps import (
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries,
 )
-import joblib
-from mobspy.sbml_simulator.run import simulate as sbml_simulate
-from mobspy.data_handler.process_result_data import (
-    extract_time_and_volume_list as dh_extract_time_and_volume_list,
-    convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
+from mobspy.parameters.default_reader import get_default_parameters
+from mobspy.parameters.example_reader import get_example_parameters
+from mobspy.plot_params.default_plot_reader import (
+    get_default_plot_parameters,
 )
-from mobspy.data_handler.time_series_object import MobsPyTimeSeries, MobsPyList_of_TS
+from mobspy.plot_scripts.default_plots import (
+    deterministic_plot as dp_deterministic_plot,
+)
+from mobspy.plot_scripts.default_plots import (
+    parametric_plot as dp_parametric_plot,
+)
+from mobspy.plot_scripts.default_plots import (
+    raw_plot as dp_raw_plot,
+)
+from mobspy.plot_scripts.default_plots import (
+    stochastic_plot as dp_stochastic_plot,
+)
+from mobspy.sbml_simulator.builder import build as sbml_build
+from mobspy.sbml_simulator.run import simulate as sbml_simulate
+from mobspy.simulator_object.simulator_object_functions import (
+    Simulation_Utils,
+)
 from mobspy.simulator_object.simulator_object_functions import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
-from mobspy.simulator_object.simulator_object_functions import Simulation_Utils
-from json import dump as json_dump, load as json_load
-from mobspy.plot_scripts.default_plots import (
-    deterministic_plot as dp_deterministic_plot,
-    stochastic_plot as dp_stochastic_plot,
-    raw_plot as dp_raw_plot,
-    parametric_plot as dp_parametric_plot,
-)
-from mobspy.sbml_simulator.builder import build as sbml_build
-from os.path import splitext as os_path_splitext
-from random import randint as rd_randint
-# import re
+
+if TYPE_CHECKING:
+    from mobspy.types import (
+        CompiledModelDict,
+        EventsForSbml,
+        MappingsForSbml,
+        ParametersForSbml,
+        ParameterSweepList,
+        ReactionsForSbml,
+        SBMLModelDict,
+        SimulationEventData,
+        SimulationParameters,
+        SpeciesForSbml,
+        TimeSeriesDataDict,
+    )
+
+# Initialize logger
+logger = get_logger(__name__)
+simlog = logger
 
 
 class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
@@ -112,22 +166,23 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         )
 
     def event_context_finish(self) -> None:
-        """
-        Removes the context in all meta-species and resets some variables. Called each time an event context is finished.
+        """Removes the context in all meta-species and resets some variables.
+
+        Called each time an event context is finished.
         """
         self._event_time = 0
         Species.reset_simulation_context()
         self._context_not_active = True
 
-    def event_context_add(self, time, trigger):
+    def event_context_add(self, time: float, trigger: str) -> None:
         """
         Adds an event to the event context
 
-        :param trigger: () condition that triggers the event when fulfilled
-        :param time: (int, float, Quantity) time to wait before triggering the event once the trigger condition has been fulfilled
+        :param trigger: condition that triggers the event
+        :param time: time to wait before triggering the event
         """
 
-        event_data = {
+        event_data: SimulationEventData = {
             "event_time": time,
             "event_counts": list(self.current_event_count_data),
             "trigger": trigger,
@@ -142,17 +197,21 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         self.event_context_finish()
 
-    def event_context_initiator(self):
-        """
-        Sets the context in all meta-species. Called each time an event context is initiated.
+    def event_context_initiator(self) -> None:
+        """Sets the context in all meta-species.
+
+        Called each time an event context is initiated.
         """
         Species.set_simulation_context(self)
 
-    def _event_handler(self):
+    def _event_handler(self) -> None:
         """
-        Handles the event context by activating the current context and checking it is the only one active. It is called in every event context manager.
+        Handles the event context by activating the current
+        context and checking it is the only one active. It is
+        called in every event context manager.
 
-        :raise simlog.error: if the event context is called although another event is already active
+        :raise simlog.error: if the event context is called
+            although another event is already active
         """
         if self._context_not_active:
             self._context_not_active = False
@@ -163,7 +222,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
     @contextmanager
     def event_condition(
-        self, trigger: str, delay: Union[float, int, Quantity] = 0
+        self, trigger: str, delay: float | int | Quantity = 0
     ) -> Generator[int, None, None]:
         """
         Context manager for condition events.
@@ -200,7 +259,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             if isinstance(trigger, (bool, float, int)):
                 raise ValidationError(
                     f"MobsPy has received an invalid trigger type: {type(trigger)}. "
-                    "Please make sure you are not using the operator == for creating event conditions"
+                    "Please make sure you are not using the "
+                    "operator == for creating event conditions"
                 )
 
             self._conditional_event = True
@@ -212,9 +272,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             self.event_context_add(delay, trigger)
 
     @contextmanager
-    def event_time(
-        self, time: Union[float, int, Quantity]
-    ) -> Generator[int, None, None]:
+    def event_time(self, time: float | int | Quantity) -> Generator[int, None, None]:
         """
         Context manager for time events.
 
@@ -244,7 +302,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
     def __init__(
         self,
-        model: Union[Species, List_Species],
+        model: Species | List_Species,
         reactions: set | None = None,
         names: dict | None = None,
         parameters: dict | None = None,
@@ -272,17 +330,17 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         self._event_time = 0
         self.previous_trigger = None
         self.current_event_count_data = []
-        self.total_packed_events = []
+        self.total_packed_events: list[SimulationEventData] = []
         self.number_of_context_comparisons = 0
         self.pre_number_of_context_comparisons = 0
-        self._list_of_models = []
-        self._list_of_parameters = []
+        self._list_of_models: list[CompiledModelDict] = []
+        self._list_of_parameters: list[SimulationParameters] = []
         self._context_not_active = True
         self._assigned_species_list = []
         self._conditional_event = False
         self._end_condition = None
         self.model_parameters = {}
-        self.sbml_data_list = []
+        self.sbml_data_list: ParameterSweepList = []
         self._parameter_list_of_dic = []
         self._is_compiled = False
         self.dimension = None
@@ -301,7 +359,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         if not isinstance(model, Species) and not isinstance(model, List_Species):
             raise ValidationError(
-                f"Model must be formed only by Species objects or List_Species objects. "
+                "Model must be formed only by Species objects "
+                "or List_Species objects. "
                 f"Received type {type(model)} with value {model}"
             )
 
@@ -328,7 +387,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 )
 
         if not parameters:
-            self.parameters = get_default_parameters()
+            self.parameters: SimulationParameters = get_default_parameters()
 
         if not plot_parameters:
             self.plot_parameters = get_default_plot_parameters()
@@ -338,11 +397,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         self.fres = {}
         self.default_order = Default
 
-        self._species_for_sbml = None
-        self._reactions_for_sbml = None
-        self._parameters_for_sbml = None
-        self._mappings_for_sbml = None
-        self._events_for_sbml = None
+        self._species_for_sbml: SpeciesForSbml | None = None
+        self._reactions_for_sbml: ReactionsForSbml | None = None
+        self._parameters_for_sbml: ParametersForSbml | None = None
+        self._mappings_for_sbml: MappingsForSbml | None = None
+        self._events_for_sbml: EventsForSbml | None = None
         self.model_string = ""
 
     def compile(self, verbose: bool = True) -> str | None:
@@ -353,7 +412,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         an SBML representation that can be executed by the simulation engine.
 
         Args:
-            verbose (bool): If True, print detailed compilation information. Defaults to True.
+            verbose (bool): If True, print detailed compilation
+                information. Defaults to True.
 
         Returns:
             Optional[str]: The compiled model string in SBML format, or None if
@@ -387,27 +447,19 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 self.plot_parameters["simulation_method"] = "stochastic"
             else:
                 raise ParameterError(
-                    f"Invalid simulation method: {self.parameters['simulation_method']}. "
+                    "Invalid simulation method: "
+                    f"{self.parameters['simulation_method']}. "
                     "Must be 'deterministic' or 'stochastic'"
                 )
 
-            # Pass end condition to dict parameters - It is stored outside of parameters to the parameters serializable
-            # However, it is necessary for the compilation so it is passed as a parameter
+            # Pass end condition to dict parameters
+            # It is stored outside of parameters to keep
+            # the parameters serializable. However, it is
+            # necessary for compilation so it is passed here.
+
             self.parameters["_end_condition"] = self._end_condition
 
-            (
-                self._species_for_sbml,
-                self._reactions_for_sbml,
-                self._parameters_for_sbml,
-                self._mappings_for_sbml,
-                self.model_string,
-                self._events_for_sbml,
-                self._assigned_species_list,
-                self.model_parameters,
-                self.model_parameter_objects_dict,
-                self._assignments_for_sbml,
-                self._has_mole,
-            ) = Compiler.compile(
+            _result = Compiler.compile(
                 self.model,
                 reactions_set=self._reactions_set,
                 species_counts=self._species_counts,
@@ -425,6 +477,18 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             logger.exception("Model compilation failed")
             raise CompilationError(f"Model compilation failed: {str(e)}") from e
 
+        self._species_for_sbml = _result.species_for_sbml
+        self._reactions_for_sbml = _result.reactions_for_sbml
+        self._parameters_for_sbml = _result.parameters_for_sbml
+        self._mappings_for_sbml = _result.mappings_for_sbml
+        self.model_string = _result.model_str
+        self._events_for_sbml = _result.events_for_sbml
+        self._assigned_species_list = _result.assigned_species
+        self.model_parameters = _result.parameters_used
+        self.model_parameter_objects_dict = _result.parameter_object_dict
+        self._assignments_for_sbml = _result.assignments_for_sbml
+        self._has_mole = _result.has_mole
+
         # The volume is converted to the proper unit at the compiler level
         self.parameters["volume"] = self._parameters_for_sbml["volume"][0]
         self.mappings = deepcopy(self._mappings_for_sbml)
@@ -435,18 +499,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 self._species_for_sbml[key]
             )
 
-        self._list_of_models += [
-            {
-                "species_for_sbml": self._species_for_sbml,
-                "parameters_for_sbml": self._parameters_for_sbml,
-                "reactions_for_sbml": self._reactions_for_sbml,
-                "events_for_sbml": self._events_for_sbml,
-                "assignments_for_sbml": self._assignments_for_sbml,
-                "species_not_mapped": self.all_species_not_mapped,
-                "mappings": self.mappings,
-                "assigned_species": self._assigned_species_list,
-            }
-        ]
+        compiled_model = _result.to_compiled_model_dict(
+            species_not_mapped=self.all_species_not_mapped,
+            mappings=self.mappings,
+        )
+        self._list_of_models += [compiled_model]
 
         self._list_of_parameters = [self.parameters]
 
@@ -457,7 +514,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         return self.model_string
 
-    def _assemble_multi_simulation_structure(self):
+    def _assemble_multi_simulation_structure(self) -> None:
+        data_for_sbml_construction: ParameterSweepList
         data_for_sbml_construction, parameter_list_of_dic = ps_generate_all_sbml_models(
             self.model_parameters, self._list_of_models
         )
@@ -466,8 +524,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
     def run(
         self,
-        duration: Union[float, Quantity] | None = None,
-        volume: Union[float, Quantity] | None = None,
+        duration: float | Quantity | None = None,
+        volume: float | Quantity | None = None,
         dimension: int | None = None,
         repetitions: int | None = None,
         level: int | None = None,
@@ -604,25 +662,23 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 self.parameters["output_concentration"],
             )
 
-        def convert_all_ts_to_correct_format(single_ts, parameters, unit_convert=False):
-            # Convert multiple ts_data into correct format
-            if unit_convert:
-                data_dict = {
-                    "data": convert_one_ts_to_desired_unit(single_ts),
-                    "params": self.parameters,
-                    "models": self._list_of_models,
-                }
-            else:
-                data_dict = {
-                    "data": single_ts,
-                    "params": self.parameters,
-                    "models": self._list_of_models,
-                }
+        def convert_all_ts_to_correct_format(
+            single_ts: Any,
+            parameters: Any,
+            unit_convert: bool = False,
+        ) -> Any:
+            data_dict: TimeSeriesDataDict = {
+                "data": convert_one_ts_to_desired_unit(single_ts)
+                if unit_convert
+                else single_ts,
+                "params": self.parameters,
+                "models": self._list_of_models,
+            }
             return MobsPyTimeSeries(data_dict, parameters)
 
         flatt_ts = []
         if self._parameter_list_of_dic:
-            for r, params in zip(results, self._parameter_list_of_dic):
+            for r, params in zip(results, self._parameter_list_of_dic):  # noqa: B905
                 for ts in r:
                     flatt_ts.append((ts, params))
         else:
@@ -718,25 +774,26 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 with open(file, "w") as jf:
                     json_dump(self.results.to_dict(), jf, indent=4)
                     logger.info(f"Successfully saved simulation results to {file}")
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.error(f"Error saving data to file: {str(e)}")
-            raise IOError(f"Failed to save simulation data: {str(e)}") from e
+            raise OSError(f"Failed to save simulation data: {str(e)}") from e
         except Exception as e:
             logger.exception("Unexpected error during data saving")
             raise SimulationError(
                 f"Unexpected error saving simulation data: {str(e)}"
             ) from e
 
-    def _pack_data(self, time_series_data):
+    def _pack_data(self, time_series_data: TypingAny) -> None:
         """
         Packs data from multiple simulations or external data into one simulation object
 
-        :param time_series_data: (data in MobsPy format) data to be packed in the simulation object
+        :param time_series_data: (data in MobsPy format) data to
+            be packed in the simulation object
         """
         self.packed_data.append(time_series_data)
 
     # Dealing with parameters
-    def set_from_json(self, file_name):
+    def set_from_json(self, file_name: str) -> None:
         """
         Set simulation parameters from json file
 
@@ -747,7 +804,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             for key in data:
                 self.__setattr__(key, data[key])
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: TypingAny) -> None:
         """
         __setattr__ override. For setting simulation parameters using the _dot_ operator
 
@@ -821,8 +878,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         if not plotted_flag:
             example_parameters = get_example_parameters()
-            if name in example_parameters.keys():
-                # If the model is already compiled, the change in parameters should be faster
+            if name in example_parameters.keys():  # noqa: SIM118
+                # Compiled model: parameter change is faster
                 if self._is_compiled and name != "unit_x" and name != "unit_y":
                     value = pr_convert_time_parameters_after_compilation(value)
                 if self._is_compiled and name == "volume":
@@ -830,10 +887,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                         self.dimension, self._parameters_for_sbml, value
                     )
 
-                if name == "duration":
-                    if type(value) == bool:
+                if name == "duration":  # noqa: SIM102
+                    if type(value) == bool:  # noqa: E721
                         simlog.error(
-                            f"MobsPy has received an invalid trigger type: {type(value)} \n"
+                            "MobsPy has received an invalid "
+                            f"trigger type: {type(value)} \n"
                             + "Please make sure you are not using the operator == for "
                             + "creating event conditions \n",
                         )
@@ -855,7 +913,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             else:
                 simlog.error(f"Parameter {name} is not supported")
 
-    def __getattribute__(self, item):
+    def __getattribute__(self, item: str) -> TypingAny:
         ta = item == "results" and self.__dict__["results"] == {}
         tb = item == "fres" and self.__dict__["fres"] == {}
         if ta or tb:
@@ -868,9 +926,10 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         return super().__getattribute__(item)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Simulation:
         """
-        __getattr__ override. For the user to be able to set plot parameters as MySim.plot.parameter
+        __getattr__ override. For the user to be able to set
+        plot parameters as MySim.plot.parameter
         """
         if item == "plot_config":
             self.__dict__["plot_flag"] = True
@@ -878,7 +937,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             self.__dict__["plot_flag"] = False
         return self
 
-    def configure_parameters(self, config):
+    def configure_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
         Configure simulation parameters from json file or dictionary
 
@@ -886,7 +945,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         """
         self.parameters = self.__config_parameters(config)
 
-    def configure_plot_parameters(self, config):
+    def configure_plot_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
         Configure plot parameters from json file or dictionary
 
@@ -895,23 +954,23 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         self.plot_parameters = self.__config_parameters(config)
 
     @staticmethod
-    def __config_parameters(config):
+    def __config_parameters(config: str | dict[str, TypingAny]) -> dict[str, TypingAny]:
         """
         Encapsulation for config_plot and config_parameters
         """
-        if type(config) == str:
+        if type(config) == str:  # noqa: E721
             if os_path_splitext(config)[1] != ".json":
                 simlog.error("Wrong file extension")
             parameters_to_config = pr_read_json(config)
-        elif type(config) == dict:
+        elif type(config) == dict:  # noqa: E721
             parameters_to_config = config
         else:
             simlog.error("Parameters must be python dictionary or json file")
         return parameters_to_config
 
-    def add_plot_params(self, *args, **kwargs):
+    def add_plot_params(self, *args: TypingAny, **kwargs: TypingAny) -> None:
         for a in args:
-            if type(a) == dict:
+            if type(a) == dict:  # noqa: E721
                 for par in a:
                     self.base_sim.plot_parameters[par] = a[par]
 
@@ -919,12 +978,18 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             self.plot_parameters[key] = deepcopy(kwargs[key])
 
     # Plotting encapsulation
-    def extract_plot_essentials(self, *species):
+    def extract_plot_essentials(
+        self,
+        *species: str | Species | Reacting_Species,
+    ) -> tuple[set[str], TypingAny, dict[str, TypingAny]]:
         """
         Extract essential information for plotting
 
         :param species: (meta-species objects) meta-species objects to plot
-        :return: species_strings (str) = species strings to be plotted, self.results = data resulting from the simulation, self.plot_parameters (dict) = parameters for plotting
+        :return: species_strings (str) = species strings to be
+            plotted, self.results = data resulting from the
+            simulation, self.plot_parameters (dict) = parameters
+            for plotting
         """
         if not species:
             species_strings = set()
@@ -934,11 +999,9 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             species_strings = set()
 
         for spe in species:
-            if isinstance(spe, Species):
+            if isinstance(spe, Species) or isinstance(spe, Reacting_Species):  # noqa: SIM101
                 species_strings.add(str(spe))
-            elif isinstance(spe, Reacting_Species):
-                species_strings.add(str(spe))
-            elif type(spe) == str:
+            elif type(spe) == str:  # noqa: E721
                 species_strings.add(spe)
             else:
                 simlog.error(
@@ -947,14 +1010,13 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         return species_strings, self.results, self.plot_parameters
 
-    def plot_stochastic(
-        self, *species: Union[str, Species, Reacting_Species]
-    ) -> TypingAny:
+    def plot_stochastic(self, *species: str | Species | Reacting_Species) -> TypingAny:
         """
         Generate a stochastic plot of the simulation results.
 
         Args:
-            *species: Variable number of species to plot (can be strings or species objects)
+            *species: Variable number of species to plot
+                (can be strings or species objects)
 
         Returns:
             Plot object (type depends on the plotting backend)
@@ -972,13 +1034,14 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         )
 
     def plot_deterministic(
-        self, *species: Union[str, Species, Reacting_Species]
+        self, *species: str | Species | Reacting_Species
     ) -> TypingAny:
         """
         Generate a deterministic plot of the simulation results.
 
         Args:
-            *species: Variable number of species to plot (can be strings or species objects)
+            *species: Variable number of species to plot
+                (can be strings or species objects)
 
         Returns:
             Plot object (type depends on the plotting backend)
@@ -995,14 +1058,13 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             plot_essentials[0], plot_essentials[1], plot_essentials[2]
         )
 
-    def plot_parametric(
-        self, *species: Union[str, Species, Reacting_Species]
-    ) -> TypingAny:
+    def plot_parametric(self, *species: str | Species | Reacting_Species) -> TypingAny:
         """
         Generate a parametric plot of the simulation results.
 
         Args:
-            *species: Variable number of species to plot (can be strings or species objects)
+            *species: Variable number of species to plot
+                (can be strings or species objects)
 
         Returns:
             Plot object (type depends on the plotting backend)
@@ -1019,14 +1081,16 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             plot_essentials[0], plot_essentials[1], plot_essentials[2]
         )
 
-    def plot(self, *species: Union[str, Species, Reacting_Species]) -> TypingAny:
+    def plot(self, *species: str | Species | Reacting_Species) -> TypingAny:
         """
         Generate a deterministic plot (alias for plot_deterministic).
 
-        This is a convenience method that calls plot_deterministic with the same arguments.
+        This is a convenience method that calls
+        plot_deterministic with the same arguments.
 
         Args:
-            *species: Variable number of species to plot (can be strings or species objects)
+            *species: Variable number of species to plot
+                (can be strings or species objects)
 
         Returns:
             Plot object (type depends on the plotting backend)
@@ -1034,13 +1098,14 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         return self.plot_deterministic(*species)
 
     def plot_raw(
-        self, parameters_or_file: Union[str, dict], return_fig: bool = False
+        self, parameters_or_file: str | dict, return_fig: bool = False
     ) -> TypingAny:
         """
         Generate a raw plot with custom parameters.
 
         Args:
-            parameters_or_file: Either a JSON file name or dictionary with plot configuration
+            parameters_or_file: Either a JSON file name or
+                dictionary with plot configuration
             return_fig: If True, return the figure object instead of displaying it
 
         Returns:
@@ -1055,13 +1120,13 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         return dp_raw_plot(self.results, parameters_or_file, return_fig=return_fig)
 
-    def __add__(self, other):
+    def __add__(self, other: Simulation) -> SimulationComposition:
         """
         The add operator is used to concatenate simulations.
         """
         return SimulationComposition(self, other)
 
-    def to_dataframe(self) -> "pandas.DataFrame":
+    def to_dataframe(self) -> TypingAny:  # -> pandas.DataFrame
         """
         Convert simulation results to a pandas DataFrame.
 
@@ -1084,20 +1149,22 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 f"Failed to convert results to DataFrame: {str(e)}"
             ) from e
 
-    def compose_sbml(self):
-        list_of_composite_dicts_for_sbml = []
+    def compose_sbml(self) -> list[list[SBMLModelDict]]:
+        list_of_composite_dicts_for_sbml: list[list[SBMLModelDict]] = []
 
         def check_convertible():
             if len(self._list_of_parameters) == 1:
                 simlog.error(
-                    "Single simulations cannot generate a composed sbml or antimony string"
+                    "Single simulations cannot generate a "
+                    "composed sbml or antimony string"
                 )
 
             for i in range(len(self._list_of_parameters)):
                 if self._list_of_parameters[i]["_end_condition"] is not None:
                     simlog.error(
-                        "Composite Simulations with conditional duration cannot be converted to sbml "
-                        "or antimony"
+                        "Composite Simulations with conditional "
+                        "duration cannot be converted to "
+                        "sbml or antimony"
                     )
 
         check_convertible()
@@ -1155,7 +1222,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 event_process(next_spe, i, cul_duration, sim_sbml)
 
             for spe in sim_sbml["species_for_sbml"]:
-                if spe not in new_sbml_file["species_for_sbml"] and "_" != spe[0]:
+                if spe not in new_sbml_file["species_for_sbml"] and spe[0] != "_":
                     event_number = len(new_sbml_file["events_for_sbml"])
                     new_sbml_file["events_for_sbml"]["e" + str(event_number)] = {
                         "trigger": f"_SFS_{str(i)} > 0",
@@ -1190,7 +1257,7 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
 
         for multi_sims in self.sbml_data_list:
             # Sequential Flag Species - SFS
-            new_sbml_file = {
+            new_sbml_file: SBMLModelDict = {
                 "species_for_sbml": {},
                 "parameters_for_sbml": {},
                 "reactions_for_sbml": {},
@@ -1217,11 +1284,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             list_of_composite_dicts_for_sbml.append([new_sbml_file])
         return list_of_composite_dicts_for_sbml
 
-    def parse_volume_name_for_antimony(self):
-        new_sims = []
+    def parse_volume_name_for_antimony(self) -> list[list[SBMLModelDict]]:
+        new_sims: list[list[SBMLModelDict]] = []
         for multi_sims in self.sbml_data_list:
             sim_sbml = multi_sims[0]
-            new_sbml_file = {
+            new_sbml_file: SBMLModelDict = {
                 "species_for_sbml": sim_sbml["species_for_sbml"],
                 "parameters_for_sbml": sim_sbml["parameters_for_sbml"],
                 "reactions_for_sbml": {},
@@ -1244,19 +1311,20 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             new_sims.append([new_sbml_file])
         return new_sims
 
-    def generate_sbml(self, compose=False):
+    def generate_sbml(self, compose: bool = False) -> list[str]:
         """
         Generates sbmls strings from the current stored models in the simulation
         :param composes: (bool) Join composite simulations into a single sbml
 
-        :return: to_return (list of str) list of sbml files from all the simulations stored
+        :return: to_return (list of str) list of sbml files
+            from all the simulations stored
         """
-        to_return = []
+        to_return: list[str] = []
         if self._species_for_sbml is None:
             self.compile(verbose=False)
         self._assemble_multi_simulation_structure()
 
-        if compose:
+        if compose:  # noqa: SIM108
             sbml_dict_list = self.compose_sbml()
         else:
             sbml_dict_list = self.sbml_data_list
@@ -1274,13 +1342,18 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                 )
         return to_return
 
-    def generate_antimony(self, compose: bool = False, model_name=None) -> list[str]:
+    def generate_antimony(
+        self,
+        compose: bool = False,
+        model_name: str | None = None,
+    ) -> list[str]:
         """
         Generates an string with an Antimony model from a respective MobsPy model
         :param compose: (bool) Join composite simulations into a single sbml
-        :param model_name: (str) desired name of the model. If not supplied a random name will be chosen
+        :param model_name: (str) desired name of the model.
+            If not supplied a random name will be chosen
         """
-        antimony_text = ""
+        antimony_text = ""  # noqa: F841
         if self._species_for_sbml is None:
             self.compile(verbose=False)
         self._assemble_multi_simulation_structure()
@@ -1321,12 +1394,12 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                         )
 
                 if sbml_data["assignments_for_sbml"]:
-                    for assign_name, assign_data in sbml_data[
+                    for assign_name, assign_data in sbml_data[  # noqa: B007
                         "assignments_for_sbml"
                     ].items():
                         antimony_model = (
-                            antimony_model
-                            + f"    {assign_data['species']} := {assign_data['expression']}\n"
+                            antimony_model + f"    {assign_data['species']}"
+                            f" := {assign_data['expression']}\n"
                         )
 
                 for reaction_name, reaction_data in sbml_data[
@@ -1371,8 +1444,8 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
                     for event_name, event_data in sbml_data["events_for_sbml"].items():
                         if event_data["trigger"] == "true":
                             antimony_model = (
-                                antimony_model
-                                + f"    {event_name}: at(time > {event_data['delay']}): "
+                                antimony_model + f"    {event_name}: at("
+                                f"time > {event_data['delay']}): "
                             )
                         else:
                             antimony_model = (
@@ -1394,11 +1467,11 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
         return True
 
     @classmethod
-    def set_job_number(cls, params):
+    def set_job_number(cls, params: dict[str, TypingAny]) -> int:
         # Run in parallel or sequentially
         # If nothing is specified just run it in parallel
         try:
-            if params["jobs"] == 1:
+            if params["jobs"] == 1:  # noqa: SIM108
                 jobs = params["jobs"]
             else:
                 jobs = params["jobs"]
@@ -1406,18 +1479,18 @@ class Simulation(pdl_Experimental_Data_Holder, Simulation_Utils):
             jobs = -1
         return jobs
 
-    def __sub__(self, other):
+    def __sub__(self, other: TypingAny) -> Simulation:
         return sof_sim_remove_reaction(self, other, Simulation)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: TypingAny) -> Simulation:
         return sof_sim_remove_reaction(other, self, Simulation)
 
 
 class SimulationComposition:
-    def update_model(self, *args):
+    def update_model(self, *args: TypingAny) -> None:
         self.base_sim.update_model(*args)
 
-    def _compile_multi_simulation(self):
+    def _compile_multi_simulation(self) -> None:
         for sim1 in self.list_of_simulations:
             for sim2 in self.list_of_simulations:
                 if sim1 == sim2:
@@ -1425,25 +1498,31 @@ class SimulationComposition:
 
                 for spe1 in sim1.model:
                     for spe2 in sim2.model:
-                        if spe1.get_name() == spe2.get_name():
+                        if spe1.get_name() == spe2.get_name():  # noqa: SIM102
                             if (
                                 spe1.get_all_characteristics()
                                 != spe2.get_all_characteristics()
                             ):
                                 simlog.error(
-                                    f"Species {spe1.get_name()} was modified through simulations. \n"
-                                    + "Although reactions can be removed, the characteristics inherited must"
-                                    " remain the same"
+                                    f"Species {spe1.get_name()} "
+                                    "was modified through "
+                                    "simulations. \n" + "Although reactions can be "
+                                    "removed, the characteristics "
+                                    "inherited must remain the same"
                                 )
 
     def __len__(self) -> int:
         return len(self.list_of_simulations)
 
-    def __iter__(self):
-        for sim in self.list_of_simulations:
+    def __iter__(self) -> Generator[Simulation, None, None]:
+        for sim in self.list_of_simulations:  # noqa: UP028
             yield sim
 
-    def __init__(self, S1, S2):
+    def __init__(
+        self,
+        S1: Simulation | SimulationComposition,
+        S2: Simulation | SimulationComposition,
+    ) -> None:
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
             self.list_of_simulations = [S1] + [S2]
         elif isinstance(S1, SimulationComposition) and isinstance(S2, Simulation):
@@ -1462,10 +1541,13 @@ class SimulationComposition:
         self.fres = None
         self.base_sim = self.list_of_simulations[0]
 
-    def __add__(self, other):
+    def __add__(
+        self,
+        other: Simulation | SimulationComposition,
+    ) -> SimulationComposition:
         return SimulationComposition(self, other)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: TypingAny) -> None:
         white_list = ["list_of_simulations", "results", "base_sim", "fres"]
         multi_cast_parameters = ["duration"]
         broad_cast_parameters = ["level", "rate_type", "plot_type", "repetitions"]
@@ -1474,9 +1556,9 @@ class SimulationComposition:
         if name in double_cast_parameters:
             # Broadcast if single value
             if (
-                type(value) == str
-                or type(value) == int
-                or type(value) == float
+                type(value) == str  # noqa: E721
+                or type(value) == int  # noqa: E721
+                or type(value) == float  # noqa: E721
                 or isinstance(value, Quantity)
             ):
                 for sim in self:
@@ -1486,14 +1568,15 @@ class SimulationComposition:
                 try:
                     if not len(self) == len(value):
                         raise SystemExit
-                except:
+                except Exception:
                     simlog.error(
                         f"The parameter {name} was assigned non-accepted type.",
                     )
 
-                for par, sim in zip(value, self):
-                    # DON'T ADD DIRECTLY to the object's dict, changes in volume, duration after compilation are
-                    # checked in the setattr method in the individual simulations
+                for par, sim in zip(value, self):  # noqa: B905
+                    # Don't add directly to the object's dict;
+                    # volume/duration changes after compilation
+                    # are checked in setattr
                     if name == "volume":
                         sim.volume = par
                     elif name == "duration":
@@ -1505,15 +1588,18 @@ class SimulationComposition:
             try:
                 if not len(self) == len(value):
                     raise SystemExit
-            except:
+            except Exception:
                 simlog.error(
-                    "From 2.4.4 duration must be assigned to each simulation individually or a list "
-                    "with all durations must be assigned to the concatenated simulation",
+                    "From 2.4.4 duration must be assigned to "
+                    "each simulation individually or a list "
+                    "with all durations must be assigned to "
+                    "the concatenated simulation",
                 )
 
-            for par, sim in zip(value, self):
-                # DON'T ADD DIRECTLY to the object's dict, changes in volume, duration after compilation are
-                # checked in the setattr method in the individual simulations
+            for par, sim in zip(value, self):  # noqa: B905
+                # Don't add directly to the object's dict;
+                # volume/duration changes after compilation
+                # are checked in setattr
                 if name == "volume":
                     sim.volume = par
                 elif name == "duration":
@@ -1529,12 +1615,12 @@ class SimulationComposition:
             else:
                 self.base_sim.__setattr__(name, value)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Simulation:
         if item == "plot_config":
             self.base_sim.__dict__["plot_flag"] = True
             return self.base_sim
 
-    def compile(self, verbose=True):
+    def compile(self, verbose: bool = True) -> str | None:
         str = ""
         for sim in self.list_of_simulations:
             str += sim.compile(verbose)
@@ -1553,7 +1639,7 @@ class SimulationComposition:
         if str != "":
             return str
 
-    def _check_all_sims_compilation(self):
+    def _check_all_sims_compilation(self) -> None:
         for sim in self.list_of_simulations:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
@@ -1561,53 +1647,62 @@ class SimulationComposition:
     # This run is for the multiple simulations
     def run(
         self,
-        duration=None,
-        volume=None,
-        dimension=None,
-        repetitions=None,
-        level=None,
-        simulation_method=None,
-        start_time=None,
-        r_tol=None,
-        a_tol=None,
-        seeds=None,
-        step_size=None,
-        jobs=None,
-        unit_x=None,
-        unit_y=None,
-        output_concentration=None,
-        output_event=None,
-        output_file=None,
-        save_data=None,
-        plot_data=None,
-        rate_type=None,
-        plot_type=None,
-    ):
+        duration: TypingAny = None,
+        volume: TypingAny = None,
+        dimension: int | None = None,
+        repetitions: int | None = None,
+        level: int | None = None,
+        simulation_method: str | None = None,
+        start_time: float | None = None,
+        r_tol: float | None = None,
+        a_tol: float | None = None,
+        seeds: list[int] | None = None,
+        step_size: float | None = None,
+        jobs: int | None = None,
+        unit_x: TypingAny = None,
+        unit_y: TypingAny = None,
+        output_concentration: bool | None = None,
+        output_event: bool | None = None,
+        output_file: str | None = None,
+        save_data: bool | None = None,
+        plot_data: bool | None = None,
+        rate_type: str | None = None,
+        plot_type: str | None = None,
+    ) -> None:
         """
-        runs a concatenated simulation with multiple simulation objects summed
-        Some inputs are different here, duration and volume must receive any iterable with the volume for
-        each simulation
+        Runs a concatenated simulation with multiple
+        simulation objects summed. Some inputs are different
+        here, duration and volume must receive any iterable
+        with the volume for each simulation.
 
         :param duration: (iterable) duration of a simulation
-        :param volume: (iterable) volume of the simulation - if none given 1 - liter is used
-        :param repetitions: (int) number of times to reapeat a simulation
-        :param level: (int) 0 - only error messages, 3 - errors, warnings, compilation info
-        :param simulation_method: (iterable) stochastic, deterministic, direct_method - simulation method
-        :param start_time: (float) the simulation will only display data after the start time
-        :param r_tol: (float) relative tolerance - basiCO simulation parameter
-        :param a_tol: (float) absolute tolerance  - basiCO simulation parameter
-        :param seeds: (list) list of seeds for stochastic simulation
-        :param step_size: (float) time step-size for simulation
-        :param jobs: (int) number of jobs to execute simulation
+        :param volume: (iterable) volume of the simulation,
+            if none given 1 liter is used
+        :param repetitions: (int) number of times to repeat
+        :param level: (int) 0 - only error messages,
+            3 - errors, warnings, compilation info
+        :param simulation_method: (iterable) stochastic,
+            deterministic, direct_method
+        :param start_time: (float) simulation will only
+            display data after the start time
+        :param r_tol: (float) relative tolerance
+        :param a_tol: (float) absolute tolerance
+        :param seeds: (list) seeds for stochastic simulation
+        :param step_size: (float) time step-size
+        :param jobs: (int) number of jobs
         :param unit_x: (unit) unit of the time x-axis
         :param unit_y: (unit) unit of the y-axis
-        :param output_concentration: (bool) outputs the concentration instead of counts - to be changed
-        :param output_event: (bool) exactly when an event happens, it adds the data point to the results
+        :param output_concentration: (bool) outputs
+            concentration instead of counts
+        :param output_event: (bool) when an event happens,
+            adds the data point to the results
         :param output_file: (str) name of the file
         :param save_data: (bool) save data or not
         :param plot_data: (bool) plot data or not
-        :param rate_type: (str) stochastic or deterministic rate expression - mass action kinetic or prob. based
-        :param plot_type: (str) stochastic or deterministic - style of MobsPy plot
+        :param rate_type: (str) stochastic or deterministic
+            rate expression
+        :param plot_type: (str) stochastic or deterministic
+            style of MobsPy plot
         """
         if level is not None:
             self.level = level
@@ -1660,28 +1755,28 @@ class SimulationComposition:
         self.results = self.base_sim.results
         self.fres = self.base_sim.fres
 
-    def plot_deterministic(self, *species):
+    def plot_deterministic(self, *species: str | Species | Reacting_Species) -> None:
         self.base_sim.plot_deterministic(*species)
 
-    def plot_stochastic(self, *species):
+    def plot_stochastic(self, *species: str | Species | Reacting_Species) -> None:
         self.base_sim.plot_stochastic(*species)
 
-    def plot(self, *species):
+    def plot(self, *species: str | Species | Reacting_Species) -> None:
         self.base_sim.plot(*species)
 
-    def plot_raw(self, parameters_or_file):
+    def plot_raw(self, parameters_or_file: str | dict[str, TypingAny]) -> None:
         self.base_sim.plot_raw(parameters_or_file)
 
-    def add_plot_params(self, *args, **kwargs):
+    def add_plot_params(self, *args: TypingAny, **kwargs: TypingAny) -> None:
         for a in args:
-            if type(a) == dict:
+            if type(a) == dict:  # noqa: E721
                 for par in a:
                     self.base_sim.plot_parameters[par] = a[par]
 
         for key in kwargs:
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
 
-    def generate_sbml(self, compose=False) -> list[str]:
+    def generate_sbml(self, compose: bool = False) -> list[str]:
         """
         Generates a string with an SBML model from a respective MobsPy model
         :param compose: (bool) Join composite simulations into a single sbml
@@ -1699,7 +1794,11 @@ class SimulationComposition:
 
         return self.base_sim.generate_sbml(compose=compose)
 
-    def generate_antimony(self, compose=False, model_name=None) -> list[str]:
+    def generate_antimony(
+        self,
+        compose: bool = False,
+        model_name: str | None = None,
+    ) -> list[str]:
         """
         Generates a string with an Antimony model from a respective MobsPy model
         :param compose: (bool) Join composite simulations into a single sbml
@@ -1716,7 +1815,7 @@ class SimulationComposition:
 
         return self.base_sim.generate_antimony(compose=compose, model_name=model_name)
 
-    def to_dataframe(self):
+    def to_dataframe(self) -> TypingAny:
         self.base_sim.to_dataframe()
 
     @classmethod

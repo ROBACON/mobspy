@@ -1,46 +1,62 @@
-from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from mobspy.mobspy_logging import get_logger
+from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
+
+if TYPE_CHECKING:
+    from mobspy.types import EventsForSbml
 
 _logger = get_logger(__name__)
-from mobspy.modules.species_string_generator import (
-    construct_all_combinations as ssg_construct_all_combinations,
-    construct_species_char_list as ssg_construct_species_char_list,
-)
-from pint import Quantity
-from mobspy.modules.mobspy_parameters import (
-    Internal_Parameter_Constructor as mp_Mobspy_Parameter,
-)
-from mobspy.modules.function_rate_code import (
+from pint import Quantity  # noqa: E402
+
+from mobspy.modules.function_rate_code import (  # noqa: E402
     search_for_parameters_in_str as frc_search_for_parameters_in_str,
 )
+from mobspy.modules.mobspy_parameters import (  # noqa: E402
+    Internal_Parameter_Constructor as mp_Mobspy_Parameter,
+)
+from mobspy.modules.species_string_generator import (  # noqa: E402
+    construct_all_combinations as ssg_construct_all_combinations,
+)
+from mobspy.modules.species_string_generator import (  # noqa: E402
+    construct_species_char_list as ssg_construct_species_char_list,
+)
 
-# @TODO remove search parameters in string - don't use it anymore - slowly deprecate this function
+# @TODO remove search parameters in string
+# don't use it anymore - slowly deprecate this function
 
 
 def format_event_dictionary_for_sbml(
-    species_for_sbml,
-    event_list,
-    characteristics_to_object,
-    volume,
-    dimension,
-    meta_species_to_simulate,
-    parameter_exist,
-    parameters_in_events,
-):
+    species_for_sbml: dict[str, Any],
+    event_list: list[dict[str, Any]],
+    characteristics_to_object: dict[str, Any],
+    volume: int | float,
+    dimension: int,
+    meta_species_to_simulate: Any,
+    parameter_exist: dict[str, Any],
+    parameters_in_events: set[Any],
+) -> tuple[EventsForSbml, set[str]]:
     """
-    Creates events_for_sbml dictionary for sbml file construction on the sbml_simulator/SBMLWriter.py
+    Creates events_for_sbml dictionary for sbml file construction
+    on the sbml_simulator/SBMLWriter.py
 
-    :param species_for_sbml: (dict) {'species_string': count, ....}
-    :param event_list: [{'species':'meta_species_object', 'characteristics':['list of characteristics'],
+    :param species_for_sbml: (dict)
+        {'species_string': count, ....}
+    :param event_list:
+        [{'species':'meta_species_object',
+        'characteristics':['list of characteristics'],
         'quantity': number or pint object}
     :param characteristics_to_object: {'characteristic':'meta_species_object', .....}
     :param volume: Simulation volume for unit conversion
     :param dimension: Dimension of the system 2D, 3D, 4D, e
     :return: event dictionary for the sbml file construction
-    :rtype: events = {'e': { 'trigger': 'true', 'delay': '10', 'assignments': [('M','1'),]}}
+    :rtype: events = {'e': { 'trigger': 'true',
+        'delay': '10', 'assignments': [('M','1'),]}}
     """
-    reformed_event_list = []
-    species_in_events = set()
+    reformed_event_list: list[dict[str, Any]] = []
+    species_in_events: set[str] = set()
 
     # Convert count from triggers
     for ev in event_list:
@@ -52,7 +68,7 @@ def format_event_dictionary_for_sbml(
     for ev in event_list:
         if not ev["event_counts"]:
             continue
-        event_dictionary = {}
+        event_dictionary: dict[str, Any] = {}
 
         # All assignments never take priority over specific assignments
         for ec in ev["event_counts"]:
@@ -65,7 +81,7 @@ def format_event_dictionary_for_sbml(
                 ec["species"], temp_char, characteristics_to_object, symbol="_dot_"
             )
             for d in dummy:
-                if type(ec["quantity"]) != str:
+                if type(ec["quantity"]) != str:  # noqa: E721
                     event_dictionary[d] = uh_convert_counts(
                         ec["quantity"], volume, dimension
                     )
@@ -83,7 +99,7 @@ def format_event_dictionary_for_sbml(
                 symbol="_dot_",
             )
 
-            if type(ec["quantity"]) != str:
+            if type(ec["quantity"]) != str:  # noqa: E721
                 if isinstance(ec["quantity"], mp_Mobspy_Parameter):
                     parameters_in_events.add(ec["quantity"])
                     event_dictionary[dummy] = ec["quantity"].name
@@ -98,7 +114,7 @@ def format_event_dictionary_for_sbml(
                     )
                 event_dictionary[dummy] = ec["quantity"]
 
-        if type(ev["trigger"]) == str:
+        if type(ev["trigger"]) == str:  # noqa: E721
             reformed_event_list.append(
                 {
                     "event_time": ev["event_time"],
@@ -108,10 +124,11 @@ def format_event_dictionary_for_sbml(
             )
         else:
             for e in ev["trigger"].operation:
-                if type(e) == dict:
+                if type(e) == dict:  # noqa: SIM102, E721
                     if e["object"] not in meta_species_to_simulate:
                         _logger.error(
-                            f"Meta species {e['object']} was used in an event but is not in the model"
+                            f"Meta species {e['object']} was used"
+                            " in an event but is not in the model"
                         )
             reformed_event_list.append(
                 {
@@ -123,16 +140,17 @@ def format_event_dictionary_for_sbml(
                 }
             )
 
-    events_for_sbml = {}
+    events_for_sbml: dict[str, dict[str, Any]] = {}
     for i, event in enumerate(reformed_event_list):
-        assignments = []
+        assignments: list[tuple[str, str]] = []
         for key in event["event_counts"]:
             if key in species_for_sbml:
                 assignments.append((key, str(event["event_counts"][key])))
                 species_in_events.add(key)
             else:
                 _logger.error(
-                    f"Species {key} used in an event assignment but it is not in the model"
+                    f"Species {key} used in an event assignment"
+                    " but it is not in the model"
                 )
 
         assignments.sort()

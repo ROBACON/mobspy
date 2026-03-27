@@ -1,37 +1,49 @@
 """
-The class_of_meta_specie_named_any.py model is responsible for defining the Context_specie_named_any class.
+The class_of_meta_specie_named_any.py model is responsible
+for defining the Context_specie_named_any class.
 """
 
-from mobspy.modules.meta_class import Species
+from __future__ import annotations
+
 from inspect import stack as inspect_stack
+from typing import Any as TypingAny
+
 from mobspy.mobspy_logging import get_logger
+from mobspy.modules.meta_class import Species
 
 _logger = get_logger(__name__)
 
 
 class Context_specie_named_any(Species):
     """
-    Class which inherits from Species. It only has one object, Any, which is defined at the end of this script.
-    It is used to simplify the syntax of reactions and count setting inside the body of a
+    Class which inherits from Species. It only has one
+    object, Any, which is defined at the end of this
+    script. It is used to simplify the syntax of reactions
+    and count setting inside the body of a
     "with Any.example_characteristic1 :" statement.
-    Is is compatible with event_condition and event_time methods of the Simulation class.
-    It can be nested and used several time in the same with statement.
+    Is is compatible with event_condition and event_time
+    methods of the Simulation class.
+    It can be nested and used several time in the same
+    with statement.
     """
 
-    # This is the set of characteristics which are currently under the active Any context.
-    _set_of_characteristics_currently_under_the_any_context = set()
+    _set_of_characteristics_currently_under_the_any_context: set[str] = set()
 
-    # This is the list of all the nested Any contexts which are currently active.
-    _list_of_nested_any_contexts = []
+    _list_of_nested_any_contexts: list[set[str]] = []
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Context_specie_named_any:
         """
-        This method is called when an attribute is called on the Any specie.
-        It is used to add the characteristic to the currently active Any context.
+        This method is called when an attribute is called
+        on the Any specie. It is used to add the
+        characteristic to the currently active Any context.
 
-        :param item: (str) characteristic to be added to the currently active Any context.
-        :raise simlog.error: if the Any specie is given a characteristic outside of a context.
-        :return self: to allow for assigning multiple characteristics to the Any specie in the same line.
+        :param item: (str) characteristic to be added to
+            the currently active Any context.
+        :raise simlog.error: if the Any specie is given a
+            characteristic outside of a context.
+        :return self: to allow for assigning multiple
+            characteristics to the Any specie in the
+            same line.
         """
         if item.startswith("_"):
             raise AttributeError(item)
@@ -57,7 +69,7 @@ class Context_specie_named_any(Species):
         self.context_initiator_for_meta_specie_named_any()
         return 0
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args: TypingAny) -> None:
         """
         Context manager for Any's characteristics.
         Called in "with Any.example_characteristic :" format, when exiting.
@@ -80,8 +92,10 @@ class Context_specie_named_any(Species):
 
     def context_finish_for_meta_specie_named_any(self) -> None:
         """
-        This removes the context which is ending from _list_of_nested_any_contexts and updates the current Any context.
-        Then, it updates the Any context in all meta-species.
+        This removes the context which is ending from
+        _list_of_nested_any_contexts and updates the
+        current Any context. Then, it updates the Any
+        context in all meta-species.
         """
         self._previous_set_of_characteristics_under_the_any_context = (
             self._list_of_nested_any_contexts.pop()
@@ -97,33 +111,37 @@ class Context_specie_named_any(Species):
             - self._previous_set_of_characteristics_under_the_any_context
         )
 
-    def __call__(self, quantity):
+    def __call__(self, quantity: TypingAny) -> None:
         """
-        The call operator is overloaded as the Any specie cannot be called, as it is not supposed to
-        be used this way. Thus, it raises an error when called.
+        The call operator is overloaded as the Any specie
+        cannot be called, as it is not supposed to be used
+        this way. Thus, it raises an error when called.
         """
         _logger.error("The Any specie cannot be called")
 
-    def __add__(self, other):
+    def __add__(self, other: TypingAny) -> None:
         """
-        The add operator is overloaded as the Any specie cannot be added. Thus, it raises an error when added.
-        """
-        _logger.error("The Any specie cannot be added")
-
-    def __radd__(self, other):
-        """
-        The add operator is overloaded as the Any specie cannot be added. Thus it raises an error when added.
+        The add operator is overloaded as the Any specie
+        cannot be added. Raises an error when added.
         """
         _logger.error("The Any specie cannot be added")
 
-    def __rmul__(self, other):
+    def __radd__(self, other: TypingAny) -> None:
         """
-        The multiplication operator is overloaded as the Any specie cannot be multiplied.
-        Thus it raises an error when multiplied.
+        The add operator is overloaded as the Any specie
+        cannot be added. Raises an error when added.
+        """
+        _logger.error("The Any specie cannot be added")
+
+    def __rmul__(self, other: TypingAny) -> None:
+        """
+        The multiplication operator is overloaded as the
+        Any specie cannot be multiplied. Raises an error
+        when multiplied.
         """
         _logger.error("The Any specie cannot be multiplied")
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: TypingAny) -> None:
         """
         The >> operator is overloaded so that  it raises an error when used.
         """

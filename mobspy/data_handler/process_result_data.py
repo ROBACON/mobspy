@@ -4,32 +4,31 @@ mobspy.data_handler.process_result_data.py
 Handles converting the output data from a simulation into desired-units or concentration
 """
 
-from typing import Any, TypedDict
-from mobspy.modules.mobspy_expressions import u
-from scipy.constants import N_A
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import TYPE_CHECKING, Any
+
+from scipy.constants import N_A
+
 from mobspy.mobspy_logging import get_logger
+from mobspy.modules.mobspy_expressions import u
+
+if TYPE_CHECKING:
+    from mobspy.types import SimulationParameters
 
 simlog = get_logger(__name__)
 
 
-class Parameters(TypedDict):
-    volume: float
-    duration: float
-    _end_condition: None | bool
-    unit_x: str | None
-    unit_y: str | None
-    output_concentration: bool
-    rate_type: str
-
-
 def extract_time_and_volume_list(
-    list_of_params: list[Parameters],
+    list_of_params: list[SimulationParameters],
 ) -> tuple[list[float], list[float], bool]:
     """
-    This function extracts the list of durations from all concatenated simulations (or one for single simulation)
-    It also extracts the respective volumes at each simulation. It does not work if their is a change in volume
-    and a simulation without fixed duration
+    This function extracts the list of durations from all
+    concatenated simulations (or one for single simulation).
+    It also extracts the respective volumes at each
+    simulation. It does not work if there is a change in
+    volume and a simulation without fixed duration.
 
     Conditional simulations have a parameter called '_end_condition' in their dictionary
 
@@ -49,8 +48,10 @@ def extract_time_and_volume_list(
     if no_fixed_dur and len(list_of_params) > 1 and no_fixed_volume:
         flag_concentration = False
         simlog.warning(
-            "Could not resolve simulation volume due to multiple simulations with at least one with a"
-            " conditional duration. The output will be printed in counts instead"
+            "Could not resolve simulation volume due to "
+            "multiple simulations with at least one "
+            "with a conditional duration. The output "
+            "will be printed in counts instead"
         )
 
     volume_list: list[float] = []
@@ -74,22 +75,28 @@ def extract_time_and_volume_list(
 
 
 def convert_data_to_desired_unit(
-    data,
+    data: dict[str, list[float]],
     time_list: list[float],
     volume_list: list[float],
     unit_x: str | None = None,
     unit_y: str | None = None,
     output_concentration: bool = False,
-):
+) -> dict[str, list[float]]:
     """Converts the simulation output data from the MobsPy standard units
     to the desired units specified by the user
 
-    :param data: (dict) resulting data from a MobsPy simulation execution
-    :param time_list: (list) list of times where the volume changes (in case of single simulation it's only one)
-    :param volume_list: (list) list of volumes changes (in case of single simulation it's only one)
-    :param unit_x: (str) unit that the user desires the time in, defaults to dimensionless (None)
-    :param unit_y: (str) unit that the user desires the y axis to be in (Concentration or counts)
-    :param output_concentration: (bool) decide if output should be a concentration or count
+    :param data: (dict) resulting data from a MobsPy
+        simulation execution
+    :param time_list: (list) list of times where the
+        volume changes (single simulation: only one)
+    :param volume_list: (list) list of volumes changes
+        (single simulation: only one)
+    :param unit_x: (str) unit that the user desires the
+        time in, defaults to dimensionless (None)
+    :param unit_y: (str) unit that the user desires the
+        y axis to be in (Concentration or counts)
+    :param output_concentration: (bool) decide if output
+        should be a concentration or count
     :return: converted_data - input data converted to the desired units
     :rtype: (dict) Dictionary meta-species as key and run as value
     """
@@ -103,7 +110,7 @@ def convert_data_to_desired_unit(
             new_time.append(quantity.to(unit_x).magnitude)
         converted_data["Time"] = new_time
 
-    def multiply_data_by_factor(data, factor):
+    def multiply_data_by_factor(data: dict[str, list[float]], factor: float) -> None:
         for key in data:
             if key == "Time":
                 continue
@@ -134,15 +141,20 @@ def convert_data_to_desired_unit(
 
 
 def convert_to_concentration(
-    data, converted_data, volume_list: list[float], time_list: list[float]
-):
+    data: dict[str, list[float]],
+    converted_data: dict[str, list[float]],
+    volume_list: list[float],
+    time_list: list[float],
+) -> dict[str, Any]:
     """
     Converts output data from counts to concentration according to simulation volume
 
     :param data: simulation data
     :param converted_data: data converted to requested units
-    :param volume_list: list of volumes of all simulations (more than one if concatenated)
-    :param time_list: list of durations of each simulation (to check for respective volume in results)
+    :param volume_list: list of volumes of all simulations
+        (more than one if concatenated)
+    :param time_list: list of durations of each simulation
+        (to check for respective volume in results)
     """
     new_data: dict[str, Any] = {}
     for key in data:

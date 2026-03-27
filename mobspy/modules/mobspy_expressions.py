@@ -1,32 +1,59 @@
-from pint import Quantity, UnitRegistry
-from mobspy.mobspy_logging import get_logger
+from __future__ import annotations
 
-simlog = get_logger(__name__)
+import contextlib
 import re
-from scipy.constants import N_A
 from copy import deepcopy
+from typing import TYPE_CHECKING, Any
+
 from numpy import (
-    integer as np_int_,
-    floating as np_float_,
     add as np_add,
-    subtract as np_subtract,
-    multiply as np_multiply,
+)
+from numpy import (
     divide as np_divide,
 )
+from numpy import (
+    floating as np_float_,
+)
+from numpy import (
+    integer as np_int_,
+)
+from numpy import (
+    multiply as np_multiply,
+)
+from numpy import (
+    subtract as np_subtract,
+)
+from pint import Quantity, UnitRegistry
+from scipy.constants import N_A
+
+from mobspy.mobspy_logging import get_logger
+
+if TYPE_CHECKING:
+    from numpy import ufunc as np_ufunc
+
+    from mobspy.modules.meta_class import Species
+
+simlog = get_logger(__name__)
 
 
 # @TODO change _ms_active to context based name
 class Bool_Override:
     """
-    Just a base class for implementing the . operation in the rate function arguments
-    through boolean overriding. It is responsible for returning true when the reactant
-    has the specified characteristic when using the dot notation
+    Just a base class for implementing the . operation in the rate
+    function arguments through boolean overriding. It is responsible
+    for returning true when the reactant has the specified
+    characteristic when using the dot notation
 
-    :param _stocked_characteristics: (str) stocks the characteristics of the queries performed by the user
-    :param species_string: (str) string value from an individual species in MobsPY format
+    :param _stocked_characteristics: (str) stocks the characteristics
+        of the queries performed by the user
+    :param species_string: (str) string value from an individual
+        species in MobsPY format
     """
 
-    def __bool__(self):
+    species_string: str
+    _stocked_characteristics: set[str]
+
+    def __bool__(self) -> bool:
         """
         The implementation of the .dot operation for rate function arguments
         Returns true when the argument possesses the characteristics
@@ -56,63 +83,69 @@ class Bool_Override:
 
 class Specific_Species_Operator(Bool_Override):
     """
-    This class creates objects from the species strings from the meta-species to pass them to the rate functions
-    as arguments. It uses the Bool_Override class to return true or false to the .dot operation inside the rate
-    functions
+    Creates objects from species strings from the meta-species to
+    pass them to rate functions as arguments. Uses Bool_Override to
+    return true or false to the .dot operation inside rate functions.
 
-
-    :param _stocked_characteristics: (str) stocks the characteristics of the queries performed by the user
-    :param species_string: (str) string value from an individual species in MobsPY format
-    :param species_object: (Species) Meta-species object which originated the meta-species str
+    :param _stocked_characteristics: (str) stocks the
+        characteristics of the queries performed by the user
+    :param species_string: (str) string value from an individual
+        species in MobsPY format
+    :param species_object: (Species) Meta-species object which
+        originated the meta-species str
     """
 
-    def __init__(self, species_string, species_object):
+    def __init__(self, species_string: str, species_object: Species | None) -> None:
         """
-        Constructs the object from the species strings from the meta-species to pass them to the rate functions
-        as arguments.
+        Constructs the object from the species strings from the
+        meta-species to pass them to rate functions as arguments.
 
-        :param species_string: (str) A string from MobsPy meta-species format
-        :param species_object: (Species) = Meta-species set for which the species_string is contained in
+        :param species_string: (str) A string from MobsPy
+            meta-species format
+        :param species_object: (Species) = Meta-species set for
+            which the species_string is contained in
         """
         self.species_string = species_string
-        self._stocked_characteristics = set()
+        self._stocked_characteristics: set[str] = set()
         self._species_object = species_object
 
-    def __getattr__(self, characteristic):
+    def __getattr__(self, characteristic: str) -> Specific_Species_Operator:
         """
-        Stores the characteristics for the boolean query inside the rate function by adding them to the set
+        Stores the characteristics for the boolean query inside the
+        rate function by adding them to the set.
 
         :param characteristic: (str) characteristic being queried
         """
         self._stocked_characteristics.add(characteristic)
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Returns the species_string from the MobsPy meta-species used in the object construction
+        Returns the species_string from the MobsPy meta-species
+        used in the object construction.
         """
         return self.species_string
 
-    def is_a(self, reference):
+    def is_a(self, reference: Species) -> bool | None:
         """
-        This function checks to see if the meta-species the species_string belong to has inherited from the
-        parameter reference (reminder: every meta-species inherits from itself)
+        Checks if the meta-species the species_string belongs to has
+        inherited from the parameter reference (reminder: every
+        meta-species inherits from itself).
 
         :param reference: (Species) Meta-species object
-        :return: (bool) True if the meta-species in Specific_Species_Operator has inherited from the reference
-            False otherwise
+        :return: (bool) True if the meta-species in
+            Specific_Species_Operator has inherited from the
+            reference, False otherwise
         """
         if not self._stocked_characteristics:
-            if reference in self._species_object.get_references():
-                return True
-            else:
-                return False
+            return reference in self._species_object.get_references()
         else:
             simlog.error(
-                "Concatenation of is_a and dot operator not supported. Please use them separately",
+                "Concatenation of is_a and dot operator "
+                "not supported. Please use them separately",
             )
 
-    def add(self, characteristic):
+    def add(self, characteristic: str) -> None:
         """
         Adds characteristic to the set of characteristics when checking for all
         referred characteristics by the user
@@ -121,19 +154,19 @@ class Specific_Species_Operator(Bool_Override):
         """
         self._stocked_characteristics.add(characteristic)
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Returns: The name of the species the reactant is in string format
         """
         return self._species_object.get_name()
 
-    def get_characteristics(self):
+    def get_characteristics(self) -> set[str]:
         """
         Returns: The characteristics of the species in this given state
         """
         return set(self.species_string.split("_dot_")[1:])
 
-    def get_state(self):
+    def get_state(self) -> str:
         """
         Returns: the string of a state with dots instead of _dot_
         """
@@ -142,12 +175,27 @@ class Specific_Species_Operator(Bool_Override):
 
 class ExpressionDefiner:
     """
-    This class defines a MobsPy expression. It encompasses what is necessary for something to act as an expression.
-    For instance, the functionalities of storing the operations an object has gone through
+    Defines a MobsPy expression. Encompasses what is necessary for
+    something to act as an expression, including storing the
+    operations an object has gone through.
     """
 
+    _operation: Any
+    _unit_count_op: Any
+    _unit_conc_op: Any
+    _ms_active: bool
+    _parameter_set: set[Any]
+    _expression_variables: set[Any]
+    _has_units: bool | str
+    _count_in_model: bool
+    _concentration_in_model: bool
+    _count_in_expression: bool
+    _concentration_in_expression: bool
+    _dimension: int | None
+    species_list_operation_order: list[Any]
+
     @classmethod
-    def execute_op(cls, first, second, operation):
+    def execute_op(cls, first: Any, second: Any, operation: str) -> Any:
         """
         Executes a unit operation using the Quantity class
 
@@ -155,10 +203,13 @@ class ExpressionDefiner:
         :param second: second number
         :param operation: operation to be executed
         """
-        # TODO: FIX HERE NOW! FABRICIO DONT FORGET THIS DUMBASS
+        # TODO: FIX HERE NOW!
         # CHANGED HERE
-        # if isinstance(first, OverrideQuantity) or isinstance(second, OverrideQuantity):
-        #    raise Exception('Override quantity is not supposed to be in execute op')
+        # if isinstance(first, OverrideQuantity) or
+        #     isinstance(second, OverrideQuantity):
+        #    raise Exception(
+        #       'Override quantity is not supposed to be
+        #        in execute op')
 
         q_object = None
         if isinstance(first, Quantity) and isinstance(second, Quantity):
@@ -205,12 +256,15 @@ class ExpressionDefiner:
         else:
             raise TypeError("Non Valid Operation resulted in no q_object creation")
 
-    def execute_quantity_op(self, other, operation):
+    def execute_quantity_op(self, other: Any, operation: str) -> tuple[Any, Any]:
         """
-        Executes the unit based operation. It is used to verify the unit of a MobsPy expression
+        Executes the unit based operation. Used to verify the
+        unit of a MobsPy expression.
 
-        :param other: other number (or expression) to execute the operation on
-        :param operation: string symbol of the operation to be executed
+        :param other: other number (or expression) to execute
+            the operation on
+        :param operation: string symbol of the operation to be
+            executed
         """
         try:
             if isinstance(other, ExpressionDefiner):
@@ -236,15 +290,19 @@ class ExpressionDefiner:
 
         return count_op, conc_op
 
-    def __array_ufunc__(self, ufunc, _, *inputs):
+    _NUMPY_ARRAY_ERR = (
+        "MobsPy does not yet support array-wise numpy operations, only element-wise"
+    )
+
+    def __array_ufunc__(self, ufunc: np_ufunc, _: str, *inputs: Any) -> Any:
         """
-        This function handles the numpy compatibility with MobsPy expressions. ufunc is the operation,
-        and inputs are both the numpy element (arrays not yet supported) and the quantity object.
-        You have to reverse the direction, for Numpy the numpy object is the mail call, for us it is in reverse!
-        That's why the r in every operation
+        Handles numpy compatibility with MobsPy expressions.
+        ufunc is the operation, and inputs are both the numpy
+        element (arrays not yet supported) and the quantity object.
 
         :param ufunc: numpy operation
-        :param _: method, not used, please don't erase or it becomes an input - will break function
+        :param _: method, not used, please don't erase or it
+            becomes an input - will break function
         :param inputs: numpy element and the quantity object
         """
         # Implement all numpy operations
@@ -252,35 +310,27 @@ class ExpressionDefiner:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__radd__(inputs[0])
             else:
-                simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
-                )
+                simlog.error(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rsub__(inputs[0])
             else:
-                simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
-                )
+                simlog.error(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rmul__(inputs[0])
             else:
-                simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
-                )
+                simlog.error(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rtruediv__(inputs[0])
             else:
-                simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
-                )
+                simlog.error(self._NUMPY_ARRAY_ERR)
         else:
             simlog.error("Numpy operation not yet supported by MobsPy")
 
-    # T is here to avoid problems with __getattr__ from units and quantities that were not overridden
-    def __add__(self, other):
+    # T avoids problems with __getattr__ from units/quantities
+    def __add__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__add__")
@@ -288,7 +338,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_add(other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__radd__")
@@ -296,7 +346,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_radd(other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__sub__")
@@ -304,7 +354,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_sub(other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__rsub__")
@@ -312,7 +362,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_rsub(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__mul__")
@@ -320,7 +370,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_mul(other)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__rmul__")
@@ -328,7 +378,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_rmul(other)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__truediv__")
@@ -336,14 +386,14 @@ class ExpressionDefiner:
         else:
             return self.non_expression_truediv(other)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Any) -> Any:
         if self._ms_active:
             count_op, conc_op = self.execute_quantity_op(other, "__rtruediv__")
             return self.create_from_new_operation(other, "/", count_op, conc_op, False)
         else:
             return self.non_expression_rtruediv(other)
 
-    def __pow__(self, other):
+    def __pow__(self, other: Any) -> Any:
         # if type(other) != int and type(other) != float:
         #    raise TypeError('Power must only be int or float')
         if self._ms_active:
@@ -353,7 +403,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_pow(other)
 
-    def __rpow__(self, other):
+    def __rpow__(self, other: Any) -> Any:
         # if type(other) != int and type(other) != float:
         #    raise TypeError('Power must only be int or float')
         if self._ms_active:
@@ -363,7 +413,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_rpow(other)
 
-    def __neg__(self):
+    def __neg__(self) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(-1)
             count_op, conc_op = self.execute_quantity_op(-1, "__mul__")
@@ -371,7 +421,7 @@ class ExpressionDefiner:
         else:
             return self.non_expression_neg()
 
-    def combine_binary_attributes(self, other, attribute):
+    def combine_binary_attributes(self, other: Any, attribute: str) -> bool:
         """
         Or gates to binary True or False attributes from self and other
 
@@ -397,12 +447,11 @@ class ExpressionDefiner:
 
         return to_return
 
-    def _generate_necessary_attributes(self):
+    def _generate_necessary_attributes(self) -> None:
         """
-        This function was implemented as a replacement for innit for classes that inherit from multiple
-        Pint objects. This gives the object all the necessary attributes to execute create_from_new_operation.
-        I've done this instead of overrinding the __init__ because it had some compatibility issue with Pint
-        __init__ at the time of writting this
+        Replacement for __init__ for classes inheriting from
+        multiple Pint objects. Gives the object all necessary
+        attributes to execute create_from_new_operation.
         """
         # Operation variables
         self._operation = None
@@ -413,11 +462,11 @@ class ExpressionDefiner:
         self._ms_active = False
 
         # Parameter Variables
-        self._parameter_set = set()
-        self._expression_variables = set()
+        self._parameter_set: set[Any] = set()
+        self._expression_variables: set[Any] = set()
 
         # Presence of units
-        self._has_units = False
+        self._has_units: bool | str = False
 
         # Concentration and counts
         self._count_in_model = False
@@ -428,23 +477,32 @@ class ExpressionDefiner:
         # Dimension
         self._dimension = None
 
-        self.species_list_operation_order = []
+        self.species_list_operation_order: list[Any] = []
 
     def create_from_new_operation(
-        self, other, symbol, count_op, conc_op, direct_sense=True, operation=None
-    ):
+        self,
+        other: Any,
+        symbol: str,
+        count_op: Any,
+        conc_op: Any,
+        direct_sense: bool = True,
+        operation: str | None = None,
+    ) -> MobsPyExpression:
         """
-        Executes the storing based operation. It also executes a unit operation to store the verify the unit
-        of the given expression
+        Executes the storing based operation. Also executes a unit
+        operation to verify the unit of the given expression.
 
-        :param other: other number (or expression) to execute the operation on
-        :param symbol: string symbol of the operation to be executed
-        :param count_op: unit of the expression if the arguments are considered dimentionless
-        :param count_op: unit of the expression if the arguments are considered 1/v
+        :param other: other number (or expression) to execute
+            the operation on
+        :param symbol: string symbol of the operation
+        :param count_op: unit of the expression if the arguments
+            are considered dimensionless
+        :param conc_op: unit of the expression if the arguments
+            are considered 1/v
         :param direct_sense: sense of the operation
         :param operation: current operation in the stack
         """
-        _has_units = False
+        _has_units: bool | str = False
         try:
             # Returns string True not boolean to avoid risk __getattr__ bugs
             if self._has_units == "T":
@@ -462,17 +520,22 @@ class ExpressionDefiner:
             c2 = other._has_units == "T"
         except AttributeError:
             c2 = False
-        if c1 or c2:
-            if isinstance(count_op, Exception) and isinstance(conc_op, Exception):
-                simlog.error(
-                    "The units cannot be resolved. "
-                    "Ex: This error is cased by summing two number with different units "
-                    "(1/u.s) + 1*(u.l/u.s), \nor other impossible unit operations",
-                )
+        if (
+            (c1 or c2)
+            and isinstance(count_op, Exception)
+            and isinstance(conc_op, Exception)
+        ):
+            simlog.error(
+                "The units cannot be resolved. "
+                "Ex: This error is cased by summing two "
+                "number with different units "
+                "(1/u.s) + 1*(u.l/u.s), \n"
+                "or other impossible unit operations",
+            )
 
-        if isinstance(self, Quantity) or isinstance(self, OverrideQuantity):
+        if isinstance(self, (Quantity, OverrideQuantity)):
             self = QuantityConverter.convert_received_unit(self)
-        if isinstance(other, Quantity) or isinstance(other, OverrideQuantity):
+        if isinstance(other, (Quantity, OverrideQuantity)):
             other = QuantityConverter.convert_received_unit(other)
 
         try:
@@ -488,17 +551,17 @@ class ExpressionDefiner:
             conc_op = e
 
         if (
-            type(self._operation) == str
-            or (isinstance(other, ExpressionDefiner) and type(other._operation)) == str
+            type(self._operation) == str  # noqa: E721
+            or (isinstance(other, ExpressionDefiner) and type(other._operation)) == str  # noqa: E721
         ):
             int_op_self = (
                 str(self.magnitude)
-                if isinstance(self, Quantity) or isinstance(self, OverrideQuantity)
+                if isinstance(self, (Quantity, OverrideQuantity))
                 else str(self)
             )
             int_op_other = (
                 str(other.magnitude)
-                if isinstance(other, Quantity) or isinstance(other, OverrideQuantity)
+                if isinstance(other, (Quantity, OverrideQuantity))
                 else str(other)
             )
 
@@ -515,16 +578,12 @@ class ExpressionDefiner:
         new_parameter_set = self._parameter_set
         new_expression_variables = self._expression_variables
 
-        try:
+        with contextlib.suppress(AttributeError):
             new_parameter_set = new_parameter_set.union(other._parameter_set)
-        except AttributeError:
-            pass
-        try:
+        with contextlib.suppress(AttributeError):
             new_expression_variables = new_expression_variables.union(
                 other._expression_variables
             )
-        except AttributeError:
-            pass
 
         # Accumulate species in operation order
         new_species_list_operation_order = list(
@@ -560,7 +619,8 @@ class ExpressionDefiner:
 
         if _count_in_expression and _concentration_in_expression:
             simlog.error(
-                "A meta-species in an expression cannot be both a count and a concentration"
+                "A meta-species in an expression cannot be "
+                "both a count and a concentration"
             )
 
         for variable in self._expression_variables:
@@ -581,7 +641,8 @@ class ExpressionDefiner:
         elif dimension_1 is not None and dimension_2 is not None:
             if dimension_1 != dimension_2:
                 raise TypeError(
-                    "Dimensions are inconsistent between different MobsPy expression objects"
+                    "Dimensions are inconsistent between "
+                    "different MobsPy expression objects"
                 )
             else:
                 dimension = dimension_1
@@ -608,21 +669,21 @@ class ExpressionDefiner:
 
 class OverrideUnitRegistry:
     """
-    It was necessary to override Pint's unit registry so it behaves one way under context and
-    normally without context
+    It was necessary to override Pint's unit registry so it
+    behaves one way under context and normally without context
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.unit_registry_object = UnitRegistry()
         self._ms_active = False
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> OverrideQuantity:
         q_object = self.unit_registry_object(*args, **kwargs)
         owq_obj = OverrideQuantity(q_object)
         owq_obj._ms_active = self._ms_active
         return owq_obj
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> OverrideQuantity:
         # Convert here
         if item == "h":
             item = "hour"
@@ -637,11 +698,11 @@ class OverrideUnitRegistry:
 u = OverrideUnitRegistry()
 
 
-def set_u_context():
+def set_u_context() -> None:
     u._ms_active = True
 
 
-def reset_u_context():
+def reset_u_context() -> None:
     u._ms_active = False
 
 
@@ -651,7 +712,10 @@ class QuantityConverter:
     """
 
     @classmethod
-    def convert_received_unit(cls, quantity):
+    def convert_received_unit(
+        cls,
+        quantity: Quantity | OverrideQuantity,
+    ) -> Quantity | OverrideQuantity:
         """
         Converts a received quantity to L-s-counts, standard MobsPy units
 
@@ -709,13 +773,21 @@ class QuantityConverter:
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
-    def __array_ufunc__(self, ufunc, _, *inputs):
+    def __array_ufunc__(
+        self,
+        ufunc: np_ufunc,
+        _: str,
+        *inputs: Any,
+    ) -> OverrideQuantity | None:
         """
-        This function handles the numpy compatibility with MobsPy expressions. ufunc is the operation,
-        and inputs are both the numpy element (arrays not yet supported) and the quantity object.
+        Handles numpy compatibility with MobsPy expressions.
+        ufunc is the operation, and inputs are both the numpy
+        element (arrays not yet supported) and the quantity
+        object.
 
         :param ufunc: numpy operation
-        :param _: method, not used, please don't erase or it becomes an input - will break function
+        :param _: method, not used, please don't erase or
+            it becomes an input - will break function
         :param inputs: numpy element and the quantity object
         """
         # Implement all numpy operations
@@ -724,33 +796,38 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
                 return OverrideQuantity(float(inputs[0]) + self.q_object)
             else:
                 simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
+                    "MobsPy does not yet support array-wise "
+                    "numpy operations, only element-wise"
                 )
         elif ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) - self.q_object)
             else:
                 simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
+                    "MobsPy does not yet support array-wise "
+                    "numpy operations, only element-wise"
                 )
         elif ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) * self.q_object)
             else:
                 simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
+                    "MobsPy does not yet support array-wise "
+                    "numpy operations, only element-wise"
                 )
         elif ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) / self.q_object)
             else:
                 simlog.error(
-                    "MobsPy does not yet support array-wise numpy operations, only element-wise"
+                    "MobsPy does not yet support array-wise "
+                    "numpy operations, only element-wise"
                 )
         else:
             simlog.error("Numpy operation not yet supported by MobsPy")
+        return None
 
-    def non_expression_add(self, other):
+    def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__radd__ to avoid infinite loops
             # Just perform the operation directly
@@ -761,7 +838,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__add__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_radd(self, other):
+    def non_expression_radd(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__add__ to avoid infinite loops
             # Just perform the operation directly
@@ -772,7 +849,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__radd__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_sub(self, other):
+    def non_expression_sub(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__rsub__ to avoid infinite loops
             # Just perform the operation directly
@@ -783,7 +860,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__sub__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_rsub(self, other):
+    def non_expression_rsub(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__sub__ to avoid infinite loops
             # Just perform the operation directly
@@ -794,7 +871,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__rsub__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_mul(self, other):
+    def non_expression_mul(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__mul__(self.q_object, other.q_object)
         elif isinstance(other, ExpressionDefiner):
@@ -804,7 +881,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__mul__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_rmul(self, other):
+    def non_expression_rmul(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__rmul__(self.q_object, other.q_object)
         elif isinstance(other, ExpressionDefiner):
@@ -814,7 +891,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__rmul__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_truediv(self, other):
+    def non_expression_truediv(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__truediv__(self.q_object, other.q_object)
         elif isinstance(other, ExpressionDefiner):
@@ -824,28 +901,28 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__truediv__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_rtruediv(self, other):
+    def non_expression_rtruediv(self, other: Any) -> OverrideQuantity:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__rtruediv__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__rtruediv__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_pow(self, other):
+    def non_expression_pow(self, other: Any) -> OverrideQuantity:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__pow__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__pow__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def non_expression_rpow(self, other):
+    def non_expression_rpow(self, other: Any) -> OverrideQuantity:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__rpow__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__rpow__(self.q_object, other)
         return OverrideQuantity(q_object)
 
-    def __init__(self, quantity_object):
+    def __init__(self, quantity_object: Quantity) -> None:
         self._generate_necessary_attributes()
         self.q_object = quantity_object
 
@@ -856,9 +933,9 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             self.__dict__[key] = item
 
         self._operation = self.q_object.magnitude
-        self._expression_variables = set()
-        self._parameter_set = set()
-        self._has_units = "T"
+        self._expression_variables: set[Any] = set()
+        self._parameter_set: set[Any] = set()
+        self._has_units: bool | str = "T"
 
     def __str__(self) -> str:
         # Always return the full quantity with units for user-facing output
@@ -867,50 +944,54 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def __repr__(self) -> str:
         return str(self.q_object)
 
-    def set_ms_active(self, ms_active) -> None:
+    def set_ms_active(self, ms_active: bool) -> None:
         """
-        ms_active is the boolean responsible for activating the context. This function can be used to set it
+        ms_active is the boolean responsible for activating
+        the context. This function can be used to set it.
 
-        :param ms_active: boolean with the state to set the expression or normal unit context
+        :param ms_active: boolean with the state to set
+            the expression or normal unit context
         """
         self._ms_active = ms_active
 
-    # Had to propose new functions for conversion as Pint is doing something strange and checking the returned object
-    def convert(self, unit):
+    # Had to propose new functions for conversion as Pint is
+    # doing something strange and checking the returned object
+    def convert(self, unit: str) -> OverrideQuantity:
         new_q_object = self.q_object.to(unit)
         temp = OverrideQuantity(new_q_object)
         temp._ms_active = self._ms_active
         return temp
 
-    def convert_into(self, unit):
+    def convert_into(self, unit: str) -> None:
         self.q_object.ito(unit)
 
 
 class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
     """
-    MobsPy expression objects are passed to rate functions to store the expressions they've been through
+    MobsPy expression objects are passed to rate functions
+    to store the expressions they've been through.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._operation)
 
     def __init__(
         self,
-        species_string,
-        species_object,
-        operation=None,
-        unit_count_op=1,
-        unit_conc_op=(1 / u.unit_registry_object.liter),
-        dimension=None,
-        expression_variables=None,
-        parameter_set=None,
-        count_in_model=True,
-        concentration_in_model=False,
-        count_in_expression=True,
-        concentration_in_expression=False,
-        has_units=False,
-        species_list_operation_order=None,
-    ):
+        species_string: str,
+        species_object: Species | None,
+        operation: Any = None,
+        unit_count_op: Any = 1,
+        unit_conc_op: Any = (1 / u.unit_registry_object.liter),
+        dimension: int | None = None,
+        expression_variables: set[Any] | None = None,
+        parameter_set: set[Any] | None = None,
+        count_in_model: bool = True,
+        concentration_in_model: bool = False,
+        count_in_expression: bool = True,
+        concentration_in_expression: bool = False,
+        has_units: bool | str = False,
+        species_list_operation_order: list[Any] | None = None,
+    ) -> None:
         super().__init__(species_string, species_object)
         self._generate_necessary_attributes()
 
@@ -924,7 +1005,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         self._dimension = dimension
 
         if expression_variables is None:
-            self._expression_variables = set()
+            self._expression_variables: set[Any] = set()
             self._expression_variables.add(self)
         else:
             self._expression_variables = expression_variables
@@ -935,7 +1016,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._operation = operation
 
         if parameter_set is None:
-            self._parameter_set = set()
+            self._parameter_set: set[Any] = set()
         else:
             self._parameter_set = parameter_set
 
@@ -953,25 +1034,31 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         if self._concentration_in_model:
             self._unit_conc_op = None
 
-        self._has_units = has_units
+        self._has_units: bool | str = has_units
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Specific_Species_Operator:
         return super().__getattr__(item)
 
     # Write string operation return and unit
     def generate_string_operation(
-        self, skip_check=False, reaction_order=None, dimension=None
-    ):
+        self,
+        skip_check: bool = False,
+        reaction_order: int | None = None,
+        dimension: int | None = None,
+    ) -> tuple[str, bool]:
         """
-        Converts the expression from what has been stored to a string format for the sbml file
+        Converts the expression from what has been stored
+        to a string format for the sbml file.
 
-        :param skip_check: skip units check or not - always set to False, True only for debugging
-        :param reaction_order: order of the reaction - to check if the unit is correct
+        :param skip_check: skip units check or not - always
+            set to False, True only for debugging
+        :param reaction_order: order of the reaction -
+            to check if the unit is correct
         """
         ur = u.unit_registry_object
 
         if dimension is None:
-            if self._dimension is None:
+            if self._dimension is None:  # noqa: SIM108
                 dimension = 3
             else:
                 dimension = self._dimension
@@ -1012,7 +1099,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             )
 
         # If both count and concentration are valid, count takes priority
-        if c1 and not c3:
+        if c1 and not c3:  # noqa: SIM102
             if self._unit_conc_op.units == (
                 1
                 / (
@@ -1022,7 +1109,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             ):
                 self._concentration_in_expression = True
 
-        if c1 and not c2:
+        if c1 and not c2:  # noqa: SIM102
             if self._unit_count_op.units == (1 / u.unit_registry_object.second):
                 self._count_in_expression = True
 
@@ -1032,16 +1119,19 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             and not self._concentration_in_expression
         ):
             raise TypeError(
-                "The automated unit detection resulted was unable to compile the reaction rate. "
+                "The automated unit detection resulted "
+                "was unable to compile the reaction rate. "
                 + "With meta-species as count: "
                 + str(self._unit_count_op)
                 + ". "
                 + "With meta-species as concentration: "
                 + str(self._unit_conc_op)
                 + ". "
-                "Please check if the resulting units are valid. "
-                "For counts the expression must result in units 1/[time] and for concentration in "
-                "1/([time][volume])."
+                "Please check if the resulting units "
+                "are valid. "
+                "For counts the expression must result "
+                "in units 1/[time] and for concentration"
+                " in 1/([time][volume])."
             )
 
         convert_operation = str(self._operation)
@@ -1073,7 +1163,9 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                     convert_operation = "(" + convert_operation + ")" + "*volume"
                 else:
                     raise ValueError(
-                        "The expression did not resolve for lack of concentration/count specifications"
+                        "The expression did not resolve for "
+                        "lack of concentration/count "
+                        "specifications"
                     )
             elif self._concentration_in_model:
                 convert_operation = replace_spe_in_expr(
@@ -1098,13 +1190,15 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                     pass
                 else:
                     raise ValueError(
-                        "The expression did not resolve for lack of concentration/count specifications"
+                        "The expression did not resolve for "
+                        "lack of concentration/count "
+                        "specifications"
                     )
 
         return convert_operation, self._count_in_expression
 
 
-def check_if_non_expression_operated(other):
+def check_if_non_expression_operated(other: Any) -> Any:
     if (
         not isinstance(other, ExpressionDefiner)
         and not isinstance(other, int)
@@ -1127,7 +1221,7 @@ def check_if_non_expression_operated(other):
     return other
 
 
-def replace_spe_in_expr(string, to_replace, replacement):
+def replace_spe_in_expr(string: str, to_replace: str, replacement: str) -> str:
     pattern = re.compile(re.escape(to_replace) + r"(?![a-zA-Z0-9_])")
     return pattern.sub(replacement, string)
 
@@ -1135,7 +1229,7 @@ def replace_spe_in_expr(string, to_replace, replacement):
 class _Count_Base:
     "self.species_string"
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:
                 item._operation = item._operation.replace(
@@ -1144,13 +1238,14 @@ class _Count_Base:
             return item
         except AttributeError:
             simlog.error("Count[] operator can only be used in MobsPy expressions")
+            return None
 
 
 Count = _Count_Base()
 
 
 class _Conc_Base:
-    def __getitem__(self, item):
+    def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:
                 item._operation = item._operation.replace(
@@ -1170,8 +1265,13 @@ if __name__ == "__main__":
     print("Ran local script")
 
     # u = OverrideUnitRegistry(is_active=True)
-    # a = MobsPyExpression('a_dot_alive', None, count_in_model=False, concentration_in_model=True,
-    #                      count_in_expression=False, concentration_in_expression=True)
+    # a = MobsPyExpression(
+    #     'a_dot_alive', None,
+    #     count_in_model=False,
+    #     concentration_in_model=True,
+    #     count_in_expression=False,
+    #     concentration_in_expression=True,
+    # )
 
     # Don't create new objects
     # Quantity Object

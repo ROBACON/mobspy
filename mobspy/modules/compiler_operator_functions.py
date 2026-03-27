@@ -1,18 +1,19 @@
-from itertools import product as ite_product
+from __future__ import annotations
 
-from mobspy.modules.meta_class import Reactions
-from mobspy.modules.meta_class import Reacting_Species
-from mobspy.modules.meta_class import Zero
+from itertools import product as ite_product
+from typing import Any
+
+from mobspy.modules.meta_class import Reacting_Species, Zero
 
 """
     Species and meta-species supporting scripts
 """
 
 
-def create_all_not_reactions(reactions):
+def create_all_not_reactions(reactions: set[Any]) -> set[Any]:
     new_reactions_set = reactions
 
-    def include_new_combinations(r, attribute_to_get):
+    def include_new_combinations(r: Any, attribute_to_get: str) -> bool:
         ignore_flag = True
         for x in getattr(r, attribute_to_get):
             if "not$" in x["characteristics"]:
@@ -43,21 +44,25 @@ def create_all_not_reactions(reactions):
     return new_reactions_set
 
 
-def get_all_non_listed_characteristics(species, characteristics):
+def get_all_non_listed_characteristics(
+    species: Any,
+    characteristics: set[str],
+) -> list[set[str]]:
     """
-    This function gets all characteristics related to a species except the ones listed bellow.
-    It uses inheritance to find all charactersitcs linked to a species
+    Gets all characteristics related to a species except the
+    ones listed below. It uses inheritance to find all
+    characteristics linked to a species
     """
     operator_characteristics = {c for c in characteristics if "$" in c}
 
-    multi_list_char_struct = []
+    multi_list_char_struct: list[set[str]] = []
     for spe in species.get_references():
         if characteristics:
             dimension_cha = {
                 e for e in spe.get_characteristics() if e not in characteristics
             }
         else:
-            dimension_cha = {}
+            dimension_cha = set()
 
         if dimension_cha:
             multi_list_char_struct.append(dimension_cha)
@@ -70,7 +75,11 @@ def get_all_non_listed_characteristics(species, characteristics):
     return combinations
 
 
-def new_reaction_with_new_characteristics(r, spe_to_modify, new_characteristics):
+def new_reaction_with_new_characteristics(
+    r: Any,
+    spe_to_modify: Any,
+    new_characteristics: set[str],
+) -> Any:
     """
     Create a copy of this reaction, replacing characteristics of a specific dict
 
@@ -82,7 +91,6 @@ def new_reaction_with_new_characteristics(r, spe_to_modify, new_characteristics)
     React = Zero
     for reactant in r.reactants:
         if reactant["object"] == spe_to_modify:
-            # Use the new characteristics
             rs = Reacting_Species(
                 reactant["object"],
                 new_characteristics,
@@ -90,7 +98,6 @@ def new_reaction_with_new_characteristics(r, spe_to_modify, new_characteristics)
                 reactant["label"],
             )
         else:
-            # Copy existing reactant
             rs = Reacting_Species(
                 reactant["object"],
                 reactant["characteristics"],
@@ -104,7 +111,6 @@ def new_reaction_with_new_characteristics(r, spe_to_modify, new_characteristics)
     Product = Zero
     for product in r.products:
         if product["object"] == spe_to_modify:
-            # Use the new characteristics
             ps = Reacting_Species(
                 product["object"],
                 new_characteristics,
@@ -112,7 +118,6 @@ def new_reaction_with_new_characteristics(r, spe_to_modify, new_characteristics)
                 product["label"],
             )
         else:
-            # Copy existing product
             ps = Reacting_Species(
                 product["object"],
                 product["characteristics"],

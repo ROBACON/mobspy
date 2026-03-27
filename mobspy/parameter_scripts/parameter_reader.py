@@ -1,19 +1,26 @@
 """
-This module is responsible for processing the parameters given to MobsPy before starting the simulation
+This module is responsible for processing the
+parameters given to MobsPy before starting the
+simulation
 """
 
+from __future__ import annotations
+
+import inspect
 import json
 from datetime import datetime
-from mobspy.mobspy_logging import get_logger
+from typing import Any
 
-simlog = get_logger(__name__)
 from pint import Quantity
+
 import mobspy.modules.unit_handler as uh
-import inspect
+from mobspy.mobspy_logging import get_logger
 from mobspy.modules.mobspy_expressions import u
 
+simlog = get_logger(__name__)
 
-def read_json(json_file_name):
+
+def read_json(json_file_name: str) -> Any:
     """
     Reads json file
 
@@ -23,7 +30,7 @@ def read_json(json_file_name):
 
     :return: plot parameter dictionary
     """
-    with open(json_file_name, "r") as file:
+    with open(json_file_name) as file:
         try:
             json_data = json.load(file)
         except json.decoder.JSONDecodeError:
@@ -33,9 +40,10 @@ def read_json(json_file_name):
     return json_data
 
 
-def name_output_file(params):
+def name_output_file(params: dict[str, Any]) -> None:
     """
-    Gives a name to the output file - just date time in case the user has not specified one
+    Gives a name to the output file - just date
+    time in case the user has not specified one
 
     :param params: (dict) Dictionary with simulation parameters
     """
@@ -45,7 +53,7 @@ def name_output_file(params):
     params["absolute_output_file"] = params["output_dir"] + file_name
 
 
-def check_stochastic_repetitions_seeds(params):
+def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
     """
     The list of seeds must be equal to the number of repetitions specified
 
@@ -59,24 +67,31 @@ def check_stochastic_repetitions_seeds(params):
             simlog.error("Parameter seeds must be a list")
 
 
-def convert_parameters_for_COPASI(params):
+def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
     """
-    Converts parameters units to MobsPy standard units (basiCO needs seconds for simulation duration)
+    Converts parameters units to MobsPy standard units
+    (basiCO needs seconds for simulation duration)
 
     :param params: (dict) = Dictionary with simulation parameters
     """
     for key, p in params.items():
-        if key == "duration" and isinstance(p, Quantity):
-            if p.dimensionality != "[time]":
-                simlog.error("The duration of the simulation is not in units of time")
+        if (
+            key == "duration"
+            and isinstance(p, Quantity)
+            and p.dimensionality != "[time]"
+        ):
+            simlog.error("The duration of the simulation is not in units of time")
 
-        if isinstance(p, Quantity) and (key != "unit_x" and key != "unit_y"):
-            if str(p.dimensionality) == "[time]":
-                params[key] = p.convert("second").magnitude
-                continue
+        if (
+            isinstance(p, Quantity)
+            and (key != "unit_x" and key != "unit_y")
+            and str(p.dimensionality) == "[time]"
+        ):
+            params[key] = p.convert("second").magnitude
+            continue
 
 
-def convert_unit_parameters(params):
+def convert_unit_parameters(params: dict[str, Any]) -> None:
     units = ["unit_x", "unit_y"]
 
     for un in units:
@@ -91,24 +106,30 @@ def convert_unit_parameters(params):
                     simlog.error(f"The unit in parameter {un} did not parse")
 
 
-def convert_time_parameters_after_compilation(value):
+def convert_time_parameters_after_compilation(
+    value: int | float | Quantity,
+) -> int | float | Quantity:
     """
     This function converts the duration if the model was already compiled
     """
-    if isinstance(value, Quantity):
-        if str(value.dimensionality) == "[time]":
-            value = value.convert("second").magnitude
+    if isinstance(value, Quantity) and str(value.dimensionality) == "[time]":
+        value = value.convert("second").magnitude
     return value
 
 
-def convert_volume_after_compilation(dimension, parameters_for_sbml, value):
+def convert_volume_after_compilation(
+    dimension: int | None,
+    parameters_for_sbml: dict[str, Any],
+    value: int | float | Quantity,
+) -> int | float:
     if isinstance(value, Quantity):
         message = "Error at "
         context = inspect.stack()[2].code_context[0][:-1]
         message += (
             context
-            + "\n The dimension is set to tree at the moment of the compilation if not specified"
-            " beforehand \n Please set a volume in the correct dimension before compilation"
+            + "\n The dimension is set to tree at the moment of the compilation if"
+            " not specified beforehand \n Please set a volume in the correct"
+            " dimension before compilation"
         )
         uh.extract_length_dimension(
             str(value.dimensionality), dimension, context=message
@@ -137,8 +158,9 @@ methods = {
 """
 
 
-def check_method_parameter(params):
-    # Method takes preference from the user assignment, but the code was made for 'simulation_method
+def check_method_parameter(params: dict[str, Any]) -> None:
+    # Method takes preference from the user assignment,
+    # but the code was made for 'simulation_method
     if params["method"] is not None:
         params["simulation_method"] = params["method"]
     params["simulation_method"] = params["simulation_method"].lower()
@@ -159,7 +181,9 @@ def check_method_parameter(params):
         not in valid_basiCO_deterministic + valid_basiCO_stochastic
     ):
         simlog.error(
-            f"The simulation method {params['simulation_method']} is not compatible with MobsPy"
+            "The simulation method "
+            f"{params['simulation_method']}"
+            " is not compatible with MobsPy"
         )
 
     if params["simulation_method"] in valid_basiCO_deterministic:
@@ -178,13 +202,12 @@ def check_method_parameter(params):
             params["plot_type"] = "stochastic"
 
 
-def check_duration_unit(params):
-    if isinstance(params["duration"], Quantity):
-        if params["unit_x"] is None:
-            params["unit_x"] = 1 * params["duration"].units
+def check_duration_unit(params: dict[str, Any]) -> None:
+    if isinstance(params["duration"], Quantity) and params["unit_x"] is None:
+        params["unit_x"] = 1 * params["duration"].units
 
 
-def parameter_process(params):
+def parameter_process(params: dict[str, Any]) -> None:
     check_duration_unit(params)
     convert_unit_parameters(params)
     name_output_file(params)
@@ -193,31 +216,30 @@ def parameter_process(params):
     check_method_parameter(params)
 
 
-# I felt like inspect could be to invasive, maybe it would have been better to inspect the function signature
 def manually_process_each_parameter(
-    simulation_object,
-    duration,
-    volume,
-    dimension,
-    repetitions,
-    level,
-    simulation_method,
-    start_time,
-    r_tol,
-    a_tol,
-    seeds,
-    step_size,
-    jobs,
-    unit_x,
-    unit_y,
-    output_concentration,
-    output_event,
-    output_file,
-    save_data,
-    plot_data,
-    rate_type,
-    plot_type,
-):
+    simulation_object: Any,
+    duration: int | float | Quantity | None,
+    volume: int | float | Quantity | None,
+    dimension: int | None,
+    repetitions: int | None,
+    level: int | None,
+    simulation_method: str | None,
+    start_time: int | float | None,
+    r_tol: float | None,
+    a_tol: float | None,
+    seeds: list[int] | None,
+    step_size: int | float | None,
+    jobs: int | None,
+    unit_x: str | Quantity | None,
+    unit_y: str | Quantity | None,
+    output_concentration: bool | None,
+    output_event: bool | None,
+    output_file: str | None,
+    save_data: bool | None,
+    plot_data: bool | None,
+    rate_type: str | None,
+    plot_type: str | None,
+) -> None:
     if duration is not None:
         simulation_object.duration = duration
 

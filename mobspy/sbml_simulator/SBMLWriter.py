@@ -2,10 +2,23 @@
 This module is responsible for converting a model_str into a SBML format
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import libsbml as sbml
 
+if TYPE_CHECKING:
+    from mobspy.types import (
+        AssignmentsForSbml,
+        EventsForSbml,
+        ParametersForSbml,
+        ReactionsForSbml,
+        SpeciesForSbml,
+    )
 
-def check(value, message="error"):
+
+def check(value: Any, message: str = "error") -> None:
     """If 'value' is None, prints an error message constructed using
     'message' and then exits with status code 1.  If 'value' is an integer,
     it assumes it is a libSBML return status code.  If the code value is
@@ -35,10 +48,16 @@ def check(value, message="error"):
         return
 
 
-def create_model(species={}, parameters={}, reactions={}, events={}, assignments={}):
+def create_model(
+    species: SpeciesForSbml | None = None,
+    parameters: ParametersForSbml | None = None,
+    reactions: ReactionsForSbml | None = None,
+    events: EventsForSbml | None = None,
+    assignments: AssignmentsForSbml | None = None,
+) -> Any:
     """
     Returns an SBML Level 3 model.
-    
+
     Example:
 
         species = { \
@@ -46,16 +65,16 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
             'EM': 0,
             'EM2': 0,
             'F': 100, }
-        
+
         parameters = { \
             'k': (1e-06, 'per_min'), }
-        
+
         reactions = { \
             'Production_E': { \
                 're': [(1, 'E'), (1, 'F')],
                 'pr': [(2, 'E')],
                 'kin': 'k * E * F', } }
-        
+
         events = { \
             'e': { \
                 'trigger': 'true',
@@ -64,15 +83,21 @@ def create_model(species={}, parameters={}, reactions={}, events={}, assignments
 
     """
 
-    # Create an empty SBMLDocument object. It's a good idea to check for
-    # possible errors.  Even when the parameter values are hardwired like
-    # this, it is still possible for a failure to occur (e.g., if the
-    # operating system runs out of memory).
+    if species is None:
+        species = {}
+    if parameters is None:
+        parameters = {}
+    if reactions is None:
+        reactions = {}
+    if events is None:
+        events = {}
+    if assignments is None:
+        assignments = {}
 
     try:
         document = sbml.SBMLDocument(3, 1)
-    except ValueError:
-        raise RuntimeError("Could not create SBMLDocumention object")
+    except ValueError as exc:
+        raise RuntimeError("Could not create SBMLDocumention object") from exc
 
     # Create the basic Model object inside the SBMLDocument object.
 

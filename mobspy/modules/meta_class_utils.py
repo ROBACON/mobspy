@@ -1,6 +1,10 @@
 """This model stores function used by the meta_class.py module"""
 
+from __future__ import annotations
+
 from collections.abc import Sequence
+from typing import Any
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
@@ -21,7 +25,7 @@ def count_stoichiometry(
     return to_return
 
 
-def combine_references(species1, species2):
+def combine_references(species1: Any, species2: Any) -> set[Any]:
     """Combine the sets of references of two species
 
     :param species1: (Meta-species object)
@@ -30,12 +34,16 @@ def combine_references(species1, species2):
     return species1.get_references().union(species2.get_references())
 
 
-def check_orthogonality_between_references(references):
-    """Check if meta-species objects inside a reference do not have characteristics in common
-    The sets of characteristics directly added to species must be independent
+def check_orthogonality_between_references(references: set[Any]) -> None:
+    """Check if meta-species objects inside a reference do
+    not have characteristics in common. The sets of
+    characteristics directly added to species must be
+    independent.
 
-    :param references: (set) set of meta-species objects to check for independence
-    :raise simlog.error: raises error if there are repeated characteristics in different meta-species
+    :param references: (set) set of meta-species objects
+        to check for independence
+    :raise simlog.error: raises error if there are repeated
+        characteristics in different meta-species
     """
     for i, reference1 in enumerate(references):
         for j, reference2 in enumerate(references):
@@ -51,32 +59,47 @@ def check_orthogonality_between_references(references):
                 != 0
             ):
                 simlog.error(
-                    "The same characteristic can only be shared through inheritance. "
-                    + f"There are two characteristics directly added to two meta-species \n"
-                    f"Repetition in: {reference1}, {reference2}"
-                    f"Characteristics: {reference1.get_characteristics()}, {reference2.get_characteristics()}"
+                    "The same characteristic can only be "
+                    "shared through inheritance. " + "There are two characteristics "
+                    "directly added to two "
+                    "meta-species \n"
+                    f"Repetition in: "
+                    f"{reference1}, {reference2}"
+                    f"Characteristics: "
+                    f"{reference1.get_characteristics()}"
+                    f", "
+                    f"{reference2.get_characteristics()}"
                 )
 
 
 def complete_characteristics_with_first_values(
-    spe_object, characteristics, characteristics_to_object
-):
-    """This creates a string with the species object name and the set of all first characteristics added
-    to it's base species used to construct it
-    It allows us to search for the proper string in the model using the result of this function
-    It's used to set the quantities using the call method in Species and Reacting_Species
+    spe_object: Any,
+    characteristics: set[str] | str,
+    characteristics_to_object: dict[str, Any],
+) -> set[str]:
+    """This creates a string with the species object name
+    and the set of all first characteristics added to it's
+    base species used to construct it.
+    It allows us to search for the proper string in the
+    model using the result of this function.
+    It's used to set the quantities using the call method
+    in Species and Reacting_Species.
 
-    :param spe_object: (meta-species object) meta-species to generate the species states with the first values
-    :param characteristics: (str) if there are characteristics to use instead of the default
-    :param characteristics_to_object: (dict) dictionary with characteristics as keys and the meta-species which
-        they have been added to directly as value (no inheritance or New)
+    :param spe_object: (meta-species object) meta-species
+        to generate the species states with the first values
+    :param characteristics: (str) if there are
+        characteristics to use instead of the default
+    :param characteristics_to_object: (dict) dictionary
+        with characteristics as keys and the meta-species
+        which they have been added to directly as value
+        (no inheritance or New)
 
     :return: Set with the species name and characteristics
     """
     if characteristics == "std$":
         characteristics = set()
 
-    vector_elements = {}
+    vector_elements: dict[Any, bool] = {}
     for cha in characteristics:
         vector = characteristics_to_object[cha]
         if vector in vector_elements:
@@ -84,7 +107,7 @@ def complete_characteristics_with_first_values(
         else:
             vector_elements[vector] = True
 
-    first_characteristics = set()
+    first_characteristics: set[str] = set()
     for reference in spe_object.get_references() - set(vector_elements.keys()):
         if reference.first_characteristic:
             first_characteristics.add(reference.first_characteristic)
@@ -92,12 +115,12 @@ def complete_characteristics_with_first_values(
     return {spe_object.get_name()}.union(first_characteristics).union(characteristics)
 
 
-def unite_characteristics(species):
+def unite_characteristics(species: list[Any] | None) -> set[str]:
     """This function unites the characteristics of all the given species
 
     :param species: (list of species or List_Species object)
     """
-    characteristics = set()
+    characteristics: set[str] = set()
 
     if species is not None:
         for spe in species:
@@ -106,19 +129,27 @@ def unite_characteristics(species):
     return characteristics
 
 
-def create_orthogonal_vector_structure(species):
-    """This creates the independent state-structure for the model
-    It is just a dictionary where the keys are characteristics and the values are meta-species objects that have
-    been directly added to that object (no inheritance or New)
-    It simplifies the code by allowing to easily keep track of the 'axis' of each characteristic. Allowing
-    for easy transformation on the products and others
+def create_orthogonal_vector_structure(
+    species: list[Any] | set[Any],
+) -> dict[str, Any]:
+    """This creates the independent state-structure for the
+    model. It is just a dictionary where the keys are
+    characteristics and the values are meta-species objects
+    that have been directly added to that object (no
+    inheritance or New).
+    It simplifies the code by allowing to easily keep track
+    of the 'axis' of each characteristic. Allowing for easy
+    transformation on the products and others.
 
-    :param species: (meta-species objects) - meta-species objects used in a model
+    :param species: (meta-species objects) - meta-species
+        objects used in a model
 
-    :return ref_characteristics_to_object: (dict) a dictionary where the keys are characteristics and the
-        values are meta-species objects that have been directly added to that object
+    :return ref_characteristics_to_object: (dict) a
+        dictionary where the keys are characteristics and
+        the values are meta-species objects that have been
+        directly added to that object
     """
-    ref_characteristics_to_object = {}
+    ref_characteristics_to_object: dict[str, Any] = {}
     for spe in species:
         for prop in spe.get_references():
             for cha in prop.get_characteristics():
@@ -128,8 +159,11 @@ def create_orthogonal_vector_structure(species):
                     pass
                 else:
                     simlog.error(
-                        "The same characteristic can only be shared through inheritance. "
-                        + f"There are two characteristics directly added to two meta-species \n"
+                        "The same characteristic can only "
+                        "be shared through inheritance. "
+                        + "There are two characteristics "
+                        "directly added to two "
+                        "meta-species \n"
                         f"Repetition in: {spe}, {ref_characteristics_to_object[cha]} \n"
                         f"Characteristics: {spe.get_characteristics()}, "
                         f"{ref_characteristics_to_object[cha].get_characteristics()} \n"

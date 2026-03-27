@@ -1,54 +1,44 @@
-# import basico
-# Lazy import basico
-from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
+from __future__ import annotations
 
-basico = ipm_LazyImporter("basico")
+import contextlib
+from typing import TYPE_CHECKING, Any
+
 from joblib import Parallel, delayed
+
+import mobspy.sbml_simulator.builder as sbml_builder
+from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
 
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from mobspy.types import CompiledModelDict, SimParams
+
 simlog = get_logger(__name__)
-import mobspy.sbml_simulator.builder as sbml_builder
+basico = ipm_LazyImporter("basico")
 
 
-# def simulate(list_of_params, models)
-def simulate(jobs, list_of_params, models):
-    """
-    This function coordinates the simulation by calling the necessary jobs
-    In the future we hope to implement parallel cluster computing compatibility
-
-    :param list_of_params: (dict) simulation parameters from the text file
-    :param models: (list) [{'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
-                        'events_for_sbml':, 'species_not_mapped':, 'mappings':}]
-    :return: data (dict) = dictionary containing the resulting data from simulation
-    """
-
-    # Run in parallel or sequentially
-    # If nothing is specified just run it in parallel
+def simulate(
+    jobs: int,
+    list_of_params: list[SimParams],
+    models: list[CompiledModelDict],
+) -> list[dict[str, list[float]]] | None:
     data = job_execution(list_of_params, models, jobs)
 
     return data
 
 
-def job_execution(params, models, jobs):
-    """
-    This is defined for parallelism purposes
-    Uses multiple cores from the processor to execute stochastic simulations
-
-    :param params: (dict) = simulation parameters
-    :param models: (list) [{'species_for_sbml':, 'parameters_for_sbml':, 'reactions_for_sbml':,
-                        'events_for_sbml':, 'species_not_mapped':, 'mappings':}]
-    :param jobs: (int) = number of cores to use, -1 for all available
-
-    :return: parallel_data data of all the individual simulations executed in parallel
-    """
-
-    def __single_run(packed):
+def job_execution(
+    params: list[SimParams],
+    models: list[CompiledModelDict],
+    jobs: int,
+) -> list[dict[str, list[float]]] | None:
+    def __single_run(packed: int) -> dict[str, list[float]]:
         i = packed
 
-        added_data = {}
-        # This is only need to avoid git errors
-        reformatted_data = {}
-        for j, (sim_par, model) in enumerate(zip(params, models)):
+        added_data: dict[str, list[float]] = {}
+        reformatted_data: dict[str, list[float]] = {}
+        for j, (sim_par, model) in enumerate(zip(params, models, strict=False)):
             # Generate SBML here
             if j > 0:
                 sbml_str = __sbml_new_initial_values(
@@ -90,7 +80,7 @@ def job_execution(params, models, jobs):
 
         return added_data
 
-    parallel_data = Parallel(n_jobs=jobs)(
+    parallel_data: list[dict[str, list[float]]] | None = Parallel(n_jobs=jobs)(
         delayed(__single_run)(i) for i in range(params[0]["repetitions"])
     )
 
@@ -103,22 +93,19 @@ def job_execution(params, models, jobs):
     return parallel_data
 
 
-def __run_time_course(basico_model, duration, params, index):
-    """
-    This function prepares the parameters for the basiCO.run_time_course
-
-    :param basico_model: basico model to be run in the simulation
-    :param params: (dict) simulation parameters
-    :param index: (int) current index of the run
-    :param duration: (int, float) simulation duration in seconds
-    """
+def __run_time_course(
+    basico_model: Any,
+    duration: float,
+    params: SimParams,
+    index: int,
+) -> pd.DataFrame:
     params["simulation_method"] = params["simulation_method"].lower()
     if (params["_with_event"] or params["_continuous_simulation"]) and params[
         "simulation_method"
     ] == "stochastic":
         params["simulation_method"] = "directmethod"
 
-    kargs = {
+    kargs: dict[str, Any] = {
         "model": basico_model,
         "method": params["simulation_method"],
         "start_time": params["start_time"],
@@ -138,13 +125,10 @@ def __run_time_course(basico_model, duration, params, index):
     return basico.run_time_course(duration, **kargs)
 
 
-def reformat_time_series(data):
-    """
-    Transforms the _dot_ in from the results into .
-
-    :param data: (pd.dataframe) simulation data results from BasiCO
-    """
-    data_dict = {"Time": data.index.tolist()}
+def reformat_time_series(
+    data: pd.DataFrame,
+) -> dict[str, list[float]]:
+    data_dict: dict[str, list[float]] = {"Time": data.index.tolist()}
 
     for key in data:
         data_dict[key.replace("_dot_", ".")] = list(data[key])
@@ -152,14 +136,10 @@ def reformat_time_series(data):
     return data_dict
 
 
-def __filter_condition_event_time_data(data):
-    """
-    This function filters all the data until the event was triggered. It is used for the conditional duration
-    simulations
-
-    :param data: (dict) single run data with species as keys and values
-    """
-    new_data = {}
+def __filter_condition_event_time_data(
+    data: dict[str, list[float]],
+) -> dict[str, list[float]]:
+    new_data: dict[str, list[float]] = {}
 
     for i, e in enumerate(data["_End_Flag_MetaSpecies"]):
         if e == 1:
@@ -172,22 +152,18 @@ def __filter_condition_event_time_data(data):
     return new_data
 
 
-def __sbml_new_initial_values(data, model, sim_para, new_model=False):
-    """
-    This function adjusts the new sbml counts to the end of the previous concatenation simulation or conditional
-    simulation
-
-    :param data: (dict) single run data with species as keys and values
-    :param model: (dict) model to be used in the next simulation
-    :param model: (sim_par) parameters to be used in the next simulation
-    :param new_model: (bool) is a new model being used or the model is the same as the old one
-    """
+def __sbml_new_initial_values(
+    data: dict[str, list[float]],
+    model: CompiledModelDict,
+    sim_para: SimParams,
+    new_model: bool = False,
+) -> str:
     species_for_sbml = model["species_for_sbml"]
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
         sbml_key = key.replace(".", "_dot_")
-        if sbml_key not in species_for_sbml.keys():
+        if sbml_key not in species_for_sbml:
             continue
 
         if key == "Time":
@@ -202,10 +178,8 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
             pass
 
     if new_model:
-        try:
+        with contextlib.suppress(KeyError):
             species_for_sbml["_End_Flag_MetaSpecies"] = 0
-        except KeyError:
-            pass
 
     return sbml_builder.build(
         species_for_sbml,
@@ -216,20 +190,13 @@ def __sbml_new_initial_values(data, model, sim_para, new_model=False):
     )
 
 
-def __add_simulations_data(added_data, reformatted_data):
-    """
-    Adds the data from the new executed simulation to the data stored so far
-
-    :param added_data: (dict) added data so far in the simulation (key: species string - value: run)
-    :param reformatted_data: (dict) data return from the simulation after being formatted using the reformat
-    data function
-    """
-    if added_data != {}:
-        time_to_add = added_data["Time"][-1]
-    else:
-        time_to_add = 0
-    new_data = {}
-    already_added_keys = set()
+def __add_simulations_data(
+    added_data: dict[str, list[float]],
+    reformatted_data: dict[str, list[float]],
+) -> dict[str, list[float]]:
+    time_to_add = added_data["Time"][-1] if added_data != {} else 0
+    new_data: dict[str, list[float]] = {}
+    already_added_keys: set[str] = set()
 
     for key in added_data:
         new_data[key] = added_data[key]
@@ -241,11 +208,8 @@ def __add_simulations_data(added_data, reformatted_data):
             for key in reformatted_data:
                 reformatted_data[key].pop(0)
 
-        # This is for simulations with only one value. The system did not change at all
-        try:
+        with contextlib.suppress(IndexError):
             reformatted_data["Time"][i] = reformatted_data["Time"][i] + time_to_add
-        except IndexError:
-            pass
 
     for key in added_data:
         if key == "Time":
@@ -278,43 +242,34 @@ def __add_simulations_data(added_data, reformatted_data):
     return new_data
 
 
-def __remap_species(data, mapping, species_not_mapped):
-    """
-    Takes the simulated species (data) and add ones defined by
-    mapping (mapping).
-    By default, a mapping is a list of species in which case the
-    sum is taken: ['a', 'b', ...]
-    It also adds species that have been removed from the basico simulation
-
-    Parameters:
-    :param data: (dict) Data in MobsPy format
-    :param mapping: (dict) = Mappings between species and meta-species
-    :param species_not_mapped: (list of str) Species not mapped by BasiCO
-    """
-
-    mapped_data = {"Time": data["Time"]}
+def __remap_species(
+    data: dict[str, Any],
+    mapping: dict[str, list[str]],
+    species_not_mapped: dict[str, float],
+) -> dict[str, Any]:
+    mapped_data: dict[str, Any] = {"Time": data["Time"]}
     T = range(len(data["Time"]))
 
     # copy over all unmapped ones
-    for k in data.keys():
+    for k in data:
         mapped_data[k] = data[k]
 
-    dot_species_not_mapped = {}
+    dot_species_not_mapped: dict[str, float] = {}
     for key in species_not_mapped:
         dot_species_not_mapped[key.replace("_dot_", ".")] = species_not_mapped[key]
 
     # 1st pass with sum mappings
-    for group in mapping.keys():
+    for group in mapping:
         the_mapping = mapping[group]
         mapped_data[group] = {"runs": []}
 
         try:
             # check if is a list -> sum
             if type(the_mapping) is list:
-                this_run = []
-                runs_not_returned_by_basico = {}
+                this_run: list[float] = []
+                runs_not_returned_by_basico: dict[str, list[float]] = {}
                 for t in T:
-                    mapping_sum = 0
+                    mapping_sum: float = 0
                     for spe in the_mapping:
                         try:
                             mapping_sum = mapping_sum + data[spe][t]
@@ -344,11 +299,13 @@ def __remap_species(data, mapping, species_not_mapped):
 
         except TypeError:
             simlog.warning(
-                "Copasi removes A >> A species from reaction calculations and does not provide an output"
+                "Copasi removes A >> A species from"
+                " reaction calculations and does"
+                " not provide an output"
             )
             simlog.warning("Please check the output data to see if this is the problem")
             for key in data:
-                print(key, data[key])
-            exit(1)
+                print(key, data[key])  # noqa: T201
+            exit(1)  # noqa: PLR1722
 
     return mapped_data

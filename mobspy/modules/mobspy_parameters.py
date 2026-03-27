@@ -1,24 +1,32 @@
+from __future__ import annotations
+
 from inspect import stack as inspect_stack
+from typing import Any
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
-from mobspy.modules.mobspy_expressions import (
+from pint import Quantity, UnitRegistry  # noqa: E402
+
+from mobspy.modules.mobspy_expressions import (  # noqa: E402
     ExpressionDefiner as me_ExpressionDefiner,
+)
+from mobspy.modules.mobspy_expressions import (  # noqa: E402
     QuantityConverter as me_QuantityConverter,
 )
-from pint import Quantity, UnitRegistry
 
 
 class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
-    """
-    This is the constructor that is called by ModelParameters to create a model parameter
-    (not a simulation parameter). The user is not supposed to create parameters using this object.
+    """Constructor called by ModelParameters to create a model parameter.
+
+    Not a simulation parameter. The user is not supposed to create
+    parameters using this object.
     """
 
     # convert_received_unit
-    parameter_stack = {}
+    parameter_stack: dict[str, Internal_Parameter_Constructor] = {}
 
-    def __init__(self, name, value):
+    def __init__(self, name: str, value: Any) -> None:
         self._generate_necessary_attributes()
 
         temp_set = set()
@@ -34,7 +42,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
         self.process_value(value)
 
-    def unit_process(self, value):
+    def unit_process(self, value: Quantity) -> tuple[Any, Any]:  # type: ignore[type-arg]
         # We convert into MobsPy units already during the definition of a parameter
         self.value = self.convert_received_unit(value).magnitude
 
@@ -50,12 +58,12 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
         return self.value, self.original_unit
 
-    def process_value(self, value):
+    def process_value(self, value: Any) -> None:
         if isinstance(value, Quantity):
             self.unit_process(value)
-        elif type(value) == list or type(value) == tuple:
-            new_list = []
-            first_unit = None
+        elif type(value) == list or type(value) == tuple:  # noqa: E721
+            new_list: list[Any] = []
+            first_unit: Any = None
             for i, val in enumerate(value):
                 if isinstance(val, Quantity) and i == 0:
                     new_value, first_unit = self.unit_process(val)
@@ -79,45 +87,43 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
             self.conversion_factor = 1
             self._has_units = False
 
-    def convert_to_original_unit(self):
-        """
-        Converts the parameter from the MobsPy standard unit to the original unit of the parameter
-        """
+    def convert_to_original_unit(self) -> None:
+        """Converts from MobsPy standard unit to the original unit."""
         if self.has_units():
             self.set_value(self.value / self.conversion_factor * self.original_unit)
 
-    def rename(self, new_name):
-        """
-        Renames a parameter. Checks to see if name is available beforehand. It uses the parameter stack to do so
-        """
+    def rename(self, new_name: str) -> None:
+        """Renames a parameter, checking name availability via the parameter stack."""
         if new_name in self.parameter_stack:
             simlog.warning(
-                " MobsPy uses a parameter dictionary with parameter names as keys and the respective object"
-                " as value to keep track of created parameters. As, there is a parameter with this name"
-                " already in the stack. The old will be deleted and replaced by this one."
+                " MobsPy uses a parameter dictionary with parameter"
+                " names as keys and the respective object as value"
+                " to keep track of created parameters. As there is"
+                " a parameter with this name already in the stack,"
+                " the old will be deleted and replaced by this one."
             )
 
         del self.parameter_stack[self.name]
         self.parameter_stack[new_name] = self
         self.name = new_name
 
-    def set_value(self, new_value):
+    def set_value(self, new_value: Any) -> Internal_Parameter_Constructor:
         """
         Sets value of parameter
         """
         self.value = new_value
         return self
 
-    def has_units(self):
+    def has_units(self) -> bool:
         """
         Check if is a unit based parameter or not
         """
-        if self._has_units == "T":
+        if self._has_units == "T":  # noqa: SIM103
             return True
         else:
             return False
 
-    def update_value(self, new_value):
+    def update_value(self, new_value: Any) -> None:
         temp_set = set()
         temp_set.add(self)
         self.original_value = new_value
@@ -128,16 +134,19 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
         self.process_value(new_value)
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._operation)
 
 
-def ModelParameters(*args):
+def ModelParameters(
+    *args: Any,
+) -> Internal_Parameter_Constructor | list[Internal_Parameter_Constructor]:
     """
-    Creates ModelParameters. Like meta-species, it uses the variable names as parameter names
+    Creates ModelParameters. Like meta-species, it uses the
+    variable names as parameter names
     """
     code_line = inspect_stack()[1].code_context[0][:-1]
     separated_line = code_line.split("=")[-2].replace(" ", "")
@@ -149,9 +158,11 @@ def ModelParameters(*args):
         )
 
     if len(parameter_variable_names) > 1:
-        parameters_to_return = [
+        parameters_to_return: (
+            Internal_Parameter_Constructor | list[Internal_Parameter_Constructor]
+        ) = [
             Internal_Parameter_Constructor(p, v)
-            for p, v in zip(parameter_variable_names, args)
+            for p, v in zip(parameter_variable_names, args)  # noqa: B905
         ]
     else:
         parameters_to_return = Internal_Parameter_Constructor(

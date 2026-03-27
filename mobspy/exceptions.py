@@ -1,6 +1,9 @@
 """
-Custom exceptions for MobsPy to provide better error handling and debugging.
+Custom exceptions for MobsPy to provide better error handling
+and debugging.
 """
+
+from __future__ import annotations
 
 
 class MobsPyError(Exception):

@@ -1,14 +1,18 @@
 """
 Centralized logging system for MobsPy.
 
-This module provides a consistent logging interface throughout the MobsPy codebase,
-allowing for better control over log levels, formatting, and output destinations.
+This module provides a consistent logging interface
+throughout the MobsPy codebase, allowing for better
+control over log levels, formatting, and output
+destinations.
 """
+
+from __future__ import annotations
 
 import logging
 import sys
 import traceback
-from typing import Optional, Any
+from typing import Any
 
 
 class ColoredFormatter(logging.Formatter):
@@ -160,7 +164,7 @@ class MobsPyLogger:
 logger = MobsPyLogger()
 
 
-def get_logger(name: Optional[str] = None) -> MobsPyLogger:
+def get_logger(name: str | None = None) -> MobsPyLogger:
     """
     Get a logger instance.
 

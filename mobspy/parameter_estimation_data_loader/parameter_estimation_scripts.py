@@ -1,56 +1,70 @@
+from __future__ import annotations
+
+from typing import Any
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
-from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
+from mobspy.import_manager.lazy_import_class import (  # noqa: E402
+    LazyImporter as ipm_LazyImporter,
+)
 
 basico = ipm_LazyImporter("basico")
 mobspy_basico_patch = ipm_LazyImporter(
     "mobspy.patch_scripts.basico_task_parametrization"
 )
-from pandas import DataFrame
+from pandas import DataFrame  # noqa: E402
 
 
 def basiCO_parameter_estimation(
-    simulation_object,
-    parameters_to_estimate,
-    experimental_data=None,
-    bound=None,
-    method="Evolution Strategy (SRES)",
-    verbose=True,
-    change_parameter_values=True,
-):
+    simulation_object: Any,
+    parameters_to_estimate: list[Any] | set[Any] | tuple[Any, ...],
+    experimental_data: Any = None,
+    bound: dict[str, list[float]] | list[float] | tuple[float, ...] | None = None,
+    method: str = "Evolution Strategy (SRES)",
+    verbose: bool = True,
+    change_parameter_values: bool = True,
+) -> dict[str, Any]:
     """
     This function fits a MobsPy parameter in a model to experimental data.
     Bound specifies the search range.
-    If the bound is None it takes as bounds /1000 and *1000 the original value of the parameter
+    If the bound is None it takes as bounds /1000 and *1000
+    the original value of the parameter
     The function updates the value of the parameter when it is done
 
     :param simulation_object: (Simulation Object) - MobsPy Simulation Object
-    :param parameters_to_estimate: (list of MobsPy parameters, or list of str) List of MobsPy parameters
-    to estimate
-    :param experimental_data: (list of pandas Dataframe, or pandas Dataframe) - experimental data to fit the
-    parameter with
-    :param bound: (list, tuple, dict) - list of two elements with a lower and upper bound of the parameters values,
-    or dictionary with the parameter name and a two element for that specific parameter
-    :param method: (str) - method to be used by basiCO optimisation - The options are Random Search,
-    Simulated Annealing, Differential Evolution, Scatter Search, Genetic Algorithm, Evolutionary Programming,
-    Genetic Algorithm SR, Evolution Strategy (SRES), Particle Swarm
+    :param parameters_to_estimate: (list of MobsPy
+        parameters, or list of str) List of MobsPy
+        parameters to estimate
+    :param experimental_data: (list of pandas Dataframe,
+        or pandas Dataframe) - experimental data to fit
+        the parameter with
+    :param bound: (list, tuple, dict) - list of two
+        elements with a lower and upper bound of the
+        parameters values, or dictionary with the parameter
+        name and a two element for that specific parameter
+    :param method: (str) - method to be used by basiCO
+        optimisation - The options are Random Search,
+        Simulated Annealing, Differential Evolution,
+        Scatter Search, Genetic Algorithm, Evolutionary
+        Programming, Genetic Algorithm SR,
+        Evolution Strategy (SRES), Particle Swarm
     :param verbose: (bool) print the results after finishing or not
     :param change_parameter_values: (bool) change/convert parameter values when possible
     """
 
-    # Check inputs in order ###############################################################################
+    # Check inputs in order ############################
     # Parameters ok?
     if (
-        type(parameters_to_estimate) != list
-        and type(parameters_to_estimate) != set
-        and type(parameters_to_estimate) != tuple
+        type(parameters_to_estimate) != list  # noqa: E721
+        and type(parameters_to_estimate) != set  # noqa: E721
+        and type(parameters_to_estimate) != tuple  # noqa: E721
     ):
         simlog.error(
             "The parameter that will be estimated must be inside a list, set or tuple"
         )
 
-    converted_parameters = []
+    converted_parameters: list[str] = []
     # If bound is None, we set the auto-bound when checking the parameters
     if bound is None:
         bound = {}
@@ -78,18 +92,19 @@ def basiCO_parameter_estimation(
 
     # Experimental data ok?
     if (
-        type(experimental_data) != list
-        and type(experimental_data) != set
-        and type(experimental_data) != tuple
+        type(experimental_data) != list  # noqa: E721
+        and type(experimental_data) != set  # noqa: E721
+        and type(experimental_data) != tuple  # noqa: E721
         and not isinstance(experimental_data, DataFrame)
     ):
         simlog.error(
-            "Experimental for basiCO estimation must be a list of pandas dataframes or a pandas dataframe"
+            "Experimental for basiCO estimation must be a "
+            "list of pandas dataframes or a pandas dataframe"
         )
 
     # Bound ok?
-    new_bound = {}
-    if type(bound) == dict:
+    new_bound: dict[str, Any] = {}
+    if type(bound) == dict:  # noqa: E721
         for key in bound:
             new_bound[str(key)] = bound[key]
         bound = new_bound
@@ -97,19 +112,27 @@ def basiCO_parameter_estimation(
         for par in parameters_to_estimate:
             if par not in bound:
                 simlog.error(
-                    "If a dictionary is used for the bounds, all parameters range for estimation "
-                    "must be specified. Make sure the dictionary keys contains all parameters and a list with "
-                    "upper and lower bound value for the each parameter is given as the items "
+                    "If a dictionary is used for the bounds,"
+                    " all parameters range for estimation "
+                    "must be specified. Make sure the "
+                    "dictionary keys contains all "
+                    "parameters and a list with upper and "
+                    "lower bound value for the each "
+                    "parameter is given as the items "
                 )
     else:
         try:
             if len(bound) != 2:
                 simlog.error(
-                    "The bound argument must be a list with the lower and upper bound of all parameters"
+                    "The bound argument must be a list with "
+                    "the lower and upper bound of all "
+                    "parameters"
                 )
-        except:
+        except Exception:
             simlog.error(
-                "The bound argument must be a list with the lower and upper bound of all parameters"
+                "The bound argument must be a list with "
+                "the lower and upper bound of all "
+                "parameters"
             )
     ########################################################################################################
 
@@ -122,7 +145,7 @@ def basiCO_parameter_estimation(
     sbml_str = sbml_list[0]
     model = basico.model_io.load_model_from_string(sbml_str)
 
-    fit_list = []
+    fit_list: list[dict[str, Any]] = []
     for par in parameters_to_estimate:
         basico_reaction_dict = find_parameters_in_basico_dataframe(
             basico.get_reaction_parameters(), par
@@ -131,15 +154,18 @@ def basiCO_parameter_estimation(
             basico_parameter_name = list(basico_reaction_dict["reaction"].keys())[0]
         except IndexError:
             simlog.error(
-                f"Parameter {par} was not found in the Simulation model. \n "
-                f"Please make sure that any of the meta-species used to construct the simulator use "
-                f" the parameter in one of their reactions."
+                f"Parameter {par} was not found in the "
+                f"Simulation model. \n "
+                f"Please make sure that any of the "
+                f"meta-species used to construct the "
+                f"simulator use the parameter in one "
+                f"of their reactions."
             )
 
         if bound is None:
             pass
 
-        if type(bound) == dict:
+        if type(bound) == dict:  # noqa: E721
             fit_dictionary = {
                 "name": basico_parameter_name,
                 "lower": bound[par][0],
@@ -154,9 +180,9 @@ def basiCO_parameter_estimation(
         fit_list.append(fit_dictionary)
 
     if (
-        type(experimental_data) == list
-        or type(experimental_data) == set
-        or type(experimental_data) == tuple
+        type(experimental_data) == list  # noqa: E721
+        or type(experimental_data) == set  # noqa: E721
+        or type(experimental_data) == tuple  # noqa: E721
     ):
         for i, exp in enumerate(experimental_data):
             mobspy_basico_patch.add_experiment("exp" + str(i), exp, model=model)
@@ -167,7 +193,7 @@ def basiCO_parameter_estimation(
     basico_results = basico.run_parameter_estimation(model=model, method=method)
 
     # WHY IS EVERYTHING PANDAS IN BASICO??????????? - I don't get paid enough for this
-    results = {}
+    results: dict[str, Any] = {}
     for key, sol in basico_results.to_dict()["sol"].items():
         parameter_name = str(key).replace("Values[", "")
         parameter_name = str(parameter_name).replace("]", "")
@@ -189,20 +215,26 @@ def basiCO_parameter_estimation(
     return results
 
 
-def find_parameters_in_basico_dataframe(basico_reactions_df, mobspy_parameter_name):
+def find_parameters_in_basico_dataframe(
+    basico_reactions_df: Any, mobspy_parameter_name: str
+) -> Any:
     """
-    Finds the corresponding mobspy parameter in the basico reactions parameters dataframe
+    Finds the corresponding mobspy parameter in the basico
+    reactions parameters dataframe.
 
     :param basico_reactions_df: (Dataframe) basiCO reactions df
     :param mobspy_parameter_name: (str) name of the mobspy parameter
     """
 
-    def has_mobspy_parameter_in_name(basico_reaction_name, mobspy_parameter_name):
-        # Change this function based on your specific logic for finding common substrings
+    def has_mobspy_parameter_in_name(
+        basico_reaction_name: str, mobspy_parameter_name: str
+    ) -> bool:
+        # Change this function based on your specific
+        # logic for finding common substrings
         parameter_name = basico_reaction_name.split(".")[1]
-        return True if parameter_name == mobspy_parameter_name else False
+        return True if parameter_name == mobspy_parameter_name else False  # noqa: SIM210
 
-    def find_common_substrings(df):
+    def find_common_substrings(df: str) -> bool:
         return has_mobspy_parameter_in_name(df, mobspy_parameter_name)
 
     return basico_reactions_df[
@@ -210,6 +242,6 @@ def find_parameters_in_basico_dataframe(basico_reactions_df, mobspy_parameter_na
     ]
 
 
-def python_parameter_estimation():
+def python_parameter_estimation() -> None:
     # Work in progress
     pass

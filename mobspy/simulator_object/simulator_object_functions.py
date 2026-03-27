@@ -1,29 +1,44 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mobspy.types import CompiledModelDict, ParametersUsed
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
-from mobspy.modules.mobspy_parameters import Internal_Parameter_Constructor
-from mobspy.modules.species_string_generator import (
-    construct_species_char_list as sp_construct_species_char_list,
+from mobspy.modules.mobspy_parameters import (  # noqa: E402
+    Internal_Parameter_Constructor,
 )
-from mobspy.modules.species_string_generator import (
+from mobspy.modules.species_string_generator import (  # noqa: E402
     construct_all_combinations as sp_construct_all_combinations,
 )
-from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
+from mobspy.modules.species_string_generator import (  # noqa: E402
+    construct_species_char_list as sp_construct_species_char_list,
+)
+from mobspy.modules.unit_handler import (  # noqa: E402
+    convert_counts as uh_convert_counts,
+)
 
 
-def sim_remove_reaction(sim, reaction, Simulation_Constructor):
+def sim_remove_reaction(sim: Any, reaction: Any, Simulation_Constructor: Any) -> Any:
     new_sim = Simulation_Constructor(sim.model)
     new_sim._reactions_set.remove(reaction)
     return new_sim
 
 
 class Simulation_Utils:
-    def update_model(self, *args):
+    _list_of_models: list[CompiledModelDict]
+    model_parameters: ParametersUsed
+
+    def update_model(self, *args: Any) -> None:
         # Check if the model was already compiled
         if not self._list_of_models:
             simlog.error(
                 "In .update_model method - \n"
-                "The model was not compiled yet. The update_model method is reserved for simulations that "
+                "The model was not compiled yet. The update_model"
+                " method is reserved for simulations that "
                 "have already been compiled"
             )
 
@@ -32,21 +47,22 @@ class Simulation_Utils:
             if len(arg) != 2:
                 simlog.error(
                     "In .update_model method - \n"
-                    "Please all parameters and species changes must be in the format: \n"
+                    "Please all parameters and species changes"
+                    " must be in the format: \n"
                     "(name, value)"
                 )
 
             self._update_from_compiler(arg)
 
-    def _update_from_compiler(self, arg):
+    def _update_from_compiler(self, arg: Any) -> None:
         try:
             is_species = arg[0].is_spe_or_reac()
-        except:
+        except Exception:
             is_species = False
 
         if isinstance(arg[0], Internal_Parameter_Constructor):
             self._update_parameter(arg)
-        elif type(arg[0]) == str:
+        elif type(arg[0]) == str:  # noqa: E721
             test_model = self._list_of_models[0]
 
             # Check to see if string is in parameters
@@ -77,18 +93,18 @@ class Simulation_Utils:
         else:
             simlog.error("Placeholder error for now")
 
-    def _update_parameter(self, arg):
+    def _update_parameter(self, arg: Any) -> None:
         try:
             iterable = iter(arg[1])
         except TypeError:
             iterable = False
 
-        if iterable:
+        if iterable:  # noqa: SIM108
             value_to_update = arg[1][0]
         else:
             value_to_update = arg[1]
 
-        if type(arg[0]) == str:
+        if type(arg[0]) == str:  # noqa: SIM108, E721
             parameter_str = arg[0]
         else:
             parameter_str = arg[0].get_name()
@@ -121,9 +137,9 @@ class Simulation_Utils:
                 f"The parameter named {parameter_str} was not found in the model"
             )
 
-    def _update_species(self, arg):
+    def _update_species(self, arg: Any) -> None:
         # Prepare count
-        if "volume" not in self.__dict__:
+        if "volume" not in self.__dict__:  # noqa: SIM108
             volume = 1
         else:
             volume = self.__dict__["volume"]

@@ -1,20 +1,24 @@
 """
-Taken from basiCO repository - https://github.com/copasi/basico - code before changes to 0.65
+Taken from basiCO repository -
+https://github.com/copasi/basico -
+code before changes to 0.65
 It fixes the parameter estimation task, for now
 """
 
-import shutil
+from __future__ import annotations
 
-import pandas
+import logging
+import os
+import shutil
+from typing import Any
+
+import basico
 import COPASI
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas
 import pandas as pd
-import os
-import logging
 import yaml
-
-import basico
 from basico.callbacks import get_default_handler
 
 logger = logging.getLogger(__name__)
@@ -54,11 +58,11 @@ class PE:
     PRAXIS = "Praxis"
     TRUNCATED_NEWTON = "Truncated Newton"
 
-    _names = None
-    _values = None
+    _names: dict[int, str] | None = None
+    _values: dict[str, int] | None = None
 
     @classmethod
-    def _create_name_map(cls):
+    def _create_name_map(cls) -> dict[int, str]:
         return {
             COPASI.CTaskEnum.Method_Statistics: PE.CURRENT_SOLUTION,
             COPASI.CTaskEnum.Method_RandomSearch: PE.RANDOM_SEARCH,
@@ -79,7 +83,7 @@ class PE:
         }
 
     @classmethod
-    def _create_value_map(cls):
+    def _create_value_map(cls) -> dict[str, int]:
         return {
             PE.CURRENT_SOLUTION: COPASI.CTaskEnum.Method_Statistics,
             PE.RANDOM_SEARCH: COPASI.CTaskEnum.Method_RandomSearch,
@@ -100,21 +104,21 @@ class PE:
         }
 
     @classmethod
-    def from_enum(cls, int_value):
+    def from_enum(cls, int_value: int) -> str:
         if cls._names is None:
             cls._names = cls._create_name_map()
 
         return cls._names.get(int_value, PE.CURRENT_SOLUTION)
 
     @classmethod
-    def to_enum(cls, value):
+    def to_enum(cls, value: str) -> int:
         if cls._values is None:
             cls._values = cls._create_value_map()
 
         return cls._values.get(value, COPASI.CTaskEnum.Method_Statistics)
 
     @classmethod
-    def all_method_names(cls):
+    def all_method_names(cls) -> list[str]:
         if cls._names is None:
             cls._names = cls._create_name_map()
 
@@ -126,13 +130,13 @@ try:
 except ValueError:
     import model_io
 
-try:
+try:  # noqa: SIM105
     from builtins import ValueError
 except ImportError:
     pass
 
 
-def num_experiment_files(**kwargs):
+def num_experiment_files(**kwargs: Any) -> int:
     """Return the number of experiment files defined.
 
     :param kwargs:
@@ -155,7 +159,7 @@ def num_experiment_files(**kwargs):
     return problem.getExperimentSet().size()
 
 
-def get_experiment_names(**kwargs):
+def get_experiment_names(**kwargs: Any) -> list[str]:
     """Returns the list of experiment names
 
     :param kwargs:
@@ -175,14 +179,14 @@ def get_experiment_names(**kwargs):
     problem = task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
 
-    result = []
+    result: list[str] = []
     for i in range(problem.getExperimentSet().size()):
         experiment = problem.getExperimentSet().getExperiment(i)
         result.append(experiment.getObjectName())
     return result
 
 
-def _get_experiment_keys(**kwargs):
+def _get_experiment_keys(**kwargs: Any) -> list[str]:
     model = model_io.get_model_from_dict_or_default(kwargs)
     assert isinstance(model, COPASI.CDataModel)
 
@@ -192,14 +196,14 @@ def _get_experiment_keys(**kwargs):
     problem = task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
 
-    result = []
+    result: list[str] = []
     for i in range(problem.getExperimentSet().size()):
         experiment = problem.getExperimentSet().getExperiment(i)
         result.append(experiment.getKey())
     return result
 
 
-def num_validations_files(**kwargs):
+def num_validations_files(**kwargs: Any) -> int:
     """Returns the number of cross validation experiment files
 
     :param kwargs:
@@ -222,7 +226,7 @@ def num_validations_files(**kwargs):
     return problem.getCrossValidationSet().size()
 
 
-def _role_to_string(role):
+def _role_to_string(role: int) -> str:
     names = {
         COPASI.CExperiment.time: "time",
         COPASI.CExperiment.ignore: "ignored",
@@ -232,7 +236,7 @@ def _role_to_string(role):
     return names.get(role, "ignored")
 
 
-def _role_to_int(role):
+def _role_to_int(role: str) -> int:
     values = {
         "time": COPASI.CExperiment.time,
         "ignored": COPASI.CExperiment.ignore,
@@ -242,7 +246,7 @@ def _role_to_int(role):
     return values.get(role, COPASI.CExperiment.ignore)
 
 
-def get_experiment(experiment, **kwargs):
+def get_experiment(experiment: int | str | Any, **kwargs: Any) -> Any:
     """Returns the specified experiment.
 
     :param experiment: experiment name or index
@@ -272,11 +276,13 @@ def get_experiment(experiment, **kwargs):
         if exp is not None:
             experiment = exp
         else:
-            raise ValueError("No experiment for: {0}".format(experiment))
+            raise ValueError(f"No experiment for: {experiment}")
     return experiment
 
 
-def _get_experiment_mapping_dict(experiment, **kwargs):
+def _get_experiment_mapping_dict(
+    experiment: Any, **kwargs: Any
+) -> list[dict[str, Any]]:
     """Returns the mapping of the given experiment
 
     :param experiment: copasi experiment, name or index
@@ -294,21 +300,20 @@ def _get_experiment_mapping_dict(experiment, **kwargs):
     names = experiment.getColumnNames()
     obj_map = experiment.getObjectMap()
     assert isinstance(obj_map, COPASI.CExperimentObjectMap)
-    rows = []
-
+    rows: list[dict[str, Any]] = []
     last = obj_map.getLastColumn() + 1
     size = obj_map.size()
     max_col = min(len(names), max(last, size))
     for i in range(max_col):
         role = obj_map.getRole(i)
         cn = obj_map.getObjectCN(i)
-        obj = ""
+        obj: Any = ""
         if cn:
             obj = experiment.getObjectDataModel().getObject(COPASI.CCommonName(cn))
             if obj:
                 obj = obj.getObjectDisplayName()
 
-        current = {
+        current: dict[str, Any] = {
             "column": i,
             "type": _role_to_string(role),
             "mapping": obj,
@@ -327,7 +332,7 @@ def _get_experiment_mapping_dict(experiment, **kwargs):
     return rows
 
 
-def get_experiment_mapping(experiment, **kwargs):
+def get_experiment_mapping(experiment: Any, **kwargs: Any) -> pandas.DataFrame:
     """Retrieves a data frame of the experiment mapping.
 
     The resulting data frame will have the columns:
@@ -349,7 +354,7 @@ def get_experiment_mapping(experiment, **kwargs):
     return pandas.DataFrame(data=rows).set_index("column")
 
 
-def _get_experiment_file(experiment, **kwargs):
+def _get_experiment_file(experiment: Any, **kwargs: Any) -> str:
     file_name_only = experiment.getFileNameOnly()
     model = experiment.getObjectDataModel()
     directory = os.path.dirname(model.getFileName())
@@ -386,13 +391,14 @@ def _get_experiment_file(experiment, **kwargs):
 
     raise_error = kwargs.get("raise_error", True)
     if raise_error:
-        raise ValueError("Experiment file {0} does not exist".format(file_name_only))
+        raise ValueError(f"Experiment file {file_name_only} does not exist")
 
     if return_relative and directory and os.path.exists(file_name_only):
         try:
             return os.path.relpath(file_name_only, directory)
         except ValueError:
-            # if we can't create a relative path, we copy the file over and then return the relative path
+            # if we can't create a relative path,
+            # copy the file over and return it
             dst = os.path.join(directory, os.path.basename(file_name_only))
             shutil.copy(file_name_only, dst)
             return os.path.relpath(dst, directory)
@@ -400,7 +406,7 @@ def _get_experiment_file(experiment, **kwargs):
     return file_name_only
 
 
-def get_data_from_experiment(experiment, **kwargs):
+def get_data_from_experiment(experiment: Any, **kwargs: Any) -> pandas.DataFrame:
     """Returns the data of the given experiment as dataframe
 
     :param experiment: the experiment
@@ -409,9 +415,11 @@ def get_data_from_experiment(experiment, **kwargs):
     - | `model`: to specify the data model to be used (if not specified
       | the one from :func:`.get_current_model` will be taken)
 
-    - | `rename_headers` (bool): if true (default) the columns of the headers will be renamed
-      | with the names of the element it is mapped to. Also all ignored columns will be removed from the
-      | dataset
+    - | `rename_headers` (bool): if true (default)
+      | the columns of the headers will be renamed
+      | with the names of the element it is mapped
+      | to. Also all ignored columns will be removed
+      | from the dataset
 
     :return: dataframe with experimental data
     :rtype: pandas.DataFrame
@@ -419,7 +427,7 @@ def get_data_from_experiment(experiment, **kwargs):
     experiment = get_experiment(experiment, **kwargs)
     experiment_file = _get_experiment_file(experiment)
     header_row = experiment.getHeaderRow()
-    original_headers = None
+    original_headers: dict[int, str] | None = None
     num_lines = 0
     separator = experiment.getSeparator()
     with open(experiment_file, encoding="utf-8") as f:
@@ -435,16 +443,16 @@ def get_data_from_experiment(experiment, **kwargs):
         if not (experiment.getFirstRow() <= x <= experiment.getLastRow())
     ]
 
-    if "rename_headers" in kwargs:
+    if "rename_headers" in kwargs:  # noqa: SIM401, SIM108
         rename_headers = kwargs["rename_headers"]
     else:
         rename_headers = True
 
-    if (have_headers and rename_headers) or original_headers != None:
+    if (have_headers and rename_headers) or original_headers != None:  # noqa: E711
         skip_idx.insert(0, header_row - 1)
 
-    drop_cols = []
-    headers = {}
+    drop_cols: list[Any] = []
+    headers: dict[int, str] = {}
     obj_map = experiment.getObjectMap()
     if rename_headers:
         count = 0
@@ -498,17 +506,19 @@ def get_data_from_experiment(experiment, **kwargs):
     return df
 
 
-def get_experiment_data_from_model(model=None):
+def get_experiment_data_from_model(model: Any = None) -> list[pandas.DataFrame]:
     """Returns all experimental data from the model
 
     :param model: the model to get the data from
     :type model: COPASI.CDataModel or None
-    :return: list of dataframes with experimental data (with columns renamed and unmapped columns dropped)
+    :return: list of dataframes with experimental data
+        (with columns renamed and unmapped columns
+        dropped)
     :rtype: [pandas.DataFrame]
     """
     if model is None:
         model = model_io.get_current_model()
-    result = []
+    result: list[pandas.DataFrame] = []
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
     assert isinstance(task, COPASI.CFitTask)
@@ -531,7 +541,7 @@ def get_experiment_data_from_model(model=None):
     return result
 
 
-def get_experiment_filenames(model=None):
+def get_experiment_filenames(model: Any = None) -> list[str]:
     """Returns filenames of all experiments
 
     :param model: the model to get the data from
@@ -541,7 +551,7 @@ def get_experiment_filenames(model=None):
     """
     if model is None:
         model = model_io.get_current_model()
-    result = []
+    result: list[str] = []
 
     task = model.getTask(TASK_PARAMETER_ESTIMATION)
     assert isinstance(task, COPASI.CFitTask)
@@ -564,12 +574,12 @@ def get_experiment_filenames(model=None):
 
 
 def get_fit_item_template(
-    include_local=False,
-    include_global=False,
-    default_lb=0.001,
-    default_ub=1000,
-    model=None,
-):
+    include_local: bool = False,
+    include_global: bool = False,
+    default_lb: float = 0.001,
+    default_ub: float = 1000,
+    model: Any = None,
+) -> list[dict[str, Any]]:
     """Returns a template list of items to be used for the parameter estimation
 
     :param include_local: boolean, indicating whether to include local parameters
@@ -587,7 +597,9 @@ def get_fit_item_template(
     :param model: the model or None
     :type model: COPASI.CDataModel or None
 
-    :return: List of dictionaries, with the local / global parameters in the format needed by:
+    :return: List of dictionaries, with the local /
+             global parameters in the format
+             needed by:
              :func:`set_fit_parameters`.
     :rtype: [{}]
     """
@@ -595,7 +607,7 @@ def get_fit_item_template(
     if model is None:
         model = model_io.get_current_model()
 
-    result = []
+    result: list[dict[str, Any]] = []
 
     if include_global:
         for mv in model.getModel().getModelValues():
@@ -614,7 +626,7 @@ def get_fit_item_template(
 
         local_params = model_info.get_reaction_parameters().reset_index()
         if "name" in local_params:
-            for name, local, value in zip(
+            for name, local, value in zip(  # noqa: B905
                 local_params["name"], local_params["type"], local_params["value"]
             ):
                 if local == "local":
@@ -630,7 +642,7 @@ def get_fit_item_template(
     return result
 
 
-def get_fit_parameters(model=None):
+def get_fit_parameters(model: Any = None) -> pandas.DataFrame | None:
     """Returns a data frame with all fit parameters
 
     The resulting dataframe will have the following columns:
@@ -639,8 +651,10 @@ def get_fit_parameters(model=None):
     * `lower`: the lower bound of the parameter
     * `upper`: the upper bound of the parameter
     * `start`: the start value
-    * | `affected`: a list of all experiments (names) the fit parameter should apply to. If empty the parameter should
-      | be varied for all experiments.
+    * | `affected`: a list of all experiments
+      | (names) the fit parameter should apply to.
+      | If empty the parameter should be varied
+      | for all experiments.
     * `cn`: internal identifier
 
     :param model: the model to get the fit parameters from
@@ -656,7 +670,7 @@ def get_fit_parameters(model=None):
     problem = pe_task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
     items = problem.getOptItemList()
-    data = []
+    data: list[dict[str, Any]] = []
 
     for i in range(len(items)):
         item = items[i]
@@ -683,7 +697,7 @@ def get_fit_parameters(model=None):
     return pandas.DataFrame(data=data).set_index("name")
 
 
-def get_fit_constraints(model=None):
+def get_fit_constraints(model: Any = None) -> pandas.DataFrame | None:
     """Returns a data frame with all fit constraints
 
     The resulting dataframe will have the following columns:
@@ -692,8 +706,10 @@ def get_fit_constraints(model=None):
     * `lower`: the lower bound of the parameter
     * `upper`: the upper bound of the parameter
     * `start`: the start value
-    * | `affected`: a list of all experiments (names) the fit parameter should apply to. If empty the parameter should
-      | be varied for all experiments.
+    * | `affected`: a list of all experiments
+      | (names) the fit parameter should apply to.
+      | If empty the parameter should be varied
+      | for all experiments.
     * `cn`: internal identifier
 
     :param model: the model to get the fit parameters from
@@ -709,7 +725,7 @@ def get_fit_constraints(model=None):
     problem = pe_task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
 
-    data = []
+    data: list[dict[str, Any]] = []
 
     for i in range(problem.getOptConstraintSize()):
         item = problem.getOptConstraint(i).asFitConstraint()
@@ -736,10 +752,15 @@ def get_fit_constraints(model=None):
     return pandas.DataFrame(data=data).set_index("name")
 
 
-def set_fit_parameters(fit_parameters, model=None):
+def set_fit_parameters(
+    fit_parameters: pandas.DataFrame | list[dict[str, Any]] | None,
+    model: Any = None,
+) -> None:
     """Replaces all existing fit items with the ones provided
 
-    :param fit_parameters: the fit parameters as pandas data frame of list of dictionaries with keys:
+    :param fit_parameters: the fit parameters as
+           pandas data frame of list of
+           dictionaries with keys:
 
            * 'name' str: the display name of the model element to map the column to.
            * 'lower': the lower bound of the parameter
@@ -788,7 +809,7 @@ def set_fit_parameters(fit_parameters, model=None):
                     cn = obj.getCN()
 
         if not cn:
-            logger.warning("object {0} not found".format(name))
+            logger.warning(f"object {name} not found")
             continue
 
         fit_item = problem.addFitItem(cn)
@@ -808,17 +829,22 @@ def set_fit_parameters(fit_parameters, model=None):
                     continue
 
                 if name not in experiment_names:
-                    logger.warning("Invalid affected experiment name {0}".format(name))
+                    logger.warning(f"Invalid affected experiment name {name}")
                     continue
 
                 index = experiment_names.index(name)
                 fit_item.addExperiment(experiment_keys[index])
 
 
-def set_fit_constraints(fit_constraints, model=None):
+def set_fit_constraints(
+    fit_constraints: pandas.DataFrame | list[dict[str, Any]] | None,
+    model: Any = None,
+) -> None:
     """Replaces all existing fit constraints with the ones provided
 
-    :param fit_constraints: the fit parameters as pandas data frame of list of dictionaries with keys:
+    :param fit_constraints: the fit parameters as
+           pandas data frame of list of
+           dictionaries with keys:
 
            * 'name' str: the display name of the model element to map the column to.
            * 'lower': the lower bound of the parameter
@@ -868,7 +894,7 @@ def set_fit_constraints(fit_constraints, model=None):
                     cn = obj.getCN()
 
         if not cn:
-            logger.warning("object {0} not found".format(name))
+            logger.warning(f"object {name} not found")
             continue
 
         fit_item = problem.addFitConstraint(cn)
@@ -888,14 +914,14 @@ def set_fit_constraints(fit_constraints, model=None):
                     continue
 
                 if name not in experiment_names:
-                    logger.warning("Invalid affected experiment name {0}".format(name))
+                    logger.warning(f"Invalid affected experiment name {name}")
                     continue
 
                 index = experiment_names.index(name)
                 fit_item.addExperiment(experiment_keys[index])
 
 
-def _get_name_for_key(key):
+def _get_name_for_key(key: str) -> str:
     factory = COPASI.CRootContainer.getKeyFactory()
     obj = factory.get(key)
     if not obj:
@@ -903,9 +929,9 @@ def _get_name_for_key(key):
     return obj.getObjectName()
 
 
-def _get_affected_experiments(optitem):
+def _get_affected_experiments(optitem: Any) -> list[str]:
     # type: (COPASI.CCopasiParameterGroup) -> [str]
-    result = []
+    result: list[str] = []
     affected = optitem.getGroup(AFFECTED_EXPERIMENTS)
     assert isinstance(affected, COPASI.CCopasiParameterGroup)
     for i in range(affected.size()):
@@ -914,7 +940,7 @@ def _get_affected_experiments(optitem):
     return result
 
 
-def get_parameters_solution(model=None):
+def get_parameters_solution(model: Any = None) -> pandas.DataFrame:
     """Returns the solution found for the fit parameters as data frame
 
     The resulting data frame will have the columns:
@@ -922,8 +948,12 @@ def get_parameters_solution(model=None):
     * `name`: the name of the parameter
     * `lower`: the parameters lower bound
     * `upper`: the parameters upper bound
-    * `sol`: the solution found in the last run (or NaN, if not run yet, or no solution found)
-    * `affected`: the experiments this parameter applies to (or an empty list if it applies to all)
+    * `sol`: the solution found in the last run
+      (or NaN, if not run yet, or no solution
+      found)
+    * `affected`: the experiments this parameter
+      applies to (or an empty list if it applies
+      to all)
 
     :param model: the model to use, or None
     :type model: COPASI.CDataModel or None
@@ -938,14 +968,14 @@ def get_parameters_solution(model=None):
     solution = problem.getSolutionVariables()
     items = problem.getOptItemList()
     assert solution.size() == len(items)
-    data = []
+    data: list[dict[str, Any]] = []
 
     for i in range(solution.size()):
         item = items[i]
         sol = solution.get(i)
         obj = model.getObject(COPASI.CCommonName(item.getObjectCN()))
         if obj is None:
-            logger.debug("fit item not in model, cn: {0}".format(item.getObjectCN()))
+            logger.debug(f"fit item not in model, cn: {item.getObjectCN()}")
             continue
         obj = obj.toObject().getObjectParent()
         name = obj.getObjectDisplayName()
@@ -965,7 +995,7 @@ def get_parameters_solution(model=None):
     return pandas.DataFrame(data=data).set_index("name")
 
 
-def _get_role_for_reference(reference_name):
+def _get_role_for_reference(reference_name: str) -> int:
     role_map = {
         "Concentration": COPASI.CExperiment.dependent,
         "ParticleNumber": COPASI.CExperiment.dependent,
@@ -981,17 +1011,24 @@ def _get_role_for_reference(reference_name):
     return role_map.get(reference_name, COPASI.CExperiment.ignore)
 
 
-def add_experiment(name, data, **kwargs):
+def add_experiment(name: str, data: pd.DataFrame, **kwargs: Any) -> str | None:
     """Adds a new experiment to the model.
 
-    This method adds a new experiment file to the parameter estimation task. The provided
-    data frame will be written into the current directory as `experiment_name.txt` unless a filename
-    has been provided.
+    This method adds a new experiment file to the
+    parameter estimation task. The provided
+    data frame will be written into the current
+    directory as `experiment_name.txt` unless a
+    filename has been provided.
 
-    The mapping between the columns and the model elements should be done by having the columns of the data
-    frame be model element names in question. So for example `[A]` to note that the transient concentrations
-    of a species `A` is to be mapped as dependent variable. or `[A]_0` to note that the initial concentration of
-    a species `A` is to be mapped as independent variable.
+    The mapping between the columns and the model
+    elements should be done by having the columns
+    of the data frame be model element names in
+    question. So for example `[A]` to note that
+    the transient concentrations of a species `A`
+    is to be mapped as dependent variable. or
+    `[A]_0` to note that the initial concentration
+    of a species `A` is to be mapped as
+    independent variable.
 
     :param name: the name of the experiment
     :type name: str
@@ -1002,9 +1039,13 @@ def add_experiment(name, data, **kwargs):
     - | `model`: to specify the data model to be used (if not specified
       | the one from :func:`.get_current_model` will be taken)
 
-    - | `file_name` (str): the file name to save the experimental data to (otherwise it will be name.txt)
+    - | `file_name` (str): the file name to save
+      | the experimental data to (otherwise it
+      | will be name.txt)
 
-    - | `data_dir` (str): the directory to save the experimental data to (otherwise it will be the current directory)
+    - | `data_dir` (str): the directory to save
+      | the experimental data to (otherwise it
+      | will be the current directory)
 
     :return: the filename of the generated data file
     :rtype: str
@@ -1019,7 +1060,7 @@ def add_experiment(name, data, **kwargs):
     assert isinstance(exp_set, COPASI.CExperimentSet)
     exp = exp_set.getExperiment(name)
     if exp is not None:
-        logger.error("An experiment with the name {0} already exists".format(name))
+        logger.error(f"An experiment with the name {name} already exists")
         return None
 
     # save data as tsv
@@ -1060,14 +1101,14 @@ def add_experiment(name, data, **kwargs):
         else:
             obj = model.findObjectByDisplayName(current)
             if obj is None:
-                logger.warning("Can't find model element for {0}".format(current))
+                logger.warning(f"Can't find model element for {current}")
             else:
                 assert isinstance(obj, COPASI.CDataObject)
                 if obj.getObjectType() != "Reference":
                     try:
                         obj = obj.getValueReference()
                     except AttributeError:
-                        logger.warning("Cannot map the element {0}".format(current))
+                        logger.warning(f"Cannot map the element {current}")
                 role = _get_role_for_reference(obj.getObjectName())
                 obj_map.setObjectCN(i, str(obj.getCN()))
         obj_map.setRole(i, role)
@@ -1078,7 +1119,7 @@ def add_experiment(name, data, **kwargs):
     return file_name
 
 
-def run_parameter_estimation(**kwargs):
+def run_parameter_estimation(**kwargs: Any) -> pandas.DataFrame:
     """Runs the parameter estimation task as specified:
 
     The following are valid methods to be used for the parameter estimation task.
@@ -1116,23 +1157,35 @@ def run_parameter_estimation(**kwargs):
 
     - | `method` (str): one of the strings from above
 
-    - | `randomize_start_values` (bool): if true, parameters will be randomized before starting otherwise the
-      | parameters starting value will be taken.
+    - | `randomize_start_values` (bool): if true,
+      | parameters will be randomized before
+      | starting otherwise the parameters starting
+      | value will be taken.
 
-    - | `calculate_statistics` (bool): if true, the statistics will be calculated at the end of the task
+    - | `calculate_statistics` (bool): if true,
+      | the statistics will be calculated at the
+      | end of the task
 
-    - | `create_parametersets` (bool): if true, parameter sets will be created for all experiments
+    - | `create_parametersets` (bool): if true,
+      | parameter sets will be created for all
+      | experiments
 
     - `use_initial_values` (bool): whether to use initial values
 
     - `scheduled` (bool): sets whether the task is scheduled or not
 
-    - `update_model` (bool): sets whether the model should be updated, or reset to initial conditions.
+    - `update_model` (bool): sets whether the
+      model should be updated, or reset to
+      initial conditions.
 
-    - `settings` (dict): a dictionary with settings to use, in the same format as the ones obtained from
-                         :func:`.get_task_settings`
+    - `settings` (dict): a dictionary with
+      settings to use, in the same format as
+      the ones obtained from
+      :func:`.get_task_settings`
 
-    - `write_report` (bool): overrides the writing of a report file of filename is specified. (defaults to True)
+    - `write_report` (bool): overrides the
+      writing of a report file of filename is
+      specified. (defaults to True)
 
     :return: the solution for the fit parameters see :func:`get_parameters_solution`.
     :rtype: pandas.DataFrame
@@ -1225,8 +1278,12 @@ def run_parameter_estimation(**kwargs):
     return get_parameters_solution(model)
 
 
-def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
-    """Runs the current solution statistics and returns result of simulation and experimental data
+def get_simulation_results(
+    values_only: bool = False, update_parameters: bool = True, **kwargs: Any
+) -> tuple[list[pandas.DataFrame], list[pandas.DataFrame]] | list[Any]:
+    """Runs the current solution statistics and
+    returns result of simulation and experimental
+    data
 
     :param values_only: if true, only time points at the measurements will be returned
     :type values_only: bool
@@ -1259,7 +1316,7 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
     experiments = problem.getExperimentSet()
     assert isinstance(experiments, COPASI.CExperimentSet)
 
-    result = []
+    result: list[Any] = []
     num_experiments = experiments.getExperimentCount()
     if num_experiments == 0:
         return result
@@ -1274,8 +1331,8 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
                 method="Current Solution Statistics", write_report=False
             )
 
-    exp_data = []
-    sim_data = []
+    exp_data: list[pandas.DataFrame] = []
+    sim_data: list[pandas.DataFrame] = []
 
     for i in range(num_experiments):
         experiment = experiments.getExperiment(i)
@@ -1349,8 +1406,15 @@ def get_simulation_results(values_only=False, update_parameters=True, **kwargs):
 
 
 def _apply_nth_change(
-    change, columns, df, dm, exp_name, independent, model, num_independent
-):
+    change: int,
+    columns: list[str],
+    df: pandas.DataFrame,
+    dm: Any,
+    exp_name: str,
+    independent: pandas.DataFrame,
+    model: Any,
+    num_independent: int,
+) -> None:
     change_set = COPASI.DataObjectSet()
     for j in range(num_independent):
         name = independent.iloc[j].mapping
@@ -1364,7 +1428,7 @@ def _apply_nth_change(
         obj = dm.getObject(COPASI.CCommonName(cn))
 
         if obj is None:  # not found skip
-            logger.debug("independent object not found for cn: {0}".format(cn))
+            logger.debug(f"independent object not found for cn: {cn}")
             continue
 
         if obj.getObjectName() == "InitialConcentration":
@@ -1373,15 +1437,17 @@ def _apply_nth_change(
             obj.getObjectParent().setInitialValue(value)
 
         change_set.append(obj)
-        logger.debug('set independent "{0}" to "{1}"'.format(cn, value))
+        logger.debug(f'set independent "{cn}" to "{value}"')
     if change_set.size() > 0:
         model.updateInitialValues(change_set)
 
 
-def _get_value_from_bound(bound):
+def _get_value_from_bound(bound: str) -> float:
     """
 
-    :param bound: the bound for the fit item (a float value as string, or name of another reference)
+    :param bound: the bound for the fit item
+        (a float value as string, or name of
+        another reference)
     :return: the value of the bound
     :rtype: float
     """
@@ -1392,7 +1458,9 @@ def _get_value_from_bound(bound):
     return value
 
 
-def _update_fit_parameters_from(dm, solution, exp_name=""):
+def _update_fit_parameters_from(
+    dm: Any, solution: pandas.DataFrame, exp_name: str = ""
+) -> None:
     """Utility function that updates the models fit parameters for the given solution
 
     :param dm: the current model
@@ -1437,17 +1505,18 @@ def _update_fit_parameters_from(dm, solution, exp_name=""):
                 obj.getObjectParent().setInitialValue(value)
 
             change_set.append(obj)
-            logger.debug('set solution value "{0}" to "{1}"'.format(cn, value))
+            logger.debug(f'set solution value "{cn}" to "{value}"')
         else:
             basico.set_reaction_parameters(name, value=value)
-            logger.debug('set reaction parameter "{0}" to "{1}"'.format(name, value))
+            logger.debug(f'set reaction parameter "{name}" to "{value}"')
     if change_set.size() > 0:
         model.updateInitialValues(change_set)
 
 
-def plot_per_experiment(**kwargs):
+def plot_per_experiment(**kwargs: Any) -> list[tuple[Any, Any]]:
     """
-    This function creates one figure per experiment defined, with plots of all dependent variables
+    This function creates one figure per experiment
+    defined, with plots of all dependent variables
     and their fit in it.
 
     :param kwargs:
@@ -1468,7 +1537,7 @@ def plot_per_experiment(**kwargs):
     experiments = problem.getExperimentSet()
     assert isinstance(experiments, COPASI.CExperimentSet)
 
-    result = []
+    result: list[tuple[Any, Any]] = []
     num_experiments = experiments.getExperimentCount()
     if num_experiments == 0:
         return result
@@ -1493,7 +1562,7 @@ def plot_per_experiment(**kwargs):
             if name not in sim_data[i].columns:
                 name = name[1:-1]
             sim_data[i].reset_index().plot(
-                x="Time", y=name, label="{0} Fit".format(name), ax=ax, color=nextval
+                x="Time", y=name, label=f"{name} Fit", ax=ax, color=nextval
             )
             name = dependent.iloc[j].mapping
             exp_data[i].plot.scatter(
@@ -1501,16 +1570,18 @@ def plot_per_experiment(**kwargs):
                 y=name,
                 ax=ax,
                 color=nextval,
-                label="{0} Measured".format(name),
+                label=f"{name} Measured",
             )
         result.append((fig, ax))
 
     return result
 
 
-def plot_per_dependent_variable(**kwargs):
+def plot_per_dependent_variable(**kwargs: Any) -> list[tuple[Any, Any]]:
     """
-    This function creates a figure for each dependent variable, with traces for all experiments.
+    This function creates a figure for each
+    dependent variable, with traces for all
+    experiments.
 
     :param kwargs:
 
@@ -1530,14 +1601,14 @@ def plot_per_dependent_variable(**kwargs):
     experiments = problem.getExperimentSet()
     assert isinstance(experiments, COPASI.CExperimentSet)
 
-    result = []
+    result: list[tuple[Any, Any]] = []
     num_experiments = experiments.getExperimentCount()
     if num_experiments == 0:
         return result
 
     exp_data, sim_data = get_simulation_results(**kwargs)
 
-    dependent_variables = {}
+    dependent_variables: dict[str, list[int]] = {}
 
     for i in range(num_experiments):
         experiment = experiments.getExperiment(i)
@@ -1567,24 +1638,30 @@ def plot_per_dependent_variable(**kwargs):
                 name = name[1:-1]
 
             sim_data[i].reset_index().plot(
-                x="Time", y=name, label="{0} Fit".format(exp_name), ax=ax, color=nextval
+                x="Time", y=name, label=f"{exp_name} Fit", ax=ax, color=nextval
             )
             exp_data[i].plot.scatter(
                 x="Time",
                 y=dependent,
                 ax=ax,
                 color=nextval,
-                label="{0} Measured".format(exp_name),
+                label=f"{exp_name} Measured",
             )
         result.append((fig, ax))
 
     return result
 
 
-def prune_simulation_results(simulation_results):
-    """Removes all columns & time points from the simulation set, that are not available in the measurement set
+def prune_simulation_results(
+    simulation_results: tuple[list[pandas.DataFrame], list[pandas.DataFrame]],
+) -> tuple[list[pandas.DataFrame], list[pandas.DataFrame]]:
+    """Removes all columns & time points from the
+    simulation set, that are not available in the
+    measurement set
 
-    :param simulation_results: the simulation result as obtained by get_simulation_results
+    :param simulation_results: the simulation
+        result as obtained by
+        get_simulation_results
 
     :return:
     """
@@ -1603,20 +1680,26 @@ def prune_simulation_results(simulation_results):
 
 
 def get_fit_statistic(
-    include_parameters=False, include_experiments=False, include_fitted=False, **kwargs
-):
+    include_parameters: bool = False,
+    include_experiments: bool = False,
+    include_fitted: bool = False,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """Return information about the last fit.
 
-    :param include_parameters: whether to include information about the parameters in a result entry
-                               with key `parameters`
+    :param include_parameters: whether to include
+        information about the parameters in a
+        result entry with key `parameters`
     :type include_parameters: bool
 
-    :param include_experiments: whether to include information about the experiments in a result entry
-                               with key `experiments`
+    :param include_experiments: whether to include
+        information about the experiments in a
+        result entry with key `experiments`
     :type include_experiments: bool
 
-    :param include_fitted: whether to include information about the fitted values in a result entry
-                               with key `fitted`
+    :param include_fitted: whether to include
+        information about the fitted values in a
+        result entry with key `fitted`
     :type include_fitted: bool
 
     :param kwargs:
@@ -1640,7 +1723,7 @@ def get_fit_statistic(
 
     function_evaluations = problem.getFunctionEvaluations()
     performed_iterations = function_evaluations > 0
-    result = {
+    result: dict[str, Any] = {
         "obj": problem.getSolutionValue(),
         "rms": problem.getRMS(),
         "sd": problem.getStdDeviation(),
@@ -1662,7 +1745,7 @@ def get_fit_statistic(
     std = problem.getVariableStdDeviations()
 
     if include_parameters:
-        parameters = []
+        parameters: list[dict[str, Any]] = []
         for i in range(problem.getOptItemSize()):
             current = problem.getOptItem(i)
             assert isinstance(current, COPASI.COptItem)
@@ -1690,14 +1773,14 @@ def get_fit_statistic(
                 "Newer COPASI version required to return experiment statistic"
             )
 
-        experiment_stats = []
+        experiment_stats: list[dict[str, Any]] = []
         for i in range(experiments.getExperimentCount()):
             exp = experiments.getExperiment(i)
 
             valid_value_count = exp.getValidValueCount()
             total_value_count = exp.getTotalValueCount()
 
-            item = {
+            item: dict[str, Any] = {
                 "name": exp.getObjectName(),
                 "valid_points": valid_value_count,
                 "total_points": total_value_count,
@@ -1733,7 +1816,7 @@ def get_fit_statistic(
         num_dependent = dependent.size()
         if function_evaluations == 0:
             num_dependent = 0
-        values = []
+        values: list[dict[str, Any]] = []
         for i in range(num_dependent):
             current = dependent.get(i)
             name = (
@@ -1755,7 +1838,7 @@ def get_fit_statistic(
     return result
 
 
-def remove_experiments(**kwargs):
+def remove_experiments(**kwargs: Any) -> None:
     """Removes all experiments from the model
 
     :param kwargs:
@@ -1780,7 +1863,7 @@ def remove_experiments(**kwargs):
         experiments.removeExperiment(0)
 
 
-def remove_fit_parameters(**kwargs):
+def remove_fit_parameters(**kwargs: Any) -> None:
     """Removes all fit items
 
     :param kwargs:
@@ -1799,7 +1882,7 @@ def remove_fit_parameters(**kwargs):
         problem.removeOptItem(0)
 
 
-def _weight_method_to_string(weight_method):
+def _weight_method_to_string(weight_method: int) -> str:
     """Convenience function converting a weight method to string
 
     :param weight_method: the weight method
@@ -1816,7 +1899,7 @@ def _weight_method_to_string(weight_method):
     return weight_map.get(weight_method, "Mean Square")
 
 
-def _weight_method_to_int(weight_method):
+def _weight_method_to_int(weight_method: str) -> int:
     """Convenience function converting a weight method to int
 
     :param weight_method: the weight method
@@ -1833,7 +1916,7 @@ def _weight_method_to_int(weight_method):
     return weight_map.get(weight_method, COPASI.CExperiment.MEAN_SQUARE)
 
 
-def get_experiment_dict(experiment, **kwargs):
+def get_experiment_dict(experiment: Any, **kwargs: Any) -> dict[str, Any]:
     """Returns all information about the experiment as dictionary
 
     :param experiment: copasi experiment, experiment name or index
@@ -1856,7 +1939,7 @@ def get_experiment_dict(experiment, **kwargs):
     kwargs["return_relative"] = kwargs.get("return_relative", True)
     filename = _get_experiment_file(experiment, **kwargs)
 
-    result = {
+    result: dict[str, Any] = {
         "name": experiment.getObjectName(),
         "filename": filename,
         "type": basico.T.STEADY_STATE
@@ -1894,7 +1977,7 @@ def get_experiment_dict(experiment, **kwargs):
     return result
 
 
-def save_experiments_to_dict(**kwargs):
+def save_experiments_to_dict(**kwargs: Any) -> list[dict[str, Any]]:
     """Returns a list of dictionaries with the parameter estimation experiments
 
     :param kwargs: optional arguments
@@ -1911,7 +1994,7 @@ def save_experiments_to_dict(**kwargs):
     :return: the parameter estimation experimetns as list of dictionary
     :rtype: [{}]
     """
-    experiments = []
+    experiments: list[dict[str, Any]] = []
     model = model_io.get_model_from_dict_or_default(kwargs)
     assert isinstance(model, COPASI.CDataModel)
 
@@ -1928,7 +2011,7 @@ def save_experiments_to_dict(**kwargs):
     return experiments
 
 
-def save_experiments_to_yaml(filename=None, **kwargs):
+def save_experiments_to_yaml(filename: str | None = None, **kwargs: Any) -> str:
     """Saves the experiment to yaml
 
     :param filename: optional filename to write to
@@ -1952,7 +2035,7 @@ def save_experiments_to_yaml(filename=None, **kwargs):
     return yaml_str
 
 
-def load_experiments_from_yaml(experiment_description, **kwargs):
+def load_experiments_from_yaml(experiment_description: str, **kwargs: Any) -> None:
     """Loads all experiments from the specified experiment description
 
     All existing experiments will be replaced with the ones from the specified file.
@@ -1967,7 +2050,7 @@ def load_experiments_from_yaml(experiment_description, **kwargs):
     """
 
     if os.path.exists(experiment_description):
-        with open(experiment_description, "r") as stream:
+        with open(experiment_description) as stream:
             experiments = yaml.safe_load(stream)
     else:
         experiments = yaml.safe_load(experiment_description)
@@ -1975,7 +2058,9 @@ def load_experiments_from_yaml(experiment_description, **kwargs):
     return load_experiments_from_dict(experiments, **kwargs)
 
 
-def load_experiments_from_dict(experiments, **kwargs):
+def load_experiments_from_dict(
+    experiments: list[dict[str, Any]] | dict[str, Any], **kwargs: Any
+) -> None:
     """Loads all experiments from the specified experiment description
 
     All existing experiments will be replaced with the ones from the specified file.
@@ -2004,8 +2089,10 @@ def load_experiments_from_dict(experiments, **kwargs):
     set_fit_parameters(fit_items, model=model)
 
 
-def _get_nth_line_from_file(filename, n, max_line=None):
-    with open(filename, "r") as stream:
+def _get_nth_line_from_file(
+    filename: str, n: int, max_line: int | None = None
+) -> str | None:
+    with open(filename) as stream:
         for i, line in enumerate(stream):
             if i + 1 == n:
                 return line.strip()
@@ -2014,14 +2101,16 @@ def _get_nth_line_from_file(filename, n, max_line=None):
     return None
 
 
-def _get_first_column(mappings, column):
+def _get_first_column(
+    mappings: list[dict[str, Any]], column: Any
+) -> dict[str, Any] | None:
     for entry in mappings:
         if entry["column"] == column:
             return entry
     return None
 
 
-def add_experiment_from_dict(exp_dict, **kwargs):
+def add_experiment_from_dict(exp_dict: dict[str, Any], **kwargs: Any) -> None:
     """Adds an experiment from dictionary
 
     :param exp_dict:
@@ -2054,7 +2143,7 @@ def add_experiment_from_dict(exp_dict, **kwargs):
             abs_data_file_name = os.path.abspath(data_file_name)
 
     if not os.path.exists(abs_data_file_name):
-        raise IOError("File not found: " + data_file_name)
+        raise OSError("File not found: " + data_file_name)
 
     experiment = COPASI.CExperiment(model, exp_dict["name"])
     experiment.setFirstRow(exp_dict["first_row"])
@@ -2079,7 +2168,7 @@ def add_experiment_from_dict(exp_dict, **kwargs):
     #
     ## instead we use:
 
-    names = None
+    names: Any = None
     if "header_row" in exp_dict:
         names = _get_nth_line_from_file(
             abs_data_file_name, int(exp_dict["header_row"]), int(exp_dict["last_row"])
@@ -2099,7 +2188,7 @@ def add_experiment_from_dict(exp_dict, **kwargs):
             continue
         role = _role_to_int(mapping["type"])
         obj_map.setRole(i, role)
-        need_initial = True if mapping["type"] == "independent" else False
+        need_initial = True if mapping["type"] == "independent" else False  # noqa: SIM210
         cn = (
             mapping["cn"]
             if "cn" in mapping

@@ -1,22 +1,31 @@
-from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
+from __future__ import annotations
+
+from re import compile as re_compile
+from re import escape as re_escape
+from typing import TYPE_CHECKING, Any
+
 from mobspy.mobspy_logging import get_logger
 
-_logger = get_logger(__name__)
+if TYPE_CHECKING:
+    from mobspy.types import AssignmentsForSbml
+from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
+)
+from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
-from re import compile as re_compile, escape as re_escape
+
+_logger = get_logger(__name__)
 
 
 class Assignment_Operator:
-    _asg_context = False
-    regex_pattern = r"\(\$arg(?:\.[^\s().]+)?\)(?=[^\s()]|$)"
+    _asg_context: bool = False
+    regex_pattern: str = r"\(\$arg(?:\.[^\s().]+)?\)(?=[^\s()]|$)"
 
     @staticmethod
-    # To be updated for a regex, it was not working and I need to finish my Ph.D.
-    def find_arg_strings(input_string):
-        arg_strings = []
+    def find_arg_strings(input_string: str) -> list[str]:
+        arg_strings: list[str] = []
         flag_found = False
         stack = ""
         for char in input_string:
@@ -35,36 +44,38 @@ class Assignment_Operator:
 
         return arg_strings
 
-    def __enter__(self):
+    def __enter__(self) -> Assignment_Operator:
         self._asg_context = True
         return self
 
-    def set_context(self):
+    def set_context(self) -> None:
         self._asg_context = True
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> int:
         self._asg_context = False
-        yield 0
+        yield 0  # type: ignore[misc]
 
-    def reset_context(self):
+    def reset_context(self) -> None:
         self._asg_context = False
 
-    def check_context(self):
+    def check_context(self) -> bool:
         return self._asg_context
 
     @staticmethod
-    def check_arguments(first, second):
-        spe_list_first = []
-        spe_list_second = []
+    def check_arguments(
+        first: Any,
+        second: Any,
+    ) -> tuple[mbe_MobsPyExpression, mbe_MobsPyExpression]:
+        spe_list_first: list[Any] = []
+        spe_list_second: list[Any] = []
 
-        # Only extract species if it's actually a Species or Reacting_Species
         if hasattr(first, "get_spe_object"):
             spe_list_first = [first]
 
         if hasattr(second, "get_spe_object"):
             spe_list_second = [second]
 
-        if type(first) == int or type(first) == float:
+        if type(first) == int or type(first) == float:  # noqa: E721
             first = mbe_MobsPyExpression(
                 str(first),
                 species_object=None,
@@ -76,7 +87,7 @@ class Assignment_Operator:
                 species_list_operation_order=spe_list_first,
             )
 
-        if type(second) == int or type(second) == float:
+        if type(second) == int or type(second) == float:  # noqa: E721
             second = mbe_MobsPyExpression(
                 str(second),
                 species_object=None,
@@ -113,34 +124,37 @@ class Assignment_Operator:
         return first, second
 
     @staticmethod
-    def add(first, second):
+    def add(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
         return first + second
 
     @staticmethod
-    def sub(first, second):
+    def sub(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
         return first - second
 
     @staticmethod
-    def mul(first, second):
+    def mul(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
         return first * second
 
     @staticmethod
-    def div(first, second):
+    def div(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
         return first / second
 
     @staticmethod
-    def pow(first, second):
+    def pow(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
         return first**second
 
     @staticmethod
     def generate_replacement_in_expression(
-        express_spe, ortogonal_vector_structure, meta_species_in_model, expression_tuple
-    ):
+        express_spe: str,
+        ortogonal_vector_structure: dict[str, Any],
+        meta_species_in_model: list[Any],
+        expression_tuple: tuple[Any, str],
+    ) -> str:
         spe_str = express_spe.replace("$asg_", "")
         spe_str = spe_str.split(".")
 
@@ -154,7 +168,8 @@ class Assignment_Operator:
             error_message = (
                 f"Assignment {spe_name}, {expression_tuple[0][1]}: "
                 f"{expression_tuple[1].replace('$asg_', '')} failed\n"
-                f"One of the meta-species in the assignment expression was not found in the model"
+                "One of the meta-species in the assignment"
+                " expression was not found in the model"
             )
             _logger.error(error_message)
 
@@ -168,6 +183,7 @@ class Assignment_Operator:
             )
         str_comb.sort()
 
+        to_replace: str = ""
         for i, e in enumerate(str_comb):
             if i == 0:
                 to_replace = e
@@ -177,13 +193,13 @@ class Assignment_Operator:
 
     @staticmethod
     def process_assignments(
-        asg_expression,
-        ortogonal_vector_structure,
-        meta_species_in_model,
-        for_error_tuple,
-    ):
+        asg_expression: str,
+        ortogonal_vector_structure: dict[str, Any],
+        meta_species_in_model: list[Any],
+        for_error_tuple: tuple[Any, str],
+    ) -> str:
         spe_in_expression = Assignment_Operator.find_arg_strings(asg_expression)
-        replacement_dict = {}
+        replacement_dict: dict[str, str] = {}
         for spe in spe_in_expression:
             replacement_dict[spe] = (
                 Assignment_Operator.generate_replacement_in_expression(
@@ -203,9 +219,11 @@ class Assignment_Operator:
 
     @staticmethod
     def compile_assignments_for_sbml(
-        unprocessed_asgns, ortogonal_vector_structure, meta_species_in_model
-    ):
-        assignments_for_sbml = {}
+        unprocessed_asgns: dict[Any, Any],
+        ortogonal_vector_structure: dict[str, Any],
+        meta_species_in_model: list[Any],
+    ) -> AssignmentsForSbml:
+        assignments_for_sbml: dict[str, dict[str, str]] = {}
         assignment_counter = 0
         for asg in unprocessed_asgns:
             if "all$" not in asg[1]:
@@ -253,7 +271,7 @@ class Assignment_Operator:
         return assignments_for_sbml
 
     @staticmethod
-    def replace_agn_expr(assignment_ex, to_replace, replacement):
+    def replace_agn_expr(assignment_ex: str, to_replace: str, replacement: str) -> str:
         pattern = re_compile(re_escape(to_replace) + r"(?![a-zA-Z0-9_])")
         return pattern.sub(replacement, assignment_ex)
 
@@ -262,12 +280,12 @@ Assign = Assignment_Operator()
 
 
 class Asg:
-    assignments = {}
+    assignments: dict[Any, Any] = {}
 
-    def __init__(self, meta_spe, species_or_reacting):
+    def __init__(self, meta_spe: Any, species_or_reacting: bool) -> None:
         Assign.set_context()
-        self.meta_spe = []
-        self.asgn_key = []
+        self.meta_spe: list[Any] = []
+        self.asgn_key: list[tuple[Any, tuple[Any, ...]]] = []
         if species_or_reacting:
             self.meta_spe.append(meta_spe)
             self.asgn_key.append((meta_spe, tuple()))
@@ -279,12 +297,13 @@ class Asg:
                 )
         self.species_or_reacting = species_or_reacting
 
-    def __call__(self, assignment):
-        for spe, key in zip(self.meta_spe, self.asgn_key):
+    def __call__(self, assignment: Any) -> None:
+        for spe, key in zip(self.meta_spe, self.asgn_key):  # noqa: B905
             spe._assignments[key] = assignment
         Assign.reset_context()
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> None:
         _logger.error(
-            "Assignments must be the last query in the stack - Ex: A.young.blue.assign()",
+            "Assignments must be the last query in the"
+            " stack - Ex: A.young.blue.assign()",
         )

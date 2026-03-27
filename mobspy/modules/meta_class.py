@@ -1,47 +1,65 @@
-"""
-The meta_class.py model is responsible for defining the meta-species, meta-reactions and other "meta-classes"
-It is also responsible for compiling the models into data structures that will be converted into an SBML file later
-Bear in mind that they are not actually Python meta-classes. The first design utilized this feature but know there
-are just regular classes
+"""Meta-species, meta-reactions, and related classes for MobsPy.
+
+Defines the core DSL objects that users interact with. Compiles
+models into data structures later converted to SBML.
+Note: despite the name these are regular classes, not Python
+metaclasses.
 """
 
-from collections.abc import Sequence
-from typing import Self
+from __future__ import annotations
+
+import re
+from collections.abc import Generator, Sequence
+from inspect import FrameInfo
+from inspect import stack as inspect_stack
+from typing import Any, Self
+
+from numpy import floating as np_float_
+from numpy import integer as np_int_
+from pint import Quantity
 
 from mobspy.mobspy_logging import get_logger
-
-_logger = get_logger(__name__)
-from mobspy.modules.species_string_generator import (
-    construct_all_combinations as ssg_construct_all_combinations,
+from mobspy.modules.assignments_implementation import (
+    Asg as asgi_Asg,
 )
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
-    Asg as asgi_Asg,
 )
-from pint import Quantity
 from mobspy.modules.logic_operator_objects import (
     ReactingSpeciesComparator as lop_ReactingSpeciesComparator,
+)
+from mobspy.modules.logic_operator_objects import (
     SpeciesComparator as lop_SpeciesComparator,
+)
+from mobspy.modules.meta_class_utils import (
+    check_orthogonality_between_references as mcu_check_orthogonality_between_references,  # noqa: E501
+)
+from mobspy.modules.meta_class_utils import (
+    combine_references as mcu_combine_references,
+)
+from mobspy.modules.meta_class_utils import (
+    unite_characteristics as mcu_unite_characteristics,
+)
+from mobspy.modules.mobspy_expressions import (
+    ExpressionDefiner as me_ExpressionDefiner,
 )
 from mobspy.modules.mobspy_expressions import (
     OverrideQuantity as me_OverrideQuantity,
+)
+from mobspy.modules.mobspy_expressions import (
     Specific_Species_Operator as me_Specific_Species_Operator,
-    ExpressionDefiner as me_ExpressionDefiner,
 )
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
-from numpy import integer as np_int_, floating as np_float_
-from inspect import stack as inspect_stack
-from mobspy.modules.meta_class_utils import (
-    unite_characteristics as mcu_unite_characteristics,
-    combine_references as mcu_combine_references,
-    check_orthogonality_between_references as mcu_check_orthogonality_between_references,
+from mobspy.modules.species_string_generator import (
+    construct_all_combinations as ssg_construct_all_combinations,
 )
-import re
+
+_logger = get_logger(__name__)
 
 
-def _get_multiline_code_context(stack_frame):
+def _get_multiline_code_context(stack_frame: FrameInfo) -> str:
     """
     Extract multi-line code context for reaction parsing.
     Handles cases where formatters split >> operators across lines.
@@ -55,38 +73,36 @@ def _get_multiline_code_context(stack_frame):
     return full_context
 
 
-# Easter Egg: I finished the first version on a sunday at the BnF in Paris
-# If anyone is reading this, I highly recommend you study there, it is quite a nice place
+# Easter Egg: I finished the first version on a sunday at the
+# BnF in Paris. If anyone is reading this, I highly recommend
+# you study there, it is quite a nice place
 
 
 class _Last_rate_storage:
-    last_rate = None
-    entity_counter = 0
+    last_rate: Any = None
+    entity_counter: int = 0
 
     @classmethod
-    def override_get_item(cls, object_to_return, item):
-        """
-        Due to priority in Python the item is stored before the reaction
-        So it is stored in the Compiler level and passed to the reaction object in the end
-        Important: the rate is used before the compilation level, it's used when the reaction has been completely
-        defined
+    def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
+        """Store the rate before the reaction is fully defined.
 
-        :param object_to_return: (Species or Reacting) returns the object that the __getitem__ was performed on
-        :param item: (int, float, callable, Quantity) stored reaction rate
+        Due to priority in Python the item is stored before the
+        reaction. It is stored at the Compiler level and passed
+        to the reaction object in the end.
+
+        :param object_to_return: returns the object that
+            __getitem__ was performed on
+        :param item: stored reaction rate
         """
         cls.last_rate = item
         return object_to_return
 
     @classmethod
-    def process_rate(cls, rate):
+    def process_rate(cls, rate: Any) -> Any:
         if isinstance(rate, (np_int_, np_float_)):
             rate = float(rate)
 
-        if (
-            isinstance(rate, Species)
-            or isinstance(rate, Reacting_Species)
-            or isinstance(rate, Reactions)
-        ):
+        if isinstance(rate, (Species, Reacting_Species, Reactions)):
             _logger.error(
                 "Reaction rate of type "
                 + str(type(_Last_rate_storage.last_rate))
@@ -94,15 +110,20 @@ class _Last_rate_storage:
             )
 
         if not (
-            type(rate) == int
-            or type(rate) == float
+            type(rate) == int  # noqa: E721
+            or type(rate) == float  # noqa: E721
             or callable(rate)
-            or type(rate) == str
-            or isinstance(rate, me_OverrideQuantity)
-            or isinstance(rate, Quantity)
-            or isinstance(rate, mp_Mobspy_Parameter)
+            or type(rate) == str  # noqa: E721
+            or isinstance(
+                rate,
+                (
+                    me_OverrideQuantity,
+                    Quantity,
+                    mp_Mobspy_Parameter,
+                    me_ExpressionDefiner,
+                ),
+            )
             or rate is None
-            or isinstance(rate, me_ExpressionDefiner)
         ):
             _logger.error("Reaction rate of type " + str(type(rate)) + " not valid")
 
@@ -110,26 +131,31 @@ class _Last_rate_storage:
 
 
 class Reactions:
+    """Reaction class storing reactants, products, rate and order.
+
+    Reactions are created with the ``>>`` operator and stored
+    in all involved objects.
+
+    :param reactants: list of meta-species used as reactants
+    :param products: list of meta-species used as products
+    :param order: reaction order operator (Round-Robin default)
+    :param rate: reaction rate
     """
-    This is the Reaction class. It contains the reactants, products, rate and order
-    Reactions are created with the >> operator. In each reaction is stored in all involved objects
 
-    :param reactants: (list of Species) list of meta-species used as reactants in the meta-reaction
-    :param products: (list of Species) list of meta-species used as products in the meta-reaction
-    :param order: (Order Operator) reaction order operator - default in a Round-Robin base
-    :param rate: (int, float, callable, Quantity) reaction rate
-    """
+    def __init__(
+        self,
+        reactants: list[dict[str, Any]],
+        products: list[dict[str, Any]],
+        rate: Any = None,
+    ) -> None:
+        """Construct a reaction from reactants and products.
 
-    def __init__(self, reactants, products, rate=None) -> None:
-        """
-        Constructor of the reaction object. For the object construction only the reactants and products are
-        necessary - the order and the rate are assigned later by the compiler
+        The order and the rate are assigned later by the compiler.
 
-        :param reactants: (list of Species) list of meta-species used as reactants in the meta-reaction
-        :param products: (list of Species) list of meta-species used as products in the meta-reaction
-
-        :raise simlog.error: if a reaction is defined under a simulation context
-        :raise simlog.error: if was called from Zero to Zero
+        :param reactants: list of meta-species reactants
+        :param products: list of meta-species products
+        :raise simlog.error: if defined under simulation context
+        :raise simlog.error: if called from Zero to Zero
         """
         for p in products:
             if p["object"].get_name() == "Context_MetaSpecies":
@@ -141,13 +167,14 @@ class Reactions:
             _logger.error(
                 "A MobsPy context error has happen. "
                 "A reaction was defined with the assignment context activated."
-                "The assignment context was deactivated. Please try to redefine the model"
+                "The assignment context was deactivated. "
+                "Please try to redefine the model"
             )
 
         # Setup rate - consider reversible reactions
         try:
             flag_len = len(_Last_rate_storage.last_rate) == 2
-        except:
+        except (TypeError, AttributeError):
             flag_len = False
 
         if flag_len and rate is None:
@@ -185,10 +212,10 @@ class Reactions:
                     p["characteristics"].add(j)
 
         try:
-            to_test_context_object = reactants[0]["object"]
+            _ = reactants[0]["object"]
         except IndexError:
             try:
-                to_test_context_object = products[0]["object"]
+                _ = products[0]["object"]
             except IndexError:
                 _logger.error("No Meta-Species detected in the reaction")
 
@@ -209,21 +236,22 @@ class Reactions:
         # if _Last_rate_storage.last_rate is not None:
         #    _Last_rate_storage.last_rate = None
 
-        # Here we extract all involved objects to pact them in a set
-        # This is done to find the reactions associated with the species when the Compiler is started
+        # Here we extract all involved objects to pact them in a set.
+        # This is done to find the reactions associated with the
+        # species when the Compiler is started
         for reactant in reactants:
             reactant["object"].add_reaction(self)
         for product in products:
             product["object"].add_reaction(self)
 
     @staticmethod
-    def __create_reactants_string(list_of_reactants) -> str:
-        """
-        Just a simple way to simlog.debug reactions for debbuging
-        Not relevant for simulation
-        Important: here reactants are used interchangeably with products, this works for a list_of_products too
+    def __create_reactants_string(list_of_reactants: list[dict[str, Any]]) -> str:
+        """Format a list of reactants/products as a string.
 
-        :param list_of_reactants: (list of Species) list of products or reactants in the reaction
+        Not relevant for simulation, only for debugging.
+        Works for both reactants and products lists.
+
+        :param list_of_reactants: list of products or reactants
         """
         reaction_string = ""
         for i, r in enumerate(list_of_reactants):
@@ -252,7 +280,7 @@ class Reactions:
             + self.__create_reactants_string(self.products)
         )
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Self:
         """
         Override of __getitem__ for dealing with reaction rates
 
@@ -260,9 +288,10 @@ class Reactions:
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def set_rate(self, rate):
+    def set_rate(self, rate: Any) -> None:
         """
-        Sets the stored reaction rate. See _Last_rate_storage.override_get_item(self, item)
+        Sets the stored reaction rate.
+        See _Last_rate_storage.override_get_item(self, item)
 
         :param rate: (int, float, callable, Quantity) = reaction rate
         """
@@ -270,7 +299,7 @@ class Reactions:
 
 
 class Assignment_Opp_Imp:
-    def __add__(self, other):
+    def __add__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.add(self, other)
         else:
@@ -278,7 +307,7 @@ class Assignment_Opp_Imp:
                 "Addition not implemented for meta-species in this context",
             )
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.add(other, self)
         else:
@@ -286,7 +315,7 @@ class Assignment_Opp_Imp:
                 "Addition not implemented for meta-species in this context",
             )
 
-    def __sub__(self, other):
+    def __sub__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.sub(self, other)
         else:
@@ -294,7 +323,7 @@ class Assignment_Opp_Imp:
                 "Subtraction not implemented for meta-species in this context",
             )
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.sub(other, self)
         else:
@@ -302,7 +331,7 @@ class Assignment_Opp_Imp:
                 "Subtraction not implemented for meta-species in this context",
             )
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.div(self, other)
         else:
@@ -310,7 +339,7 @@ class Assignment_Opp_Imp:
                 "Division not implemented for meta-species in this context",
             )
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.div(other, self)
         else:
@@ -318,7 +347,7 @@ class Assignment_Opp_Imp:
                 "Division not implemented for meta-species in this context",
             )
 
-    def __pow__(self, other):
+    def __pow__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.pow(self, other)
         else:
@@ -326,7 +355,7 @@ class Assignment_Opp_Imp:
                 "Division not implemented for meta-species in this context",
             )
 
-    def __rpow__(self, other):
+    def __rpow__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.pow(other, self)
         else:
@@ -334,7 +363,7 @@ class Assignment_Opp_Imp:
                 "Division not implemented for meta-species in this context",
             )
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
         else:
@@ -342,7 +371,7 @@ class Assignment_Opp_Imp:
                 "Multiplication not implemented for meta-species in this sense",
             )
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(other, self)
         else:
@@ -352,28 +381,16 @@ class Assignment_Opp_Imp:
 
 
 class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
-    """
-    Represents an intermediary object created when a species is used in a reaction.
+    """Intermediary object created when a species enters a reaction.
 
-    This object is created when a species participates in a reaction. Its constructor is
-    called by the `Species` class in several of its methods. The class transforms a `Species` object
-    into a list-compatible format to pass it into the reaction object. This list format allows for easy
-    concatenation of reactants by summing.
-
-    The `>>` operator calls the `Reaction` constructor to define a reaction object.
+    Transforms a Species object into a list-compatible format
+    for the reaction object. The ``>>`` operator calls the
+    Reaction constructor.
 
     Attributes:
-        list_of_reactants (list[dict]): Represents reactants or products. Each dictionary contains:
-            - 'object' (object): A reference to a meta-species object.
-            - 'characteristics' (dict): Characteristics of the species being queried.
-            - 'stoichiometry' (float): Stoichiometric value for the species.
-            - 'label' (str, optional): A label for the species, if provided.
-
-    Example:
-
-        species1 = Species("A")
-        species2 = Species("B")
-        reaction = species1 >> species2  # Creates a Reaction object.
+        list_of_reactants: Represents reactants or products.
+            Each dict contains 'object', 'characteristics',
+            'stoichiometry', and optionally 'label'.
     """
 
     def __init__(
@@ -383,18 +400,14 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         stoichiometry: int | float = 1,
         label: int | float | str | None = None,
     ) -> None:
-        """
-        Reacting_Species constructor. It receives the meta-species object reference, the characteristics that
-        have been used as a query in the reaction, the stoichiometry of the meta-species in the reaction, and
-        finally a label if used.
+        """Construct a Reacting_Species.
 
-        :param object_reference: (Species) meta-species object reference or (int, float, Quantity) for event
-        assignments with meta-species values
-        :param characteristics: (str) characteristics used to query over the meta-species inside this reaction
-        :param stoichiometry: (int, float) stoichiometry value of the meta-species in the reaction
-        :param label: (int, float, str) value for the label for matching used in this reaction
+        :param object_reference: meta-species object reference
+        :param characteristics: characteristics used to query
+        :param stoichiometry: stoichiometry in the reaction
+        :param label: label value for matching
         """
-        super(Reacting_Species, self).__init__()
+        super().__init__()
         if object_reference.get_name() == "_S0" and characteristics == set():
             self.list_of_reactants = []
         else:
@@ -407,17 +420,13 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 }
             ]
 
-    def __enter__(self):
-        """
-        Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when entering.
-        """
+    def __enter__(self) -> int:
+        """Enter context manager for characteristics."""
         self.context_initiator_for_reacting_specie()
         return 0
 
-    def __exit__(self, *args) -> None:
-        """
-        Context manager for characteristics. Called in "with Example_specie.example_characteristic :" format, when exiting.
-        """
+    def __exit__(self, *args: Any) -> None:
+        """Exit context manager for characteristics."""
         self.context_finish_for_reacting_specie()
 
     def __str__(self) -> str:
@@ -437,16 +446,17 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             if Species.get_simulation_context() is not None:
                 _logger.error(
-                    "Please separate the species when using string based assignments under event context"
-                    "Ex: str(A) + str(B)",
+                    "Please separate the species when using "
+                    "string based assignments under event "
+                    "context. Ex: str(A) + str(B)",
                 )
             return str(self.list_of_reactants)
 
     # Labels and value function implementation
-    def c(self, item):
-        """
-        c query implementation, queries by the value inside a variable instead of the name
-        it just calls __getattr__ with the value inside the variable
+    def c(self, item: Any) -> Reacting_Species:
+        """Query by value instead of name.
+
+        Calls __getattr__ with the value inside the variable.
 
         :param item: value to query over
         """
@@ -454,22 +464,21 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         Species.check_if_valid_characteristic(self, item)
         return self.__getattr__(item)
 
-    def label(self, label) -> Self:
-        """
-        Label function implementation. This function assigns labels to meta-species to be matched by the compiler
-        later
+    def label(self, label: int | float | str) -> Self:
+        """Assign a label to a meta-species for compiler matching.
 
-        :param label: (int, float, str) value for the label for matching
+        :param label: value for the label for matching
         """
         if len(self.list_of_reactants) == 1:
             self.list_of_reactants[0]["label"] = label
         else:
             _logger.error(
-                "Labels cannot be assigned to multiple reacting species at the same time.",
+                "Labels cannot be assigned to multiple "
+                "reacting species at the same time.",
             )
         return self
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Self:
         """
         Override of __getitem__ for dealing with reaction rates
 
@@ -477,7 +486,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def get_spe_object(self):
+    def get_spe_object(self) -> Species:
         if len(self.list_of_reactants) != 1:
             _logger.error(
                 "The internal method get_queried_characteristics can only be used for "
@@ -487,7 +496,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             return self.list_of_reactants[0]["object"]
 
-    def get_query_characteristics(self):
+    def get_query_characteristics(self) -> Any:
         if len(self.list_of_reactants) != 1:
             _logger.error(
                 "The internal method get_queried_characteristics can only be used for "
@@ -497,28 +506,31 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             return self.list_of_reactants[0]["characteristics"]
 
-    def __rmul__(self, stoichiometry):
-        """
-        Multiplication by the stoichiometry for reactions
+    def __rmul__(self, stoichiometry: Any) -> Self | Any:
+        """Multiply by stoichiometry for reactions.
 
-        :params stoichiometry: (int) stoichiometry value of the meta-species in the reaction
+        :param stoichiometry: stoichiometry value
         """
         if not asgi_Assign.check_context():
             if isinstance(stoichiometry, (int, float)):
                 self.list_of_reactants[0]["stoichiometry"] = stoichiometry
             else:
                 _logger.error(
-                    f"Stoichiometry can only be an int or float - Received {stoichiometry}",
+                    "Stoichiometry can only be an int or "
+                    f"float - Received {stoichiometry}",
                 )
             return self
         else:
             return asgi_Assign.mul(stoichiometry, self)
 
-    def __add__(self, other):
+    def __add__(self, other: Species | Reacting_Species | Any) -> Self | Any:
         """
-        Addition of meta-species to construct the reaction. Here we can add species ( by transforming into reacting
-        species ) or other reacting species. With this we concatenate different reacting species in the
-        list_of_reactants to eventually transform into a reaction with the >> operator
+        Addition of meta-species to construct the reaction.
+        Here we can add species (by transforming into
+        reacting species) or other reacting species. With
+        this we concatenate different reacting species in
+        the list_of_reactants to eventually transform into
+        a reaction with the >> operator
 
         :param  other: (Species or Reacting Species) other object being added
         """
@@ -529,42 +541,47 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 self.list_of_reactants += other.list_of_reactants
             except AttributeError:
                 _logger.error(
-                    f"Addition between meta-species and types {type(other)} is not supported",
+                    "Addition between meta-species and "
+                    f"types {type(other)} is not supported",
                 )
             return self
         else:
             return asgi_Assign.add(self, other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any) -> Self | Any:
         if not asgi_Assign.check_context():
             return Reacting_Species.__add__(self, other)
         else:
             return asgi_Assign.add(other, self)
 
-    def __invert__(self):
+    def __invert__(self) -> Reacting_Species:
         return self.c("not$")
 
-    def __neg__(self):
+    def __neg__(self) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         else:
             _logger.error(
-                "The negative operator was applied to a Reacting Species in the wrong context"
+                "The negative operator was applied to a "
+                "Reacting Species in the wrong context"
             )
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
         """
-        The >> operator for defining reactions. It passes two instances of reacting species to construct the
-        list_of_reactants and list_of_products in the reaction object
+        The >> operator for defining reactions. It passes
+        two instances of reacting species to construct the
+        list_of_reactants and list_of_products in the
+        reaction object
 
-        :param other: (Species or Reacting Species) product side of the reaction being added
+        :param other: (Species or Reacting Species)
+            product side of the reaction being added
         """
         stack_frame = inspect_stack()[1]
         code_line = _get_multiline_code_context(stack_frame)
         line_number = stack_frame.lineno
         Species._compile_defined_reaction(code_line, line_number)
 
-        if isinstance(other, Species):
+        if isinstance(other, Species):  # noqa: SIM108
             p = Reacting_Species(other, set())
         else:
             p = other
@@ -573,23 +590,29 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         return reaction
 
     # Reacting_Species call
-    def __call__(self, quantity):
+    def __call__(self, quantity: Any) -> Self | None:
         """
-        The call operator here is used to add counts to species non-default state. This stores the characteristics
-        that have been called using the dot operator to assign the count after the call operation
+        The call operator here is used to add counts to
+        species non-default state. This stores the
+        characteristics that have been called using the
+        dot operator to assign the count after the call
+        operation
 
-        :param quantity: (int, float, Quantity) count to be assigned to the species
+        :param quantity: (int, float, Quantity) count to
+            be assigned to the species
         """
         # We need to cast np to int or float
         if isinstance(quantity, (np_int_, np_float_)):
             quantity = float(quantity)
 
-        # If called within a Any context, add the characteristics of the Any context to the reacting specie called
+        # If called within a Any context, add the characteristics
+        # of the Any context to the reacting specie called
         if len(Species.meta_specie_named_any_context) > 0:
             for i in Species.meta_specie_named_any_context:
                 self = self.c(i)
 
-        # Check if the quantity is a valid type and add the new count to the reacting specie
+        # Check if the quantity is a valid type and add
+        # the new count to the reacting specie
         species_object = self.list_of_reactants[0]["object"]
         characteristics = self.list_of_reactants[0]["characteristics"]
         simulation_under_context = self.list_of_reactants[0][
@@ -603,18 +626,25 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                     "Assignment used incorrectly. Only one species at a time",
                 )
             quantity_dict = species_object.add_quantities(characteristics, quantity)
-        # elif isinstance(quantity, ExpressionDefiner) and not isinstance(quantity, Internal_Parameter_Constructor):
-        #    simlog.error('Operations are not allowed for count assignment. Only individual parameters')
+        # elif isinstance(quantity, ExpressionDefiner) \
+        #         and not isinstance(quantity,
+        #                            Internal_Parameter_Constructor):
+        #    simlog.error(
+        #        'Operations are not allowed for count '
+        #        'assignment. Only individual parameters'
+        #    )
         elif asgi_Assign.check_context():
             dummy_rsp = species_object
             dummy_rsp = [dummy_rsp.c(char) for char in characteristics][-1]
             dummy_rsp.assign(quantity)
         elif simulation_under_context is None:
             _logger.error(
-                f"Reactant_Species count assignment does not support the type {type(quantity)}",
+                "Reactant_Species count assignment does "
+                f"not support the type {type(quantity)}",
             )
 
-        # If called within an event context, make sure that the call is a count assignment only
+        # If called within an event context, make sure
+        # that the call is a count assignment only
         if simulation_under_context is not None:
             try:
                 if isinstance(quantity, str):
@@ -636,10 +666,11 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             return self
 
-    def __getattr__(self, characteristic):
+    def __getattr__(self, characteristic: str) -> Any:
         """
-        This is the implementation of the .dot operation. Adds characteristics to the species and/or perform
-        queries
+        Implementation of the .dot operation.
+        Adds characteristics to the species and/or
+        perform queries
 
         :param characteristic: (str) characteristic for the query
         """
@@ -671,19 +702,21 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         return self
 
     @classmethod
-    def is_species(cls):
+    def is_species(cls) -> bool:
         return False
 
     @classmethod
-    def is_spe_or_reac(cls):
+    def is_spe_or_reac(cls) -> bool:
         return True
 
     # Context management for reacting species
-    old_context = set()
+    old_context: set[str] = set()
 
-    def context_initiator_for_reacting_specie(self):
+    def context_initiator_for_reacting_specie(self) -> None:
         """
-        This adds the current context in _list_of_nested_any_contexts and then updates the Cts context in all meta-species.
+        Adds the current context in
+        _list_of_nested_any_contexts and then updates
+        the Cts context in all meta-species.
         """
         if len(self.list_of_reactants) == 1:
             self.old_context = Species.meta_specie_named_any_context
@@ -694,10 +727,12 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             _logger.error("Contexts can only be used on basic Reacting meta species")
 
-    def context_finish_for_reacting_specie(self):
+    def context_finish_for_reacting_specie(self) -> None:
         """
-        This removes the context which is ending from _list_of_nested_any_contexts and updates the current Cts context.
-        Then, it updates the Cts context in all meta-species.
+        Removes the context which is ending from
+        _list_of_nested_any_contexts and updates the
+        current Cts context. Then, it updates the Cts
+        context in all meta-species.
         """
         Species.update_meta_specie_named_any_context(self.old_context)
 
@@ -707,15 +742,18 @@ _methods_Reacting_Species = set(dir(Reacting_Species))
 
 class List_Species:
     """
-    This class just stores species after the | operation. It creates a list of species than can be loop through or
-    given to the simulator
+    This class just stores species after the | operation.
+    It creates a list of species than can be loop
+    through or given to the simulator
 
     :param list_of_species: (Species) Meta-species list to store the meta-species
     """
 
-    def __init__(self, iterable: Sequence["Species"] | set["Species"]) -> None:
+    def __init__(self, iterable: Sequence[Species] | set[Species]) -> None:
         """
-        Constructor not usually used - but a list_of_species is given one can construct the List_Species from it
+        Constructor not usually used - but a
+        list_of_species is given one can construct the
+        List_Species from it.
         It is advised to use the | operator
 
         :param list_of_species: (Species) Meta-species list to store the meta-species
@@ -727,7 +765,7 @@ class List_Species:
             else:
                 _logger.error("Only Species can used to construct List_Species")
 
-    def append(self, species: "Species") -> None:
+    def append(self, species: Species) -> None:
         """
         Add species to the list_of_species
 
@@ -747,7 +785,7 @@ class List_Species:
             to_return.append(spe.get_name())
         return str(to_return)
 
-    def __or__(self, other: "Species | List_Species") -> Self:
+    def __or__(self, other: Species | List_Species) -> Self:
         """
         Implementation of the | operator. Adds species to the Parallel species
 
@@ -763,39 +801,40 @@ class List_Species:
 
         return self
 
-    def __iter__(self):
-        for spe in self._list_species:
+    def __iter__(self) -> Generator[Species, None, None]:
+        for spe in self._list_species:  # noqa: UP028
             yield spe
 
     def __len__(self) -> int:
         return len(self._list_species)
 
-    def is_in(self, item) -> bool:
+    def is_in(self, item: Species) -> bool:
         return item in self._list_species
 
-    def __setitem__(self, index: int, item: "Species") -> None:
+    def __setitem__(self, index: int, item: Species) -> None:
         self._list_species[index] = item
 
-    def __getitem__(self, item: int) -> "Species":
+    def __getitem__(self, item: int) -> Species:
         return self._list_species[item]
 
-    def remove_repeated_elements(self) -> "List_Species":
+    def remove_repeated_elements(self) -> List_Species:
         """
-        This function creates a List_Species with no repetitions. The order of elements is lost
+        Creates a List_Species with no repetitions.
+        The order of elements is lost
 
         :return: List_Species with no repeated elements
         """
         set_species = set(self._list_species)
         return List_Species(set_species)
 
-    def insert(self, index: int, item: "Species") -> None:
+    def insert(self, index: int, item: Species) -> None:
         self._list_species.insert(index, item)
 
-    def extend(self, other: "List_Species") -> None:
+    def extend(self, other: List_Species) -> None:
         if isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
 
-    def remove(self, value):
+    def remove(self, value: Any) -> int:
         """
         Removes all instances of the meta-species in the object
 
@@ -811,14 +850,19 @@ class List_Species:
         return len(indexes)
 
 
-def ListSpecies(number_of_elements, inherits_from=None):
+def ListSpecies(
+    number_of_elements: int,
+    inherits_from: Species | None = None,
+) -> List_Species:
     code = inspect_stack()[1].code_context[0][:-1]
     before_eq, after_eq = code.split("=")
     before_eq = before_eq.replace(" ", "")
     if "," in before_eq:
         _logger.error(
             f"At: {code} \n"
-            f"No comas are allowed in the right-side of the equality during the creation of a ListSpecies"
+            "No comas are allowed in the right-side of "
+            "the equality during the creation of "
+            "a ListSpecies"
         )
     name = before_eq.split("=")[0]
 
@@ -835,64 +879,83 @@ def ListSpecies(number_of_elements, inherits_from=None):
 
 
 class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
-    """
-    Fundamental class - The meta-species object
-    Contains the characteristics, the species name, the reactions it is involved in
-    and finally the other species it references
-    Objects store all the basic information necessary to create an SBML file and construct a model
-    So we construct the species through reactions and __getattr__ to form a model
+    """Fundamental class - The meta-species object.
 
-    :param _name: (str) name of the species - named firstly as N$Counter as a placeholder. During compilation it is
-        named by MobsPy to be equal to the variable name. It can also be named by the user using one the methods
-    :param _characteristics: (str) set of characteristics DIRECTLY added to a species, does not contain inherited
-        characteristics
-    :param _references: (set) set of meta-species a meta-species has inherited from (used in it's construction).
-        Every species contains itself in this set
-    :param first_characteristic: (str) first characteristic added to the species
-    :param _reactions: (set) Every species stores all reactions is involved in. The compiler performs the union of
-        the set with all species and species in the _references set to get the reactions back
-    :param _species_counts: (list) counts listed for the species. Stores dictionaries with the characteristics as
-        keys and the counts of values
+    Contains the characteristics, the species name,
+    the reactions it is involved in and finally the
+    other species it references. Objects store all the
+    basic information necessary to create an SBML file
+    and construct a model. So we construct the species
+    through reactions and __getattr__ to form a model.
+
+    :param _name: (str) name of the species - named
+        firstly as N$Counter as a placeholder. During
+        compilation it is named by MobsPy to be equal
+        to the variable name. It can also be named by
+        the user using one the methods
+    :param _characteristics: (str) set of
+        characteristics DIRECTLY added to a species,
+        does not contain inherited characteristics
+    :param _references: (set) set of meta-species a
+        meta-species has inherited from (used in it's
+        construction). Every species contains itself
+        in this set
+    :param first_characteristic: (str) first
+        characteristic added to the species
+    :param _reactions: (set) Every species stores all
+        reactions is involved in. The compiler performs
+        the union of the set with all species and
+        species in the _references set to get the
+        reactions back
+    :param _species_counts: (list) counts listed for
+        the species. Stores dictionaries with the
+        characteristics as keys and the counts of
+        values
     """
 
-    # __init__ should be at the top of a class definition for easy access to the attributes names (sorry people)
-    def __init__(self, name):
+    # __init__ should be at the top of a class definition
+    # for easy access to the attributes names
+    def __init__(self, name: str) -> None:
         """
         Object constructor - We recommend using BaseSpecies instead
 
         :param name: (str) Name of the species (can be placeholder if named with N$)
         """
-        super(Species, self).__init__()
+        super().__init__()
         self.name(name)
-        self._characteristics = set()
-        self._references = {self}
-        self._ordered_references = []
-        self._reference_index_dictionary = {}
-        self._unit = ""
-        self._assignments = {}
-        self._linked_species = set()
+        self._characteristics: set[str] = set()
+        self._references: set[Species] = {self}
+        self._ordered_references: list[Species] = []
+        self._reference_index_dictionary: dict[Species, int] = {}
+        self._unit: str = ""
+        self._assignments: dict[str, Any] = {}
+        self._linked_species: set[Species] = set()
 
-        # This is necessary for the empty objects generated when we perform multiplication with more than 2 Properties
-        self.first_characteristic = None
+        # Necessary for the empty objects generated when we
+        # perform multiplication with more than 2 Properties
+        self.first_characteristic: str | None = None
 
         # Each object stores the reactions it is involved in
-        self._reactions = set()
+        self._reactions: set[Reactions] = set()
 
         # This will store the quantities relating to the species counts
-        self._species_counts = []
+        self._species_counts: list[dict[str, Any]] = []
 
     @classmethod
-    def check_if_valid_characteristic(cls, affected_object, char):
+    def check_if_valid_characteristic(cls, affected_object: Any, char: str) -> bool:
         """
-        Checks if the characteristics is valid. If there is any conflict between the methods of the class or
-        attributes of the class the user will be asked to rename the characteristic
+        Checks if the characteristics is valid. If there
+        is any conflict between the methods of the class
+        or attributes of the class the user will be asked
+        to rename the characteristic
 
         :param: char - name of the characteristic to be added:
         :raises: simlog.error if the characteristic name is not allowed
         :return: True if characteristic is allowed false if not
         """
         black_list = {"list_of_reactants", "first_characteristic"}
-        # Allow pytest and other testing framework attributes, plus Python dunder attributes
+        # Allow pytest and other testing framework
+        # attributes, plus Python dunder attributes
         system_attrs = {"_pytestfixturefunction", "__sphinx_mock__"}
         # Allow all Python dunder (double underscore) attributes
         if (
@@ -901,8 +964,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             and not (char.startswith("__") and char.endswith("__"))
         ):
             _logger.error(
-                f"Characteristic name {char} in object {affected_object} is not allowed."
-                f" Please pick another name",
+                f"Characteristic name {char} in object "
+                f"{affected_object} is not allowed."
+                " Please pick another name",
             )
 
         if (
@@ -911,15 +975,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             or char in black_list
         ):
             _logger.error(
-                f"Characteristic name {char} in object {affected_object} is not allowed. "
-                f"Please pick another name",
+                f"Characteristic name {char} in object "
+                f"{affected_object} is not allowed. "
+                "Please pick another name",
             )
             return False
         else:
             return True
 
     @classmethod
-    def str_under_context(cls, species_object, characteristics):
+    def str_under_context(cls, species_object: Species, characteristics: Any) -> str:
         """
         Returns the str representation of a species under context or not
 
@@ -954,10 +1019,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return Species.str_under_context(self, "std$")
 
     # Def c to get the value
-    def c(self, item):
+    def c(self, item: Any) -> Reacting_Species:
         """
-        c query implementation, queries by the value inside a variable instead of the name
-        it just calls __getattr__ with the value inside the variable
+        c query implementation, queries by the value
+        inside a variable instead of the name. It just
+        calls __getattr__ with the value inside the
+        variable
 
         :param item: value to query over
         """
@@ -968,8 +1035,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     # Def labels
     def label(self, label: int | float | str) -> Reacting_Species:
         """
-        Label function implementation. This function matches equal meta-species if they have equal labels
-        Here it returns a Reacting_Species as labels need to be used in reactions
+        Label function implementation. This function
+        matches equal meta-species if they have equal
+        labels. Here it returns a Reacting_Species as
+        labels need to be used in reactions
 
         :param label: (int, float, str) value for the label for matching
         :return: Reacting_Species object created with the label in the constructor
@@ -991,7 +1060,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Prints the directly characteristics inside the object
         """
         _logger.debug(str(self) + " has the following characteristics referenced:")
-        for i, reference in enumerate(self.get_references()):
+        for i, reference in enumerate(self.get_references()):  # noqa: B007
             if reference.get_characteristics():
                 _logger.debug(str(reference) + ": ")
                 reference.simlog.debug_characteristics()
@@ -1002,7 +1071,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         _logger.debug(str(self) + "_dot_")
         _logger.debug("{")
-        for i, reference in enumerate(self.get_references()):
+        for i, reference in enumerate(self.get_references()):  # noqa: B007
             if reference.get_characteristics():
                 _logger.debug(" " + str(reference) + " ")
         _logger.debug("}")
@@ -1014,7 +1083,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         print(self._species_counts)
 
     # Creation of List_Species For Simulation ##################
-    def __or__(self, other: "Species | List_Species") -> "List_Species":
+    def __or__(self, other: Species | List_Species) -> List_Species:
         """
         Creates an instance of List_Species using the | operator
 
@@ -1029,14 +1098,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             _logger.error("Only Species and List_Species can be concatenated")
 
     # Both are defined bellow to be consistent with List_Species behavior
-    def __iter__(self):
+    def __iter__(self) -> Generator[Self, None, None]:
         """
         iter defined to be consistent with List_Species behavior
         :return: Itself
         """
         yield self
 
-    def remove_repeated_elements(self):
+    def remove_repeated_elements(self) -> Self:
         """
         Defined to be consistent with the model behavior from List_Species
         :return: Itself
@@ -1044,7 +1113,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return self
 
     # Creation of reactions using entities ########################
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Self:
         """
         Override of __getitem__ for dealing with reaction rates
 
@@ -1052,19 +1121,22 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)
 
-    def __rmul__(self, stoichiometry):
+    def __rmul__(self, stoichiometry: Any) -> Reacting_Species | Any:
         """
         Multiplication by the stoichiometry
 
-        :param stoichiometry: (int) Stoichiometry of the meta-species in the meta-reaction
-        :return: r (Reacting_Species) Reacting_Species with the stoichiometry added to it
+        :param stoichiometry: (int) Stoichiometry of the
+            meta-species in the meta-reaction
+        :return: r (Reacting_Species) Reacting_Species
+            with the stoichiometry added to it
         """
         if not asgi_Assign.check_context():
             if isinstance(stoichiometry, (int, float)):
                 r = Reacting_Species(self, set(), stoichiometry)
             else:
                 _logger.error(
-                    f"Stoichiometry can only be an int or float - Received {stoichiometry}",
+                    "Stoichiometry can only be an int or "
+                    f"float - Received {stoichiometry}",
                 )
                 raise ValueError("wrong stoichiometry")
             return r
@@ -1072,13 +1144,21 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             # Here is not stoichiometry but other
             return asgi_Assign.mul(stoichiometry, self)
 
-    def __add__(self, other):
+    def __add__(
+        self,
+        other: Species | Reacting_Species | Any,
+    ) -> Reacting_Species | Any:
         """
-        Implementation of addition. In case a Species object is being used in a reaction, so it can then generate
-        a Reacting_Species object
+        Implementation of addition. In case a Species
+        object is being used in a reaction, so it can
+        then generate a Reacting_Species object
 
-        :param other: (Species or Reacting Species object) Other objected added to construct a reaction
-        :return: r1 + r2 (Reacting Species) Reacting Species objected created by the sum of the two
+        :param other: (Species or Reacting Species
+            object) Other objected added to construct
+            a reaction
+        :return: r1 + r2 (Reacting Species) Reacting
+            Species objected created by the sum of
+            the two
         """
         if not asgi_Assign.check_context():
             r1 = Reacting_Species(self, set())
@@ -1090,7 +1170,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             return asgi_Assign.add(self, other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any) -> Reacting_Species | Any:
         """
         Just making addition symmetric check __add__
         """
@@ -1099,10 +1179,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             return asgi_Assign.add(other, self)
 
-    def __invert__(self):
+    def __invert__(self) -> Reacting_Species:
         return self.c("not$")
 
-    def __neg__(self):
+    def __neg__(self) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         else:
@@ -1111,9 +1191,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             )
 
     @classmethod
-    def _compile_defined_reaction(cls, code_line, line_number):
-        # Check that line ends with a ']' and after that only ')', ',', whitespace and comments
-        # Updated to handle multiline cases where newlines may appear before the closing bracket
+    def _compile_defined_reaction(cls, code_line: str, line_number: int) -> bool | None:
+        # Check that line ends with a ']' and after that
+        # only ')', ',', whitespace and comments.
+        # Updated to handle multiline cases where
+        # newlines may appear before the closing bracket
         pattern = r"\][\s\n\)\],]*(#.*)?$"
         set_pattern = r"Set\s*\[.*>>.*\]"
 
@@ -1125,7 +1207,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return True
 
         # Make sure the reaction rate is present.
-        # If code_line ends with '>>' it might be a multiline reaction, so skip validation
+        # If code_line ends with '>>' it might be a
+        # multiline reaction, so skip validation
         if code_line.rstrip().endswith(">>"):
             return True
 
@@ -1141,10 +1224,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 "Avoid comments in the same line as the reaction."
             )
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
         """
-        Reaction definition (>> operator) in case one uses only a single species. Allows it to transform
-        into a reacting species before adding it into the reaction
+        Reaction definition (>> operator) in case one
+        uses only a single species. Allows it to
+        transform into a reacting species before adding
+        it into the reaction
 
         :param other: (Species or Reacting_Species) reaction products
         :return: the reaction
@@ -1166,14 +1251,19 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return reaction
 
     # Adding characteristics to an Entity or Property ####################
-    def __getattr__(self, characteristic):
+    def __getattr__(self, characteristic: str) -> Any:
         """
-        This adds characteristics using the following manner Species.characteristic
-        If it is the first time is called we add it to the set of characteristics
-        Second time, it just creates a Reacting_Species for reaction construction
+        Adds characteristics using the following manner
+        Species.characteristic. If it is the first time
+        is called we add it to the set of
+        characteristics. Second time, it just creates a
+        Reacting_Species for reaction construction.
 
-        :param characteristic: (str) characteristic to be added or to be use as a query in the reaction
-        :return: Reacting_Species with the characteristic added for querying
+        :param characteristic: (str) characteristic to
+            be added or to be use as a query in the
+            reaction
+        :return: Reacting_Species with the
+            characteristic added for querying
         """
         # This is for IPython notebooks compatibility
         if characteristic == "_ipython_canary_method_should_not_exist_":
@@ -1184,9 +1274,13 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return asgi_Asg(self, species_or_reacting=True)
 
         # if asgi_Assign.check_context():
-        #    return me_MobsPyExpression('($asg_' + str(self) + ')', None, dimension=None, count_in_model=True,
-        #                               concentration_in_model=False, count_in_expression=False,
-        #                               concentration_in_expression=False)
+        #    return me_MobsPyExpression(
+        #        '($asg_' + str(self) + ')', None,
+        #        dimension=None, count_in_model=True,
+        #        concentration_in_model=False,
+        #        count_in_expression=False,
+        #        concentration_in_expression=False
+        #    )
 
         Species.check_if_valid_characteristic(self, characteristic)
 
@@ -1205,11 +1299,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return Reacting_Species(self, characteristics)
 
     # Species call
-    def __call__(self, quantity):
+    def __call__(self, quantity: Any) -> Self | str | None:
         """
-        The __call__ operator handles two things for Species objects
-        First, it adds characteristics to the default state of the meta-species if the quantity is a real
-        Secondly, it returns the name of the characteristic from a species string that belongs to this meta-species
+        The __call__ operator handles two things for
+        Species objects. First, it adds characteristics
+        to the default state of the meta-species if the
+        quantity is a real. Secondly, it returns the name
+        of the characteristic from a species string that
+        belongs to this meta-species
 
         :param: quantity (int, float, Quantity) = for count assignment
         (Specific_Species_Operator object) = for characteristic extraction
@@ -1220,8 +1317,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if isinstance(quantity, (np_int_, np_float_)):
             quantity = float(quantity)
 
-        # If called within a Any context, add the characteristics of the Any context to the specie called.
-        # The specie becomes a reacting specie.
+        # If called within a Any context, add the
+        # characteristics of the Any context to the
+        # specie called. The specie becomes a reacting
+        # specie.
         if len(Species.meta_specie_named_any_context) != 0:
             for i in Species.meta_specie_named_any_context:
                 self.c(i)
@@ -1231,8 +1330,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         # Check if the quantity is a valid type and add the new count to the specie
         elif (
-            type(quantity) == int
-            or type(quantity) == float
+            type(quantity) == int  # noqa: SIM101, E721
+            or type(quantity) == float  # noqa: E721
             or isinstance(quantity, Quantity)
             or isinstance(quantity, mp_Mobspy_Parameter)
         ) and not asgi_Assign.check_context():
@@ -1247,9 +1346,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             _logger.error(
                 f"{quantity} contains no characteristics from {self._name}",
             )
-        elif type(quantity) == Reacting_Species:
+        elif type(quantity) == Reacting_Species:  # noqa: E721
             _logger.error(
-                "Assignments of counts using meta-species are only allowed under events in "
+                "Assignments of counts using meta-species "
+                "are only allowed under events in "
                 "simulation context",
             )
         elif Species.get_simulation_context() is None:
@@ -1258,11 +1358,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 f" if not under a simulation context",
             )
 
-        # If called within an event context, make sure that the call is a count assignment only
+        # If called within an event context, make sure
+        # that the call is a count assignment only
         if self.get_simulation_context() is not None:
             sim_under_context = self.get_simulation_context()
 
-            if type(quantity) == str:
+            if type(quantity) == str:  # noqa: E721
                 quantity_dict = self.add_quantities("std$", quantity)
             try:
                 sim_under_context.current_event_count_data.append(
@@ -1281,10 +1382,15 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return self
 
     # Species add_quantities
-    def add_quantities(self, characteristics, quantity):
+    def add_quantities(
+        self,
+        characteristics: Any,
+        quantity: Any,
+    ) -> dict[str, Any] | None:
         """
-        This function was implemented because Python can't accept sets as dictionary keys
-        Set the quantity of an specific string of species
+        Implemented because Python can't accept sets as
+        dictionary keys. Set the quantity of a specific
+        string of species
 
         :param characteristics: (str) characteristics of the species to be set
         :param quantity: (int, float, Quantity) counts of that specific species
@@ -1302,13 +1408,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             return {"characteristics": characteristics, "quantity": quantity}
 
-    def reset_quantities(self):
+    def reset_quantities(self) -> None:
         """
-        Just reset the counts inside a species - potentially useful in jupyter environment
+        Reset the counts inside a species.
+        Potentially useful in jupyter environment
         """
         self._species_counts = []
 
-    def get_quantities(self):
+    def get_quantities(self) -> list[dict[str, Any]]:
         """
         Returns:
             The list of species_counts
@@ -1316,15 +1423,21 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return self._species_counts
 
     # Creation of other objects through multiplication ##################
-    def __mul__(self, other):
+    def __mul__(self, other: Species | Any) -> Species | Any:
         """
-        Multiplications are used to construct more complex species
-        We do not concatenate characteristics. This keeps the structure intact for reaction construction
-        Instead we combine the sets of references, objects can access the characteristics from other through the
-        reference set
+        Multiplications are used to construct more
+        complex species. We do not concatenate
+        characteristics. This keeps the structure intact
+        for reaction construction. Instead we combine
+        the sets of references, objects can access the
+        characteristics from other through the reference
+        set
 
-        :param other: (Species) Species for the multiplication and creation of a higher order species
-        :return: new_entity (Species) Higher order species resulted from the multiplication
+        :param other: (Species) Species for the
+            multiplication and creation of a higher
+            order species
+        :return: new_entity (Species) Higher order
+            species resulted from the multiplication
         """
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
@@ -1351,127 +1464,141 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         return new_entity
 
-    def get_spe_object(self):
+    def get_spe_object(self) -> Self:
         return self
 
-    def get_query_characteristics(self):
+    def get_query_characteristics(self) -> str:
         return "std$"
 
-    def link_a_species(self, other_species):
+    def link_a_species(self, other_species: Species) -> None:
         """
-        Links a species with another. So if one is added to the model, the other is also added to the model
+        Links a species with another. So if one is added
+        to the model, the other is also added to the
+        model
 
         :param other_species: (Species) Other species to be linked with this one
         """
         self._linked_species.add(other_species)
 
-    def unit(self, unit):
+    def unit(self, unit: Any) -> None:
         pass
 
-    def name(self, name):
+    def name(self, name: str) -> None:
         """
-        Function to name a species. Allows the user to use a name different from the variable's name
+        Function to name a species. Allows the user to
+        use a name different from the variable's name
 
         :param name: (str) name of the species
         """
-        if "_" == name[0]:
+        if name[0] == "_":
             _logger.error(
-                f"In species  name {name}: Species cannot have a name starting with underscore"
+                f"In species name {name}: Species cannot "
+                "have a name starting with underscore"
             )
 
         name = clean_species_name(name)
         self._name = name
 
-    def _bypass_name(self, name):
+    def _bypass_name(self, name: str) -> None:
         name = clean_species_name(name)
         self._name = name
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
-    def get_characteristics(self):
+    def get_characteristics(self) -> set[str]:
         return self._characteristics
 
-    def add_characteristic(self, characteristic):
+    def add_characteristic(self, characteristic: str) -> None:
         self._characteristics.add(characteristic)
 
-    def remove_characteristic(self, characteristic):
+    def remove_characteristic(self, characteristic: str) -> None:
         self._characteristics.remove(characteristic)
 
-    def print_characteristics(self):
+    def print_characteristics(self) -> None:
         _logger.debug(self._characteristics)
 
-    def get_references(self):
+    def get_references(self) -> set[Species]:
         return self._references
 
-    def get_all_characteristics(self):
+    def get_all_characteristics(self) -> set[str]:
         """
-        Different that get_characteristics. This function the characteristics directly added to it and the
-        characteristics of the references. While get_characteristics only returns the characteristics directly
-        added to that meta-species.
+        Different from get_characteristics. This function
+        returns the characteristics directly added to it
+        and the characteristics of the references. While
+        get_characteristics only returns the
+        characteristics directly added to that
+        meta-species.
         """
         all_char = set()
         for reference in self._references:
             all_char = all_char.union(reference.get_characteristics())
         return all_char
 
-    def add_reference(self, reference):
+    def add_reference(self, reference: Species) -> None:
         self._references.add(reference)
 
-    def set_references(self, reference_set):
+    def set_references(self, reference_set: set[Species]) -> None:
         self._references = reference_set
 
-    def reset_references(self):
+    def reset_references(self) -> None:
         self._references = {self}
 
-    def get_reactions(self):
+    def get_reactions(self) -> set[Reactions]:
         return self._reactions
 
-    def set_reactions(self, reactions):
+    def set_reactions(self, reactions: set[Reactions]) -> None:
         self._reactions = reactions
 
-    def reset_reactions(self):
+    def reset_reactions(self) -> None:
         self._reactions = set()
 
-    def add_reaction(self, reaction):
+    def add_reaction(self, reaction: Reactions) -> None:
         self._reactions.add(reaction)
 
-    def reset_counts(self):
+    def reset_counts(self) -> None:
         self._species_counts = []
 
-    _simulation_context = None
-    meta_specie_named_any_context = set()
+    _simulation_context: Any = None
+    meta_specie_named_any_context: set[str] = set()
 
     @classmethod
-    def set_simulation_context(cls, sim):
+    def set_simulation_context(cls, sim: Any) -> None:
         if cls._simulation_context is None:
             cls._simulation_context = sim
         else:
             _logger.error(
-                "A different Simulation Object was assigned to a meta-species object under context \n"
-                "Please use only one Simulation Object per context assignment",
+                "A different Simulation Object was assigned "
+                "to a meta-species object under context \n"
+                "Please use only one Simulation Object "
+                "per context assignment",
             )
 
     @classmethod
     def update_meta_specie_named_any_context(
-        cls, meta_specie_named_any_characteristics
-    ):
+        cls,
+        meta_specie_named_any_characteristics: set[str],
+    ) -> None:
         """
-        This updates the class variable meta_specie_named_any_context with the characteristics of the current any context.
+        Updates the class variable
+        meta_specie_named_any_context with the
+        characteristics of the current any context.
 
-        :param meta_specie_named_any_characteristics: (set) set of characteristics of the currently active any context.
+        :param meta_specie_named_any_characteristics:
+            (set) set of characteristics of the
+            currently active any context.
         """
         cls.meta_specie_named_any_context = meta_specie_named_any_characteristics
 
     @classmethod
-    def reset_simulation_context(cls):
+    def reset_simulation_context(cls) -> None:
         cls._simulation_context = None
 
     @classmethod
-    def get_simulation_context(cls):
+    def get_simulation_context(cls) -> Any:
         return cls._simulation_context
 
-    def order_references(self):
+    def order_references(self) -> None:
         cleaned_references = [
             x for x in self.get_references() if x.get_characteristics() != set()
         ]
@@ -1483,34 +1610,36 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             self._reference_index_dictionary[reference] = i
             i = i + 1
 
-    def get_ordered_references(self):
+    def get_ordered_references(self) -> list[Species]:
         return self._ordered_references
 
-    def get_index_from_reference_dict(self, reference):
+    def get_index_from_reference_dict(self, reference: Species) -> int:
         return self._reference_index_dictionary[reference]
 
     @classmethod
-    def is_species(cls):
+    def is_species(cls) -> bool:
         return True
 
     @classmethod
-    def is_spe_or_reac(cls):
+    def is_spe_or_reac(cls) -> bool:
         return True
 
 
-def clean_species_name(species_name):
+def clean_species_name(species_name: str) -> str:
     species_name = species_name.replace("\t", "")
     species_name = species_name.replace(" ", "")
     return species_name
 
 
-def compile_species_number_line(code_line):
+def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
     """
     Compiles code line for BaseSpecies and New
 
-    :param code_line: - Line of code where BaseSpecies or New has been called
-    :return: n (int) = number of variables after a coma, names (list) = list of strings with the names of the
-        variables
+    :param code_line: Line of code where BaseSpecies or
+        New has been called
+    :return: n (int) = number of variables after a coma,
+        names (list) = list of strings with the names
+        of the variables
     """
     before_eq, after_eq = code_line.split("=")[0], code_line.split("=")[1]
     if after_eq.count("BaseSpecies") > 1:
@@ -1530,27 +1659,31 @@ def compile_species_number_line(code_line):
     return n, new_names
 
 
-def _Create_Species(species, code_line, number_or_names=None):
+def _Create_Species(
+    species: Species | None,
+    code_line: str,
+    number_or_names: int | list[str] | None = None,
+) -> Species | tuple[Species, ...]:
     if number_or_names is not None:
-        if type(number_or_names) == int:
+        if type(number_or_names) == int:  # noqa: E721
             if number_or_names < 1:
                 _logger.error(
                     "Please use strictly positive integers for number of properties",
                 )
-        elif type(number_or_names) == list:
+        elif type(number_or_names) == list:  # noqa: E721
             pass
         else:
             _logger.error("Only numbers or lists of strings accepted")
 
-    if number_or_names is None or type(number_or_names) == int:
+    if number_or_names is None or type(number_or_names) == int:  # noqa: E721
         number_of_properties, compiled_names = compile_species_number_line(code_line)
         names = compiled_names
-        if number_or_names is not None:
+        if number_or_names is not None:  # noqa: SIM102
             if number_of_properties != number_or_names:
                 _logger.error(
                     "The number of properties is not equal to the number of variables",
                 )
-    elif type(number_or_names) == list:
+    elif type(number_or_names) == list:  # noqa: E721
         number_of_properties = len(number_or_names)
         names = number_or_names
 
@@ -1575,13 +1708,18 @@ def _Create_Species(species, code_line, number_or_names=None):
 
 
 # Property Call to return several properties as called
-def BaseSpecies(number_or_names=None):
+def BaseSpecies(
+    number_or_names: int | list[str] | None = None,
+) -> Species | tuple[Species, ...]:
     """
-    Function that returns a number of base species according to the number_of_properties
-    BaseSpecies are just Species with no inheritance attached to it
+    Returns a number of base species according to the
+    number_of_properties. BaseSpecies are just Species
+    with no inheritance attached to it.
 
-    :param number_or_names: (int) number of base species wanted or (list) list of names of wanted Species
-    :return: Species objects according to the number of species requested
+    :param number_or_names: (int) number of base species
+        wanted or (list) list of names of wanted Species
+    :return: Species objects according to the number of
+        species requested
     """
     # CHECK-SET CONTEXT ZERO
     asgi_Assign.reset_context()
@@ -1590,12 +1728,18 @@ def BaseSpecies(number_or_names=None):
     return _Create_Species(None, code_line, number_or_names)
 
 
-def New(species, number_or_names=None):
+def New(
+    species: Species,
+    number_or_names: int | list[str] | None = None,
+) -> Species | tuple[Species, ...]:
     """
-    Function that returns a number of meta-species that inherit from the species supplied
+    Returns a number of meta-species that inherit from
+    the species supplied.
 
-    :param number_or_names: (int) number of meta-species wanted, (list) list of names wanted
-    :return: Species objects according to the number of species requested
+    :param number_or_names: (int) number of meta-species
+        wanted, (list) list of names wanted
+    :return: Species objects according to the number of
+        species requested
     """
     code_line = inspect_stack()[1].code_context[0][:-1]
     return _Create_Species(species, code_line, number_or_names)

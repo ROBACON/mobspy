@@ -1,18 +1,28 @@
+from __future__ import annotations
+
+import contextlib
 import itertools
 from copy import deepcopy
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mobspy.types import CompiledModelDict, ParameterSweepList
 
 
-def assign_values_to_model(parameter_name, parameter_value, models, locations):
+def assign_values_to_model(
+    parameter_name: str,
+    parameter_value: int | float,
+    models: list[CompiledModelDict],
+    locations: set[str],
+) -> None:
     for location in locations:
         if location == "$sbml":
             for model in models:
-                try:
+                with contextlib.suppress(KeyError):
                     model["parameters_for_sbml"][parameter_name] = (
                         parameter_value,
                         "dimensionless",
                     )
-                except KeyError:
-                    pass
         else:
             for model in models:
                 try:
@@ -24,12 +34,15 @@ def assign_values_to_model(parameter_name, parameter_value, models, locations):
                     pass
 
 
-def generate_all_sbml_models(model_parameters, list_of_models):
-    names = []
-    used_in = []
-    values = []
+def generate_all_sbml_models(
+    model_parameters: dict[str, dict[str, Any]],
+    list_of_models: list[CompiledModelDict],
+) -> tuple[ParameterSweepList, list[dict[str, int | float]]]:
+    names: list[str] = []
+    used_in: list[set[str]] = []
+    values: list[list[int | float]] = []
 
-    to_return = []
+    to_return: ParameterSweepList = []
 
     if model_parameters == {}:
         return [list_of_models], []
@@ -46,9 +59,9 @@ def generate_all_sbml_models(model_parameters, list_of_models):
         except TypeError:
             values.append([item["values"]])
 
-    parameter_list_of_dic = []
+    parameter_list_of_dic: list[dict[str, int | float]] = []
     for v in itertools.product(*values):
-        parameter_dic = {}
+        parameter_dic: dict[str, int | float] = {}
         for i, name in enumerate(names):
             assign_values_to_model(name, v[i], list_of_models, used_in[i])
             parameter_dic[name] = v[i]
@@ -59,7 +72,10 @@ def generate_all_sbml_models(model_parameters, list_of_models):
     return to_return, parameter_list_of_dic
 
 
-def unite_parameter_dictionaries(dict_1, dict_2):
+def unite_parameter_dictionaries(
+    dict_1: dict[str, dict[str, Any]],
+    dict_2: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     for key in dict_2:
         if key not in dict_1:
             dict_1[key] = dict_2[key]

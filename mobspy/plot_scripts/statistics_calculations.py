@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
+
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
 
 
-def time_series_average(species_string, mobspy_ts):
+def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
     """
     Badly named function - Average between all RUNS inside a single time-series
 
@@ -13,9 +18,9 @@ def time_series_average(species_string, mobspy_ts):
     :return: average_series (list) a list with the average values from all runs
     """
 
-    list_series = []
+    list_series: list[Any] = []
     for series in mobspy_ts:
-        if species_string in series.keys():
+        if species_string in series.keys():  # noqa: SIM118
             list_series.append(series)
 
     war_1, war_2 = (True, True)
@@ -27,21 +32,23 @@ def time_series_average(species_string, mobspy_ts):
             if len(s1) != len(s2) and war_1:
                 simlog.warning(
                     "Time Series length is different. \n"
-                    "MobsPy disregards time-series that have already finished during calculations"
+                    "MobsPy disregards time-series that have"
+                    " already finished during calculations"
                 )
                 war_1 = False
 
-            for t1, t2 in zip(s1["Time"], s2["Time"]):
+            for t1, t2 in zip(s1["Time"], s2["Time"]):  # noqa: B905
                 if t1 != t2 and war_2:
                     simlog.warning(
                         "Times in Time Series Objects are different. \n"
-                        "MobsPy calculates the average by index position. Please be careful."
+                        "MobsPy calculates the average by index"
+                        " position. Please be careful."
                     )
                 war_2 = False
 
-    average_series = []
+    average_series: list[float] = []
     for j in range(len(mobspy_ts.get_max_time_for_species(species_string))):
-        add = 0
+        add: float = 0
         size = 0
         for series in list_series:
             try:
@@ -57,21 +64,24 @@ def time_series_average(species_string, mobspy_ts):
     return average_series
 
 
-def standard_deviation(species_string, mobspy_ts, average_series=None):
+def standard_deviation(
+    species_string: str, mobspy_ts: Any, average_series: list[float] | None = None
+) -> list[Any]:
     """
     Standard deviation between all RUNS inside a single time-series
 
     :param species_string: (str) Species string
     :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
     :param average_series: (list) if the average series is given it is not recalculated
-    :return: deviation_series (list) a list with the standard deviation values from all runs
+    :return: deviation_series (list) a list with the standard
+        deviation values from all runs
     """
     if average_series is None:
         average_series = time_series_average(species_string, mobspy_ts)
-    deviation_series = []
+    deviation_series: list[Any] = []
 
     for j in range(len(mobspy_ts.get_max_time_for_species(species_string))):
-        add = 0
+        add: float = 0
         size = 0
         for series in mobspy_ts:
             try:
@@ -88,8 +98,11 @@ def standard_deviation(species_string, mobspy_ts, average_series=None):
 
 
 def average_plus_standard_deviation(
-    species_string, mobspy_ts, average_series=None, deviation_series=None
-):
+    species_string: str,
+    mobspy_ts: Any,
+    average_series: list[float] | None = None,
+    deviation_series: list[Any] | None = None,
+) -> tuple[list[float], list[float], list[float]]:
     """
     Standard deviation between all RUNS inside a single time-series
 
@@ -98,17 +111,18 @@ def average_plus_standard_deviation(
     :param average_series: (list) if the average series is given it is not recalculated
     :param deviation_series: (list) if the deviation is given it is not recalculated
 
-    :return: series_average (list) = average value of the run,  plus (list) = average + deviation,
-        minus (list) = average - deviation,
+    :return: series_average (list) = average value of the run,
+        plus (list) = average + deviation,
+        minus (list) = average - deviation
     """
     if average_series is None:
         series_average = time_series_average(species_string, mobspy_ts)
     if deviation_series is None:
         series_deviation = standard_deviation(species_string, mobspy_ts)
 
-    plus = []
-    minus = []
-    for average, deviation in zip(series_average, series_deviation):
+    plus: list[float] = []
+    minus: list[float] = []
+    for average, deviation in zip(series_average, series_deviation):  # noqa: B905
         plus.append(average + deviation)
         minus.append(average - deviation)
 

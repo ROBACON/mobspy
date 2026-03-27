@@ -1,16 +1,25 @@
+from __future__ import annotations
+
 from itertools import product as itertools_product
+from typing import Any
 
 
-def characteristics_dictionary(characteristics, characteristics_to_object):
+def characteristics_dictionary(
+    characteristics: set[str],
+    characteristics_to_object: dict[str, Any],
+) -> dict[Any, str]:
     """
-    This function constructs a dictionary that leads from the species string characteristics to their respective
-    object. This structure allows to easily find where the characteristics in a species string are locates
+    This function constructs a dictionary that leads from the
+    species string characteristics to their respective object.
+    This structure allows to easily find where the
+    characteristics in a species string are locates
 
     :param characteristics: (set) of characteristics
-    :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
-        object as value
+    :param characteristics_to_object: (dict) with
+        characteristics as keys and their respective base
+        meta-species object as value
     """
-    object_to_characteristic = {}
+    object_to_characteristic: dict[Any, str] = {}
     for characteristic in characteristics:
         if "$" not in characteristic:
             object_to_characteristic[characteristics_to_object[characteristic]] = (
@@ -20,19 +29,28 @@ def characteristics_dictionary(characteristics, characteristics_to_object):
 
 
 def construct_species_char_list(
-    spe_or_reactiong_object, characteristics, characteristics_to_object, symbol=None
-):
+    spe_or_reactiong_object: Any,
+    characteristics: set[str] | str,
+    characteristics_to_object: dict[str, Any],
+    symbol: str | None = None,
+) -> list[Any] | str:
     """
-    This function constructs a list in the format ['species_name', 'char1', 'char2', ...]. It generetes this list
-    for a given meta-species and the specified characteristics. Values of characteristics not specified in a
-    particular position are replaced by their default value. If a symbol is given it generates a string from
+    This function constructs a list in the format
+    ['species_name', 'char1', 'char2', ...]. It generates
+    this list for a given meta-species and the specified
+    characteristics. Values of characteristics not specified
+    in a particular position are replaced by their default
+    value. If a symbol is given it generates a string from
     the list using the symbol to join it.
 
     :param spe_object: meta-species object to be used
     :param characteristics: (set) of characteristics given
-    :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
-        object as value
-    :param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol
+    :param characteristics_to_object: (dict) with
+        characteristics as keys and their respective base
+        meta-species object as value
+    :param symbol: (str) usually . or _dot_, connects
+        the elements from the list using the specified
+        symbol
     """
     if characteristics == "std$":
         characteristics = set()
@@ -44,7 +62,7 @@ def construct_species_char_list(
         characteristics, characteristics_to_object
     )
 
-    species_char_list = [spe_object]
+    species_char_list: list[Any] = [spe_object]
 
     for obj in ordered_references_list:
         if obj in objects_to_characteristic:
@@ -63,18 +81,28 @@ def construct_species_char_list(
 
 
 def construct_all_combinations(
-    spe_or_reactiong_object, characteristics, characteristics_to_object, symbol=None
-):
+    spe_or_reactiong_object: Any,
+    characteristics: set[str] | str,
+    characteristics_to_object: dict[str, Any],
+    symbol: str | None = None,
+) -> list[Any]:
     """
-    This function constructs all possible list in the format ['species_name', 'char1', 'char2', ...] using
-    all combinations of characteristics from the vector coordinates not used in the characteristics specified
-    in the function argument. If a symbol is given it generates a string from the list using the symbol to join it.
+    This function constructs all possible list in the format
+    ['species_name', 'char1', 'char2', ...] using all
+    combinations of characteristics from the vector
+    coordinates not used in the characteristics specified
+    in the function argument. If a symbol is given it
+    generates a string from the list using the symbol
+    to join it.
 
     :param spe_object: meta-species object to be used
     :param characteristics: (set) of characteristics given
-    :param characteristics_to_object: (dict) with characteristics as keys and their respective base meta-species
-        object as value
-    :param symbol: (str) usually . or _dot_, connects the elements from the list using the specified symbol
+    :param characteristics_to_object: (dict) with
+        characteristics as keys and their respective base
+        meta-species object as value
+    :param symbol: (str) usually . or _dot_, connects
+        the elements from the list using the specified
+        symbol
     """
 
     if characteristics == "std$":
@@ -88,14 +116,14 @@ def construct_all_combinations(
         characteristics, characteristics_to_object
     )
 
-    list_of_all_possibilities = [[spe_object]]
+    list_of_all_possibilities: list[list[Any]] = [[spe_object]]
     for obj in ordered_references_list:
         if obj in objects_to_characteristic:
             list_of_all_possibilities.append([objects_to_characteristic[obj]])
         else:
             list_of_all_possibilities.append(list(obj.get_characteristics()))
 
-    to_return = []
+    to_return: list[Any] = []
     for i in itertools_product(*list_of_all_possibilities):
         if symbol is not None:
             to_return.append(

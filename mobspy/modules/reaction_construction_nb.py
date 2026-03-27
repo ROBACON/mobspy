@@ -1,9 +1,17 @@
-"""This module is responsible for the construction of all individual reactions from a meta-reaction."""
+"""Construction of individual reactions from a meta-reaction."""
 
-from collections.abc import Sequence
+from __future__ import annotations
+
+from collections.abc import Generator, Sequence
 from copy import deepcopy
 from inspect import signature as inspect_signature
 from itertools import product as itertools_product
+from typing import TYPE_CHECKING, Any
+
+from mobspy.mobspy_logging import get_logger
+
+if TYPE_CHECKING:
+    from mobspy.types import ReactionData, ReactionsForSbml
 
 # from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.context_related_scripts import (
@@ -20,26 +28,29 @@ from mobspy.modules.order_operators import Default
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
-from mobspy.mobspy_logging import get_logger
 
 _logger = get_logger(__name__)
 
 
-def iterator_for_combinations(list_of_lists: list[list]):
+def iterator_for_combinations(
+    list_of_lists: list[list[Any]],
+) -> Generator[tuple[Any, ...], None, None]:
     """Iterate through all the combinations of a list of lists
     [[A,B,C], [D, F, E], [G]] means:
     ADG, AFG, AEG, BDG, BFG, BEG, CDG, CFG, CEG .....
 
     Parameter:
-        list_of_lists (list of lists) = list of all lists to iterate through all combinations
+        list_of_lists (list of lists) = list of all lists
+            to iterate through all combinations
     """
-    for i in itertools_product(*list_of_lists):
+    for i in itertools_product(*list_of_lists):  # noqa: UP028
         yield i
 
 
-def copy_reaction(reaction):
-    """Just copies a meta-reaction
-    Deepcopy is not working because it calls __getattr__ on the species with a private method
+def copy_reaction(reaction: Reactions) -> Reactions:
+    """Just copies a meta-reaction.
+    Deepcopy is not working because it calls __getattr__
+    on the species with a private method
 
     Parameters:
         reaction (meta-reaction) = meta-reaction to be copied
@@ -75,18 +86,26 @@ def copy_reaction(reaction):
     return reaction_copy
 
 
-def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
-    """If query references two independent characteristics from the in meta-species it would result in an empty set
-    Like Ecoli.live.dead - (assuming live and dead belong to the same meta-species characteristics set)
-    If that ever happens inside a meta-reaction we just pop an error
+def check_for_invalid_reactions(
+    reactions: set[Any],
+    ref_characteristics_to_object: dict[str, Any],
+) -> None:
+    """Check for queries referencing two independent
+    characteristics from the same meta-species, which
+    would result in an empty set. Like Ecoli.live.dead
+    (assuming live and dead belong to the same
+    meta-species characteristics set). If that ever
+    happens inside a meta-reaction we just pop an error.
 
-    :param reactions: (set of meta-reactions) set of meta-reactions inside the model
-    :param ref_characteristics_to_object: (dict) dictionary with the characteristics as keys and their respective
-        object as values
+    :param reactions: (set of meta-reactions) set of
+        meta-reactions inside the model
+    :param ref_characteristics_to_object: (dict)
+        dictionary with the characteristics as keys
+        and their respective object as values
     """
     for reaction in reactions:
         for reactant in reaction.reactants:
-            check_for_duplicates = {}
+            check_for_duplicates: dict[Any, str] = {}
             for cha in reactant["characteristics"]:
                 if cha == "all$":
                     continue
@@ -95,21 +114,34 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     _logger.error(
                         f"Illegal reaction: {reaction}. \n"
-                        "There is a query with two characteristics "
-                        f"{ref_characteristics_to_object[cha].get_characteristics()} from the same"
-                        f" vector axis resulting in an impossible query. \n"
-                        f"As all those characteristics have been directly added to"
-                        f"{ref_characteristics_to_object[cha]}, they are located in the same vector axis. \n"
-                        f"To solve this either assign the characteristics to new meta-species and use "
-                        f"inheritance or create a new reaction for each desired query."
+                        "There is a query with two "
+                        "characteristics "
+                        f"{ref_characteristics_to_object[cha].get_characteristics()}"
+                        " from the same"
+                        " vector axis resulting in an"
+                        " impossible query. \n"
+                        "As all those characteristics"
+                        " have been directly added to"
+                        f" {ref_characteristics_to_object[cha]},"
+                        " they are located in the same"
+                        " vector axis. \n"
+                        "To solve this either assign the"
+                        " characteristics to new"
+                        " meta-species and use "
+                        "inheritance or create a new"
+                        " reaction for each desired"
+                        " query."
                     )
                 except KeyError:
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
                         _logger.error(
-                            f"A base object for characteristic {cha} was not found in the species supplied to the "
-                            f"simulator \n"
+                            "A base object for"
+                            f" characteristic {cha} was"
+                            " not found in the species"
+                            " supplied to the "
+                            "simulator \n"
                             "Perhaps a species is missing ? "
                         )
 
@@ -120,28 +152,45 @@ def check_for_invalid_reactions(reactions, ref_characteristics_to_object):
                     check_for_duplicates[ref_characteristics_to_object[cha]]
                     _logger.error(
                         f"Illegal reaction: {reaction}. \n"
-                        "There is a transformation with two characteristics "
-                        f"{ref_characteristics_to_object[cha].get_characteristics()} from the same"
-                        f" vector axis resulting in an undefinable transformation. \n"
-                        f"As all those characteristics have been directly added to "
-                        f"{ref_characteristics_to_object[cha]}, they are located in the same vector axis. \n"
-                        f"To solve this either assign the characteristics to new meta-species and use "
-                        f"inheritance or create a new reaction for each desired query."
+                        "There is a transformation"
+                        " with two characteristics "
+                        f"{ref_characteristics_to_object[cha].get_characteristics()}"
+                        " from the same"
+                        " vector axis resulting in an"
+                        " undefinable"
+                        " transformation. \n"
+                        "As all those characteristics"
+                        " have been directly added"
+                        " to "
+                        f"{ref_characteristics_to_object[cha]},"
+                        " they are located in the"
+                        " same vector axis. \n"
+                        "To solve this either assign"
+                        " the characteristics to new"
+                        " meta-species and use "
+                        "inheritance or create a new"
+                        " reaction for each desired"
+                        " query."
                     )
                 except KeyError:
                     if "$" not in cha:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 
 
-def construct_reactant_structures(reactant_species, ref_characteristics_to_object):
-    """This function finds the corresponding strings according to the reactant meta-species with or without a query
-    pack then in a list and return
+def construct_reactant_structures(
+    reactant_species: tuple[Any, ...], ref_characteristics_to_object: dict[str, Any]
+) -> list[list[Any]]:
+    """Find corresponding strings for the reactant
+    meta-species with or without a query, pack them in
+    a list and return.
 
-    :param reactant_species: (meta-species object) species objects of the involved species
-    :param ref_characteristics_to_object: (dict) dictionary with characteristics as keys and species objects as
-        values
+    :param reactant_species: (meta-species object)
+        species objects of the involved species
+    :param ref_characteristics_to_object: (dict)
+        dictionary with characteristics as keys and
+        species objects as values
     """
-    species_string_combinations = []
+    species_string_combinations: list[list[Any]] = []
 
     for reactant in reactant_species:
         species_string_combinations.append(
@@ -155,22 +204,31 @@ def construct_reactant_structures(reactant_species, ref_characteristics_to_objec
     return species_string_combinations
 
 
-def construct_order_structure(species_order_list, current_species_string_list):
-    """Order structure for reaction order operations. Returns the cyclic_dictionary to be used by the order operator.
-    The meta-species objects are the keys of this dictionary and a lists of species strings currently being used
-    in the reaction are the values - Allowing the product to find it's corresponding species-string in a future
-    step
+def construct_order_structure(
+    species_order_list: list[tuple[Any, Any]],
+    current_species_string_list: tuple[Any, ...],
+) -> dict[Any, list[Any]]:
+    """Order structure for reaction order operations.
+    Returns the cyclic_dictionary to be used by the
+    order operator. The meta-species objects are the
+    keys of this dictionary and a lists of species
+    strings currently being used in the reaction are
+    the values, allowing the product to find its
+    corresponding species-string in a future step.
 
-    :param species_order_list: (list of meta-species objects) list of meta-species objects as they appear in the
-        meta-reaction
-    :param current_species_string_list: (list of strings) list of strings in MobsPy format of the species
-        currently in this specific reaction
+    :param species_order_list: (list of meta-species
+        objects) list of meta-species objects as they
+        appear in the meta-reaction
+    :param current_species_string_list: (list of
+        strings) list of strings in MobsPy format of
+        the species currently in this specific reaction
 
-    :return: cyclic_dict (dict) Dictionary where the keys are meta-species objects and the values are
-        lists of species
+    :return: cyclic_dict (dict) Dictionary where the
+        keys are meta-species objects and the values
+        are lists of species
     """
-    cyclic_dict = {}
-    for species_object, species_string in zip(
+    cyclic_dict: dict[Any, list[Any]] = {}
+    for species_object, species_string in zip(  # noqa: B905
         species_order_list, current_species_string_list
     ):
         try:
@@ -181,15 +239,16 @@ def construct_order_structure(species_order_list, current_species_string_list):
     return cyclic_dict
 
 
-def construct_product_structure(reaction):
+def construct_product_structure(reaction: Reactions) -> list[dict[str, Any]]:
     """This function unpacks the products in a meta-reaction
 
     :param: reaction meta-reaction currently being analysed
 
-    :return: product_list = A list of dictionaries for each product with the meta-species object, the label and the
-        characteristics
+    :return: product_list = A list of dictionaries for
+        each product with the meta-species object,
+        the label and the characteristics
     """
-    product_list = []
+    product_list: list[dict[str, Any]] = []
     for product in reaction.products:
         if isinstance(product["stoichiometry"], float):
             product_list.append(
@@ -218,19 +277,22 @@ def construct_single_reaction_for_sbml(
     reactant_species_string_list: list[str],
     product_species_string_list: Sequence[tuple[float, str]],
     reaction_rate: str,
-) -> dict:
-    """This function constructs the reactions for SBML for the conversion by the model builder script
+) -> ReactionData:
+    """Construct the reactions for SBML for the
+    conversion by the model builder script.
     It follows the following structure 're':[('stoichmetry', reactantant_string) ....
     The reaction rate must be a string containing the reaction kinetics
     This returns a single reaction to be appended by the reactions_for_sbml dictionary
 
-    :param reactant_species_string_list: (list of strings) list of reactants in MobsPy format
-    :param product_species_string_list: (list of strings) list of products in MobsPy format
+    :param reactant_species_string_list: (list of
+        strings) list of reactants in MobsPy format
+    :param product_species_string_list: (list of
+        strings) list of products in MobsPy format
     :param reaction_rate: (str) reaction rate expression as a string
 
     :return: to_return (dict) = dictionary that packs the reactants products and rate
     """
-    to_return: dict = {"re": [], "pr": [], "kin": reaction_rate}
+    to_return: ReactionData = {"re": [], "pr": [], "kin": reaction_rate}
     reactant_count_dict = mcu_count_string_dictionary(reactant_species_string_list)
     # print('p', product_species_string_list)
     product_count_dict = mcu_count_string_dictionary(product_species_string_list)
@@ -244,25 +306,34 @@ def construct_single_reaction_for_sbml(
     return to_return
 
 
-def get_involved_species(reaction, meta_species_in_model):
-    """This extracts all the involved meta-species inside a reaction
-    This function is responsible for implementing the inheritance mechanism, by finding within each meta-species
-    references set, if they reference the meta-species in the reaction
+def get_involved_species(
+    reaction: Reactions, meta_species_in_model: list[Any]
+) -> tuple[list[tuple[Any, Any]], list[list[dict[str, Any]]]]:
+    """Extract all involved meta-species inside a
+    reaction. This function implements the inheritance
+    mechanism by finding within each meta-species
+    references set if they reference the meta-species
+    in the reaction.
 
     :param reaction: (meta-reaction object)
-    :param meta_species_in_model: (list) list of meta-species used in the model
+    :param meta_species_in_model: (list) list of
+        meta-species used in the model
 
-    :return: base_species_order (list of meta-species objects) = order that the meta-species appear in the
-        meta-reaction, reactant_species_combination_list (list of lists of meta-species) = list of lists of all
-        meta-species that have inherited from the meta-species in the meta-reaction
+    :return: base_species_order (list of meta-species
+        objects) = order that the meta-species appear
+        in the meta-reaction,
+        reactant_species_combination_list (list of
+        lists of meta-species) = list of lists of all
+        meta-species that have inherited from the
+        meta-species in the meta-reaction
     """
-    reactant_species_combination_list = []
-    base_species_order = []
+    reactant_species_combination_list: list[list[dict[str, Any]]] = []
+    base_species_order: list[tuple[Any, Any]] = []
 
     for reactant in reaction.reactants:
         flag_absent_reactant = False
         for _ in range(reactant["stoichiometry"]):
-            species_for_reactant = []
+            species_for_reactant: list[dict[str, Any]] = []
             base_species_order.append((reactant["object"], reactant["label"]))
 
             for species in meta_species_in_model:
@@ -278,7 +349,9 @@ def get_involved_species(reaction, meta_species_in_model):
 
             if not flag_absent_reactant:
                 _logger.error(
-                    f"Species {reactant['object']} or any inheritors were not found in model \n"
+                    f"Species {reactant['object']} or any"
+                    " inheritors were not found"
+                    " in model \n"
                     f"For reaction {reaction} \n"
                     f"Please add the species or remove the reaction"
                 )
@@ -288,7 +361,10 @@ def get_involved_species(reaction, meta_species_in_model):
     return base_species_order, reactant_species_combination_list
 
 
-def construct_rate_function_arguments(rate_function, reaction):
+def construct_rate_function_arguments(
+    rate_function: Any,
+    reaction: Reactions,
+) -> list[str]:
     rate_function_arguments = str(inspect_signature(rate_function))
 
     black_list = ["*", "="]
@@ -296,7 +372,9 @@ def construct_rate_function_arguments(rate_function, reaction):
         _logger.error(
             f"Rate arguments must not contain = or *. \n"
             f"Error in reaction {reaction}. \n"
-            f"Error in rate function {rate_function} in signature {inspect_signature(rate_function)!s}"
+            "Error in rate function"
+            f" {rate_function} in signature"
+            f" {inspect_signature(rate_function)!s}"
         )
 
     rate_function_arguments = str(rate_function_arguments).replace("(", "")
@@ -307,29 +385,34 @@ def construct_rate_function_arguments(rate_function, reaction):
 
 
 def create_all_reactions(
-    reactions,
-    meta_species_in_model,
-    ref_characteristics_to_object,
-    type_of_model,
-    dimension,
-    parameter_exist,
-    parameters_in_reaction,
-    skip_check,
-):
+    reactions: set[Any],
+    meta_species_in_model: list[Any],
+    ref_characteristics_to_object: dict[str, Any],
+    type_of_model: str,
+    dimension: int,
+    parameter_exist: dict[str, Any],
+    parameters_in_reaction: dict[str, Any],
+    skip_check: bool,
+) -> tuple[ReactionsForSbml, dict[str, Any]]:
     """This function creates all reactions
     Returns the reactions_for_sbml and parameters_for_sbml dictionary
     Those will be used by another module to create the SBML file
 
-    :param reactions: (meta-reaction objects) reactions objects constructed by the meta_class module
-    :param meta_species_in_model: (list) list of meta-species in model
-    :param ref_characteristics_to_object: (dict) Characteristics as keys objects as values
+    :param reactions: (meta-reaction objects) reactions
+        objects constructed by the meta_class module
+    :param meta_species_in_model: (list) list of
+        meta-species in model
+    :param ref_characteristics_to_object: (dict)
+        Characteristics as keys objects as values
     :param type_of_model: (str) stochastic or deterministic
     :param dimension: (int) model dimension 1D, 2D, 3D, .....
 
-    :returns: reactions_for_sbml (dict) = dictionary with all reactions that will be added to the sbml model file,
-        parameters_for_sbml (dict) = parameters for the sbml model file
+    :returns: reactions_for_sbml (dict) = dictionary
+        with all reactions that will be added to the
+        sbml model file, parameters_for_sbml (dict) =
+        parameters for the sbml model file
     """
-    reactions_for_sbml = {}
+    reactions_for_sbml: ReactionsForSbml = {}
 
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
 
