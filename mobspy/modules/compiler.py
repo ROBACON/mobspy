@@ -2,6 +2,42 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pint import Quantity
+
+from mobspy.mobspy_logging import get_logger
+from mobspy.modules.assignments_implementation import (
+    Assign as asgi_Assign,
+)
+from mobspy.modules.compiler_operator_functions import (
+    create_all_not_reactions as cof_create_all_not_reactions,
+)
+from mobspy.modules.event_functions import (
+    format_event_dictionary_for_sbml as eh_format_event_dictionary_for_sbml,
+)
+from mobspy.modules.meta_class import EndFlagSpecies
+from mobspy.modules.mobspy_parameters import (
+    Internal_Parameter_Constructor as mp_Mobspy_Parameter,
+)
+from mobspy.modules.reaction_construction_nb import (
+    create_all_reactions as rc_create_all_reactions,
+)
+from mobspy.modules.species_string_generator import (
+    construct_all_combinations as ssg_construct_all_combinations,
+)
+from mobspy.modules.species_string_generator import (
+    construct_species_char_list as ssg_construct_species_char_list,
+)
+from mobspy.modules.unit_handler import (
+    convert_counts as uh_convert_counts,
+)
+from mobspy.modules.unit_handler import (
+    convert_volume as uh_convert_volume,
+)
+from mobspy.modules.unit_handler import (
+    extract_length_dimension as uh_extract_length_dimension,
+)
+from mobspy.types import CompilerResult
+
 if TYPE_CHECKING:
     from mobspy.types import (
         MappingsForSbml,
@@ -11,45 +47,7 @@ if TYPE_CHECKING:
         SpeciesForSbml,
     )
 
-from mobspy.mobspy_logging import get_logger
-from mobspy.modules.compiler_operator_functions import (
-    create_all_not_reactions as cof_create_all_not_reactions,
-)
-from mobspy.types import CompilerResult
-
 _logger = get_logger(__name__)
-from copy import deepcopy  # noqa: E402
-
-from pint import Quantity  # noqa: E402
-
-from mobspy.modules.assignments_implementation import (  # noqa: E402
-    Assign as asgi_Assign,
-)
-from mobspy.modules.event_functions import (  # noqa: E402
-    format_event_dictionary_for_sbml as eh_format_event_dictionary_for_sbml,
-)
-from mobspy.modules.meta_class import EndFlagSpecies  # noqa: E402
-from mobspy.modules.mobspy_parameters import (  # noqa: E402
-    Internal_Parameter_Constructor as mp_Mobspy_Parameter,
-)
-from mobspy.modules.reaction_construction_nb import (  # noqa: E402
-    create_all_reactions as rc_create_all_reactions,
-)
-from mobspy.modules.species_string_generator import (  # noqa: E402
-    construct_all_combinations as ssg_construct_all_combinations,
-)
-from mobspy.modules.species_string_generator import (  # noqa: E402
-    construct_species_char_list as ssg_construct_species_char_list,
-)
-from mobspy.modules.unit_handler import (  # noqa: E402
-    convert_counts as uh_convert_counts,
-)
-from mobspy.modules.unit_handler import (  # noqa: E402
-    convert_volume as uh_convert_volume,
-)
-from mobspy.modules.unit_handler import (  # noqa: E402
-    extract_length_dimension as uh_extract_length_dimension,
-)
 
 
 class Compiler:
@@ -127,14 +125,7 @@ class Compiler:
         happen in python 3.10. To be compatible with
         earlier versions we add an extremely slow phantom
         reaction for each such species with a coefficient
-        of 1e-100. The reaction is so slow it should not
-        make any sizable difference. Adds them directly
-        to the reactions for sbml dictionary.
-
-        :param reactions_for_sbml: reactions dictionary
-            in python sbml format
-        :param species_to_add_phantom_reaction: species
-            that will be assigned a phantom reaction
+        of 1e-100.
         """
         for i, spe in enumerate(species_to_add_phantom_reaction):
             reactions_for_sbml["phantom_reaction_" + str(i)] = {
@@ -143,118 +134,62 @@ class Compiler:
                 "kin": str(spe) + " * 1e-100",
             }
 
+    # ------------------------------------------------------------------
+    # Private helpers: each handles one phase of compilation
+    # ------------------------------------------------------------------
+
     @classmethod
-    def compile(
+    def _validate_species_names(
         cls,
         meta_species_to_simulate: Any,
-        reactions_set: set[Any],
-        species_counts: list[dict[str, Any]],
-        orthogonal_vector_structure: dict[str, Any],
-        volume: int | float | Quantity = 1,
-        dimension: int | None = None,
-        type_of_model: str = "deterministic",
-        verbose: bool = True,
-        event_dictionary: list[Any] | None = None,
-        continuous_sim: bool = False,
-        ending_condition: Any = None,
-        skip_expression_check: bool = False,
-    ) -> CompilerResult:
-        """Construct the species for Copasi.
+    ) -> set[str]:
+        """Check all species have valid, unique names.
 
-        Handles the construction of species_for_sbml,
-        reactions_for_sbml, parameters_for_sbml,
-        mappings_for_sbml, model_str which will be used
-        to write the sbml_string for basiCO. It also
-        performs checks to see if the model is valid.
-
-        :param meta_species_to_simulate:
-            (List_Species or Species) Species to generate
-        :param reactions_set: (set) Set of meta-reactions
-            collected when the simulation was constructed
-        :param species_counts: (dict) All counts assigned
-            to species before the simulation was built
-        :param orthogonal_vector_structure: (dict)
-            ref_characteristics_to_objects. Dictionary
-            with characteristics as keys and objects as
-            values. Points to vector space coordinates.
-        :param volume: (int, float) Simulation volume
-        :param type_of_model: (str) deterministic or
-            stochastic
-        :param verbose: (bool) print or not the model
-            results by generating a model_str
-        :param event_dictionary: (dict) dictionary with
-            all the events to be added to the model
-        :param continuous_sim: (bool) simulation with
-            conditional duration or not
-        :param ending_condition:
-            (MetaSpeciesLogicResolver) trigger for the
-            ending condition
-
-        :returns: Tuple of species_for_sbml,
-            reactions_for_sbml, parameters_for_sbml,
-            mappings_for_sbml, model_str,
-            events_for_sbml, assigned_species,
-            parameters_used, parameter_object_dict,
-            assignments_for_sbml, has_mole.
+        Returns the set of names used.
         """
-        # Check to see if all species are named
-        # Parameter compilation as well
-        names_used = set()
-
-        # Removing repeated elements to ensure only one meta-species in the simulation
-        meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
+        names_used: set[str] = set()
         black_listed_names = {"Time", "Rev", "All"}
+
         for i, species in enumerate(meta_species_to_simulate):
-            if "_dot_" in species.get_name():
+            name = species.get_name()
+            if "_dot_" in name:
                 _logger.error(
-                    f"In species: {species.get_name()} \n"
-                    " _dot_ cannot be used in"
-                    " meta-species names"
+                    f"In species: {name} \n _dot_ cannot be used in meta-species names"
                 )
-            if species.get_name() in black_listed_names:
+            if name in black_listed_names:
                 _logger.error(
-                    f"The name {species.get_name()} is"
-                    " not allowed for meta-species"
-                    " please change it"
+                    f"The name {name} is not allowed for meta-species please change it"
                 )
-            if "$" in species.get_name():
+            if "$" in name:
                 _logger.error(
-                    f"In species: {species.get_name()} \n"
+                    f"In species: {name} \n"
                     "An error has occurred and one of"
                     " the species was either not named"
                     " or named with the"
                     " restricted $ symbol"
                 )
-            if species.get_name() in names_used:
+            if name in names_used:
                 _logger.error(
                     "Names must be unique for all species\n"
-                    + "The repeated name is "
-                    + f"{species.get_name()} "
+                    + f"The repeated name is {name} "
                     + f"in position {i}\n"
                     + "Another possibility could be a"
                     " repeated meta-species in the model"
                 )
-            names_used.add(species.get_name())
+            names_used.add(name)
 
-        # Define parameter dictionary and get parameter stack
-        parameters_used: ParametersUsed = {}
-        parameter_exist = {}
-        if mp_Mobspy_Parameter.parameter_stack != {}:
-            parameter_exist = mp_Mobspy_Parameter.parameter_stack
+        return names_used
 
-        # Order the species references for later usage
-        for species in meta_species_to_simulate:
-            species.order_references()
-
-        # Start by creating the Mappings for the SBML
-        # Convert to user-friendly format as well
-        mappings_for_sbml: MappingsForSbml = {}
-        for spe_object in meta_species_to_simulate:
-            mappings_for_sbml[spe_object.get_name()] = []
-
-        # List of Species objects
+    @classmethod
+    def _build_species_and_mappings(
+        cls,
+        meta_species_to_simulate: Any,
+        orthogonal_vector_structure: dict[str, Any],
+    ) -> tuple[SpeciesForSbml, MappingsForSbml]:
+        """Build species_for_sbml and mappings_for_sbml dicts."""
         species_for_sbml: SpeciesForSbml = {}
-        mappings_for_sbml = {}
+        mappings_for_sbml: MappingsForSbml = {}
+
         for spe_object in meta_species_to_simulate:
             species_string_list = ssg_construct_all_combinations(
                 spe_object, "std$", orthogonal_vector_structure
@@ -267,7 +202,16 @@ class Compiler:
             for species_string in species_string_list:
                 species_for_sbml["_dot_".join(species_string)] = 0
 
-        # Default dimension equal to three after update
+        return species_for_sbml, mappings_for_sbml
+
+    @classmethod
+    def _resolve_volume_and_dimension(
+        cls,
+        volume: int | float | Quantity,
+        dimension: int | None,
+        species_counts: list[dict[str, Any]],
+    ) -> tuple[int | float, int, ParametersForSbml]:
+        """Resolve volume and dimension, returning converted values."""
         if isinstance(volume, Quantity):
             dimension = uh_extract_length_dimension(
                 str(volume.dimensionality), dimension
@@ -284,26 +228,29 @@ class Compiler:
                         str(count["quantity"].dimensionality), dimension
                     )
 
-        # Check volume:
         volume = uh_convert_volume(volume, dimension)
         parameters_for_sbml: ParametersForSbml = {"volume": (volume, "dimensionless")}
+        return volume, dimension, parameters_for_sbml
 
-        # Add the flag species used for verifying if the simulation is over
-        if continuous_sim:
-            species_for_sbml[EndFlagSpecies.get_name()] = 0
+    @classmethod
+    def _assign_initial_counts(
+        cls,
+        species_counts: list[dict[str, Any]],
+        species_for_sbml: SpeciesForSbml,
+        orthogonal_vector_structure: dict[str, Any],
+        volume: int | float,
+        dimension: int,
+        type_of_model: str,
+        parameters_used: ParametersUsed,
+    ) -> tuple[list[str], set[Any]]:
+        """Process species counts and assign initial values.
 
-        # Check if there are any mols in the units
-        has_mole = False
-        for count in species_counts:
-            if isinstance(count["quantity"], Quantity):  # noqa: SIM102
-                if "substance" in str(count["quantity"].dimensionality):
-                    has_mole = True
+        Returns (assigned_species, parameters_in_counts).
+        """
+        assigned_species: list[str] = []
+        parameters_in_counts: set[Any] = set()
 
-        # Assignments with all do not take priority
-        # This allows specific assignments to override All assignments
-        # I should encapsulate this, to make my life easier lol
-        assigned_species = []
-        parameters_in_counts = set()
+        # All-assignments first (lower priority, can be overridden)
         for count in species_counts:
             if "all$" not in count["characteristics"]:
                 continue
@@ -338,13 +285,11 @@ class Compiler:
                         "The stochastic simulation rounds floats to integers"
                     )
                     species_for_sbml[spe_str] = int(temp_count)
-                    assigned_species.append(spe_str)
                 else:
                     species_for_sbml[spe_str] = temp_count
-                    assigned_species.append(spe_str)
+                assigned_species.append(spe_str)
 
-        # Set initial counts for SBML
-        # Create the list HERE
+        # Specific assignments (higher priority)
         for count in species_counts:
             if "all$" in count["characteristics"]:
                 continue
@@ -375,22 +320,27 @@ class Compiler:
             if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
                 _logger.warning("The stochastic simulation rounds floats to integers")
                 species_for_sbml[species_string] = int(temp_count)
-                assigned_species.append(species_string)
             else:
                 species_for_sbml[species_string] = temp_count
-                assigned_species.append(species_string)
+            assigned_species.append(species_string)
 
-        cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_counts
-        )
+        return assigned_species, parameters_in_counts
 
-        # Invert the not$ operators in all reactions
+    @classmethod
+    def _build_reactions(
+        cls,
+        reactions_set: set[Any],
+        meta_species_to_simulate: Any,
+        orthogonal_vector_structure: dict[str, Any],
+        type_of_model: str,
+        dimension: int,
+        parameter_exist: dict[str, Any],
+        skip_expression_check: bool,
+    ) -> tuple[ReactionsForSbml, set[Any]]:
+        """Expand meta-reactions into concrete SBML reactions."""
         reactions_set = cof_create_all_not_reactions(reactions_set)
 
-        # BaseSpecies reactions for SBML with theirs respective parameters and rates
-        # What do I have so far
-        # Species_String_Dict and a set of reaction objects in Reactions_Set
-        parameters_in_reaction = set()
+        parameters_in_reaction: set[Any] = set()
         reactions_for_sbml, parameters_in_reaction = rc_create_all_reactions(
             reactions_set,
             meta_species_to_simulate,
@@ -401,17 +351,19 @@ class Compiler:
             parameters_in_reaction,
             skip_expression_check,
         )
+        return reactions_for_sbml, parameters_in_reaction
 
-        cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_reaction
-        )
-
-        # O(n^2) reaction check for doubles
-        for i, r1 in enumerate(reactions_for_sbml):
-            for j, r2 in enumerate(reactions_for_sbml):
-                if i == j:
+    @classmethod
+    def _check_duplicate_reactions(
+        cls,
+        reactions_for_sbml: ReactionsForSbml,
+    ) -> None:
+        """Warn about duplicate reactions (O(n^2) check)."""
+        keys = list(reactions_for_sbml)
+        for i, r1 in enumerate(keys):
+            for j, r2 in enumerate(keys):
+                if i >= j:
                     continue
-
                 if (
                     reactions_for_sbml[r1]["re"] == reactions_for_sbml[r2]["re"]
                     and reactions_for_sbml[r1]["pr"] == reactions_for_sbml[r2]["pr"]
@@ -423,12 +375,25 @@ class Compiler:
                         + "Is doubled. Was that intentional? \n"
                     )
 
-        # Event implementation here
-        # Basico does not resolve species that have no
-        # reactions but were added to events
-        # So we add "phantom" reactions to fix this
+    @classmethod
+    def _build_events(
+        cls,
+        species_for_sbml: SpeciesForSbml,
+        reactions_for_sbml: ReactionsForSbml,
+        event_dictionary: list[Any] | None,
+        orthogonal_vector_structure: dict[str, Any],
+        volume: int | float,
+        dimension: int,
+        meta_species_to_simulate: Any,
+        parameter_exist: dict[str, Any],
+        continuous_sim: bool,
+        ending_condition: Any,
+    ) -> tuple[dict[str, Any], set[Any]]:
+        """Build events and add phantom reactions for event-only species.
 
-        parameters_in_events = set()
+        Returns (events_for_sbml, parameters_in_events).
+        """
+        parameters_in_events: set[Any] = set()
         events_for_sbml, species_in_events = eh_format_event_dictionary_for_sbml(
             species_for_sbml,
             event_dictionary,
@@ -439,11 +404,46 @@ class Compiler:
             parameter_exist,
             parameters_in_events,
         )
-        cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_events
+
+        # Phantom reactions for species in events but not in reactions
+        species_in_reactions: set[str] = set()
+        for reaction in reactions_for_sbml.values():
+            for reactant in reaction["re"]:
+                species_in_reactions.add(reactant[1])
+            for product in reaction["pr"]:
+                species_in_reactions.add(product[1])
+        cls.add_phantom_reactions(
+            reactions_for_sbml, species_in_events.difference(species_in_reactions)
         )
 
-        # Check to see if parameters are names are repeated or used as meta-species
+        # End condition event for continuous simulations
+        if continuous_sim:
+            end_event = {
+                "trigger": ending_condition.generate_string(
+                    orthogonal_vector_structure
+                ),
+                "delay": "0",
+                "assignments": [("_End_Flag_MetaSpecies", "1")],
+            }
+            reactions_for_sbml["phantom_reaction_end"] = {
+                "re": [(10, "_End_Flag_MetaSpecies")],
+                "pr": [],
+                "kin": "_End_Flag_MetaSpecies * 1e-100",
+            }
+            events_for_sbml["end_event"] = end_event
+
+        return events_for_sbml, parameters_in_events
+
+    @classmethod
+    def _validate_parameters(
+        cls,
+        parameters_for_sbml: ParametersForSbml,
+        names_used: set[str],
+        parameters_in_counts: set[Any],
+        parameters_in_reaction: set[Any],
+        parameters_in_events: set[Any],
+    ) -> None:
+        """Check parameter names are unique and don't collide with species."""
         for p in parameters_for_sbml:
             if p in names_used:
                 _logger.error(
@@ -453,129 +453,233 @@ class Compiler:
                 )
             names_used.add(p)
 
-        # Store the parameter objects for possible unit conversion - or others
-        parameter_object_dict = {}
-        for key in parameters_used:
-            parameter_object_dict[key] = mp_Mobspy_Parameter.parameter_stack[key]
-
-        species_in_reactions = set()
-        for key, reaction in reactions_for_sbml.items():  # noqa: B007
-            for reactant in reaction["re"]:
-                species_in_reactions.add(reactant[1])
-            for product in reaction["pr"]:
-                species_in_reactions.add(product[1])
-        cls.add_phantom_reactions(
-            reactions_for_sbml, species_in_events.difference(species_in_reactions)
-        )
-
-        if continuous_sim:
-            end_event = {
-                "trigger": ending_condition.generate_string(
-                    orthogonal_vector_structure
-                ),
-                "delay": "0",
-                "assignments": [("_End_Flag_MetaSpecies", "1")],
-            }
-
-            reactions_for_sbml["phantom_reaction_end"] = {
-                "re": [(10, "_End_Flag_MetaSpecies")],
-                "pr": [],
-                "kin": "_End_Flag_MetaSpecies * 1e-100",
-            }
-            events_for_sbml["end_event"] = end_event
-
-        set_to_double_parameter = (
+        all_params = (
             set()
             .union(parameters_in_counts)
             .union(parameters_in_reaction)
             .union(parameters_in_events)
         )
-        for p1 in set_to_double_parameter:
-            for p2 in set_to_double_parameter:
-                if p1 == p2:
-                    continue
-                else:
-                    if p1.name == p2.name:
-                        _logger.error(
-                            "There are two different"
-                            " Parameter Objects with"
-                            " the same name"
-                        )
+        for p1 in all_params:
+            for p2 in all_params:
+                if p1 is not p2 and p1.name == p2.name:
+                    _logger.error(
+                        "There are two different Parameter Objects with the same name"
+                    )
 
-        non_processed_assignments = {}
+    @classmethod
+    def _build_assignments(
+        cls,
+        meta_species_to_simulate: Any,
+        orthogonal_vector_structure: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Compile species assignments for SBML."""
+        non_processed_assignments: dict[str, Any] = {}
         for spe in meta_species_to_simulate:
             for asgn, expression in spe._assignments.items():
                 non_processed_assignments[asgn] = expression
-        assignments_for_sbml = asgi_Assign.compile_assignments_for_sbml(
+        return asgi_Assign.compile_assignments_for_sbml(
             non_processed_assignments,
             orthogonal_vector_structure,
             meta_species_to_simulate,
         )
 
+    @classmethod
+    def _generate_model_string(
+        cls,
+        species_for_sbml: SpeciesForSbml,
+        mappings_for_sbml: MappingsForSbml,
+        parameters_for_sbml: ParametersForSbml,
+        reactions_for_sbml: ReactionsForSbml,
+        events_for_sbml: dict[str, Any],
+        assignments_for_sbml: dict[str, Any],
+    ) -> str:
+        """Generate a human-readable model string for verbose output."""
+        model_str = "\n"
+
+        model_str += "Species\n"
+        for spe in sorted(species_for_sbml):
+            model_str += (
+                spe.replace("_dot_", ".") + "," + str(species_for_sbml[spe]) + "\n"
+            )
+
+        model_str += "\nMappings\n"
+        for map_key in sorted(mappings_for_sbml):
+            model_str += map_key + " :\n"
+            for element in sorted(mappings_for_sbml[map_key]):
+                model_str += element + "\n"
+
+        model_str += "\nParameters\n"
+        for par in sorted(parameters_for_sbml):
+            model_str += par + "," + str(parameters_for_sbml[par][0]) + "\n"
+
+        model_str += "\nReactions\n"
+        visible_reactions = {
+            k: v for k, v in reactions_for_sbml.items() if "phantom" not in k
+        }
+        reaction_alpha = [
+            str(x[1]).replace("_dot_", ".")
+            for x in sorted(visible_reactions.items(), key=lambda x: str(x[1]))
+        ]
+        for i, reac in enumerate(reaction_alpha):
+            model_str += "reaction_" + str(i) + "," + reac + "\n"
+
+        if events_for_sbml:
+            model_str += "\nEvents\n"
+            list_to_sort = sorted(str(events_for_sbml[key]) for key in events_for_sbml)
+            for i, event_str in enumerate(list_to_sort):
+                model_str += ("event_" + str(i) + "," + event_str + "\n").replace(
+                    "_dot_", "."
+                )
+
+        if assignments_for_sbml:
+            model_str += "\nAssignments\n"
+            list_to_sort = sorted(
+                str(assignments_for_sbml[key]) for key in assignments_for_sbml
+            )
+            for i, asgn_str in enumerate(list_to_sort):
+                model_str += ("assignment_" + str(i) + "," + asgn_str + "\n").replace(
+                    "_dot_", "."
+                )
+
+        return model_str
+
+    # ------------------------------------------------------------------
+    # Main compile entry point
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def compile(
+        cls,
+        meta_species_to_simulate: Any,
+        reactions_set: set[Any],
+        species_counts: list[dict[str, Any]],
+        orthogonal_vector_structure: dict[str, Any],
+        volume: int | float | Quantity = 1,
+        dimension: int | None = None,
+        type_of_model: str = "deterministic",
+        verbose: bool = True,
+        event_dictionary: list[Any] | None = None,
+        continuous_sim: bool = False,
+        ending_condition: Any = None,
+        skip_expression_check: bool = False,
+    ) -> CompilerResult:
+        """Compile a MobsPy model into SBML-ready data structures.
+
+        Orchestrates validation, species expansion, count assignment,
+        reaction construction, event building, and model string generation.
+        """
+        # Phase 1: Validate species names
+        meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
+        names_used = cls._validate_species_names(meta_species_to_simulate)
+
+        # Phase 2: Initialize parameters
+        parameters_used: ParametersUsed = {}
+        parameter_exist = {}
+        if mp_Mobspy_Parameter.parameter_stack != {}:
+            parameter_exist = mp_Mobspy_Parameter.parameter_stack
+
+        for species in meta_species_to_simulate:
+            species.order_references()
+
+        # Phase 3: Build species and mappings
+        species_for_sbml, mappings_for_sbml = cls._build_species_and_mappings(
+            meta_species_to_simulate, orthogonal_vector_structure
+        )
+
+        # Phase 4: Resolve volume and dimension
+        volume, dimension, parameters_for_sbml = cls._resolve_volume_and_dimension(
+            volume, dimension, species_counts
+        )
+
+        # Add end flag species for continuous simulations
+        if continuous_sim:
+            species_for_sbml[EndFlagSpecies.get_name()] = 0
+
+        # Check for mole units in counts
+        has_mole = any(
+            isinstance(count["quantity"], Quantity)
+            and "substance" in str(count["quantity"].dimensionality)
+            for count in species_counts
+        )
+
+        # Phase 5: Assign initial counts
+        assigned_species, parameters_in_counts = cls._assign_initial_counts(
+            species_counts,
+            species_for_sbml,
+            orthogonal_vector_structure,
+            volume,
+            dimension,
+            type_of_model,
+            parameters_used,
+        )
+        cls.add_to_parameters_to_sbml(
+            parameters_used, parameters_for_sbml, parameters_in_counts
+        )
+
+        # Phase 6: Build reactions
+        reactions_for_sbml, parameters_in_reaction = cls._build_reactions(
+            reactions_set,
+            meta_species_to_simulate,
+            orthogonal_vector_structure,
+            type_of_model,
+            dimension,
+            parameter_exist,
+            skip_expression_check,
+        )
+        cls.add_to_parameters_to_sbml(
+            parameters_used, parameters_for_sbml, parameters_in_reaction
+        )
+
+        # Phase 7: Check for duplicate reactions
+        cls._check_duplicate_reactions(reactions_for_sbml)
+
+        # Phase 8: Build events
+        events_for_sbml, parameters_in_events = cls._build_events(
+            species_for_sbml,
+            reactions_for_sbml,
+            event_dictionary,
+            orthogonal_vector_structure,
+            volume,
+            dimension,
+            meta_species_to_simulate,
+            parameter_exist,
+            continuous_sim,
+            ending_condition,
+        )
+        cls.add_to_parameters_to_sbml(
+            parameters_used, parameters_for_sbml, parameters_in_events
+        )
+
+        # Phase 9: Validate parameters
+        cls._validate_parameters(
+            parameters_for_sbml,
+            names_used,
+            parameters_in_counts,
+            parameters_in_reaction,
+            parameters_in_events,
+        )
+
+        # Phase 10: Store parameter objects
+        parameter_object_dict = {
+            key: mp_Mobspy_Parameter.parameter_stack[key] for key in parameters_used
+        }
+
+        # Phase 11: Build assignments
+        assignments_for_sbml = cls._build_assignments(
+            meta_species_to_simulate, orthogonal_vector_structure
+        )
+
+        # Phase 12: Generate model string
         model_str = ""
         if verbose:
-            model_str = "\n"
-            model_str += "Species" + "\n"
-            species_alpha = list(sorted(species_for_sbml.keys()))
-            for spe in species_alpha:
-                model_str += (
-                    spe.replace("_dot_", ".") + "," + str(species_for_sbml[spe]) + "\n"
-                )
-
-            model_str += "\n"
-            model_str += "Mappings" + "\n"
-            mappings_alpha = list(sorted(mappings_for_sbml.keys()))
-            for map in mappings_alpha:
-                model_str += map + " :" + "\n"
-                for element in sorted(mappings_for_sbml[map]):
-                    model_str += element + "\n"
-
-            model_str += "\n"
-            model_str += "Parameters" + "\n"
-            parameters_alpha = list(sorted(parameters_for_sbml.keys()))
-            for par in parameters_alpha:
-                model_str += par + "," + str(parameters_for_sbml[par][0]) + "\n"
-
-            model_str += "\n"
-            model_str += "Reactions" + "\n"
-            remove_phantom_reactions = deepcopy(reactions_for_sbml)
-            to_remove = []
-            for reaction in remove_phantom_reactions:
-                if "phantom" in reaction:
-                    to_remove.append(reaction)
-            for r in to_remove:
-                remove_phantom_reactions.pop(r, None)
-            reaction_alpha = [
-                str(x[1]).replace("_dot_", ".")
-                for x in list(
-                    sorted(remove_phantom_reactions.items(), key=lambda x: str(x[1]))
-                )
-            ]
-
-            for i, reac in enumerate(reaction_alpha):
-                model_str += "reaction_" + str(i) + "," + reac + "\n"
-
-            if events_for_sbml != {}:
-                model_str += "\n"
-                model_str += "Events" + "\n"
-                list_to_sort = [str(events_for_sbml[key]) for key in events_for_sbml]
-                list_to_sort = sorted(list_to_sort)
-                for i in range(len(list_to_sort)):
-                    model_str += (
-                        "event_" + str(i) + "," + list_to_sort[i] + "\n"
-                    ).replace("_dot_", ".")
-
-            if assignments_for_sbml != {}:
-                model_str += "\n"
-                model_str += "Assignments" + "\n"
-                list_to_sort = [
-                    str(assignments_for_sbml[key]) for key in assignments_for_sbml
-                ]
-                list_to_sort = sorted(list_to_sort)
-                for i in range(len(list_to_sort)):
-                    model_str += (
-                        "assignment_" + str(i) + "," + list_to_sort[i] + "\n"
-                    ).replace("_dot_", ".")
+            model_str = cls._generate_model_string(
+                species_for_sbml,
+                mappings_for_sbml,
+                parameters_for_sbml,
+                reactions_for_sbml,
+                events_for_sbml,
+                assignments_for_sbml,
+            )
 
         return CompilerResult(
             species_for_sbml=species_for_sbml,

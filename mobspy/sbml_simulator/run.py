@@ -304,8 +304,9 @@ def __remap_species(
                 " not provide an output"
             )
             simlog.warning("Please check the output data to see if this is the problem")
-            for key in data:
-                print(key, data[key])  # noqa: T201
-            exit(1)  # noqa: PLR1722
+            simlog.error(
+                "TypeError while mapping simulation results. "
+                "This may be caused by A >> A identity reactions."
+            )
 
     return mapped_data

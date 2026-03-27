@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import mobspy
 from mobspy import All, BaseSpecies, New, Simulation, set_counts, simlog, u
+from mobspy.exceptions import MobsPyError
 
 from .conftest import compare_model
 
@@ -48,7 +49,7 @@ class TestTimeEvents:
         A(1 * u.mol)
         S = Simulation(A)
         S.level = -1
-        with S.event_condition(A < 0.5 * u.mol):
+        with S.event_condition(A < 0.5 * u.mol):  # noqa: SIM300
             A(1 * u.mol)
         S.duration = 3
         assert compare_model(S.compile(), "model_10.txt")
@@ -101,7 +102,7 @@ class TestTimeEvents:
             with S.event_time(0):
                 mobspy.Zero >> A[1]
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
 
@@ -113,21 +114,21 @@ class TestLogicOperators:
         A.a1, A.a2, A.a3
 
         try:
-            (10 >= A) >= 10
+            (10 >= A) >= 10  # noqa: SIM300
             test_failed = True
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
 
         try:
-            (10 >= A >= 10 >= A)
+            (10 >= A >= 10 >= A)  # noqa: SIM300
             test_failed = True
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
 
         try:
-            (10 >= A * A)
+            (10 >= A * A)  # noqa: SIM300
             test_failed = True
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
 
         try:
@@ -137,10 +138,10 @@ class TestLogicOperators:
                 A(100)
             S1.compile()
             test_failed = True
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
 
-        r1 = ((10 >= 2 * A) & (A <= 10)) | (10 >= A)
+        r1 = ((10 >= 2 * A) & (A <= 10)) | (10 >= A)  # noqa: SIM300
         S = Simulation(A)
         S.level = -1
         with S.event_condition(r1):
@@ -197,6 +198,6 @@ class TestLogicOperators:
         try:
             S.duration = True
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
         assert True

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import cProfile
 from importlib import import_module as implib_import_module
 
 
-def profile_imports():
+def profile_imports() -> None:
     # Import the modules you want to profile
     implib_import_module("mobspy")
 

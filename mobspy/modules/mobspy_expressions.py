@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import re
+import weakref
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -36,7 +37,183 @@ if TYPE_CHECKING:
 simlog = get_logger(__name__)
 
 
-# @TODO change _ms_active to context based name
+# ---------------------------------------------------------------------------
+# Expression AST nodes
+# ---------------------------------------------------------------------------
+# These replace raw string concatenation for building rate expressions.
+# `str(node)` renders the same strings the old code produced, so all
+# downstream consumers (SBML writer, ODE operator, etc.) are unaffected.
+
+
+class ExprNode:
+    """Base class for expression AST nodes."""
+
+    def render(self) -> str:
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        return self.render()
+
+    def __repr__(self) -> str:
+        return self.render()
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        """Return all SpeciesRefNode leaves in this subtree."""
+        return []
+
+
+class LiteralNode(ExprNode):
+    """A numeric or string literal."""
+
+    __slots__ = ("value",)
+
+    def __init__(self, value: int | float | str) -> None:
+        self.value = value
+
+    def render(self) -> str:
+        return str(self.value)
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return []
+
+
+class SpeciesRefNode(ExprNode):
+    """Reference to a species variable in an expression.
+
+    mode controls the string prefix:
+      'default'       -> species_string  (bare name)
+      'count'         -> $count$species_string
+      'concentration' -> $concentration$species_string
+      'assignment'    -> ($asg_species_string)
+    """
+
+    __slots__ = ("species_string", "mode")
+
+    def __init__(self, species_string: str, mode: str = "default") -> None:
+        self.species_string = species_string
+        self.mode = mode
+
+    def render(self) -> str:
+        if self.mode == "count":
+            return "$count$" + self.species_string
+        elif self.mode == "concentration":
+            return "$concentration$" + self.species_string
+        elif self.mode == "assignment":
+            return "($asg_" + self.species_string + ")"
+        return self.species_string
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return [self]
+
+
+class ParamRefNode(ExprNode):
+    """Reference to a named parameter."""
+
+    __slots__ = ("name",)
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def render(self) -> str:
+        return str(self.name)
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return []
+
+
+class BinaryOpNode(ExprNode):
+    """A binary operation: (left op right)."""
+
+    __slots__ = ("left", "op", "right")
+
+    def __init__(self, left: ExprNode, op: str, right: ExprNode) -> None:
+        self.left = left
+        self.op = op
+        self.right = right
+
+    def render(self) -> str:
+        return "(" + self.left.render() + self.op + self.right.render() + ")"
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return self.left.walk_species() + self.right.walk_species()
+
+
+class FunctionCallNode(ExprNode):
+    """A function call: name(arg)."""
+
+    __slots__ = ("name", "arg")
+
+    def __init__(self, name: str, arg: ExprNode) -> None:
+        self.name = name
+        self.arg = arg
+
+    def render(self) -> str:
+        return self.name + "(" + self.arg.render() + ")"
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return self.arg.walk_species()
+
+
+def _to_expr_node(value: Any) -> ExprNode:
+    """Wrap a raw value into an ExprNode if it isn't one already."""
+    if isinstance(value, ExprNode):
+        return value
+    return LiteralNode(value)
+
+
+def _render_resolved(
+    node: ExprNode,
+    expression_vars: set[Any],
+    count_in_model: bool,
+    concentration_in_model: bool,
+    count_in_expression: bool,
+    concentration_in_expression: bool,
+) -> str:
+    """Render an AST with species references resolved for count/concentration context.
+
+    Handles the mode on each SpeciesRefNode:
+      - 'count' in count_in_model -> bare name; in concentration_in_model -> (name*volume)
+      - 'concentration' in count_in_model -> (name/volume); in concentration_in_model -> bare
+      - 'default' resolved based on count_in_expression/concentration_in_expression
+      - 'assignment' -> rendered as-is (for ODE references)
+    """
+    var_names = {v.species_string for v in expression_vars}
+
+    def _resolve(n: ExprNode) -> str:
+        if isinstance(n, SpeciesRefNode) and n.species_string in var_names:
+            name = n.species_string
+            if n.mode == "assignment":
+                return n.render()
+            elif n.mode == "count":
+                if count_in_model:
+                    return name
+                elif concentration_in_model:
+                    return "(" + name + "*volume)"
+                return name
+            elif n.mode == "concentration":
+                if count_in_model:
+                    return "(" + name + "/volume)"
+                elif concentration_in_model:
+                    return name
+                return name
+            else:
+                # default mode - resolved by expression context
+                # Count takes priority when both flags are set
+                if count_in_model and concentration_in_expression and not count_in_expression:
+                    return "(" + name + "/volume)"
+                elif concentration_in_model and count_in_expression and not concentration_in_expression:
+                    return "(" + name + "*volume)"
+                return name
+
+        if isinstance(n, BinaryOpNode):
+            return "(" + _resolve(n.left) + n.op + _resolve(n.right) + ")"
+        if isinstance(n, FunctionCallNode):
+            return n.name + "(" + _resolve(n.arg) + ")"
+        return n.render()
+
+    return _resolve(node)
+
+
 class Bool_Override:
     """
     Just a base class for implementing the . operation in the rate
@@ -179,6 +356,12 @@ class ExpressionDefiner:
     something to act as an expression, including storing the
     operations an object has gone through.
     """
+
+    # Global registry of all live ExpressionDefiner instances.
+    # Used by Unit_Context_Setter to flip _ms_active without walking the stack.
+    # Keyed by id() with weak ref + callback for auto-cleanup, avoiding
+    # OverrideQuantity's problematic __hash__ from Pint.
+    _registry: dict[int, weakref.ref[ExpressionDefiner]] = {}
 
     _operation: Any
     _unit_count_op: Any
@@ -453,6 +636,21 @@ class ExpressionDefiner:
         multiple Pint objects. Gives the object all necessary
         attributes to execute create_from_new_operation.
         """
+        # Register in the global registry for context activation.
+        # Use weak refs with id-based keys to avoid OverrideQuantity's __hash__.
+        obj_id = id(self)
+
+        def _remove_from_registry(ref: weakref.ref[ExpressionDefiner]) -> None:
+            ExpressionDefiner._registry.pop(obj_id, None)
+
+        try:
+            ExpressionDefiner._registry[obj_id] = weakref.ref(
+                self, _remove_from_registry
+            )
+        except TypeError:
+            # Some Pint Quantity subclasses may not support weak refs
+            pass
+
         # Operation variables
         self._operation = None
         self._unit_count_op = 1
@@ -550,28 +748,36 @@ class ExpressionDefiner:
         except Exception as e:
             conc_op = e
 
-        if (
-            type(self._operation) == str  # noqa: E721
-            or (isinstance(other, ExpressionDefiner) and type(other._operation)) == str  # noqa: E721
-        ):
-            int_op_self = (
-                str(self.magnitude)
+        # Check if either operand has a symbolic (non-numeric) operation
+        self_is_symbolic = isinstance(self._operation, (str, ExprNode))
+        other_is_symbolic = isinstance(other, ExpressionDefiner) and isinstance(
+            other._operation, (str, ExprNode)
+        )
+
+        if self_is_symbolic or other_is_symbolic:
+            node_self = (
+                _to_expr_node(self.magnitude)
                 if isinstance(self, (Quantity, OverrideQuantity))
-                else str(self)
+                else _to_expr_node(self._operation)
+                if isinstance(self._operation, ExprNode)
+                else _to_expr_node(str(self))
             )
-            int_op_other = (
-                str(other.magnitude)
+            node_other = (
+                _to_expr_node(other.magnitude)
                 if isinstance(other, (Quantity, OverrideQuantity))
-                else str(other)
+                else _to_expr_node(other._operation)
+                if isinstance(other, ExpressionDefiner)
+                and isinstance(other._operation, ExprNode)
+                else _to_expr_node(str(other))
             )
 
             if direct_sense:
-                op1, op2 = int_op_self, int_op_other
+                left, right = node_self, node_other
             else:
-                op2, op1 = int_op_self, int_op_other
+                left, right = node_other, node_self
 
             if operation is None:
-                operation = "(" + op1 + symbol + op2 + ")"
+                operation = BinaryOpNode(left, symbol, right)
         else:
             operation = count_op.magnitude
 
@@ -624,7 +830,7 @@ class ExpressionDefiner:
             )
 
         for variable in self._expression_variables:
-            variable._operation = variable.species_string
+            variable._operation = SpeciesRefNode(variable.species_string)
 
         dimension_1 = None
         if isinstance(self, MobsPyExpression):
@@ -1011,7 +1217,9 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._expression_variables = expression_variables
 
         if operation is None:
-            self._operation = self.species_string
+            self._operation: ExprNode | int | float = SpeciesRefNode(
+                self.species_string
+            )
         else:
             self._operation = operation
 
@@ -1134,66 +1342,112 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 " in 1/([time][volume])."
             )
 
-        convert_operation = str(self._operation)
-
-        for variable in self._expression_variables:
-            count_name = "$count$" + variable.species_string
-            concentration_name = "$concentration$" + variable.species_string
-
-            default_name = variable.species_string
-            replace_name = variable.species_string
-
-            if self._count_in_model:
-                convert_operation = replace_spe_in_expr(
-                    convert_operation, count_name, replace_name
-                )
-                convert_operation = replace_spe_in_expr(
-                    convert_operation,
-                    concentration_name,
-                    "(" + replace_name + "/volume)",
-                )
-
-                # Add unit check!!!
-                if self._count_in_expression:
-                    pass
-                elif self._concentration_in_expression:
-                    convert_operation = replace_spe_in_expr(
-                        convert_operation, default_name, "(" + replace_name + "/volume)"
+        if isinstance(self._operation, ExprNode):
+            # AST path: walk the tree to resolve species references
+            if not self._count_in_model and not self._concentration_in_model:
+                # Neither set: check expression context for validation
+                if not self._count_in_expression and not self._concentration_in_expression:
+                    raise ValueError(
+                        "The expression did not resolve for "
+                        "lack of concentration/count "
+                        "specifications"
                     )
+
+            convert_operation = _render_resolved(
+                self._operation,
+                self._expression_variables,
+                self._count_in_model,
+                self._concentration_in_model,
+                self._count_in_expression,
+                self._concentration_in_expression,
+            )
+
+            # Apply volume wrapper when model/expression contexts differ.
+            # Count takes priority when both flags are set.
+            # The wrapper is applied once per expression variable (matching
+            # the legacy per-variable loop behavior).
+            n_vars = len(self._expression_variables) if self._expression_variables else 0
+            if (
+                self._count_in_model
+                and self._concentration_in_expression
+                and not self._count_in_expression
+            ):
+                for _ in range(max(n_vars, 1)):
                     convert_operation = "(" + convert_operation + ")" + "*volume"
-                else:
-                    raise ValueError(
-                        "The expression did not resolve for "
-                        "lack of concentration/count "
-                        "specifications"
-                    )
-            elif self._concentration_in_model:
-                convert_operation = replace_spe_in_expr(
-                    convert_operation, concentration_name, replace_name
-                )
-                convert_operation = convert_operation.replace(
-                    count_name, "(" + replace_name + "*volume)"
-                )
-                convert_operation = replace_spe_in_expr(
-                    convert_operation, count_name, "(" + replace_name + "*volume)"
-                )
+            elif (
+                self._concentration_in_model
+                and self._count_in_expression
+                and not self._concentration_in_expression
+            ):
+                for _ in range(max(n_vars, 1)):
+                    convert_operation = "(" + convert_operation + ")" + "/volume"
+        else:
+            # Legacy string path fallback
+            convert_operation = str(self._operation)
 
-                if self._count_in_expression:
-                    convert_operation = convert_operation.replace(
-                        default_name, "(" + replace_name + "*volume)"
+            for variable in self._expression_variables:
+                count_name = "$count$" + variable.species_string
+                concentration_name = "$concentration$" + variable.species_string
+
+                default_name = variable.species_string
+                replace_name = variable.species_string
+
+                if self._count_in_model:
+                    convert_operation = replace_spe_in_expr(
+                        convert_operation, count_name, replace_name
                     )
                     convert_operation = replace_spe_in_expr(
-                        convert_operation, default_name, "(" + replace_name + "*volume)"
+                        convert_operation,
+                        concentration_name,
+                        "(" + replace_name + "/volume)",
                     )
-                    convert_operation = "(" + convert_operation + ")" + "/volume"
-                elif self._concentration_in_expression:
-                    pass
-                else:
-                    raise ValueError(
-                        "The expression did not resolve for "
-                        "lack of concentration/count "
-                        "specifications"
+
+                    if self._count_in_expression:
+                        pass
+                    elif self._concentration_in_expression:
+                        convert_operation = replace_spe_in_expr(
+                            convert_operation,
+                            default_name,
+                            "(" + replace_name + "/volume)",
+                        )
+                        convert_operation = "(" + convert_operation + ")" + "*volume"
+                    else:
+                        raise ValueError(
+                            "The expression did not resolve for "
+                            "lack of concentration/count "
+                            "specifications"
+                        )
+                elif self._concentration_in_model:
+                    convert_operation = replace_spe_in_expr(
+                        convert_operation, concentration_name, replace_name
                     )
+                    convert_operation = convert_operation.replace(
+                        count_name, "(" + replace_name + "*volume)"
+                    )
+                    convert_operation = replace_spe_in_expr(
+                        convert_operation,
+                        count_name,
+                        "(" + replace_name + "*volume)",
+                    )
+
+                    if self._count_in_expression:
+                        convert_operation = convert_operation.replace(
+                            default_name, "(" + replace_name + "*volume)"
+                        )
+                        convert_operation = replace_spe_in_expr(
+                            convert_operation,
+                            default_name,
+                            "(" + replace_name + "*volume)",
+                        )
+                        convert_operation = "(" + convert_operation + ")" + "/volume"
+                    elif self._concentration_in_expression:
+                        pass
+                    else:
+                        raise ValueError(
+                            "The expression did not resolve for "
+                            "lack of concentration/count "
+                            "specifications"
+                        )
 
         return convert_operation, self._count_in_expression
 
@@ -1206,9 +1460,11 @@ def check_if_non_expression_operated(other: Any) -> Any:
         and not isinstance(other, Quantity)
         and not isinstance(other, (np_int_, np_float_))
     ):
+        asg_node = SpeciesRefNode(str(other), mode="assignment")
         other = MobsPyExpression(
-            "($asg_" + str(other) + ")",
+            str(asg_node),
             None,
+            operation=asg_node,
             dimension=None,
             count_in_model=True,
             concentration_in_model=False,
@@ -1226,15 +1482,32 @@ def replace_spe_in_expr(string: str, to_replace: str, replacement: str) -> str:
     return pattern.sub(replacement, string)
 
 
-class _Count_Base:
-    "self.species_string"
+def _set_species_mode_in_tree(operation: Any, species_string: str, mode: str) -> Any:
+    """Walk an expression tree/string and set the mode on matching SpeciesRefNodes."""
+    if isinstance(operation, SpeciesRefNode):
+        if operation.species_string == species_string:
+            operation.mode = mode
+    elif isinstance(operation, BinaryOpNode):
+        _set_species_mode_in_tree(operation.left, species_string, mode)
+        _set_species_mode_in_tree(operation.right, species_string, mode)
+    elif isinstance(operation, FunctionCallNode):
+        _set_species_mode_in_tree(operation.arg, species_string, mode)
+    elif isinstance(operation, str):
+        # Fallback for legacy string operations
+        operation = operation.replace(species_string, f"${mode}${species_string}")
+    return operation
 
+
+class _Count_Base:
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:
-                item._operation = item._operation.replace(
-                    v.species_string, "$count$" + v.species_string
-                )
+                if isinstance(item._operation, ExprNode):
+                    _set_species_mode_in_tree(item._operation, v.species_string, "count")
+                else:
+                    item._operation = str(item._operation).replace(
+                        v.species_string, "$count$" + v.species_string
+                    )
             return item
         except AttributeError:
             simlog.error("Count[] operator can only be used in MobsPy expressions")
@@ -1248,15 +1521,20 @@ class _Conc_Base:
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:
-                item._operation = item._operation.replace(
-                    v.species_string, "$concentration$" + v.species_string
-                )
+                if isinstance(item._operation, ExprNode):
+                    _set_species_mode_in_tree(
+                        item._operation, v.species_string, "concentration"
+                    )
+                else:
+                    item._operation = str(item._operation).replace(
+                        v.species_string, "$concentration$" + v.species_string
+                    )
             return item
         except AttributeError:
             simlog.error(
                 "Concentration[] operator can only be used in MobsPy expressions"
             )
-        pass
+        return None
 
 
 Concentration = _Conc_Base()

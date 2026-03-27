@@ -1,5 +1,7 @@
 """Constants used throughout the MobsPy package."""
 
+from __future__ import annotations
+
 # Common numeric constants
 MIN_DIMENSION_COUNT = 2
 DEFAULT_LOG_LEVEL_THRESHOLD = 2

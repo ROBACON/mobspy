@@ -35,7 +35,6 @@ def read_json(json_file_name: str) -> Any:
             json_data = json.load(file)
         except json.decoder.JSONDecodeError:
             simlog.error("Error reading file")
-            exit(1)
 
     return json_data
 
@@ -101,8 +100,7 @@ def convert_unit_parameters(params: dict[str, Any]) -> None:
             else:
                 try:
                     params[un] = u.unit_registry_object(params[un])
-                except Exception as e:
-                    print(e)
+                except Exception:
                     simlog.error(f"The unit in parameter {un} did not parse")
 
 

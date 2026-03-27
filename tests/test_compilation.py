@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 import mobspy
-from mobspy import All, BaseSpecies, ModelParameters, New, Simulation, set_counts, simlog, u
+from mobspy import (
+    All,
+    BaseSpecies,
+    ModelParameters,
+    New,
+    Simulation,
+    set_counts,
+    u,
+)
+from mobspy.exceptions import MobsPyError
 
 from .conftest import compare_model, compare_model_ignore_order
 
@@ -375,14 +384,14 @@ class TestSpeciesNaming:
             _S0 = BaseSpecies()
             _S0 >> mobspy.Zero[1]
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_blocked_names_2(self):
         try:
             _S1 = BaseSpecies()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
 
         S0, S1, S2 = BaseSpecies()

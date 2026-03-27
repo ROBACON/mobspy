@@ -54,7 +54,6 @@ class Context_specie_named_any(Species):
         if is_with == "with":
             pass
         else:
-            print(is_with, item, code_line)
             _logger.error(
                 "Characteristics cannot be added to the Any specie outside of a context"
             )

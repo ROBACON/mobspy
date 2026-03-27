@@ -6,6 +6,7 @@ import logging
 
 import pytest
 
+from mobspy.exceptions import MobsPyError
 from mobspy.mobspy_logging import get_logger
 
 log_scripts = get_logger("test_logger")
@@ -26,10 +27,9 @@ def test_warning_function_exists():
     log_scripts.warning("Test warning message")
 
 
-def test_error_function_exits():
-    with pytest.raises(SystemExit) as exc_info:
+def test_error_raises_mobspy_error():
+    with pytest.raises(MobsPyError, match="Test error message"):
         log_scripts.error("Test error message")
-    assert exc_info.value.code == 1
 
 
 def test_set_log_level_with_string():
@@ -57,7 +57,7 @@ def test_set_log_level_with_integer():
 
 
 def test_error_with_full_exception_log():
-    with pytest.raises(SystemExit):
+    with pytest.raises(MobsPyError):
         log_scripts.error("Error with trace", full_exception_log=True)
 
 

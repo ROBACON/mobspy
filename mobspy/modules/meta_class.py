@@ -1243,7 +1243,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
         elif other == 0:
-            exit()
+            _logger.error(
+                "Use the Zero meta-species for degradation reactions, not the integer 0"
+            )
         else:
             p = other
 

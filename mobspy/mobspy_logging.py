@@ -14,6 +14,8 @@ import sys
 import traceback
 from typing import Any
 
+from mobspy.exceptions import MobsPyError
+
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds color to warning and error messages."""
@@ -130,16 +132,17 @@ class MobsPyLogger:
     def error(
         self, message: str, *args: Any, full_exception_log: bool = False, **kwargs: Any
     ) -> None:
-        """
-        Log an error message and exit the program.
+        """Log an error message and raise MobsPyError.
 
         Args:
             message: The error message to log
             full_exception_log: If True, include full traceback
+
+        Raises:
+            MobsPyError: Always raised after logging the error.
         """
         formatted_message = self._format_message(message)
 
-        # Include full traceback if requested
         if full_exception_log:
             traceback_details: str = "".join(traceback.format_stack())
             formatted_message = (
@@ -147,7 +150,7 @@ class MobsPyLogger:
             )
 
         self.logger.error(formatted_message, *args, stacklevel=2, **kwargs)
-        sys.exit(1)
+        raise MobsPyError(formatted_message)
 
     def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log a critical message."""

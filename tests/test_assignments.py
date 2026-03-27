@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
 import mobspy
 from mobspy import All, Assign, BaseSpecies, New, Simulation, simlog, u
+from mobspy.exceptions import MobsPyError
 
 from .conftest import compare_model
 
@@ -59,12 +58,12 @@ class TestAssign:
             simlog.global_simlog_level = -1
             A, B = BaseSpecies()
             A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
         try:
             simlog.global_simlog_level = -1
             A >> mobspy.Zero[1]
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             pass
         A, B = BaseSpecies()
         A >> mobspy.Zero[1]

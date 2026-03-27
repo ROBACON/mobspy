@@ -6,8 +6,12 @@ Otherwise the simulation object will throw a compilation error,
 telling the user that the parameter is not supported,
 """
 
+from __future__ import annotations
 
-def get_example_parameters():
+from typing import Any
+
+
+def get_example_parameters() -> dict[str, Any]:
     example_parameters = {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
         "volume": 1,

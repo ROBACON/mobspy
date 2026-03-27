@@ -12,6 +12,9 @@ from mobspy.modules.mobspy_expressions import (  # noqa: E402
     ExpressionDefiner as me_ExpressionDefiner,
 )
 from mobspy.modules.mobspy_expressions import (  # noqa: E402
+    ParamRefNode,
+)
+from mobspy.modules.mobspy_expressions import (  # noqa: E402
     QuantityConverter as me_QuantityConverter,
 )
 
@@ -37,7 +40,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
         self._ms_active = True
 
-        self._operation = str(name)
+        self._operation = ParamRefNode(name)
         self._parameter_set.add(self)
 
         self.process_value(value)

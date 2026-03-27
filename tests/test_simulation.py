@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import os
 
-import numpy as np
-import pytest
-
 import mobspy
 from mobspy import All, BaseSpecies, ModelParameters, New, Simulation, set_counts, u
+from mobspy.exceptions import MobsPyError
 
 from .conftest import compare_model
 
@@ -337,7 +335,7 @@ class TestErrorHandling:
             MySim.level = -1
             MySim.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_dimensional_inconsistency(self):
@@ -348,7 +346,7 @@ class TestErrorHandling:
             MySim.level = -1
             MySim.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_error_mult(self):
@@ -357,7 +355,7 @@ class TestErrorHandling:
             A, B, C = D * BaseSpecies(3)
             simlog.global_simlog_level = -1
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_crash_after_modification(self):
@@ -371,7 +369,7 @@ class TestErrorHandling:
             S.level = -1
             S.run(plot_data=False)
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_wrong_dimension_error(self):
@@ -382,7 +380,7 @@ class TestErrorHandling:
             S.level = -1
             S.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
         try:
@@ -392,7 +390,7 @@ class TestErrorHandling:
             S.level = -1
             S.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_wrong_rate(self):
@@ -402,7 +400,7 @@ class TestErrorHandling:
             S = Simulation(aTc | Ara)
             S.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_shared_parameter_name(self):
@@ -442,7 +440,7 @@ class TestErrorHandling:
             S.level = -1
             S.compile()
             assert False
-        except SystemExit:
+        except (SystemExit, MobsPyError):
             assert True
 
     def test_proper_unit_context_exit(self):

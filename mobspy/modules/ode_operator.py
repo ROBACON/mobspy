@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import inspect
 import re
-from inspect import stack as inspect_stack
 from typing import Any
 
 from mobspy.mobspy_logging import get_logger
@@ -12,38 +12,39 @@ _logger = get_logger(__name__)
 
 
 def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any) -> Any:
-    """Generates a rate function from the ODE expression."""
-    expr_string = str(expression._operation)
+    """Generate a rate function from an ODE expression using a closure.
+
+    Replaces species placeholders in the expression string with
+    the positional arguments passed at call time.
+    """
+    expr_template = str(expression._operation)
 
     # Convert $asg_X to $pos_N based on position in list
     for i, spe in enumerate(list_of_used_species):
         spe_name = str(spe)
-        expr_string = expr_string.replace(f"($asg_{spe_name})", f"$_pos_{i}")
+        expr_template = expr_template.replace(f"($asg_{spe_name})", f"$_pos_{i}")
 
-    # Create the parameter argument r1, r2, r3
     n = len(list_of_used_species)
     param_names = [f"r{i + 1}" for i in range(n)]
-    param_str = ", ".join(param_names)
 
-    # Build replacement logic
-    func_code = f"def rate_fn({param_str}):\n\t"
-    func_code += f"result = {repr(expr_string)}\n\t"
+    def rate_fn(**kwargs: Any) -> str:
+        result = expr_template
+        for i, name in enumerate(param_names):
+            result = result.replace(f"$_pos_{i}", str(kwargs[name]))
+        return result
 
-    replace_lines = ""
-    for i in range(n):
-        replace_lines += (
-            f'result = result.replace("$_pos_{i}", str({param_names[i]}))\n\t'
-        )
-    func_code += replace_lines
-    func_code += "return result"
+    # Set proper signature so inspect.signature() returns (r1, r2, ...)
+    params = [
+        inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        for name in param_names
+    ]
+    rate_fn.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
 
-    local_vars: dict[str, Any] = {}
-    exec(func_code, {}, local_vars)
-    return local_vars["rate_fn"]
+    return rate_fn
 
 
 class ODEBinding:
-    """Intermediate object returned by dt[A] that waits for >> expression."""
+    """Intermediate object returned by dt[A] that waits for += or -= expression."""
 
     def __init__(self, state_variable: Species | Reacting_Species) -> None:
         self.state_variable = state_variable
@@ -53,8 +54,7 @@ class ODEBinding:
         expression: Any,
         is_birth: bool = True,
     ) -> ODEBinding:
-        """
-        Common logic for processing ODE expressions.
+        """Common logic for processing ODE expressions.
 
         Args:
             expression: The rate expression
@@ -80,7 +80,7 @@ class ODEBinding:
                     full_exception_log=True,
                 )
 
-        if isinstance(expression, Species) or isinstance(expression, Reacting_Species):  # noqa: SIM101
+        if isinstance(expression, (Species, Reacting_Species)):
             expression = Assign.mul(1, expression)
 
         Assign.reset_context()
@@ -115,11 +115,11 @@ class ODEBinding:
 
 
 class DifferentialOperator:
-    """Differential operator for ODE syntax: dt[A] >> expression."""
+    """Differential operator for ODE syntax: dt[A] += expression."""
 
     @staticmethod
     def _compile_ode_syntax(code_line: str, line_number: int) -> None:
-        """Validate that ODE syntax uses += or -="""
+        """Validate that ODE syntax uses += or -=."""
         if not re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
             _logger.error(
                 f"At: {code_line}\n"
@@ -131,7 +131,7 @@ class DifferentialOperator:
             )
 
     def __setitem__(self, key: Any, value: Any) -> None:
-        stack_frame = inspect_stack()[1]
+        stack_frame = inspect.stack()[1]
         code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
 
         if re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
@@ -149,8 +149,8 @@ class DifferentialOperator:
         )
 
     def __getitem__(self, item: Species | Reacting_Species) -> ODEBinding | None:
-        if isinstance(item, Species) or isinstance(item, Reacting_Species):  # noqa: SIM101
-            stack_frame = inspect_stack()[1]
+        if isinstance(item, (Species, Reacting_Species)):
+            stack_frame = inspect.stack()[1]
             code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
             line_number = stack_frame.lineno
 

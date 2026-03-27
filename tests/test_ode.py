@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import mobspy
 from mobspy import BaseSpecies, New, Simulation, Zero
 from mobspy.modules.functions import ms_exp
 from mobspy.modules.ode_operator import dt

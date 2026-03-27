@@ -94,11 +94,15 @@ class SimulationComposition:
             else:
                 # Multicast if list
                 try:
-                    if not len(self) == len(value):
-                        raise SystemExit
-                except Exception:
+                    value_len = len(value)
+                except TypeError:
                     simlog.error(
                         f"The parameter {name} was assigned non-accepted type.",
+                    )
+                if value_len != len(self):
+                    simlog.error(
+                        f"The parameter {name} list length must match "
+                        f"the number of simulations ({len(self)}).",
                     )
 
                 # Don't add directly to __dict__; volume/duration
@@ -113,14 +117,18 @@ class SimulationComposition:
 
         elif name in multi_cast_parameters:
             try:
-                if not len(self) == len(value):
-                    raise SystemExit
-            except Exception:
+                value_len = len(value)
+            except TypeError:
                 simlog.error(
                     "From 2.4.4 duration must be assigned to each "
                     "simulation individually or a list with all "
                     "durations must be assigned to the "
                     "concatenated simulation",
+                )
+            if value_len != len(self):
+                simlog.error(
+                    f"The parameter {name} list length must match "
+                    f"the number of simulations ({len(self)}).",
                 )
 
             # Don't add directly to __dict__; volume/duration

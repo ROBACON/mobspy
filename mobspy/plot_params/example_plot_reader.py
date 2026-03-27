@@ -3,8 +3,12 @@ This model is responsible for storing example plotting parameters
 It's used by the simulation to check which parameters exist or not
 """
 
+from __future__ import annotations
 
-def get_example_plot_parameters():
+from typing import Any
+
+
+def get_example_plot_parameters() -> dict[str, Any]:
     example_parameters = {
         "output_dir": "",
         "logscale": ["X", "Y"],

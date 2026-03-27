@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, Any
 from mobspy.mobspy_logging import get_logger
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
-from mobspy.modules.mobspy_expressions import MobsPyExpression
+from mobspy.modules.mobspy_expressions import (
+    ExprNode,
+    FunctionCallNode,
+    MobsPyExpression,
+    _to_expr_node,
+)
 
 if TYPE_CHECKING:
     pass
@@ -30,7 +35,7 @@ class MathFunctionWrapper:
         self.name = name  # COPASI function name: 'exp', 'sin', 'cos', etc.
 
     def _create_expression(
-        self, expression: MobsPyExpression, new_operation: str
+        self, expression: MobsPyExpression, new_operation: ExprNode | str
     ) -> MobsPyExpression:
         """Create new MobsPyExpression with this function applied."""
         return MobsPyExpression(
@@ -61,7 +66,9 @@ class MathFunctionWrapper:
                     "At this current version, MobsPy functions do not support "
                 )
 
-            new_operation = f"{self.name}({expression._operation})"
+            new_operation = FunctionCallNode(
+                self.name, _to_expr_node(expression._operation)
+            )
             return self._create_expression(expression, new_operation)
 
         # Species passed
@@ -78,7 +85,9 @@ class MathFunctionWrapper:
                     )
 
             expression = Assign.mul(1, expression)
-            new_operation = f"{self.name}({expression._operation})"
+            new_operation = FunctionCallNode(
+                self.name, _to_expr_node(expression._operation)
+            )
             return self._create_expression(expression, new_operation)
 
         else:

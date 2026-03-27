@@ -43,14 +43,22 @@ def convert_rate(
         )
 
     if isinstance(quantity, Quantity):
+        dim = dict(quantity.dimensionality)
+        has_time = "[time]" in dim
+        has_substance = "[substance]" in dim
+        has_length = "[length]" in dim
+
         try:
-            if str(quantity.dimensionality) == "1 / [time]":
+            if has_time and not has_substance and not has_length:
+                # Pure 1/[time] rate (count-based, order 0 or 1)
                 converted_quantity = converted_quantity.convert("1/seconds")
                 return converted_quantity.magnitude, dimension, True
-            elif str(quantity.dimensionality) == "[substance] / [time]":
+            elif has_substance and not has_length:
+                # [substance]/[time] rate (e.g. mol/s)
                 converted_quantity = converted_quantity.convert("moles/seconds")
                 return converted_quantity.magnitude * N_A, dimension, True
-            elif "[substance]" in str(quantity.dimensionality):
+            elif has_substance:
+                # [length]^n/([substance]^m*[time]) concentration rate with moles
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}"
                     f"/(moles ** {volume_power} * seconds)"
@@ -61,6 +69,7 @@ def convert_rate(
                     False,
                 )
             else:
+                # [length]^n/[time] concentration rate
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}/seconds"
                 )
@@ -96,20 +105,21 @@ def convert_counts(
     converted_quantity = deep_copy_quantities(quantity)
 
     if isinstance(quantity, Quantity):
-        if (
-            "[length]" not in str(quantity.dimensionality)
-            and "[substance]" not in quantity.dimensionality
-            and str(quantity.dimensionality) != "dimensionless"
-        ):
+        dim = dict(quantity.dimensionality)
+        has_length = "[length]" in dim
+        has_substance = "[substance]" in dim
+        is_dimensionless = len(dim) == 0
+
+        if not has_length and not has_substance and not is_dimensionless:
             simlog.error(
                 f"The assigned quantity {quantity} is neither a count or concentration"
             )
-        elif str(quantity) == "dimensionless":
+        elif is_dimensionless:
             return quantity.magnitude
 
         try:
-            if "[substance]" in quantity.dimensionality:
-                if "[length]" in str(quantity.dimensionality):
+            if has_substance:
+                if has_length:
                     converted_quantity = converted_quantity.convert(
                         f"moles/(decimeter ** {dimension})"
                     )
@@ -117,7 +127,7 @@ def convert_counts(
 
                 converted_quantity = converted_quantity.magnitude * N_A
             else:
-                if "[length]" in str(quantity.dimensionality):
+                if has_length:
                     converted_quantity = converted_quantity.convert(
                         f"1/(decimeter ** {dimension})"
                     )
@@ -173,33 +183,61 @@ def extract_length_dimension(
     reaction_order: int | None = None,
     context: bool | str = False,
 ) -> int | bool:
-    """
-    Extracts the volume dimension from a Quantity object from Pint
+    """Extract the volume dimension from a Pint dimensionality.
 
-    :param unit_string: (str) unit in str format
+    Uses Pint's dimensionality dict API instead of string parsing
+    for robustness across Pint versions.
+
+    :param unit_string: (str) unit dimensionality in str format,
+        or a Pint UnitsContainer-like object coerced to str
     :param dimension: (int) model's dimension (1D, 2D, 3D ...)
     :param reaction_order: (int) number of reactants in
         a reaction (for dimensional consistency in rates)
-    :param context: (bool or str) context of the error if dimensions are not consistent
+    :param context: (bool or str) context of the error if
+        dimensions are not consistent
     """
-    temp_list = unit_string.split()
-    try:
-        position = temp_list.index("[length]")
-    except ValueError:
-        position = -1
+    # Parse the length exponent from the dimensionality string
+    # using Pint's UnitRegistry to get the dict representation
+    length_power = _extract_length_power(unit_string)
 
-    if position == -1:
+    if length_power is None:
         return False
-    if temp_list[position + 1] == "**":
-        if reaction_order is None:
-            dimension = check_dimension(dimension, temp_list[position + 2], context)
-        else:
-            temp_int = int(int(temp_list[position + 2]) / (reaction_order - 1))
-            dimension = check_dimension(dimension, temp_int, context)
+
+    if reaction_order is None:
+        dimension = check_dimension(dimension, length_power, context)
     else:
-        dimension = check_dimension(dimension, 1, context)
+        volume_dim = int(length_power / (reaction_order - 1))
+        dimension = check_dimension(dimension, volume_dim, context)
 
     return dimension
+
+
+def _extract_length_power(unit_string: str) -> int | None:
+    """Extract the [length] exponent from a Pint dimensionality string.
+
+    Parses the dimensionality dict via the unit registry for
+    robustness, with a string fallback for edge cases.
+    """
+    try:
+        # Use Pint's API to parse dimensionality
+        ur = u.unit_registry_object
+        dim_container = ur.parse_expression(unit_string).dimensionality
+        length_exp = dim_container.get("[length]", 0)
+        if length_exp == 0:
+            return None
+        return int(length_exp)
+    except Exception:
+        # Fallback: parse from string representation
+        if "[length]" not in unit_string:
+            return None
+        parts = unit_string.split()
+        try:
+            pos = parts.index("[length]")
+            if pos + 1 < len(parts) and parts[pos + 1] == "**":
+                return int(parts[pos + 2])
+            return 1
+        except (ValueError, IndexError):
+            return None
 
 
 def convert_volume(
@@ -230,7 +268,8 @@ def convert_time(time: int | float | Quantity) -> int | float | None:  # type: i
     """
 
     if isinstance(time, Quantity):
-        if str(time.dimensionality) == "[time]":
+        dim = dict(time.dimensionality)
+        if dim.get("[time]") and len(dim) == 1:
             return time.convert("second").magnitude
     else:
         return time
@@ -241,13 +280,14 @@ def time_convert_to_other_unit(
     time: int | float | Quantity,  # type: ignore[type-arg]
     other_unit: str,
 ) -> int | float | None:
-    """
-    Converts time into seconds
+    """Converts time to a specified unit.
 
     :param time: (int, float, Quantity) any time used
+    :param other_unit: target unit string
     """
     if isinstance(time, Quantity):
-        if str(time.dimensionality) == "[time]":
+        dim = dict(time.dimensionality)
+        if dim.get("[time]") and len(dim) == 1:
             return time.convert(other_unit).magnitude
     else:
         return time

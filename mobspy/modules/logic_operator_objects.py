@@ -368,8 +368,7 @@ class MetaSpeciesLogicResolver:
         symbol: str,
     ) -> MetaSpeciesLogicResolver:
         if not isinstance(other, MetaSpeciesLogicResolver):
-            print("ERROR")
-            exit()
+            _logger.error("Logic operations require MetaSpeciesLogicResolver operands")
 
         new_operation: list[_OpElem] = (
             ["("]
