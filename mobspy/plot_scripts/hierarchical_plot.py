@@ -4,8 +4,8 @@ import math
 from collections.abc import Generator
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import ValidationError
+from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
 import matplotlib.pyplot as plt  # noqa: E402
@@ -187,7 +187,7 @@ def find_parameter(
     # Search a parameter
     # If local return local, otherwise return global
     # If not found return nothing
-    elif type(index) == int:  # noqa: E721
+    elif isinstance(index, int):
         try:
             return params["figures"][index][key]
         except (KeyError, IndexError):
@@ -196,7 +196,7 @@ def find_parameter(
             except (KeyError, IndexError):
                 return None
     # If two indexes are given, look inside the plot, than figure, than global
-    elif type(index) == tuple:  # noqa: E721
+    elif isinstance(index, tuple):
         try:
             return params["figures"][index[0]]["plots"][index[1]][key]
 
@@ -222,7 +222,7 @@ def annotation_handling(
             plot_params, key="annotations", index=(figure_index, plot_index)
         )
 
-        if type(annotations) != list:  # noqa: E721
+        if not isinstance(annotations, list):
             simlog.warning(
                 "On plotting annotations: Annotations must "
                 "be a list with dictionaries as elements"
@@ -308,7 +308,7 @@ def plot_curves(
             time_series = find_parameter(
                 plot_params, key="time_series", index=(figure_index, plot_index)
             )
-            if type(time_series) == int:  # noqa: E721
+            if isinstance(time_series, int):
                 time_series = [time_series]
         else:
             time_series = list(range(len(data)))
@@ -445,12 +445,12 @@ def plot_curves(
                                 color=curve_color,
                                 label=label,
                             )
-                        except IndexError:
+                        except IndexError as e:
                             raise ValidationError(
                                 "Fill_between must only have "
                                 "two or less runs referring "
                                 "to it"
-                            )
+                            ) from e
                     else:
                         if curve_color is not None:
                             axs.plot(

@@ -28,8 +28,8 @@ from mobspy.data_handler.time_series_object import (
     MobsPyList_of_TS,
     MobsPyTimeSeries,
 )
+from mobspy.event_handling import EventHandlingMixin
 from mobspy.exceptions import (
-    SimulationError,
     CompilationError,
     MobsPyError,  # noqa: F401
     ParameterError,
@@ -38,6 +38,7 @@ from mobspy.exceptions import (
     ValidationError,
 )
 from mobspy.mobspy_logging import get_logger
+from mobspy.model_generation import ModelGenerationMixin
 from mobspy.modules.assignments_implementation import (
     Assign,  # noqa: F401
 )
@@ -45,6 +46,7 @@ from mobspy.modules.class_of_meta_specie_named_any import (
     Any,  # noqa: F401
 )
 from mobspy.modules.compiler import Compiler
+from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.logic_operator_objects import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
@@ -61,6 +63,9 @@ from mobspy.modules.meta_class_utils import (
     create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
 from mobspy.modules.mobspy_expressions import u  # noqa: F401
+from mobspy.modules.mobspy_parameters import (
+    Internal_Parameter_Constructor as _ParameterConstructor,
+)
 from mobspy.modules.mobspy_parameters import (
     ModelParameters,  # noqa: F401
 )
@@ -106,8 +111,6 @@ from mobspy.parameters.example_reader import get_example_parameters
 from mobspy.plot_params.default_plot_reader import (
     get_default_plot_parameters,
 )
-from mobspy.event_handling import EventHandlingMixin
-from mobspy.model_generation import ModelGenerationMixin
 from mobspy.plotting import PlottingMixin
 from mobspy.sbml_simulator.run import simulate as sbml_simulate
 from mobspy.simulator_object.simulator_object_functions import (
@@ -116,7 +119,6 @@ from mobspy.simulator_object.simulator_object_functions import (
 from mobspy.simulator_object.simulator_object_functions import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
-
 from mobspy.types import SimulationEventData
 
 if TYPE_CHECKING:
@@ -135,6 +137,19 @@ if TYPE_CHECKING:
 # Initialize logger
 logger = get_logger(__name__)
 simlog = logger
+
+
+class PlotConfigProxy:
+    """Proxy object for setting plot parameters via sim.plot_config.param = value."""
+
+    def __init__(self, plot_params: dict[str, TypingAny]) -> None:
+        object.__setattr__(self, "_plot_params", plot_params)
+
+    def __setattr__(self, name: str, value: TypingAny) -> None:
+        self._plot_params[name] = value
+
+    def __getattr__(self, name: str) -> TypingAny:
+        return self._plot_params.get(name)
 
 
 class Simulation(
@@ -246,7 +261,12 @@ class Simulation(
         self._parameters_for_sbml: ParametersForSbml | None = None
         self._mappings_for_sbml: MappingsForSbml | None = None
         self._events_for_sbml: EventsForSbml | None = None
+        self._model_context: ModelUnitContext | None = None
         self.model_string = ""
+
+    def _set_parameter(self, name: str, value: TypingAny) -> None:
+        """Set a simulation parameter directly, bypassing __setattr__."""
+        self.__dict__["parameters"][name] = value
 
     def compile(self, verbose: bool = True) -> str | None:
         """
@@ -303,6 +323,13 @@ class Simulation(
 
             self.parameters["_end_condition"] = self._end_condition
 
+            _model_context = ModelUnitContext.from_simulation(
+                volume=self.parameters["volume"],
+                duration=self.parameters["duration"],
+                species_counts=self._species_counts,
+                dimension=self.dimension,
+            )
+
             _result = Compiler.compile(
                 self.model,
                 reactions_set=self._reactions_set,
@@ -316,6 +343,8 @@ class Simulation(
                 continuous_sim=self.parameters["_continuous_simulation"],
                 ending_condition=self.parameters["_end_condition"],
                 skip_expression_check=self.parameters["skip_expression_check"],
+                parameter_context=dict(_ParameterConstructor.parameter_stack),
+                model_context=_model_context,
             )
         except Exception as e:
             logger.exception("Model compilation failed")
@@ -332,6 +361,7 @@ class Simulation(
         self.model_parameter_objects_dict = _result.parameter_object_dict
         self._assignments_for_sbml = _result.assignments_for_sbml
         self._has_mole = _result.has_mole
+        self._model_context = _result.model_context
 
         # The volume is converted to the proper unit at the compiler level
         self.parameters["volume"] = self._parameters_for_sbml["volume"][0]
@@ -470,18 +500,25 @@ class Simulation(
             joblib.delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
         )
 
-        if (
-            self.parameters["unit_y"] is None
-            and self.parameters["output_concentration"]
-            and self._has_mole
-        ):
-            self.parameters["unit_y"] = 1 * u.unit_registry_object.molar
-        elif (
-            self.parameters["unit_y"] is None
-            and not self.parameters["output_concentration"]
-            and self._has_mole
-        ):
-            self.parameters["unit_y"] = 1 * u.unit_registry_object.mol
+        # Auto-set unit_y when user used molar units.
+        # When model_context is active and substance is molar, data from COPASI
+        # is already in moles - no auto-conversion needed.
+        _substance_is_molar = (
+            self._model_context is not None and self._model_context.substance_is_molar
+        )
+        if not _substance_is_molar:
+            if (
+                self.parameters["unit_y"] is None
+                and self.parameters["output_concentration"]
+                and self._has_mole
+            ):
+                self.parameters["unit_y"] = 1 * u.unit_registry_object.molar
+            elif (
+                self.parameters["unit_y"] is None
+                and not self.parameters["output_concentration"]
+                and self._has_mole
+            ):
+                self.parameters["unit_y"] = 1 * u.unit_registry_object.mol
 
         # Volume list and time list are to convert into concentrations
         # This section also checks if the output_concentration parameter is valid
@@ -504,6 +541,7 @@ class Simulation(
                 self.parameters["unit_x"],
                 self.parameters["unit_y"],
                 self.parameters["output_concentration"],
+                model_context=self._model_context,
             )
 
         def convert_all_ts_to_correct_format(
@@ -647,14 +685,8 @@ class Simulation(
             for key in data:
                 self.__setattr__(key, data[key])
 
-    def __setattr__(self, name: str, value: TypingAny) -> None:
-        """
-        __setattr__ override. For setting simulation parameters using the _dot_ operator
-
-        :param name: (str) name of the parameter to set
-        :param value: value of the parameter
-        """
-        white_list = [
+    _INTERNAL_ATTRS: frozenset[str] = frozenset(
+        {
             "default_order",
             "volume",
             "model",
@@ -669,11 +701,6 @@ class Simulation(
             "_mappings_for_sbml",
             "mappings",
             "all_species_not_mapped",
-            "self._species_for_sbml",
-            "self._reactions_for_sbml",
-            "self._parameters_for_sbml",
-            "self._mappings_for_sbml",
-            "self.model_string",
             "event_times",
             "event_models",
             "event_count_dics",
@@ -708,75 +735,82 @@ class Simulation(
             "model_parameter_objects_dict",
             "_assignments_for_sbml",
             "_has_mole",
-        ]
+            "_model_context",
+        }
+    )
 
-        plotted_flag = False
-        if name in white_list:
+    _SIMULATION_PARAMS: frozenset[str] = frozenset(get_example_parameters())
+
+    def __setattr__(self, name: str, value: TypingAny) -> None:
+        # Internal attributes: store directly on instance
+        if name in self._INTERNAL_ATTRS:
             self.__dict__[name] = value
+            # Some attrs (e.g. volume) are also simulation parameters
+            if name not in self._SIMULATION_PARAMS:
+                return
 
-        if "plot_flag" in self.__dict__ and self.__dict__["plot_flag"]:
-            self.__dict__["plot_parameters"][name] = value
-            self.__dict__["plot_flag"] = False
-            plotted_flag = True
+        # Simulation parameters
+        if name in self._SIMULATION_PARAMS:
+            if self._is_compiled and name != "unit_x" and name != "unit_y":
+                value = pr_convert_time_parameters_after_compilation(
+                    value, model_context=self._model_context
+                )
+            if self._is_compiled and name == "volume":
+                value = pr_convert_volume_after_compilation(
+                    self.dimension, self._parameters_for_sbml, value,
+                    model_context=self._model_context,
+                )
 
-        if not plotted_flag:
-            example_parameters = get_example_parameters()
-            if name in example_parameters.keys():  # noqa: SIM118
-                # Compiled model: parameter change is faster
-                if self._is_compiled and name != "unit_x" and name != "unit_y":
-                    value = pr_convert_time_parameters_after_compilation(value)
-                if self._is_compiled and name == "volume":
-                    value = pr_convert_volume_after_compilation(
-                        self.dimension, self._parameters_for_sbml, value
+            if name == "duration":
+                if type(value) == bool:  # noqa: E721
+                    raise SimulationError(
+                        "MobsPy has received an invalid "
+                        f"trigger type: {type(value)} \n"
+                        + "Please make sure you are not using the operator == for "
+                        + "creating event conditions \n"
                     )
-
-                if name == "duration":  # noqa: SIM102
-                    if type(value) == bool:  # noqa: E721
-                        raise SimulationError(
-                            "MobsPy has received an invalid "
-                            f"trigger type: {type(value)} \n"
-                            + "Please make sure you are not using the operator == for "
-                            + "creating event conditions \n")
-
-                if name == "duration" and isinstance(
-                    value, lop_MetaSpeciesLogicResolver
-                ):
-                    self.__dict__["parameters"]["_continuous_simulation"] = True
+                if isinstance(value, lop_MetaSpeciesLogicResolver):
+                    self._set_parameter("_continuous_simulation", True)
                     self.__dict__["_end_condition"] = value
                     if (
                         "initial_conditional_duration"
                         not in self.__dict__["parameters"]
                     ):
-                        self.__dict__["parameters"]["initial_conditional_duration"] = 1
-                else:
-                    self.__dict__["parameters"][name] = value
-            elif name in white_list:
-                pass
-            else:
-                raise ParameterError(f"Parameter {name} is not supported")
+                        self._set_parameter("initial_conditional_duration", 1)
+                    return
+
+            self._set_parameter(name, value)
+            return
+
+        if name in self._INTERNAL_ATTRS:
+            return
+
+        raise ParameterError(f"Parameter {name} is not supported")
 
     def __getattribute__(self, item: str) -> TypingAny:
-        ta = item == "results" and self.__dict__["results"] == {}
-        tb = item == "fres" and self.__dict__["fres"] == {}
-        if ta or tb:
+        if item == "results" and self.__dict__["results"] == {}:
             raise SimulationError(
-                "The results were accessed before the execution of the simulation")
-
-        if item == "plot_config":
-            return self.__getattr__(item)
-
+                "The results were accessed before the execution of the simulation"
+            )
+        if item == "fres" and self.__dict__["fres"] == {}:
+            raise SimulationError(
+                "The results were accessed before the execution of the simulation"
+            )
         return super().__getattribute__(item)
 
-    def __getattr__(self, item: str) -> Simulation:
-        """
-        __getattr__ override. For the user to be able to set
-        plot parameters as MySim.plot.parameter
-        """
-        if item == "plot_config":
-            self.__dict__["plot_flag"] = True
-        else:
-            self.__dict__["plot_flag"] = False
-        return self
+    @property
+    def plot_config(self) -> PlotConfigProxy:
+        """Access plot configuration. Usage: sim.plot_config.param = value."""
+        return PlotConfigProxy(self.__dict__["plot_parameters"])
+
+    def __getattr__(self, item: str) -> TypingAny:
+        """Fallback attribute access: look up simulation parameters."""
+        params = self.__dict__.get("parameters")
+        if params is not None and item in params:
+            return params[item]
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{item}'"
+        )
 
     def configure_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
@@ -888,13 +922,13 @@ class SimulationComposition:
                             and spe1.get_all_characteristics()
                             != spe2.get_all_characteristics()
                         ):
-                                raise SimulationError(
-                                    f"Species {spe1.get_name()} "
-                                    "was modified through "
-                                    "simulations. \n" + "Although reactions can be "
-                                    "removed, the characteristics "
-                                    "inherited must remain the same"
-                                )
+                            raise SimulationError(
+                                f"Species {spe1.get_name()} "
+                                "was modified through "
+                                "simulations. \n" + "Although reactions can be "
+                                "removed, the characteristics "
+                                "inherited must remain the same"
+                            )
 
     def __len__(self) -> int:
         return len(self.list_of_simulations)
@@ -919,7 +953,8 @@ class SimulationComposition:
             self.list_of_simulations = S1.list_of_simulations + S2.list_of_simulations
         else:
             raise SimulationError(
-                "Simulation compositions can only be performed with other simulations")
+                "Simulation compositions can only be performed with other simulations"
+            )
         self.results = None
         self.fres = None
         self.base_sim = self.list_of_simulations[0]
@@ -940,21 +975,22 @@ class SimulationComposition:
             # Broadcast if single value
             if isinstance(value, (str, int, float, Quantity)):
                 for sim in self:
-                    sim.__dict__["parameters"][name] = value
+                    sim._set_parameter(name, value)
             else:
                 # Multicast if list
                 try:
                     value_len = len(value)
-                except TypeError:
+                except TypeError as e:
                     raise SimulationError(
-                        f"The parameter {name} was assigned non-accepted type.")
+                        f"The parameter {name} was assigned non-accepted type."
+                    ) from e
                 if value_len != len(self):
                     raise SimulationError(
                         f"The parameter {name} list length must match "
-                        f"the number of simulations ({len(self)}).")
+                        f"the number of simulations ({len(self)})."
+                    )
 
                 for par, sim in zip(value, self, strict=False):
-                    # Don't add directly to the object's dict;
                     # volume/duration changes after compilation
                     # are checked in setattr
                     if name == "volume":
@@ -962,24 +998,25 @@ class SimulationComposition:
                     elif name == "duration":
                         sim.duration = par
                     else:
-                        sim.__dict__["parameters"][name] = par
+                        sim._set_parameter(name, par)
 
         elif name in multi_cast_parameters:
             try:
                 value_len = len(value)
-            except TypeError:
+            except TypeError as e:
                 raise SimulationError(
                     "From 2.4.4 duration must be assigned to "
                     "each simulation individually or a list "
                     "with all durations must be assigned to "
-                    "the concatenated simulation")
+                    "the concatenated simulation"
+                ) from e
             if value_len != len(self):
                 raise SimulationError(
                     f"The parameter {name} list length must match "
-                    f"the number of simulations ({len(self)}).")
+                    f"the number of simulations ({len(self)})."
+                )
 
             for par, sim in zip(value, self, strict=False):
-                # Don't add directly to the object's dict;
                 # volume/duration changes after compilation
                 # are checked in setattr
                 if name == "volume":
@@ -987,20 +1024,20 @@ class SimulationComposition:
                 elif name == "duration":
                     sim.duration = par
                 else:
-                    sim.__dict__["parameters"][name] = par
+                    sim._set_parameter(name, par)
         elif name in broad_cast_parameters:
             for sim in self:
-                sim.__dict__["parameters"][name] = value
+                sim._set_parameter(name, value)
         else:
             if name in white_list:
                 self.__dict__[name] = value
             else:
                 self.base_sim.__setattr__(name, value)
 
-    def __getattr__(self, item: str) -> Simulation:
-        if item == "plot_config":
-            self.base_sim.__dict__["plot_flag"] = True
-            return self.base_sim
+    @property
+    def plot_config(self) -> PlotConfigProxy:
+        """Access plot configuration via the base simulation."""
+        return self.base_sim.plot_config
 
     def compile(self, verbose: bool = True) -> str | None:
         str = ""

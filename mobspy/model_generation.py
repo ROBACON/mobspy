@@ -10,10 +10,10 @@ from __future__ import annotations
 from random import randint as rd_randint
 from typing import TYPE_CHECKING, Any
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import SBMLError
+from mobspy.mobspy_logging import get_logger
 from mobspy.sbml_simulator.builder import build as sbml_build
-from mobspy.types import AssignmentData, EventData, ReactionData
+from mobspy.types import EventData, ReactionData
 
 if TYPE_CHECKING:
     from mobspy.types import (
@@ -236,6 +236,7 @@ class ModelGenerationMixin:
 
         for parameter_sweep in sbml_dict_list:
             for sbml_data in parameter_sweep:
+                model_ctx = getattr(sbml_data, "model_context", None)
                 to_return.append(
                     sbml_build(
                         sbml_data["species_for_sbml"],
@@ -243,6 +244,7 @@ class ModelGenerationMixin:
                         sbml_data["reactions_for_sbml"],
                         sbml_data["events_for_sbml"],
                         sbml_data["assignments_for_sbml"],
+                        model_context=model_ctx,
                     )
                 )
         return to_return

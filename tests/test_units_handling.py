@@ -10,7 +10,7 @@ from mobspy import BaseSpecies, Simulation, u
 def test_def_by_str():
     import yaml
 
-    config_path = Path(__file__).resolve().parent.parent / "testconfig_units.yaml"
+    config_path = Path(__file__).resolve().parent / "testconfig_units.yaml"
     with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 

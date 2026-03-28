@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from inspect import stack as inspect_stack
+import linecache
+import sys
 from typing import TYPE_CHECKING
 
 from mobspy.exceptions import ReactionError, ValidationError
@@ -47,23 +48,25 @@ def _Create_Species(
     number_or_names: int | list[str] | None = None,
 ) -> Species | tuple[Species, ...]:
     if number_or_names is not None:
-        if type(number_or_names) == int:  # noqa: E721
+        if isinstance(number_or_names, int):
             if number_or_names < 1:
                 raise ValidationError(
-                    "Please use strictly positive integers for number of properties")
-        elif type(number_or_names) == list:  # noqa: E721
+                    "Please use strictly positive integers for number of properties"
+                )
+        elif isinstance(number_or_names, list):
             pass
         else:
             raise ValidationError("Only numbers or lists of strings accepted")
 
-    if number_or_names is None or type(number_or_names) == int:  # noqa: E721
+    if number_or_names is None or isinstance(number_or_names, int):
         number_of_properties, compiled_names = compile_species_number_line(code_line)
         names = compiled_names
         if number_or_names is not None:  # noqa: SIM102
             if number_of_properties != number_or_names:
                 raise ValidationError(
-                    "The number of properties is not equal to the number of variables")
-    elif type(number_or_names) == list:  # noqa: E721
+                    "The number of properties is not equal to the number of variables"
+                )
+    elif isinstance(number_or_names, list):
         number_of_properties = len(number_or_names)
         names = number_or_names
 
@@ -98,7 +101,8 @@ def BaseSpecies(
     """
     asgi_Assign.reset_context()
 
-    code_line = inspect_stack()[1].code_context[0][:-1]
+    frame = sys._getframe(1)
+    code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
     return _Create_Species(None, code_line, number_or_names)
 
 
@@ -113,7 +117,8 @@ def New(
         or (list) list of names
     :return: Species objects
     """
-    code_line = inspect_stack()[1].code_context[0][:-1]
+    frame = sys._getframe(1)
+    code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
     return _Create_Species(species, code_line, number_or_names)
 
 
@@ -121,7 +126,8 @@ def ListSpecies(
     number_of_elements: int,
     inherits_from: Species | None = None,
 ) -> List_Species:
-    code = inspect_stack()[1].code_context[0][:-1]
+    frame = sys._getframe(1)
+    code = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
     before_eq, after_eq = code.split("=")
     before_eq = before_eq.replace(" ", "")
     if "," in before_eq:

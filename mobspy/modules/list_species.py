@@ -65,7 +65,9 @@ class List_Species:
         elif isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
         else:
-            raise ValidationError("Operator must only be used in Species on List_Species")
+            raise ValidationError(
+                "Operator must only be used in Species on List_Species"
+            )
 
         return self
 

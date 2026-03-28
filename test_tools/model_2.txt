@@ -1,8 +1,8 @@
 
 Species
-Cat,6.02214076e+23
-Dog,6.02214076e+23
-Herbivore,6.02214076e+23
+Cat,1
+Dog,1
+Herbivore,1
 
 Mappings
 Cat :
@@ -13,7 +13,7 @@ Herbivore :
 Herbivore
 
 Parameters
-volume,99.99999999999999
+volume,1
 
 Reactions
 reaction_0,{'re': [(1, 'Cat'), (1, 'Herbivore')], 'pr': [(1, 'Cat')], 'kin': 'Cat * Herbivore * 1 * volume^-1'}

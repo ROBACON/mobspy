@@ -70,13 +70,12 @@ class _Last_rate_storage:
             raise ReactionError(
                 "Reaction rate of type "
                 + str(type(_Last_rate_storage.last_rate))
-                + " not valid")
+                + " not valid"
+            )
 
         if not (
-            type(rate) == int  # noqa: E721
-            or type(rate) == float  # noqa: E721
+            isinstance(rate, (int, float, str))
             or callable(rate)
-            or type(rate) == str  # noqa: E721
             or isinstance(
                 rate,
                 (
@@ -88,7 +87,9 @@ class _Last_rate_storage:
             )
             or rate is None
         ):
-            raise ReactionError("Reaction rate of type " + str(type(rate)) + " not valid")
+            raise ReactionError(
+                "Reaction rate of type " + str(type(rate)) + " not valid"
+            )
 
         return rate
 
@@ -179,12 +180,13 @@ class Reactions:
         except IndexError:
             try:
                 _ = products[0]["object"]
-            except IndexError:
-                raise ReactionError("No Meta-Species detected in the reaction")
+            except IndexError as e:
+                raise ReactionError("No Meta-Species detected in the reaction") from e
 
         if Species.get_simulation_context() is not None:
             raise ReactionError(
-                "Reactions cannot be defined under event context. Only species counts")
+                "Reactions cannot be defined under event context. Only species counts"
+            )
 
         self.reactants = reactants
         self.products = products
@@ -245,70 +247,80 @@ class Assignment_Opp_Imp:
             return asgi_Assign.add(self, other)
         else:
             raise ValidationError(
-                "Addition not implemented for meta-species in this context")
+                "Addition not implemented for meta-species in this context"
+            )
 
     def __radd__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.add(other, self)
         else:
             raise ValidationError(
-                "Addition not implemented for meta-species in this context")
+                "Addition not implemented for meta-species in this context"
+            )
 
     def __sub__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.sub(self, other)
         else:
             raise ValidationError(
-                "Subtraction not implemented for meta-species in this context")
+                "Subtraction not implemented for meta-species in this context"
+            )
 
     def __rsub__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.sub(other, self)
         else:
             raise ValidationError(
-                "Subtraction not implemented for meta-species in this context")
+                "Subtraction not implemented for meta-species in this context"
+            )
 
     def __truediv__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.div(self, other)
         else:
             raise ValidationError(
-                "Division not implemented for meta-species in this context")
+                "Division not implemented for meta-species in this context"
+            )
 
     def __rtruediv__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.div(other, self)
         else:
             raise ValidationError(
-                "Division not implemented for meta-species in this context")
+                "Division not implemented for meta-species in this context"
+            )
 
     def __pow__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.pow(self, other)
         else:
             raise ValidationError(
-                "Division not implemented for meta-species in this context")
+                "Division not implemented for meta-species in this context"
+            )
 
     def __rpow__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.pow(other, self)
         else:
             raise ValidationError(
-                "Division not implemented for meta-species in this context")
+                "Division not implemented for meta-species in this context"
+            )
 
     def __mul__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
         else:
             raise ValidationError(
-                "Multiplication not implemented for meta-species in this sense")
+                "Multiplication not implemented for meta-species in this sense"
+            )
 
     def __rmul__(self, other: Any) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(other, self)
         else:
             raise ValidationError(
-                "Multiplication not implemented for meta-species in this sense")
+                "Multiplication not implemented for meta-species in this sense"
+            )
 
 
 class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
@@ -379,7 +391,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 raise ReactionError(
                     "Please separate the species when using "
                     "string based assignments under event "
-                    "context. Ex: str(A) + str(B)")
+                    "context. Ex: str(A) + str(B)"
+                )
             return str(self.list_of_reactants)
 
     def c(self, item: Any) -> Reacting_Species:
@@ -405,7 +418,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         else:
             raise ReactionError(
                 "Labels cannot be assigned to multiple "
-                "reacting species at the same time.")
+                "reacting species at the same time."
+            )
         return self
 
     def __getitem__(self, item: Any) -> Self:
@@ -444,7 +458,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             else:
                 raise ReactionError(
                     "Stoichiometry can only be an int or "
-                    f"float - Received {stoichiometry}")
+                    f"float - Received {stoichiometry}"
+                )
             return self
         else:
             return asgi_Assign.mul(stoichiometry, self)
@@ -461,10 +476,11 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 other = Reacting_Species(other, set())
             try:
                 self.list_of_reactants += other.list_of_reactants
-            except AttributeError:
+            except AttributeError as e:
                 raise ReactionError(
                     "Addition between meta-species and "
-                    f"types {type(other)} is not supported")
+                    f"types {type(other)} is not supported"
+                ) from e
             return self
         else:
             return asgi_Assign.add(self, other)
@@ -493,13 +509,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         :param other: (Species or Reacting Species)
             product side of the reaction being added
         """
-        from inspect import stack as inspect_stack
+        import sys
 
         from mobspy.modules.species import Species, _get_multiline_code_context
 
-        stack_frame = inspect_stack()[1]
-        code_line = _get_multiline_code_context(stack_frame)
-        line_number = stack_frame.lineno
+        frame = sys._getframe(1)
+        code_line = _get_multiline_code_context(
+            frame.f_code.co_filename, frame.f_lineno
+        )
+        line_number = frame.f_lineno
         Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):  # noqa: SIM108
@@ -534,7 +552,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         ) and not asgi_Assign.check_context():
             if len(self.list_of_reactants) != 1:
                 raise ReactionError(
-                    "Assignment used incorrectly. Only one species at a time")
+                    "Assignment used incorrectly. Only one species at a time"
+                )
             quantity_dict = species_object.add_quantities(characteristics, quantity)
         elif asgi_Assign.check_context():
             dummy_rsp = species_object
@@ -543,7 +562,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         elif simulation_under_context is None:
             raise ReactionError(
                 "Reactant_Species count assignment does "
-                f"not support the type {type(quantity)}")
+                f"not support the type {type(quantity)}"
+            )
 
         if simulation_under_context is not None:
             try:
@@ -562,7 +582,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 raise ReactionError(
                     str(e)
                     + "\n Only species count assignments are allowed in a model context"
-                )
+                ) from e
         else:
             return self
 
@@ -621,7 +641,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             )
             Species.update_meta_specie_named_any_context(new_context)
         else:
-            raise ReactionError("Contexts can only be used on basic Reacting meta species")
+            raise ReactionError(
+                "Contexts can only be used on basic Reacting meta species"
+            )
 
     def context_finish_for_reacting_specie(self) -> None:
         """Remove the ending context and update."""

@@ -6,7 +6,6 @@ simulation
 
 from __future__ import annotations
 
-import inspect
 import json
 from datetime import datetime
 from typing import Any
@@ -31,8 +30,8 @@ def read_json(json_file_name: str) -> Any:
     with open(json_file_name) as file:
         try:
             json_data = json.load(file)
-        except json.decoder.JSONDecodeError:
-            raise ParameterError("Error reading file")
+        except json.decoder.JSONDecodeError as e:
+            raise ParameterError("Error reading file") from e
 
     return json_data
 
@@ -60,8 +59,8 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
         try:
             if params["repetitions"] != len(params["seeds"]):
                 raise ParameterError("Seeds must be equal to the number of repetitions")
-        except Exception:
-            raise ParameterError("Parameter seeds must be a list")
+        except Exception as e:
+            raise ParameterError("Parameter seeds must be a list") from e
 
 
 def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
@@ -77,7 +76,9 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
             and isinstance(p, Quantity)
             and p.dimensionality != "[time]"
         ):
-            raise ParameterError("The duration of the simulation is not in units of time")
+            raise ParameterError(
+                "The duration of the simulation is not in units of time"
+            )
 
         if (
             isinstance(p, Quantity)
@@ -98,18 +99,24 @@ def convert_unit_parameters(params: dict[str, Any]) -> None:
             else:
                 try:
                     params[un] = u.unit_registry_object(params[un])
-                except Exception:
-                    raise ParameterError(f"The unit in parameter {un} did not parse")
+                except Exception as e:
+                    raise ParameterError(
+                        f"The unit in parameter {un} did not parse"
+                    ) from e
 
 
 def convert_time_parameters_after_compilation(
     value: int | float | Quantity,
+    model_context: Any = None,
 ) -> int | float | Quantity:
     """
     This function converts the duration if the model was already compiled
     """
     if isinstance(value, Quantity) and str(value.dimensionality) == "[time]":
-        value = value.convert("second").magnitude
+        if model_context is not None:
+            value = model_context.convert_time(value)
+        else:
+            value = value.convert("second").magnitude
     return value
 
 
@@ -117,22 +124,25 @@ def convert_volume_after_compilation(
     dimension: int | None,
     parameters_for_sbml: dict[str, Any],
     value: int | float | Quantity,
+    model_context: Any = None,
 ) -> int | float:
     if isinstance(value, Quantity):
-        message = "Error at "
-        context = inspect.stack()[2].code_context[0][:-1]
-        message += (
-            context
-            + "\n The dimension is set to tree at the moment of the compilation if"
-            " not specified beforehand \n Please set a volume in the correct"
-            " dimension before compilation"
+        message = (
+            f"Error converting volume parameter (value={value}, dimension={dimension})."
+            "\n The dimension is set to three at the moment of the compilation if"
+            " not specified beforehand.\n Please set a volume in the correct"
+            " dimension before compilation."
         )
         uh.extract_length_dimension(
             str(value.dimensionality), dimension, context=message
         )
 
-    value = uh.convert_volume(value, dimension)
-    parameters_for_sbml["volume"] = (value, "dimensionless")
+    value = uh.convert_volume(value, dimension, model_context=model_context)
+    if model_context is not None:
+        vol_unit_id = model_context.get_sbml_volume_units_id()
+    else:
+        vol_unit_id = "dimensionless"
+    parameters_for_sbml["volume"] = (value, vol_unit_id)
     return value
 
 

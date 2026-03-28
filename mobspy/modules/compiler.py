@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import CompilationError
+from mobspy.mobspy_logging import get_logger
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
 )
@@ -28,6 +28,7 @@ from mobspy.modules.species_string_generator import (
 from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
+from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.unit_handler import (
     convert_counts as uh_convert_counts,
 )
@@ -70,7 +71,14 @@ class Compiler:
         parameters_used: ParametersUsed,
         parameters_for_sbml: ParametersForSbml,
         parameters_to_add: set[Any],
+        model_context: ModelUnitContext | None = None,
     ) -> None:
+        # Determine the unit string for parameters
+        param_unit = "dimensionless"
+        if model_context is not None:
+            rate_unit_id = f"per_{model_context.get_sbml_time_units_id()}"
+            param_unit = rate_unit_id
+
         for parameter in parameters_to_add:
             if parameter.name in parameters_used:
                 parameters_used[parameter.name].used_in.add("$sbml")
@@ -85,12 +93,12 @@ class Compiler:
             try:
                 parameters_for_sbml[parameter.name] = (
                     parameter.value[0],
-                    "dimensionless",
+                    param_unit,
                 )
             except Exception:
                 parameters_for_sbml[parameter.name] = (
                     parameter.value,
-                    "dimensionless",
+                    param_unit,
                 )
 
     @classmethod
@@ -191,6 +199,7 @@ class Compiler:
         volume: int | float | Quantity,
         dimension: int | None,
         species_counts: list[dict[str, Any]],
+        model_context: ModelUnitContext | None = None,
     ) -> tuple[int | float, int, ParametersForSbml]:
         """Resolve volume and dimension, returning converted values."""
         if isinstance(volume, Quantity):
@@ -209,8 +218,13 @@ class Compiler:
                         str(count["quantity"].dimensionality), dimension
                     )
 
-        volume = uh_convert_volume(volume, dimension)
-        parameters_for_sbml: ParametersForSbml = {"volume": (volume, "dimensionless")}
+        volume = uh_convert_volume(volume, dimension, model_context=model_context)
+
+        if model_context is not None:
+            vol_unit_id = model_context.get_sbml_volume_units_id()
+        else:
+            vol_unit_id = "dimensionless"
+        parameters_for_sbml: ParametersForSbml = {"volume": (volume, vol_unit_id)}
         return volume, dimension, parameters_for_sbml
 
     @classmethod
@@ -223,6 +237,7 @@ class Compiler:
         dimension: int,
         type_of_model: str,
         parameters_used: ParametersUsed,
+        model_context: ModelUnitContext | None = None,
     ) -> tuple[list[str], set[Any]]:
         """Process species counts and assign initial values.
 
@@ -245,11 +260,9 @@ class Compiler:
             if isinstance(count["quantity"], mp_Mobspy_Parameter):
                 parameters_in_counts.add(count["quantity"])
                 if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name].used_in = (
-                        parameters_used[count["quantity"].name].used_in.union(
-                            set(species_strings)
-                        )
-                    )
+                    parameters_used[count["quantity"].name].used_in = parameters_used[
+                        count["quantity"].name
+                    ].used_in.union(set(species_strings))
                 else:
                     parameters_used[count["quantity"].name] = ParameterUsedInfo(
                         name=count["quantity"].name,
@@ -258,7 +271,7 @@ class Compiler:
                         object=count["quantity"],
                     )
 
-            temp_count = uh_convert_counts(count["quantity"], volume, dimension)
+            temp_count = uh_convert_counts(count["quantity"], volume, dimension, model_context=model_context)
             for spe_str in species_strings:
                 if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
                     _logger.warning(
@@ -284,9 +297,7 @@ class Compiler:
             if isinstance(count["quantity"], mp_Mobspy_Parameter):
                 parameters_in_counts.add(count["quantity"])
                 if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name].used_in.add(
-                        species_string
-                    )
+                    parameters_used[count["quantity"].name].used_in.add(species_string)
                 else:
                     parameters_used[count["quantity"].name] = ParameterUsedInfo(
                         name=count["quantity"].name,
@@ -295,7 +306,7 @@ class Compiler:
                         object=count["quantity"],
                     )
 
-            temp_count = uh_convert_counts(count["quantity"], volume, dimension)
+            temp_count = uh_convert_counts(count["quantity"], volume, dimension, model_context=model_context)
             if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
                 _logger.warning("The stochastic simulation rounds floats to integers")
                 species_for_sbml[species_string] = int(temp_count)
@@ -345,8 +356,10 @@ class Compiler:
                     continue
                 if (
                     reactions_for_sbml[r1].reactants == reactions_for_sbml[r2].reactants
-                    and reactions_for_sbml[r1].products == reactions_for_sbml[r2].products
-                    and reactions_for_sbml[r1].kinetics == reactions_for_sbml[r2].kinetics
+                    and reactions_for_sbml[r1].products
+                    == reactions_for_sbml[r2].products
+                    and reactions_for_sbml[r1].kinetics
+                    == reactions_for_sbml[r2].kinetics
                 ):
                     _logger.warning(
                         "The following reaction: \n"
@@ -398,9 +411,7 @@ class Compiler:
         # End condition event for continuous simulations
         if continuous_sim:
             end_event = EventData(
-                trigger=ending_condition.generate_string(
-                    orthogonal_vector_structure
-                ),
+                trigger=ending_condition.generate_string(orthogonal_vector_structure),
                 delay="0",
                 assignments=[("_End_Flag_MetaSpecies", "1")],
             )
@@ -541,6 +552,8 @@ class Compiler:
         continuous_sim: bool = False,
         ending_condition: Any = None,
         skip_expression_check: bool = False,
+        parameter_context: dict[str, Any] | None = None,
+        model_context: ModelUnitContext | None = None,
     ) -> CompilerResult:
         """Compile a MobsPy model into SBML-ready data structures.
 
@@ -553,9 +566,10 @@ class Compiler:
 
         # Phase 2: Initialize parameters
         parameters_used: ParametersUsed = {}
-        parameter_exist = {}
-        if mp_Mobspy_Parameter.parameter_stack != {}:
-            parameter_exist = mp_Mobspy_Parameter.parameter_stack
+        if parameter_context is None:
+            parameter_exist = dict(mp_Mobspy_Parameter.parameter_stack)
+        else:
+            parameter_exist = parameter_context
 
         for species in meta_species_to_simulate:
             species.order_references()
@@ -566,8 +580,11 @@ class Compiler:
         )
 
         # Phase 4: Resolve volume and dimension
+        # ModelUnitContext is passed from Simulation when full unit pipeline is active.
+        # Do NOT auto-create here: downstream (SBML, results) must be ready first.
+
         volume, dimension, parameters_for_sbml = cls._resolve_volume_and_dimension(
-            volume, dimension, species_counts
+            volume, dimension, species_counts, model_context
         )
 
         # Add end flag species for continuous simulations
@@ -590,9 +607,11 @@ class Compiler:
             dimension,
             type_of_model,
             parameters_used,
+            model_context=model_context,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_counts
+            parameters_used, parameters_for_sbml, parameters_in_counts,
+            model_context=model_context,
         )
 
         # Phase 6: Build reactions
@@ -606,7 +625,8 @@ class Compiler:
             skip_expression_check,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_reaction
+            parameters_used, parameters_for_sbml, parameters_in_reaction,
+            model_context=model_context,
         )
 
         # Phase 7: Check for duplicate reactions
@@ -626,7 +646,8 @@ class Compiler:
             ending_condition,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_events
+            parameters_used, parameters_for_sbml, parameters_in_events,
+            model_context=model_context,
         )
 
         # Phase 9: Validate parameters
@@ -639,9 +660,7 @@ class Compiler:
         )
 
         # Phase 10: Store parameter objects
-        parameter_object_dict = {
-            key: mp_Mobspy_Parameter.parameter_stack[key] for key in parameters_used
-        }
+        parameter_object_dict = {key: parameter_exist[key] for key in parameters_used}
 
         # Phase 11: Build assignments
         assignments_for_sbml = cls._build_assignments(
@@ -672,4 +691,5 @@ class Compiler:
             parameter_object_dict=parameter_object_dict,
             assignments_for_sbml=assignments_for_sbml,
             has_mole=has_mole,
+            model_context=model_context,
         )

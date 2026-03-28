@@ -6,10 +6,10 @@ models in MobsPy's DSL.
 
 from __future__ import annotations
 
+import linecache
 import re
+import sys
 from collections.abc import Generator
-from inspect import FrameInfo
-from inspect import stack as inspect_stack
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -44,8 +44,8 @@ from mobspy.modules.mobspy_parameters import (
 )
 from mobspy.modules.reactions import (
     Assignment_Opp_Imp,
-    Reactions,
     Reacting_Species,
+    Reactions,
     _Last_rate_storage,
     _methods_Reacting_Species,
 )
@@ -59,17 +59,16 @@ if TYPE_CHECKING:
 _logger = get_logger(__name__)
 
 
-def _get_multiline_code_context(stack_frame: FrameInfo) -> str:
+def _get_multiline_code_context(filename: str, lineno: int) -> str:
     """Extract multi-line code context for reaction parsing.
 
     Handles cases where formatters split >> operators across lines.
     """
-    code_context = stack_frame.code_context
-    if not code_context:
+    line = linecache.getline(filename, lineno)
+    if not line:
         return ""
 
-    full_context = "".join(code_context).rstrip("\n")
-    return full_context
+    return line.rstrip("\n")
 
 
 # Easter Egg: I finished the first version on a sunday at the
@@ -138,7 +137,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             raise ValidationError(
                 f"Characteristic name {char} in object "
                 f"{affected_object} is not allowed."
-                " Please pick another name")
+                " Please pick another name"
+            )
 
         if (
             char in _methods_Reacting_Species
@@ -148,7 +148,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             raise ValidationError(
                 f"Characteristic name {char} in object "
                 f"{affected_object} is not allowed. "
-                "Please pick another name")
+                "Please pick another name"
+            )
             return False
         else:
             return True
@@ -272,7 +273,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             else:
                 raise ReactionError(
                     "Stoichiometry can only be an int or "
-                    f"float - Received {stoichiometry}")
+                    f"float - Received {stoichiometry}"
+                )
                 raise ValueError("wrong stoichiometry")
             return r
         else:
@@ -347,9 +349,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         :return: the reaction
         """
         myself = Reacting_Species(self, set())
-        stack_frame = inspect_stack()[1]
-        code_line = _get_multiline_code_context(stack_frame)
-        line_number = stack_frame.lineno
+        frame = sys._getframe(1)
+        code_line = _get_multiline_code_context(
+            frame.f_code.co_filename, frame.f_lineno
+        )
+        line_number = frame.f_lineno
         Species._compile_defined_reaction(code_line, line_number)
 
         if isinstance(other, Species):
@@ -411,10 +415,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             )
 
         elif (
-            type(quantity) == int  # noqa: SIM101, E721
-            or type(quantity) == float  # noqa: E721
-            or isinstance(quantity, Quantity)
-            or isinstance(quantity, mp_Mobspy_Parameter)
+            isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
         ) and not asgi_Assign.check_context():
             quantity_dict = self.add_quantities("std$", quantity)
 
@@ -425,21 +426,24 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 if cha in self._characteristics:
                     return cha
             raise ReactionError(
-                f"{quantity} contains no characteristics from {self._name}")
+                f"{quantity} contains no characteristics from {self._name}"
+            )
         elif type(quantity) == Reacting_Species:  # noqa: E721
             raise ReactionError(
                 "Assignments of counts using meta-species "
                 "are only allowed under events in "
-                "simulation context")
+                "simulation context"
+            )
         elif Species.get_simulation_context() is None:
             raise ReactionError(
                 f"Species count assignment does not support the type {type(quantity)}"
-                f" if not under a simulation context")
+                f" if not under a simulation context"
+            )
 
         if self.get_simulation_context() is not None:
             sim_under_context = self.get_simulation_context()
 
-            if type(quantity) == str:  # noqa: E721
+            if isinstance(quantity, str):
                 quantity_dict = self.add_quantities("std$", quantity)
             try:
                 sim_under_context.current_event_count_data.append(
@@ -453,7 +457,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 raise ReactionError(
                     str(e)
                     + "\n Only species count assignments are allowed in a model context"
-                )
+                ) from e
         else:
             return self
 
@@ -497,7 +501,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
 
-        code_line = inspect_stack()[1].code_context[0][:-1]
+        frame = sys._getframe(1)
+        code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip(
+            "\n"
+        )
 
         if not isinstance(other, Species):
             raise ReactionError(
@@ -512,6 +519,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         new_entity = Species(name)
         new_entity.set_references(mcu_combine_references(self, other))
         new_entity.add_reference(new_entity)
+        new_entity._from_mul = True
 
         mcu_check_orthogonality_between_references(new_entity.get_references())
 
@@ -612,7 +620,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 "A different Simulation Object was assigned "
                 "to a meta-species object under context \n"
                 "Please use only one Simulation Object "
-                "per context assignment")
+                "per context assignment"
+            )
 
     @classmethod
     def update_meta_specie_named_any_context(

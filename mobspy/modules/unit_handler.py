@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
 from scipy.constants import N_A
@@ -8,11 +8,15 @@ from scipy.constants import N_A
 from mobspy.exceptions import UnitError
 from mobspy.modules.mobspy_expressions import OverrideQuantity, u
 
+if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
+
 
 def convert_rate(
     quantity: int | float | Quantity,  # type: ignore[type-arg]
     reaction_order: int,
     dimension: int | None,
+    model_context: ModelUnitContext | None = None,
 ) -> tuple[float | int | Any, int | None, bool]:
     """
     This function converts the rate from the users given unit to MobsPy standard units
@@ -29,6 +33,9 @@ def convert_rate(
     :param quantity: (int, float) converted unit into
         MobsPy standard units
     """
+
+    if model_context is not None:
+        return model_context.convert_rate(quantity, reaction_order, dimension)
 
     volume_power = reaction_order - 1
     # For objects that cannot be deep copied
@@ -76,7 +83,7 @@ def convert_rate(
             raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
                 f"Is the rate in the form [volume]**{volume_power}/[time]?"
-            )
+            ) from e
     else:
         return quantity, dimension, False
 
@@ -85,6 +92,7 @@ def convert_counts(
     quantity: int | float | Quantity | Any,  # type: ignore[type-arg]
     volume: int | float,
     dimension: int,
+    model_context: ModelUnitContext | None = None,
 ) -> Any:
     """
     This function converts the counts from the users
@@ -96,9 +104,12 @@ def convert_counts(
         the same
     :param volume: (int, float) volume in liters (converted beforehand)
     :param dimension: (int) model's dimension (1D, 2D, 3D, ... )
+    :param model_context: optional ModelUnitContext for user-unit conversion
 
     :return: converted_quantity (int, float) = converted unit into MobsPy standard units
     """
+    if model_context is not None:
+        return model_context.convert_counts(quantity, volume)
 
     converted_quantity = deep_copy_quantities(quantity)
 
@@ -135,7 +146,7 @@ def convert_counts(
             raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
                 f"Is it really a count or concentration?"
-            )
+            ) from e
     return converted_quantity
 
 
@@ -241,14 +252,18 @@ def _extract_length_power(unit_string: str) -> int | None:
 def convert_volume(
     volume: int | float | Quantity,  # type: ignore[type-arg]
     dimension: int | None,
+    model_context: ModelUnitContext | None = None,
 ) -> int | float:
     """
-    Converts volume to decimetre**dimension
+    Converts volume to model volume units (or decimetre**dimension in legacy mode).
 
     :param volume: (int, float, Quantity) volume used in simulation
+    :param model_context: optional ModelUnitContext for user-unit conversion
 
-    :return: the converted volume in MobsPy units
+    :return: the converted volume in model units
     """
+    if model_context is not None:
+        return model_context.convert_volume(volume)
 
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
@@ -258,12 +273,18 @@ def convert_volume(
         return volume
 
 
-def convert_time(time: int | float | Quantity) -> int | float | None:  # type: ignore[type-arg]
+def convert_time(
+    time: int | float | Quantity,  # type: ignore[type-arg]
+    model_context: ModelUnitContext | None = None,
+) -> int | float | None:
     """
-    Converts time into seconds
+    Converts time to model time units (or seconds in legacy mode).
 
     :param time: (int, float, Quantity) any time used
+    :param model_context: optional ModelUnitContext for user-unit conversion
     """
+    if model_context is not None:
+        return model_context.convert_time(time)
 
     if isinstance(time, Quantity):
         dim = dict(time.dimensionality)

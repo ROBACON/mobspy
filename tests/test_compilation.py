@@ -80,13 +80,13 @@ class TestBasicModels:
             Mortal, Creator = BaseSpecies(2)
             mRNA = Mortal * Creator
             Protein = New(Mortal)
-            for m, p in zip(["m1", "m2", "m3"], ["x2", "x3", "x1"]):
+            for m, p in zip(["m1", "m2", "m3"], ["x2", "x3", "x1"], strict=False):
                 (
                     Protein.c(p)
                     >> Protein.c(p)
                     + mRNA.c(m)[lambda pro: f"{beta_m}/(1 + ({pro}/{k})^{n})"]
                 )
-            for m, p in zip(["m1", "m2", "m3"], ["x1", "x2", "x3"]):
+            for m, p in zip(["m1", "m2", "m3"], ["x1", "x2", "x3"], strict=False):
                 mRNA.c(m) >> mRNA.c(m) + Protein.c(p)[beta_p]
             Mortal >> mobspy.Zero[lambda r1: gamma_p if r1.is_a(Protein) else gamma_m]
             mobspy.Zero >> Creator[leaky]
@@ -300,8 +300,10 @@ class TestEmptyArgAndExpressions:
         (
             A + B
             >> mobspy.Zero[
-                lambda r1, r2: (1 * u.millimolar / u.hour)
-                * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)
+                lambda r1, r2: (
+                    (1 * u.millimolar / u.hour)
+                    * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)
+                )
             ]
         )
         Hey >> mobspy.Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
@@ -607,10 +609,12 @@ class TestParameters:
         Color.red, Color.blue
         Location.here, Location.there
         Something = Color * Location
-        rate = (
-            lambda r1, r2: 1 * u.decimeter**2 / u.h
-            if Location(r1) == Location(r2)
-            else 0.5 * u.decimeter**2 / u.h
+        rate = (  # noqa: E731
+            lambda r1, r2: (
+                1 * u.decimeter**2 / u.h
+                if Location(r1) == Location(r2)
+                else 0.5 * u.decimeter**2 / u.h
+            )
         )
         2 * Something >> 3 * Something[rate]
         S = Simulation(Something)

@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParametersUsed
 
 from mobspy.exceptions import SimulationError
-
 from mobspy.modules.mobspy_parameters import (  # noqa: E402
     Internal_Parameter_Constructor,
 )
@@ -61,7 +60,7 @@ class Simulation_Utils:
 
         if isinstance(arg[0], Internal_Parameter_Constructor):
             self._update_parameter(arg)
-        elif type(arg[0]) == str:  # noqa: E721
+        elif isinstance(arg[0], str):
             test_model = self._list_of_models[0]
 
             # Check to see if string is in parameters
@@ -103,7 +102,7 @@ class Simulation_Utils:
         else:
             value_to_update = arg[1]
 
-        if type(arg[0]) == str:  # noqa: SIM108, E721
+        if isinstance(arg[0], str):  # noqa: SIM108
             parameter_str = arg[0]
         else:
             parameter_str = arg[0].get_name()
@@ -115,10 +114,10 @@ class Simulation_Utils:
                     value_to_update,
                     "dimensionless",
                 )
-            except KeyError:
+            except KeyError as e:
                 raise SimulationError(
                     f"The parameter named {parameter_str} was not found in the model"
-                )
+                ) from e
 
         parameter_object = self.model_parameters[parameter_str].object
         parameter_object.update_value(arg[1])
@@ -126,15 +125,13 @@ class Simulation_Utils:
         # Update parameter in model_parameters in the simulation object
         try:
             if not iterable:
-                self.model_parameters[parameter_str].values = [
-                    parameter_object.value
-                ]
+                self.model_parameters[parameter_str].values = [parameter_object.value]
             else:
                 self.model_parameters[parameter_str].values = parameter_object.value
-        except KeyError:
+        except KeyError as e:
             raise SimulationError(
                 f"The parameter named {parameter_str} was not found in the model"
-            )
+            ) from e
 
     def _update_species(self, arg: Any) -> None:
         # Prepare count

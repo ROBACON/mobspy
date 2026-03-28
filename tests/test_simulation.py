@@ -1,11 +1,20 @@
-"""Tests that run actual simulations (deterministic, stochastic, hybrid, concatenated)."""
+"""Tests for simulations (deterministic, stochastic, hybrid, concatenated)."""
 
 from __future__ import annotations
 
 import os
 
 import mobspy
-from mobspy import All, BaseSpecies, ModelParameters, New, Simulation, set_counts, u
+from mobspy import (
+    All,
+    BaseSpecies,
+    ModelParameters,
+    New,
+    Simulation,
+    set_counts,
+    simlog,
+    u,
+)
 from mobspy.exceptions import MobsPyError
 
 from .conftest import compare_model
@@ -443,7 +452,7 @@ class TestErrorHandling:
             assert True
 
     def test_proper_unit_context_exit(self):
-        duration = 40
+        _duration = 40
         rate = 1
         init_res = 10000
         init_bact = 1000
@@ -502,7 +511,7 @@ class TestModelReference:
 
     def test_replacing_species_name_in_expression(self):
         Resource, R = BaseSpecies()
-        death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)
+        death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)  # noqa: E731
         Resource + R >> mobspy.Zero[death_rate]
         S = Simulation(Resource | R)
         S.duration = 10

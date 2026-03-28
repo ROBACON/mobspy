@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Any
 from joblib import Parallel, delayed
 
 import mobspy.sbml_simulator.builder as sbml_builder
+from mobspy.exceptions import SimulationError
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
-from mobspy.exceptions import SimulationError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -182,12 +182,16 @@ def __sbml_new_initial_values(
         with contextlib.suppress(KeyError):
             species_for_sbml["_End_Flag_MetaSpecies"] = 0
 
+    # Extract model_context if available (for proper SBML unit declarations)
+    model_context = model.get("model_context") if hasattr(model, "get") else getattr(model, "model_context", None)
+
     return sbml_builder.build(
         species_for_sbml,
         model["parameters_for_sbml"],
         model["reactions_for_sbml"],
         model["events_for_sbml"],
         model["assignments_for_sbml"],
+        model_context=model_context,
     )
 
 
@@ -292,11 +296,11 @@ def __remap_species(
                         mapped_data[spe] = [runs_not_returned_by_basico[spe]]
                 mapped_data[group] = this_run
 
-        except IndexError:
+        except IndexError as e:
             raise SimulationError(
                 f'run: remap_species: error when remapping "{the_mapping}".'
                 + "Possible fix: All runs must have the same time"
-            )
+            ) from e
 
         except TypeError:
             simlog.warning(
@@ -308,6 +312,6 @@ def __remap_species(
             raise SimulationError(
                 "TypeError while mapping simulation results. "
                 "This may be caused by A >> A identity reactions."
-            )
+            ) from None
 
     return mapped_data

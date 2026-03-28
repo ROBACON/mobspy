@@ -176,8 +176,10 @@ def _render_resolved(
     """Render an AST with species references resolved for count/concentration context.
 
     Handles the mode on each SpeciesRefNode:
-      - 'count' in count_in_model -> bare name; in concentration_in_model -> (name*volume)
-      - 'concentration' in count_in_model -> (name/volume); in concentration_in_model -> bare
+      - 'count' in count_in_model -> bare name;
+        in concentration_in_model -> (name*volume)
+      - 'concentration' in count_in_model -> (name/volume);
+        in concentration_in_model -> bare
       - 'default' resolved based on count_in_expression/concentration_in_expression
       - 'assignment' -> rendered as-is (for ODE references)
     """
@@ -203,9 +205,17 @@ def _render_resolved(
             else:
                 # default mode - resolved by expression context
                 # Count takes priority when both flags are set
-                if count_in_model and concentration_in_expression and not count_in_expression:
+                if (
+                    count_in_model
+                    and concentration_in_expression
+                    and not count_in_expression
+                ):
                     return "(" + name + "/volume)"
-                elif concentration_in_model and count_in_expression and not concentration_in_expression:
+                elif (
+                    concentration_in_model
+                    and count_in_expression
+                    and not concentration_in_expression
+                ):
                     return "(" + name + "*volume)"
                 return name
 
@@ -324,7 +334,8 @@ class Specific_Species_Operator(Bool_Override):
             raise CompilationError(
                 "Cannot chain is_a() with dot-notation characteristic queries. "
                 "Use them in separate conditions: "
-                "'r.is_a(X) and r.alive' instead of chaining.")
+                "'r.is_a(X) and r.alive' instead of chaining."
+            )
 
     def add(self, characteristic: str) -> None:
         """
@@ -367,7 +378,7 @@ class ExpressionDefiner:
     _force_expression_mode: bool
     _parameter_set: set[Any]
     _expression_variables: set[Any]
-    _has_units: bool | str
+    _has_units: bool
     _count_in_model: bool
     _concentration_in_model: bool
     _count_in_expression: bool
@@ -401,12 +412,8 @@ class ExpressionDefiner:
         # Always unwrap OverrideQuantity to plain Quantity to avoid:
         # 1. "different registries" errors in Pint operations
         # 2. ExpressionDefiner overrides when _ms_active is True
-        raw_first = (
-            first.q_object if isinstance(first, OverrideQuantity) else first
-        )
-        raw_second = (
-            second.q_object if isinstance(second, OverrideQuantity) else second
-        )
+        raw_first = first.q_object if isinstance(first, OverrideQuantity) else first
+        raw_second = second.q_object if isinstance(second, OverrideQuantity) else second
 
         q_object = None
         if isinstance(raw_first, Quantity) and isinstance(raw_second, Quantity):
@@ -453,37 +460,72 @@ class ExpressionDefiner:
         else:
             raise TypeError("Non Valid Operation resulted in no q_object creation")
 
-    def execute_quantity_op(self, other: Any, operation: str) -> tuple[Any, Any]:
+    @staticmethod
+    def _normalize_substance(value: Any) -> Any:
+        """Convert [substance] units to counts via QuantityConverter.
+
+        If the value is a Quantity with [substance] dimension, convert
+        mol -> N_A counts. Otherwise return as-is.
         """
-        Executes the unit based operation. Used to verify the
+        if isinstance(value, (Quantity, OverrideQuantity)):
+            dim = value.dimensionality if not isinstance(value, OverrideQuantity) \
+                else value.q_object.dimensionality
+            if "[substance]" in str(dim):
+                try:
+                    result = QuantityConverter.convert_received_unit(value)
+                    return result.q_object if isinstance(result, OverrideQuantity) \
+                        else result
+                except Exception:
+                    pass
+        return value
+
+    def execute_quantity_op(self, other: Any, operation: str) -> tuple[Any, Any]:
+        """Executes the unit based operation. Used to verify the
         unit of a MobsPy expression.
+
+        When an operation fails due to [substance] incompatibility (e.g.,
+        mol/L + 1/L), retries after converting mol -> N_A counts.
 
         :param other: other number (or expression) to execute
             the operation on
         :param operation: string symbol of the operation to be
             executed
         """
-        try:
-            if isinstance(other, ExpressionDefiner):
-                count_op = self.execute_op(
-                    self._unit_count_op, other._unit_count_op, operation
-                )
-            else:
-                count_op = self.execute_op(self._unit_count_op, other, operation)
-        except Exception as e:
-            # raise e - For debug
-            count_op = e
+        self_count = self._unit_count_op
+        self_conc = self._unit_conc_op
+
+        if isinstance(other, ExpressionDefiner):
+            other_count = other._unit_count_op
+            other_conc = other._unit_conc_op
+        else:
+            other_count = other
+            other_conc = other
 
         try:
-            if isinstance(other, ExpressionDefiner):
-                conc_op = self.execute_op(
-                    self._unit_conc_op, other._unit_conc_op, operation
+            count_op = self.execute_op(self_count, other_count, operation)
+        except Exception:
+            # Retry after normalizing [substance] -> counts
+            try:
+                count_op = self.execute_op(
+                    self._normalize_substance(self_count),
+                    self._normalize_substance(other_count),
+                    operation,
                 )
-            else:
-                conc_op = self.execute_op(self._unit_conc_op, other, operation)
-        except Exception as e:
-            # raise e - For debug
-            conc_op = e
+            except Exception as e:
+                count_op = e
+
+        try:
+            conc_op = self.execute_op(self_conc, other_conc, operation)
+        except Exception:
+            # Retry after normalizing [substance] -> counts
+            try:
+                conc_op = self.execute_op(
+                    self._normalize_substance(self_conc),
+                    self._normalize_substance(other_conc),
+                    operation,
+                )
+            except Exception as e:
+                conc_op = e
 
         return count_op, conc_op
 
@@ -665,7 +707,7 @@ class ExpressionDefiner:
         self._expression_variables: set[Any] = set()
 
         # Presence of units
-        self._has_units: bool | str = False
+        self._has_units: bool = False
 
         # Concentration and counts
         self._count_in_model = False
@@ -701,22 +743,21 @@ class ExpressionDefiner:
         :param direct_sense: sense of the operation
         :param operation: current operation in the stack
         """
-        _has_units: bool | str = False
+        _has_units: bool = False
         try:
-            # Returns string True not boolean to avoid risk __getattr__ bugs
-            if self._has_units == "T":
-                _has_units = "T"
-            if other._has_units == "T":
-                _has_units = "T"
+            if self._has_units:
+                _has_units = True
+            if other._has_units:
+                _has_units = True
         except AttributeError:
             pass
 
         try:
-            c1 = self._has_units == "T"
+            c1 = self._has_units
         except AttributeError:
             c1 = False
         try:
-            c2 = other._has_units == "T"
+            c2 = other._has_units
         except AttributeError:
             c2 = False
         if (
@@ -729,8 +770,11 @@ class ExpressionDefiner:
                 "Both the count and concentration interpretations failed:\n"
                 f"  count path: {count_op}\n"
                 f"  concentration path: {conc_op}\n"
-                "Check that all terms in additions/subtractions have matching dimensions. "
-                "Example of an invalid expression: (1/u.s) + (1*u.l/u.s)")
+                "Check that all terms in additions/subtractions "
+                "have matching dimensions. "
+                "Example of an invalid expression: "
+                "(1/u.s) + (1*u.l/u.s)"
+            )
 
         if isinstance(self, (Quantity, OverrideQuantity)):
             self = QuantityConverter.convert_received_unit(self)
@@ -899,14 +943,6 @@ class OverrideUnitRegistry:
 u = OverrideUnitRegistry()
 
 
-def set_u_context() -> None:
-    _ms_active_ctx.set(True)
-
-
-def reset_u_context() -> None:
-    _ms_active_ctx.set(False)
-
-
 class QuantityConverter:
     """
     Class that converts an unit from any to MobsPy L-s-counts conversion
@@ -942,24 +978,14 @@ class QuantityConverter:
         if "[mass]" in to_convert_into:
             to_convert_into = to_convert_into.replace("[mass]", "kg")
         if "[substance]" in to_convert_into:
-            index = to_convert_into.find("[substance]")
-            d_string = str(quantity.dimensionality)
-            try:
-                mol_power = int(d_string[index + 15])
-            except ValueError:
-                mol_power = 1
-            except IndexError:
-                mol_power = 1
-            except Exception as e:
-                raise e
+            mol_power = int(dict(copied_quantity.dimensionality).get("[substance]", 1))
 
             copied_quantity = copied_quantity * (N_A / (1 * ur.mol)) ** mol_power
-            if "[substance]" in copied_quantity.dimensionality:
-                copied_quantity = copied_quantity * ((1 * ur.mol) / N_A) ** (
-                    2 * mol_power
+            if "[substance]" in str(copied_quantity.dimensionality):
+                raise TypeError(
+                    f"Could not convert molar quantity {quantity} "
+                    f"(substance power={mol_power})"
                 )
-            if "[substance]" in copied_quantity.dimensionality:
-                raise TypeError("Could not convert molar quantity")
 
             to_convert_into = to_convert_into.replace("[substance]", "1")
 
@@ -1134,7 +1160,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         self._operation = self.q_object.magnitude
         self._expression_variables: set[Any] = set()
         self._parameter_set: set[Any] = set()
-        self._has_units: bool | str = "T"
+        self._has_units: bool = True
 
     def __str__(self) -> str:
         # Always return the full quantity with units for user-facing output
@@ -1175,7 +1201,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         concentration_in_model: bool = False,
         count_in_expression: bool = True,
         concentration_in_expression: bool = False,
-        has_units: bool | str = False,
+        has_units: bool = False,
         species_list_operation_order: list[Any] | None = None,
     ) -> None:
         super().__init__(species_string, species_object)
@@ -1219,7 +1245,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         if self._concentration_in_model:
             self._unit_conc_op = None
 
-        self._has_units: bool | str = has_units
+        self._has_units: bool = has_units
 
     def __getattr__(self, item: str) -> Specific_Species_Operator:
         return super().__getattr__(item)
@@ -1253,11 +1279,11 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         if skip_check:
             return operation, True
 
-        if self._has_units != "T":
+        if not self._has_units:
             self._count_in_expression = True
 
         if (
-            self._has_units == "T"
+            self._has_units
             and self._expression_variables == set()
             and reaction_order is not None
         ):
@@ -1268,7 +1294,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             ):
                 return operation, False
 
-        c1 = self._has_units == "T"
+        c1 = self._has_units
         c2 = isinstance(self._unit_count_op, Exception)
         c3 = isinstance(self._unit_conc_op, Exception)
         if c1 and (c2 and c3):
@@ -1299,12 +1325,13 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 self._count_in_expression = True
 
         if (
-            self._has_units == "T"
+            self._has_units
             and not self._count_in_expression
             and not self._concentration_in_expression
         ):
             raise TypeError(
-                "Could not determine whether the rate expression uses counts or concentrations.\n"
+                "Could not determine whether the rate expression "
+                "uses counts or concentrations.\n"
                 f"  count interpretation: {self._unit_count_op}\n"
                 f"  concentration interpretation: {self._unit_conc_op}\n"
                 "The rate must resolve to 1/[time] for counts "
@@ -1313,14 +1340,17 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
         if isinstance(self._operation, ExprNode):
             # AST path: walk the tree to resolve species references
-            if not self._count_in_model and not self._concentration_in_model:
-                # Neither set: check expression context for validation
-                if not self._count_in_expression and not self._concentration_in_expression:
-                    raise ValueError(
-                        "The expression did not resolve for "
-                        "lack of concentration/count "
-                        "specifications"
-                    )
+            if (
+                not self._count_in_model
+                and not self._concentration_in_model
+                and not self._count_in_expression
+                and not self._concentration_in_expression
+            ):
+                raise ValueError(
+                    "The expression did not resolve for "
+                    "lack of concentration/count "
+                    "specifications"
+                )
 
             convert_operation = _render_resolved(
                 self._operation,
@@ -1335,7 +1365,8 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             # Count takes priority when both flags are set.
             # The wrapper is applied once per expression variable (matching
             # the legacy per-variable loop behavior).
-            n_vars = len(self._expression_variables) if self._expression_variables else 0
+            expr_vars = self._expression_variables
+            n_vars = len(expr_vars) if expr_vars else 0
             if (
                 self._count_in_model
                 and self._concentration_in_expression
@@ -1472,15 +1503,20 @@ class _Count_Base:
         try:
             for v in item._expression_variables:
                 if isinstance(item._operation, ExprNode):
-                    _set_species_mode_in_tree(item._operation, v.species_string, "count")
+                    _set_species_mode_in_tree(
+                        item._operation,
+                        v.species_string,
+                        "count",
+                    )
                 else:
                     item._operation = str(item._operation).replace(
                         v.species_string, "$count$" + v.species_string
                     )
             return item
-        except AttributeError:
-            raise CompilationError("Count[] operator can only be used in MobsPy expressions")
-            return None
+        except AttributeError as e:
+            raise CompilationError(
+                "Count[] operator can only be used in MobsPy expressions"
+            ) from e
 
 
 Count = _Count_Base()
@@ -1499,10 +1535,10 @@ class _Conc_Base:
                         v.species_string, "$concentration$" + v.species_string
                     )
             return item
-        except AttributeError:
+        except AttributeError as e:
             raise CompilationError(
                 "Concentration[] operator can only be used in MobsPy expressions"
-            )
+            ) from e
         return None
 
 

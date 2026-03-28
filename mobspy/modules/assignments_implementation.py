@@ -9,7 +9,6 @@ from mobspy.exceptions import CompilationError
 if TYPE_CHECKING:
     from mobspy.types import AssignmentsForSbml
 
-from mobspy.types import AssignmentData
 from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
@@ -17,7 +16,7 @@ from mobspy.modules.species_string_generator import (
 from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
-
+from mobspy.types import AssignmentData
 
 
 class Assignment_Operator:
@@ -76,7 +75,7 @@ class Assignment_Operator:
         if hasattr(second, "get_spe_object"):
             spe_list_second = [second]
 
-        if type(first) == int or type(first) == float:  # noqa: E721
+        if isinstance(first, (int, float)):
             first = mbe_MobsPyExpression(
                 str(first),
                 species_object=None,
@@ -88,7 +87,7 @@ class Assignment_Operator:
                 species_list_operation_order=spe_list_first,
             )
 
-        if type(second) == int or type(second) == float:  # noqa: E721
+        if isinstance(second, (int, float)):
             second = mbe_MobsPyExpression(
                 str(second),
                 species_object=None,
@@ -242,7 +241,8 @@ class Assignment_Operator:
             )
 
             for spe in spe_to_asgn:
-                assignments_for_sbml["assignment_" + str(assignment_counter)] = AssignmentData(
+                key = "assignment_" + str(assignment_counter)
+                assignments_for_sbml[key] = AssignmentData(
                     species=spe,
                     expression=asgn_expression,
                 )
@@ -263,7 +263,8 @@ class Assignment_Operator:
                 (asg, str(unprocessed_asgns[asg])),
             )
 
-            assignments_for_sbml["assignment_" + str(assignment_counter)] = AssignmentData(
+            key = "assignment_" + str(assignment_counter)
+            assignments_for_sbml[key] = AssignmentData(
                 species=spe_to_asgn,
                 expression=asgn_expression,
             )
@@ -306,4 +307,5 @@ class Asg:
     def __getattr__(self, item: str) -> None:
         raise CompilationError(
             "Assignments must be the last query in the"
-            " stack - Ex: A.young.blue.assign()")
+            " stack - Ex: A.young.blue.assign()"
+        )

@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     pass
 
 
-
 class MathFunctionWrapper:
     """Wrapper for mathematical functions that work with MobsPy expressions
 
@@ -63,7 +62,7 @@ class MathFunctionWrapper:
 
         # MobsPy Expressions
         if isinstance(expression, MobsPyExpression):
-            if expression._has_units == "T":
+            if expression._has_units:
                 raise ValidationError(
                     f"ms_{self.name}() does not support unit-bearing expressions. "
                     "Extract the numeric value before applying the function."
@@ -80,7 +79,8 @@ class MathFunctionWrapper:
         ) and Assign.check_context():
             if isinstance(expression, Reacting_Species):  # noqa: SIM102
                 if len(expression.list_of_reactants) > 1:
-                    raise ValidationError("Reacting species with multiple"
+                    raise ValidationError(
+                        "Reacting species with multiple"
                         " reactants should not be applied"
                         " to a function"
                     )
@@ -92,9 +92,11 @@ class MathFunctionWrapper:
             return self._create_expression(expression, new_operation)
 
         else:
-            raise ValidationError(f"ms_{self.name}() received an unsupported argument type: "
-                f"{type(expression).__name__}. "
-                "Expected a species, MobsPyExpression, or numeric value."
+            raise ValidationError(
+                f"ms_{self.name}() received an unsupported "
+                f"argument type: {type(expression).__name__}."
+                " Expected a species, MobsPyExpression,"
+                " or numeric value."
             )
         return None
 

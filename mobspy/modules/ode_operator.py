@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import inspect
-import re
 from typing import Any
 
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
-
 
 
 def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any) -> Any:
@@ -67,14 +65,13 @@ class ODEBinding:
         # Validation
         if isinstance(expression, Reacting_Species):  # noqa: SIM102
             if len(expression.list_of_reactants) > 1:
-                raise ValidationError((
-                        f"ODE expressions must be built within"
-                        f" the dt[...] {operator} context.\n"
-                        f"Expressions like 'C = A + B' followed"
-                        f" by 'dt[X] {operator} C' are not"
-                        f" valid.\n"
-                        f"Use: dt[X] {operator} A + B"
-                    )
+                raise ValidationError(
+                    f"ODE expressions must be built within"
+                    f" the dt[...] {operator} context.\n"
+                    f"Expressions like 'C = A + B' followed"
+                    f" by 'dt[X] {operator} C' are not"
+                    f" valid.\n"
+                    f"Use: dt[X] {operator} A + B"
                 )
 
         if isinstance(expression, (Species, Reacting_Species)):
@@ -114,48 +111,27 @@ class ODEBinding:
 class DifferentialOperator:
     """Differential operator for ODE syntax: dt[A] += expression."""
 
-    @staticmethod
-    def _compile_ode_syntax(code_line: str, line_number: int) -> None:
-        """Validate that ODE syntax uses += or -=."""
-        if not re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
-            raise ValidationError(
-                f"At: {code_line}\n"
-                f"Line number: {line_number}\n"
-                "ODE syntax requires '+=' or '-=' operator"
-                " right after dt[Species] in the same line\n"
-                "Use: dt[Species] += expression (for birth)\n"
-                "Use: dt[Species] -= expression (for death)"
-            )
-
     def __setitem__(self, key: Any, value: Any) -> None:
-        stack_frame = inspect.stack()[1]
-        code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
+        # With += / -=, Python calls __getitem__ -> __iadd__/__isub__ -> __setitem__.
+        # ODEBinding.__iadd__/__isub__ return self, so value will be an ODEBinding.
+        # Plain `dt[X] = expr` passes the raw expression, which is invalid.
+        if isinstance(value, ODEBinding):
+            return
 
-        if re.search(r"dt\s*\[.*\]\s*(\+\=|\-\=)", code_line):
-            return  # Valid += or -= syntax, nothing to do
-
-        raise ValidationError((
-                "ODE syntax requires '+=' or '-=' operator,"
-                " not '=', right after dt[Species] in the"
-                " same line\n"
-                "Use: dt[Species] += expression (for birth)\n"
-                "Use: dt[Species] -= expression (for death)"
-            )
+        raise ValidationError(
+            "ODE syntax requires '+=' or '-=' operator,"
+            " not '=', right after dt[Species] in the"
+            " same line\n"
+            "Use: dt[Species] += expression (for birth)\n"
+            "Use: dt[Species] -= expression (for death)"
         )
 
     def __getitem__(self, item: Species | Reacting_Species) -> ODEBinding | None:
         if isinstance(item, (Species, Reacting_Species)):
-            stack_frame = inspect.stack()[1]
-            code_line = stack_frame.code_context[0] if stack_frame.code_context else ""
-            line_number = stack_frame.lineno
-
-            self._compile_ode_syntax(code_line, line_number)
-
             Assign.set_context()  # Turn ON before expression is evaluated
             return ODEBinding(item)
         else:
             raise ValidationError("MobsPy ODE object must only be applied on a species")
-            return None
 
 
 dt = DifferentialOperator()

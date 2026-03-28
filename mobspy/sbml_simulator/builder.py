@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from libsbml import writeSBMLToString as sbml_writeSBMLToString
 
 if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import (
         AssignmentsForSbml,
         EventsForSbml,
@@ -29,6 +30,7 @@ def build(
     reactions: ReactionsForSbml | None,
     events: EventsForSbml | None,
     assignments: AssignmentsForSbml | None,
+    model_context: ModelUnitContext | None = None,
 ) -> str:
     """
     Constructs the sbml file for a model from the dictionary syntax for python sbml lib
@@ -38,10 +40,11 @@ def build(
     :param reactions: (dict) reaction name and reaction in python sbml writer format
     :param events: (dict) event name and event in python sbml writer format
     :param assignments: (dict) assignments numbers and expressions
+    :param model_context: optional unit context for proper SBML unit declarations
 
     :return: sbml_str (str) = string describing the model in sbml format
     """
-    doc = create_model(species, parameters, reactions, events, assignments)
+    doc = create_model(species, parameters, reactions, events, assignments, model_context)
 
     # Convert sbml document into a string for basico
     sbml_str = sbml_writeSBMLToString(doc)

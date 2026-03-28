@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from inspect import stack as inspect_stack
+import linecache
+import sys
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import ParameterError
+from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
 from pint import Quantity, UnitRegistry  # noqa: E402
@@ -61,14 +62,14 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         self._unit_count_op = converted
         self._unit_conc_op = converted
         self._unit_operation = converted
-        self._has_units = "T"
+        self._has_units = True
 
         return self.value, self.original_unit
 
     def process_value(self, value: Any) -> None:
         if isinstance(value, Quantity):
             self.unit_process(value)
-        elif type(value) == list or type(value) == tuple:  # noqa: E721
+        elif isinstance(value, (list, tuple)):
             new_list: list[Any] = []
             first_unit: Any = None
             for i, val in enumerate(value):
@@ -79,7 +80,9 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
                     new_value, unit = self.unit_process(val)
                     if unit != first_unit:
-                        raise ParameterError("MobsPy parameters must all be the same unit")
+                        raise ParameterError(
+                            "MobsPy parameters must all be the same unit"
+                        )
                 else:
                     new_value = val
 
@@ -125,10 +128,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         """
         Check if is a unit based parameter or not
         """
-        if self._has_units == "T":  # noqa: SIM103
-            return True
-        else:
-            return False
+        return self._has_units
 
     def update_value(self, new_value: Any) -> None:
         temp_set = set()
@@ -155,13 +155,15 @@ def ModelParameters(
     Creates ModelParameters. Like meta-species, it uses the
     variable names as parameter names
     """
-    code_line = inspect_stack()[1].code_context[0][:-1]
+    frame = sys._getframe(1)
+    code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
     separated_line = code_line.split("=")[-2].replace(" ", "")
     parameter_variable_names = separated_line.split(",")
 
     if len(args) != len(parameter_variable_names):
         raise ParameterError(
-            "You must provide an initial value for every parameter variable declared")
+            "You must provide an initial value for every parameter variable declared"
+        )
 
     if len(parameter_variable_names) > 1:
         parameters_to_return: (

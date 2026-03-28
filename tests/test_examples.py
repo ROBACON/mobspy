@@ -8,12 +8,11 @@ Tests that run simulations use save_data=False, plot_data=False.
 from __future__ import annotations
 
 import matplotlib
+
 matplotlib.use("Agg")
 
-import pytest
 from mobspy import *  # noqa: F403, F401
 from mobspy.modules.meta_class import ListSpecies
-
 
 # ---------------------------------------------------------------------------
 # Application models
@@ -96,12 +95,12 @@ class TestDonorReceptor:
         Donor, Phage = New(Mortal)
         Donor(100)
 
-        dup_rate = lambda _, resource: 0.2 if resource.is_a(AA) else 0.1
+        dup_rate = lambda _, resource: 0.2 if resource.is_a(AA) else 0.1  # noqa: E731
         Donor + Resource >> 2 * Donor[dup_rate]
         Donor + Resource >> Donor + Resource + Phage[0.1]
         Infectible.low_inf >> Infectible.high_inf[0.1]
         Receptor = Mortal * Infectible
-        inf_rate = lambda receptor: 0.2 if receptor.high_inf else 0.1
+        inf_rate = lambda receptor: 0.2 if receptor.high_inf else 0.1  # noqa: E731
         Receptor.not_infected + Phage >> Receptor.early_infection[inf_rate]
         Receptor.early_infection >> Receptor.late_infection[0.1]
         Receptor + Resource >> Receptor.low_inf + Receptor[dup_rate]
@@ -121,7 +120,7 @@ class TestOscillator:
 
         list_of_chemicals = ["TetR", "Lcl", "Lacl"]
         list_of_promoters = ["PLcl", "PLacl", "PTetR"]
-        for che, pro in zip(list_of_chemicals, list_of_promoters):
+        for che, pro in zip(list_of_chemicals, list_of_promoters, strict=False):
             Rev[
                 DNAPromoter.inactive.c(pro) + Chemical.c(che)
                 >> DNAPromoter.active.c(pro)
@@ -130,8 +129,8 @@ class TestOscillator:
 
         repressed = ["TetR", "Lcl", "Lacl"]
         repressors = ["Lacl", "TetR", "Lcl"]
-        hill = lambda che: f"10/(1 + ({che})^3)"
-        for rpsor, rpsed in zip(repressed, repressors):
+        hill = lambda che: f"10/(1 + ({che})^3)"  # noqa: E731
+        for rpsor, rpsed in zip(repressed, repressors, strict=False):
             Chemical.c(rpsor) >> Chemical.c(rpsed) + Chemical.c(rpsor)[hill]
 
         S = Simulation(DNAPromoter | Chemical)
@@ -147,7 +146,7 @@ class TestCRISPROscillator:
         Promoter, dCas, CasBinding = BaseSpecies()
         Promoter.active, Promoter.inactive, CasBinding.no_cas, CasBinding.cas
 
-        DNAPro = New(Promoter)
+        DNAPro = New(Promoter)  # noqa: F841
         gRNA = New(CasBinding)
 
         G = ListSpecies(3, gRNA)
@@ -160,12 +159,12 @@ class TestCRISPROscillator:
         Promoter.active >> 2 * Promoter.active[2.3e-2 / u.minute]
         Promoter >> Zero[2.3e-2 / u.minute]
 
-        for Prom, Grna in zip(P, G):
-            act_rt = lambda dna: 5 / u.minute if dna.active else 0
+        for Prom, Grna in zip(P, G, strict=False):
+            act_rt = lambda dna: 5 / u.minute if dna.active else 0  # noqa: E731
             Prom >> Grna.no_cas + Prom[act_rt]
 
         gRNA_rep_List = [G[-1], G[0], G[1]]
-        for Prom, Grna in zip(P, gRNA_rep_List):
+        for Prom, Grna in zip(P, gRNA_rep_List, strict=False):
             dna_rt1 = 1.2e-2 * u.liter / (u.nanomoles * u.second)
             dna_rt2 = 2.3e-2 / u.minute
             Prom.active + Grna.cas >> Prom.inactive[dna_rt1]
@@ -236,12 +235,13 @@ class TestForTheTrees:
         Tree = Ager * Colored * Mortal * Location
 
         Tree.old >> Tree + Tree.green.young[0.1 / u.year]
-        Tree.dense.old + Tree.dense.young >> Tree.dense.old[
-            1e-10 * u.decimeter**2 / u.year
-        ]
+        (
+            Tree.dense.old + Tree.dense.young
+            >> Tree.dense.old[1e-10 * u.decimeter**2 / u.year]
+        )
 
         colors = ["green", "yellow", "brown"]
-        for color, next_color in zip(colors, colors[1:] + colors[:1]):
+        for color, next_color in zip(colors, colors[1:] + colors[:1], strict=False):
             Tree.c(color) >> Tree.c(next_color)[10 / u.year]
 
         Tree.dense(50), Tree.dense.old(50), Tree.sparse(50), Tree.sparse.old(50)
@@ -264,7 +264,7 @@ class TestPositivePhageFeedbackLoop:
         Age.young >> Age.old[1 / u.h]
         Reproducer >> 2 * Reproducer.young[0.1 / u.h]
 
-        infection_rate = lambda r1, r2: 2 / u.h if r1.old else 1 / u.h
+        infection_rate = lambda r1, r2: 2 / u.h if r1.old else 1 / u.h  # noqa: E731
         Infected.not_infected + Phage >> Infected.infected[infection_rate]
 
         Cell = Activatable * Reproducer * Infected * Mortal
@@ -303,11 +303,8 @@ class TestRandomWalk:
 
         Bacteria, Phage = New(Mesh)
         (
-            Bacteria.not_infected
-            + Phage
-            >> Bacteria.infected[
-                lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0
-            ]
+            Bacteria.not_infected + Phage
+            >> Bacteria.infected[lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0]
         )
         Bacteria.p_0_0(1)
         Phage.c(f"p_{n - 1}_{n - 1}")(1)
@@ -325,13 +322,10 @@ class TestSimpleRuleBasedANDGate:
 
         def Promoter_Rule(Promoter, Ligand, Protein, K):
             (
-                Promoter
-                + Ligand
+                Promoter + Ligand
                 >> Promoter
                 + Ligand
-                + Protein[
-                    lambda p, l: (p / u.h) * l**4 / (K**4 + l**4)
-                ]
+                + Protein[lambda p, loc: (p / u.h) * loc**4 / (K**4 + loc**4)]
             )
 
         Promoter_Rule(Pa, A, C, 5)
@@ -392,11 +386,13 @@ class TestBioCRNpyler2:
             sp = "started_" + strand[0][0]
             Start_Positions.c(sp)
             rate = [lambda r1, r2: 2 if r1.active else 1, 1]
-            Rev[
-                Pro + R.c("free_" + str(R)) >> Pro + R.c(sp).c("at_" + strand[0][0])
-            ][rate]
+            Rev[Pro + R.c("free_" + str(R)) >> Pro + R.c(sp).c("at_" + strand[0][0])][
+                rate
+            ]
             next_location = strand[1:]
-            for (location, Product), (next_l, _) in zip(strand, next_location):
+            for (location, Product), (next_l, _) in zip(
+                strand, next_location, strict=False
+            ):
                 R.c(sp).c("at_" + location) >> R.c(sp).c("at_" + next_l) + Product[1]
             R.c(sp).c("at_" + next_location[-1][0]) >> R.c(sp).c("free_" + str(R))[1]
 
@@ -611,7 +607,10 @@ class TestSynchronizedBacterialLysis:
         Cell, Lysis, AHL, LuxI = BaseSpecies()
 
         Cell >> 2 * Cell[lambda cell: mu_g * cell * (n_0 - cell)]
-        Lysis + Cell >> Zero[lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2)]
+        (
+            Lysis + Cell
+            >> Zero[lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2)]
+        )
 
         Cell + LuxI >> AHL + Cell + LuxI[b]
         AHL + Cell >> Cell[lambda ahl, cell: mu * ahl / (1 + cell / n_0)]
@@ -620,10 +619,12 @@ class TestSynchronizedBacterialLysis:
             AHL
             >> AHL
             + Lysis[
-                lambda ahl: c_l
-                * (
-                    alpha_0
-                    + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4)
+                lambda ahl: (
+                    c_l
+                    * (
+                        alpha_0
+                        + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4)
+                    )
                 )
             ]
         )
@@ -633,10 +634,12 @@ class TestSynchronizedBacterialLysis:
             AHL
             >> AHL
             + LuxI[
-                lambda ahl: c_i
-                * (
-                    alpha_0
-                    + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4)
+                lambda ahl: (
+                    c_i
+                    * (
+                        alpha_0
+                        + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4)
+                    )
                 )
             ]
         )
@@ -668,17 +671,21 @@ class TestPhageTransmissionSystem:
 
         Age.young >> Age.old[1 / 4 * (1 / u.min)]
 
-        rm = lambda r: 1 / c_r1 if r.is_a(R1) else 1 / c_r2
-        cm = lambda r: 1 / c_donor if r.is_a(Donor) else 1 / c_rec
-        grw_r = (
-            lambda r1, r2: 1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
-            if r2.is_a(R1)
-            else 0.08 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
+        rm = lambda r: 1 / c_r1 if r.is_a(R1) else 1 / c_r2  # noqa: E731
+        cm = lambda r: 1 / c_donor if r.is_a(Donor) else 1 / c_rec  # noqa: E731
+        grw_r = (  # noqa: E731
+            lambda r1, r2: (
+                1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
+                if r2.is_a(R1)
+                else 0.08 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
+            )
         )
-        inf_r = (
-            lambda r1, r2: 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
-            if r1.old
-            else 0.004 * 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
+        inf_r = (  # noqa: E731
+            lambda r1, r2: (
+                10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
+                if r1.old
+                else 0.004 * 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
+            )
         )
         Receiver.not_infected + Phage >> Receiver.early_infection[inf_r]
         Receiver.early_infection >> Receiver.late_infection[1 / (3 * u.min)]
@@ -686,10 +693,8 @@ class TestPhageTransmissionSystem:
         Receiver.old + Resource >> Receiver.young + Receiver.not_infected.young[grw_r]
         Receiver >> Dead[1e-4 / u.s]
 
-        phage_rate = (
-            lambda r1, r2: cm(r1) * rm(r2) * 850 * (u.l / u.s)
-            if r2.is_a(R1)
-            else 0
+        phage_rate = (  # noqa: E731
+            lambda r1, r2: cm(r1) * rm(r2) * 850 * (u.l / u.s) if r2.is_a(R1) else 0
         )
         Donor.old + Resource >> 2 * Donor.young[lambda r1, r2: grw_r(r1, r2) / 2]
         Donor + Resource >> Donor + Phage + Resource[phage_rate]
@@ -697,14 +702,17 @@ class TestPhageTransmissionSystem:
         (
             Mortal
             >> Zero[
-                lambda r: 1e-4 * cm(r) * 1 / u.s
-                if r.is_a(Donor)
-                else 0.074 * cm(r) / 24 * (1 / u.min)
+                lambda r: (
+                    1e-4 * cm(r) * 1 / u.s
+                    if r.is_a(Donor)
+                    else 0.074 * cm(r) / 24 * (1 / u.min)
+                )
             ]
         )
-        Dead + Phage >> Dead[
-            lambda r1, r2: 0.074 / 24 * cm(r1) * rm(r2) * (u.l / u.min)
-        ]
+        (
+            Dead + Phage
+            >> Dead[lambda r1, r2: 0.074 / 24 * cm(r1) * rm(r2) * (u.l / u.min)]
+        )
 
         model = set_counts(
             {

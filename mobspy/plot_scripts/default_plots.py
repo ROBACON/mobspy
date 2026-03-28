@@ -4,13 +4,12 @@ import json
 from copy import deepcopy
 from typing import Any
 
-import mobspy.plot_scripts.hierarchical_plot as hp
-import mobspy.plot_scripts.statistics_calculations as sc
-from mobspy.exceptions import ValidationError
-
 from pint import Quantity  # noqa: E402
 
+import mobspy.plot_scripts.hierarchical_plot as hp
 import mobspy.plot_scripts.process_plot_data as ppd  # noqa: E402
+import mobspy.plot_scripts.statistics_calculations as sc
+from mobspy.exceptions import ValidationError
 
 
 def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
@@ -29,7 +28,7 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
                 "The following error happened while "
                 f"decoding json file "
                 f'"{plot_json_filename}":\n' + str(e)
-            )
+            ) from e
 
     return json_data
 
@@ -130,8 +129,8 @@ def stochastic_plot(
                 {"species_to_plot": [key_dev], "fill_between": True, "time_series": [0]}
             )
 
-        except ValueError:
-            raise ValidationError(f"{spe} species not found in data")
+        except ValueError as e:
+            raise ValidationError(f"{spe} species not found in data") from e
         new_plot_params["figures"].append(
             {"ylabel": spe + " " + new_plot_params["ylabel"], "plots": plots_for_spe_i}
         )
@@ -344,12 +343,14 @@ def raw_plot(
     :param return_fig: (bool) return figure instead of
         plotting
     """
-    if type(parameters_or_file) == str and parameters_or_file[-5:] == ".json":  # noqa: E721
+    if isinstance(parameters_or_file, str) and parameters_or_file[-5:] == ".json":
         plot_params = read_plot_json(parameters_or_file)
-    elif type(parameters_or_file) == dict:  # noqa: E721
+    elif isinstance(parameters_or_file, dict):
         plot_params = parameters_or_file
     else:
-        raise ValidationError("Raw plot only takes json files or parameters for configuration")
+        raise ValidationError(
+            "Raw plot only takes json files or parameters for configuration"
+        )
 
     species = list(data.ts_data[0].keys())
     ppd.check_plot_parameters(species, plot_params)

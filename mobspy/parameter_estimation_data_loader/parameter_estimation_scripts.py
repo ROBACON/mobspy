@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from mobspy.exceptions import ParameterError
-
 from mobspy.import_manager.lazy_import_class import (  # noqa: E402
     LazyImporter as ipm_LazyImporter,
 )
@@ -127,12 +126,12 @@ def basiCO_parameter_estimation(
                     "the lower and upper bound of all "
                     "parameters"
                 )
-        except Exception:
+        except Exception as e:
             raise ParameterError(
                 "The bound argument must be a list with "
                 "the lower and upper bound of all "
                 "parameters"
-            )
+            ) from e
     ########################################################################################################
 
     sbml_list = simulation_object.generate_sbml()
@@ -151,7 +150,7 @@ def basiCO_parameter_estimation(
         ).to_dict()
         try:
             basico_parameter_name = list(basico_reaction_dict["reaction"].keys())[0]
-        except IndexError:
+        except IndexError as e:
             raise ParameterError(
                 f"Parameter {par} was not found in the "
                 f"Simulation model. \n "
@@ -159,7 +158,7 @@ def basiCO_parameter_estimation(
                 f"meta-species used to construct the "
                 f"simulator use the parameter in one "
                 f"of their reactions."
-            )
+            ) from e
 
         if bound is None:
             pass

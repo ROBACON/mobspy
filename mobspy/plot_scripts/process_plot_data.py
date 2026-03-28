@@ -3,8 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import ValidationError
+from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
 import mobspy.plot_params.example_plot_reader as epr  # noqa: E402
@@ -56,7 +56,9 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
 
     for spe in species:
         if spe in dictionary.keys():  # noqa: SIM118
-            raise ValidationError(f"Plotting is impossible, species {spe} is a parameter name")
+            raise ValidationError(
+                f"Plotting is impossible, species {spe} is a parameter name"
+            )
 
     # Check if parameters are valid
     validated_keys: set[str] = set()

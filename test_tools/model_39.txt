@@ -2,7 +2,12 @@
 <sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
   <model substanceUnits="item" timeUnits="second" extentUnits="item">
     <listOfUnitDefinitions>
-      <unitDefinition id="per_min">
+      <unitDefinition id="decimeter__3">
+        <listOfUnits>
+          <unit kind="metre" exponent="3" scale="0" multiplier="0.001"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="per_second">
         <listOfUnits>
           <unit kind="second" exponent="-1" scale="0" multiplier="1"/>
         </listOfUnits>
@@ -15,7 +20,7 @@
       <species id="A" compartment="c1" initialAmount="100" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
-      <parameter id="volume" value="1" units="dimensionless" constant="true"/>
+      <parameter id="volume" value="1" units="decimeter__3" constant="true"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="reaction_0" reversible="false" fast="false">
@@ -39,7 +44,12 @@
 <sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
   <model substanceUnits="item" timeUnits="second" extentUnits="item">
     <listOfUnitDefinitions>
-      <unitDefinition id="per_min">
+      <unitDefinition id="decimeter__3">
+        <listOfUnits>
+          <unit kind="metre" exponent="3" scale="0" multiplier="0.001"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="per_second">
         <listOfUnits>
           <unit kind="second" exponent="-1" scale="0" multiplier="1"/>
         </listOfUnits>
@@ -52,7 +62,7 @@
       <species id="A" compartment="c1" initialAmount="100" substanceUnits="item" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
-      <parameter id="volume" value="1" units="dimensionless" constant="true"/>
+      <parameter id="volume" value="1" units="decimeter__3" constant="true"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="reaction_0" reversible="false" fast="false">

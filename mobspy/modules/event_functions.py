@@ -81,7 +81,7 @@ def format_event_dictionary_for_sbml(
                 ec["species"], temp_char, characteristics_to_object, symbol="_dot_"
             )
             for d in dummy:
-                if type(ec["quantity"]) != str:  # noqa: E721
+                if not isinstance(ec["quantity"], str):
                     event_dictionary[d] = uh_convert_counts(
                         ec["quantity"], volume, dimension
                     )
@@ -99,14 +99,14 @@ def format_event_dictionary_for_sbml(
                 symbol="_dot_",
             )
 
-            if type(ec["quantity"]) != str:  # noqa: E721
+            if not isinstance(ec["quantity"], str):
                 if isinstance(ec["quantity"], mp_Mobspy_Parameter):
                     parameters_in_events.add(ec["quantity"])
                     event_dictionary[dummy] = ec["quantity"].name
-
-                event_dictionary[dummy] = uh_convert_counts(
-                    ec["quantity"], volume, dimension
-                )
+                else:
+                    event_dictionary[dummy] = uh_convert_counts(
+                        ec["quantity"], volume, dimension
+                    )
             else:
                 if parameter_exist != {}:
                     frc_search_for_parameters_in_str(
@@ -114,7 +114,7 @@ def format_event_dictionary_for_sbml(
                     )
                 event_dictionary[dummy] = ec["quantity"]
 
-        if type(ev.trigger) == str:  # noqa: E721
+        if isinstance(ev.trigger, str):
             reformed_event_list.append(
                 SimulationEventData(
                     event_time=ev.event_time,
@@ -124,7 +124,7 @@ def format_event_dictionary_for_sbml(
             )
         else:
             for e in ev.trigger.operation:
-                if type(e) == dict:  # noqa: SIM102, E721
+                if isinstance(e, dict):  # noqa: SIM102
                     if e["object"] not in meta_species_to_simulate:
                         raise EventError(
                             f"Meta species {e['object']} was used"

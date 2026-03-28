@@ -70,49 +70,6 @@ def check_orthogonality_between_references(references: set[Any]) -> None:
                 )
 
 
-def complete_characteristics_with_first_values(
-    spe_object: Any,
-    characteristics: set[str] | str,
-    characteristics_to_object: dict[str, Any],
-) -> set[str]:
-    """This creates a string with the species object name
-    and the set of all first characteristics added to it's
-    base species used to construct it.
-    It allows us to search for the proper string in the
-    model using the result of this function.
-    It's used to set the quantities using the call method
-    in Species and Reacting_Species.
-
-    :param spe_object: (meta-species object) meta-species
-        to generate the species states with the first values
-    :param characteristics: (str) if there are
-        characteristics to use instead of the default
-    :param characteristics_to_object: (dict) dictionary
-        with characteristics as keys and the meta-species
-        which they have been added to directly as value
-        (no inheritance or New)
-
-    :return: Set with the species name and characteristics
-    """
-    if characteristics == "std$":
-        characteristics = set()
-
-    vector_elements: dict[Any, bool] = {}
-    for cha in characteristics:
-        vector = characteristics_to_object[cha]
-        if vector in vector_elements:
-            raise ValidationError("The assignment refers to multiple strings")
-        else:
-            vector_elements[vector] = True
-
-    first_characteristics: set[str] = set()
-    for reference in spe_object.get_references() - set(vector_elements.keys()):
-        if reference.first_characteristic:
-            first_characteristics.add(reference.first_characteristic)
-
-    return {spe_object.get_name()}.union(first_characteristics).union(characteristics)
-
-
 def unite_characteristics(species: list[Any] | None) -> set[str]:
     """This function unites the characteristics of all the given species
 

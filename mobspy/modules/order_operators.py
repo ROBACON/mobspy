@@ -13,7 +13,6 @@ from copy import deepcopy
 from typing import Any
 
 from mobspy.exceptions import ReactionError
-
 from mobspy.modules.meta_class import Reactions, Species  # noqa: E402
 from mobspy.modules.species_string_generator import (  # noqa: E402
     construct_all_combinations as ssg_construct_all_combinations,
@@ -37,7 +36,7 @@ class __Operator_Base:
     # Assign order structure
     def __getitem__(self, item: Any) -> Any:
         try:
-            if type(item) == str:  # noqa: E721
+            if isinstance(item, str):
                 return item + ".all$"
 
             if item.is_species():
@@ -46,10 +45,11 @@ class __Operator_Base:
                 for reactant in item.list_of_reactants:
                     reactant["characteristics"].add("all$")
                 return item
-        except AttributeError:
+        except AttributeError as e:
             raise ReactionError(
                 "All can only be used on species, reacting"
-                " species and strings under set_count")
+                " species and strings under set_count"
+            ) from e
         return None
 
     # Transform product function
@@ -88,9 +88,9 @@ class __Operator_Base:
             i = species_object.get_index_from_reference_dict(obj)
             species_to_return[i] = characteristic
 
-        if type(species_to_return[-1]) == str:  # noqa: E721
+        if isinstance(species_to_return[-1], str):
             species_to_return = "_dot_".join(species_to_return)
-        elif type(species_to_return[-1]) == float:  # noqa: E721
+        elif isinstance(species_to_return[-1], float):
             species_to_return = (
                 "_dot_".join(species_to_return[:-1]),
                 species_to_return[-1],
@@ -242,7 +242,7 @@ class __Operator_Base:
                         "reaction but itself or any inheritors"
                         " are not in the model."
                         " Please add at least one"
-                    )
+                    ) from None
 
                 if all_reactions:
                     # Find all the species that reference the one in the reaction
@@ -387,8 +387,8 @@ class __Set_Reversible_Rate:
         try:
             if len(both_rates) != 2:
                 raise ReactionError("The reversible reaction must receive 2 rates")
-        except TypeError:
-            raise ReactionError("The reversible reaction must receive 2 rates")
+        except TypeError as e:
+            raise ReactionError("The reversible reaction must receive 2 rates") from e
 
         self.reaction_direct.rate = both_rates[0]
         self.reaction_reverse.rate = both_rates[1]
@@ -446,8 +446,8 @@ class _Set_Reaction_Method:
     def __init__(self, reaction: Reactions) -> None:
         if reaction.rate is None:
             raise ReactionError(
-                "A reaction rate was not found in the"
-                " reaction used in the Set Operator")
+                "A reaction rate was not found in the reaction used in the Set Operator"
+            )
 
         self.reaction = reaction
 

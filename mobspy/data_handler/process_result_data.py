@@ -81,6 +81,7 @@ def convert_data_to_desired_unit(
     unit_x: str | None = None,
     unit_y: str | None = None,
     output_concentration: bool = False,
+    model_context: Any = None,
 ) -> dict[str, list[float]]:
     """Converts the simulation output data from the MobsPy standard units
     to the desired units specified by the user
@@ -105,8 +106,13 @@ def convert_data_to_desired_unit(
 
     if unit_x is not None:
         new_time: list[float] = []
+        # Time from COPASI is in model time units (default: seconds)
+        if model_context is not None:
+            time_unit = model_context.time_unit
+        else:
+            time_unit = ur.seconds
         for time in data["Time"]:
-            quantity = time * ur.seconds
+            quantity = time * time_unit
             new_time.append(quantity.to(unit_x).magnitude)
         converted_data["Time"] = new_time
 
@@ -122,19 +128,38 @@ def convert_data_to_desired_unit(
             data, converted_data, volume_list, time_list
         )
 
-    # Fix here - forgot concentration conversion
+    # Convert substance units
+    _substance_is_molar = (
+        model_context is not None and model_context.substance_is_molar
+    )
     if unit_y is not None:
         if "mol" in str(unit_y):
-            multiply_data_by_factor(converted_data, N_A**-1)
+            if not _substance_is_molar:
+                # Legacy: data is in items/counts, convert to moles first
+                multiply_data_by_factor(converted_data, N_A**-1)
             if output_concentration:
-                factor = (1 * ur.molar).to(unit_y).magnitude
+                if _substance_is_molar:
+                    # Data is in model substance/volume, convert to target
+                    source = 1 * model_context.substance_unit / model_context.volume_unit
+                    factor = source.to(unit_y).magnitude
+                else:
+                    factor = (1 * ur.molar).to(unit_y).magnitude
                 multiply_data_by_factor(converted_data, factor)
             else:
-                factor = (1 * ur.moles).to(unit_y).magnitude
+                if _substance_is_molar:
+                    source = 1 * model_context.substance_unit
+                    factor = source.to(unit_y).magnitude
+                else:
+                    factor = (1 * ur.moles).to(unit_y).magnitude
                 multiply_data_by_factor(converted_data, factor)
         else:
             if output_concentration:
-                factor = (1 / ur.l).to(unit_y).magnitude
+                if _substance_is_molar:
+                    # Data is already in substance/volume units
+                    source = 1 / model_context.volume_unit
+                    factor = source.to(unit_y).magnitude
+                else:
+                    factor = (1 / ur.l).to(unit_y).magnitude
                 multiply_data_by_factor(converted_data, factor)
 
     return converted_data

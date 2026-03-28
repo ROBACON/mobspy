@@ -15,8 +15,8 @@ from typing import Any
 
 from pint import Quantity
 
-from mobspy.mobspy_logging import get_logger
 from mobspy.exceptions import CompilationError
+from mobspy.mobspy_logging import get_logger
 from mobspy.modules.meta_class import Zero as mc_Zero
 from mobspy.modules.meta_class_utils import (
     count_stoichiometry as mcu_count_string_dictionary,
@@ -123,14 +123,14 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
         if rate == 0:
             return 0, parameters_in_reaction
 
-        if type(rate) == int or type(rate) == float:  # noqa: E721
+        if isinstance(rate, (int, float)):
             reaction_rate_string = basic_kinetics_string(
                 reactant_string_list,
                 rate,
                 type_of_model,
                 is_count,
             )
-        elif type(rate) == str:  # noqa: E721
+        elif isinstance(rate, str):
             reaction_rate_string = rate
             reaction_rate_string = reaction_rate_string.replace("$", "")
 
@@ -185,7 +185,7 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
             "There is a reaction rate missing for the "
             "following reactants: \n" + str(reactant_string_list)
         )
-    elif type(reaction_rate_function) == str:  # noqa: E721
+    elif isinstance(reaction_rate_function, str):
         reaction_rate_string = reaction_rate_function
     else:
         _logger.debug(type(reaction_rate_function))

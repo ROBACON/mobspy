@@ -5,12 +5,10 @@ for defining the Context_specie_named_any class.
 
 from __future__ import annotations
 
-from inspect import stack as inspect_stack
 from typing import Any as TypingAny
 
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Species
-
 
 
 class Context_specie_named_any(Species):
@@ -30,6 +28,8 @@ class Context_specie_named_any(Species):
 
     _list_of_nested_any_contexts: list[set[str]] = []
 
+    _building_with_context: bool = False
+
     def __getattr__(self, item: str) -> Context_specie_named_any:
         """
         This method is called when an attribute is called
@@ -47,15 +47,7 @@ class Context_specie_named_any(Species):
         if item.startswith("_"):
             raise AttributeError(item)
 
-        code_line = inspect_stack()[1].code_context[0][:-1]
-        code_line = code_line.split(" ")
-        is_with = [x for x in code_line if x != ""][0]
-        if is_with == "with":
-            pass
-        else:
-            raise ValidationError(
-                "Characteristics cannot be added to the Any specie outside of a context"
-            )
+        self._building_with_context = True
         self._set_of_characteristics_currently_under_the_any_context.add(item)
         return self
 
@@ -64,6 +56,11 @@ class Context_specie_named_any(Species):
         Context manager for Any's characteristics.
         Called in "with Any.example_characteristic :" format, when entering.
         """
+        if not self._building_with_context:
+            raise ValidationError(
+                "Characteristics cannot be added to the Any specie outside of a context"
+            )
+        self._building_with_context = False
         self.context_initiator_for_meta_specie_named_any()
         return 0
 

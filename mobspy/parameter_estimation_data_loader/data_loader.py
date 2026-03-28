@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from mobspy.exceptions import ValidationError
-
 import mobspy.data_handler.time_series_object as tso  # noqa: E402
+from mobspy.exceptions import ValidationError
 
 
 class Experimental_Data_Holder:

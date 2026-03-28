@@ -1,6 +1,6 @@
 
 Species
-A,6.02214076e+23
+A,1
 
 Mappings
 A :

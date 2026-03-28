@@ -41,6 +41,7 @@ class TestEventData:
         assert e.delay == 5
         assert e.assignments == [("A", 100)]
 
+
 class TestAssignmentData:
     def test_attribute_access(self):
         a = AssignmentData(species="A", expression="k * B")
@@ -58,6 +59,7 @@ class TestSimulationEventData:
         assert s.event_time == 10.0
         assert len(s.event_counts) == 1
         assert s.trigger == "true"
+
 
 class TestCompiledModel:
     def test_dict_style_access(self):

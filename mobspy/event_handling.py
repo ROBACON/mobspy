@@ -9,17 +9,14 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from inspect import stack as inspect_stack
 from typing import Any
 
 from pint import Quantity
 
-from mobspy.types import SimulationEventData
-
 from mobspy.exceptions import EventError, ValidationError
 from mobspy.modules.meta_class import Species
 from mobspy.modules.unit_handler import convert_time as uh_convert_time
-
+from mobspy.types import SimulationEventData
 
 
 class EventHandlingMixin:
@@ -81,7 +78,7 @@ class EventHandlingMixin:
         """Activate the current context, checking it is the only one active."""
         if self._context_not_active:
             self._context_not_active = False
-            self.__dict__["parameters"]["_with_event"] = True
+            self._set_parameter("_with_event", True)
             self.event_context_initiator()
         else:
             raise EventError("MobsPy does not support multiple context calls")
@@ -107,13 +104,6 @@ class EventHandlingMixin:
             ValidationError: If invalid trigger type is provided.
         """
         try:
-            code_line = inspect_stack()[2].code_context[0][:-1]
-            if "==" in code_line:
-                raise EventError(
-                    "Equality comparison operator (==) not allowed for MobsPy events. "
-                    "Please use (A <= n) & (A >= n) if necessary"
-                )
-
             if isinstance(trigger, (bool, float, int)):
                 raise ValidationError(
                     f"MobsPy has received an invalid trigger type: {type(trigger)}. "

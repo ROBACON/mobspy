@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from inspect import stack as inspect_stack
 from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     _ScalarNum = int | float | Quantity
 
 
-
 class SpeciesComparator:
     """This class implements the comparisons necessary
     for events and conditional durations for Species.
@@ -28,138 +26,6 @@ class SpeciesComparator:
     :param _simulation_context: (Simulation) current
         simulation under context
     """
-
-    @classmethod
-    def check_parenthesis(
-        cls,
-        code_line: str,
-        line_number: int,
-        pos: int,
-        symbol: str,
-        number_of_comp: int,
-    ) -> bool:
-        """Compiles part of a logic expression for
-        meta-species. Checks if an operator '<' or
-        '>' is properly written inside parenthesis.
-        Only applies if more than one operator is
-        present in the code line.
-
-        :param code_line: (str) line of code to compile
-        :param line_number: (str) number of the code
-            line currently being compiled
-        :param pos: (int) position of the '>' or '<'
-            operator
-        :param symbol: '(' or ')', indicates in which
-            direction the string analysis should proceed
-        :param number_of_comp: for distinction the
-            default case where only one operator is
-            present
-
-        :raise simlog.error: if the code line is not
-            properly written isolating the clauses
-            with parenthesis
-
-        :return: (bool) false if the line compiles,
-            raises an error if it does not
-        """
-        i = pos
-        condition_not_satisfied = True
-        while condition_not_satisfied:
-            try:
-                if symbol == ")":
-                    i += 1
-                elif symbol == "(":
-                    i -= 1
-
-                if i == 0 or i == len(code_line):
-                    if number_of_comp > 1:
-                        raise EventError(
-                            f"At: {code_line} \n"
-                            + f"Line number: {line_number} \n"
-                            + "All clauses must be "
-                            "individually isolated "
-                            "by parenthesis "
-                            "- Ex: (A <= 0) "
-                            "& (B <= 0) \n"
-                        )
-                    else:
-                        return False
-
-                char = code_line[i]
-                if char == "<" or char == ">" or char == "|" or char == "&":
-                    raise EventError(
-                        f"At: {code_line} \n"
-                        + f"Line number: {line_number} \n"
-                        + "All clauses must be isolated "
-                        "by parenthesis "
-                        "- Ex: (A <= 0) "
-                        "& (B <= 0) \n"
-                    )
-                elif char == ")" and number_of_comp > 1:
-                    if symbol == ")":
-                        condition_not_satisfied = False
-                elif char == "(" and number_of_comp > 1 and symbol == "(":
-                    condition_not_satisfied = False
-            except IndexError:
-                raise EventError(
-                    f"Error Compiling the following line {line_number}: {code_line}"
-                )
-        return condition_not_satisfied
-
-    @classmethod
-    def compile_code_line(cls) -> None:
-        """Compiles the code line executing a
-        logical operation.
-
-        :raise simlog.error: if the code line is not
-            properly written isolating the clauses
-            with parenthesis
-        """
-        code_line = inspect_stack()[2].code_context[0][:-1]
-        line_number = inspect_stack()[2].lineno
-        if "and" in code_line or "or" in code_line:
-            raise EventError(
-                f"At: {code_line} \n"
-                + f"Line number: {line_number} \n"
-                + "Event notation did not compile, "
-                "please use & for 'and' "
-                "and  | for 'or' \n"
-                "Please also put the clauses under "
-                "parentheses: "
-                "example (A <= 0) & (B <= 0)"
-            )
-
-        temp_code_line = code_line.replace(" ", "")
-        multiplication_position = [
-            pos for pos, char in enumerate(temp_code_line) if char == "*"
-        ]
-        for pos in multiplication_position:
-            if not (
-                temp_code_line[pos - 1].isnumeric()
-                or temp_code_line[pos + 1].isnumeric()
-            ):
-                raise EventError(
-                    f"At: {code_line} \n"
-                    + f"Line number: {line_number} \n"
-                    + "Multiplication between "
-                    "meta-species under comparison "
-                    "context not yet supported "
-                    "by MobsPy - \n."
-                )
-
-        number_of_comp = code_line.count("<") + code_line.count(">")
-        comparison_position = [
-            pos for pos, char in enumerate(code_line) if char == "<" or char == ">"
-        ]
-        for pos in comparison_position:
-            for symbol in ["(", ")"]:
-                assert not cls.check_parenthesis(
-                    code_line,
-                    line_number,
-                    pos,
-                    symbol,
-                    number_of_comp,
-                )
 
     def __init__(self) -> None:
         self._simulation_context: Simulation | None = None
@@ -179,8 +45,14 @@ class SpeciesComparator:
             (Species or ReactingSpecies) if compared
             to the objects
         """
+        if self.__dict__.get("_from_mul", False):
+            raise EventError(
+                "Species created by the * operator (inheritance) "
+                "cannot be used directly in event comparisons.\n"
+                "The * operator creates inheritance, not multiplication."
+            )
         number = self.reformat_number_and_species(number)
-        if type(number) == list:  # noqa: E721
+        if isinstance(number, list):
             operation = [self.logical_add_species(self)] + [symbol] + number
         else:
             operation = [self.logical_add_species(self)] + [symbol] + [number]
@@ -243,22 +115,18 @@ class SpeciesComparator:
                 }
             ]
             operation = operation + dl
-        return dl
+        return operation
 
     def __lt__(self, number: _CompNum) -> MetaSpeciesLogicResolver:
-        self.compile_code_line()
         return self.add_operation_and_number("<", number)
 
     def __le__(self, number: _CompNum) -> MetaSpeciesLogicResolver:
-        self.compile_code_line()
         return self.add_operation_and_number("<=", number)
 
     def __gt__(self, number: _CompNum) -> MetaSpeciesLogicResolver:
-        self.compile_code_line()
         return self.add_operation_and_number(">", number)
 
     def __ge__(self, number: _CompNum) -> MetaSpeciesLogicResolver:
-        self.compile_code_line()
         return self.add_operation_and_number(">=", number)
 
     def __eq__(  # type: ignore[override]
@@ -326,7 +194,7 @@ class ReactingSpeciesComparator(SpeciesComparator):
             containing the comparison
         """
         number = self.reformat_number_and_species(number)
-        if type(number) == list:  # noqa: E721
+        if isinstance(number, list):
             operation = self.logical_add_reacting_species(self) + [symbol] + number
         else:
             operation = self.logical_add_reacting_species(self) + [symbol] + [number]
@@ -355,6 +223,14 @@ class MetaSpeciesLogicResolver:
         self.operation = operation
         self.simulation_context = simulation_context
 
+    def __bool__(self) -> bool:
+        raise EventError(
+            "MetaSpeciesLogicResolver cannot be used in boolean context.\n"
+            "This typically happens with Python chained comparisons "
+            "(e.g., 10 >= A >= 10).\n"
+            "Use logical operators instead: (A >= 10) & (A <= 20)"
+        )
+
     def __and__(self, other: MetaSpeciesLogicResolver) -> MetaSpeciesLogicResolver:
         return self._join(other, "&&")
 
@@ -367,7 +243,9 @@ class MetaSpeciesLogicResolver:
         symbol: str,
     ) -> MetaSpeciesLogicResolver:
         if not isinstance(other, MetaSpeciesLogicResolver):
-            raise EventError("Logic operations require MetaSpeciesLogicResolver operands")
+            raise EventError(
+                "Logic operations require MetaSpeciesLogicResolver operands"
+            )
 
         new_operation: list[_OpElem] = (
             ["("]
@@ -400,12 +278,16 @@ class MetaSpeciesLogicResolver:
         return self
 
     def add_double_symbol(self, symbol: str, number: _ScalarNum) -> None:
-        if (
-            type(number) != int  # noqa: E721
-            or type(number) != float  # noqa: E721
-            or not isinstance(number, Quantity)
-        ):
-            self.operation = [number, symbol] + self.operation
+        comparison_symbols = {"<", "<=", ">", ">="}
+        has_cmp = any(
+            op in comparison_symbols for op in self.operation if isinstance(op, str)
+        )
+        if has_cmp:
+            raise EventError(
+                "Chained comparisons are not supported in MobsPy events.\n"
+                "Use logical operators instead: (A >= 10) & (A <= 20)"
+            )
+        self.operation = [number, symbol] + self.operation
 
     @classmethod
     def find_all_species_strings(
@@ -437,11 +319,7 @@ class MetaSpeciesLogicResolver:
         """
         copasi_str = ""
         for _i, e in enumerate(self.operation):
-            if (
-                type(e) == int  # noqa: E721
-                or type(e) == float  # noqa: E721
-                or type(e) == str  # noqa: E721
-            ):
+            if isinstance(e, (int, float, str)):
                 copasi_str = copasi_str + str(e) + " "
             else:
                 copasi_str = copasi_str + "("

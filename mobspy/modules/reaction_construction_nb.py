@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence
-from copy import deepcopy
 from inspect import signature as inspect_signature
 from itertools import product as itertools_product
 from typing import TYPE_CHECKING, Any
@@ -31,7 +30,6 @@ from mobspy.modules.species_string_generator import (
 )
 
 
-
 def iterator_for_combinations(
     list_of_lists: list[list[Any]],
 ) -> Generator[tuple[Any, ...], None, None]:
@@ -45,45 +43,6 @@ def iterator_for_combinations(
     """
     for i in itertools_product(*list_of_lists):  # noqa: UP028
         yield i
-
-
-def copy_reaction(reaction: Reactions) -> Reactions:
-    """Just copies a meta-reaction.
-    Deepcopy is not working because it calls __getattr__
-    on the species with a private method
-
-    Parameters:
-        reaction (meta-reaction) = meta-reaction to be copied
-    """
-    reactants = []
-    for reactant in reaction.reactants:
-        characteristics = deepcopy(reactant["characteristics"])
-        species = reactant["object"]
-        stoichiometry = reactant["stoichiometry"]
-        reactants.append(
-            {
-                "object": species,
-                "characteristics": characteristics,
-                "stoichiometry": stoichiometry,
-            }
-        )
-
-    products = []
-    for product in reaction.products:
-        characteristics = deepcopy(product["characteristics"])
-        species = product["object"]
-        stoichiometry = product["stoichiometry"]
-        products.append(
-            {
-                "object": species,
-                "characteristics": characteristics,
-                "stoichiometry": stoichiometry,
-            }
-        )
-
-    reaction_copy = Reactions(reactants, products)
-    reaction_copy.set_rate(reaction.rate)
-    return reaction_copy
 
 
 def check_for_invalid_reactions(
@@ -135,7 +94,7 @@ def check_for_invalid_reactions(
                 except KeyError:
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
-                    except KeyError:
+                    except KeyError as e:
                         raise CompilationError(
                             "A base object for"
                             f" characteristic {cha} was"
@@ -143,7 +102,7 @@ def check_for_invalid_reactions(
                             " supplied to the "
                             "simulator \n"
                             "Perhaps a species is missing ? "
-                        )
+                        ) from e
 
         for product in reaction.products:
             check_for_duplicates = {}
@@ -487,7 +446,9 @@ def create_all_reactions(
                                 )
                             )
                         except TypeError as e:
-                            raise CompilationError(f"On reaction {reaction} \n" + str(e))
+                            raise CompilationError(
+                                f"On reaction {reaction} \n" + str(e)
+                            ) from e
 
                         if rate_string == 0:
                             continue

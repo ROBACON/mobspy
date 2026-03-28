@@ -41,6 +41,12 @@ line-length = 88
 select = ["E", "W", "F", "I", "UP", "B", "SIM"]
 ignore = ["S101"]
 
+[tool.ruff.lint.per-file-ignores]
+# Tests use `from mobspy import *` (F403/F405) and MobsPy DSL side-effect
+# expressions like `Species.char` (B018), `assert False` in expected-failure
+# tests (B011), and species comparisons in lambdas (B015).
+"tests/**" = ["F403", "F405", "B018", "B011", "B015"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -q --strict-markers --strict-config"

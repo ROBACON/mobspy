@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+import sys
 from typing import Any
-
-from mobspy.exceptions import ValidationError
-
-from inspect import stack as inspect_stack  # noqa: E402
 
 from numpy import floating as np_float_  # noqa: E402
 from numpy import integer as np_int_  # noqa: E402
 from pint import Quantity  # noqa: E402
 
+from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import (  # noqa: E402
     List_Species,
     Reacting_Species,
@@ -55,27 +53,23 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
         else:
             raise ValidationError(
                 "Reactant_species count assignment does not"
-                f" support the type {type(item)}")
+                f" support the type {type(item)}"
+            )
     count_dic = new_count_dict
 
     def find_species() -> set[Species]:
         found_species: set[Species] = set()
 
-        for i in range(len(inspect_stack())):
-            local_names = inspect_stack()[i][0].f_locals
-            global_names = inspect_stack()[i][0].f_globals
-            for key, item in global_names.items():  # noqa: B007
-                try:
-                    if isinstance(item, Species) and type(item) != type:  # noqa: E721
-                        found_species.add(item)
-                except AttributeError:
-                    pass
-            for key, item in local_names.items():  # noqa: B007
-                try:
-                    if isinstance(item, Species) and type(item) != type:  # noqa: E721
-                        found_species.add(item)
-                except AttributeError:
-                    pass
+        frame = sys._getframe(1)
+        while frame is not None:
+            for ns in (frame.f_locals, frame.f_globals):
+                for _name, obj in ns.items():
+                    try:
+                        if isinstance(obj, Species) and type(obj) != type:  # noqa: E721
+                            found_species.add(obj)
+                    except AttributeError:
+                        pass
+            frame = frame.f_back
 
         return found_species
 
@@ -99,15 +93,18 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
                         spe.add_quantities(str_characteristics, item)
                     else:
                         raise ValidationError(
-                            "Characteristics not found in species with equal name")
+                            "Characteristics not found in species with equal name"
+                        )
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
                     raise ValidationError(
                         "There are two different meta-species with"
-                        " the same name. Set_counts cannot resolve")
+                        " the same name. Set_counts cannot resolve"
+                    )
             if not already_found:
                 raise ValidationError(
-                    f"Meta-species with the following name {key} not found")
+                    f"Meta-species with the following name {key} not found"
+                )
         else:
             try:
                 if isinstance(key, Species) or isinstance(key, Reacting_Species):  # noqa: SIM101
@@ -115,12 +112,15 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
                         if len(key.list_of_reactants) != 1:
                             raise ValidationError(
                                 "Assignment used incorrectly."
-                                " Only one species at a time")
+                                " Only one species at a time"
+                            )
                         model.add(key.list_of_reactants[0]["object"])
                     if isinstance(key, Species):
                         model.add(key)
                     key(item)
-            except AttributeError:
-                raise ValidationError("Keys must be either meta-species or strings")
+            except AttributeError as e:
+                raise ValidationError(
+                    "Keys must be either meta-species or strings"
+                ) from e
 
     return List_Species(model)

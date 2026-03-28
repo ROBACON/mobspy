@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-
 # --- SBML data structures (compiler -> builder -> SBMLWriter) ---
 
 
@@ -97,6 +96,7 @@ class CompiledModel:
     species_not_mapped: dict[str, int | float] = field(default_factory=dict)
     mappings: dict[str, list[str]] = field(default_factory=dict)
     assigned_species: list[str] = field(default_factory=list)
+    model_context: Any = None  # ModelUnitContext | None (avoid circular import)
 
     # Backward compatibility: dict-like access for gradual migration
     def __getitem__(self, key: str) -> Any:
@@ -111,8 +111,7 @@ class CompiledModel:
     def items(self) -> list[tuple[str, Any]]:
         """Dict-like items() for backward compat."""
         return [
-            (f.name, getattr(self, f.name))
-            for f in self.__dataclass_fields__.values()
+            (f.name, getattr(self, f.name)) for f in self.__dataclass_fields__.values()
         ]
 
 
@@ -222,6 +221,7 @@ class CompilerResult:
     parameter_object_dict: dict[str, Any] = field(default_factory=dict)
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
     has_mole: bool = False
+    model_context: Any = None  # ModelUnitContext | None (avoid circular import)
 
     def to_compiled_model(
         self,
@@ -238,6 +238,7 @@ class CompilerResult:
             species_not_mapped=species_not_mapped,
             mappings=mappings,
             assigned_species=self.assigned_species,
+            model_context=self.model_context,
         )
 
     # Keep old name as alias

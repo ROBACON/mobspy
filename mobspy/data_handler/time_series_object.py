@@ -4,7 +4,6 @@ This module implements the class that stores the results from a MobsPy simulatio
 
 from __future__ import annotations
 
-import inspect
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
         Internal_Parameter_Constructor,
     )
     from mobspy.types import TimeSeriesDataDict
-
 
 
 class MobsPyTimeSeries:
@@ -94,7 +92,7 @@ class MobsPyList_of_TS:
         if model_parameter_objects is not None:
             need_conversion_dict: set[str] = set()
             for par, par_object in model_parameter_objects.items():
-                if par_object._has_units == "T":
+                if par_object._has_units:
                     need_conversion_dict.add(par)
 
             for i, par_comb in enumerate(self.ts_model_parameters):
@@ -161,20 +159,21 @@ class MobsPyList_of_TS:
         Returns one run if there is only one time-series and
         returns multiple runs if there are multiple time series
         """
-        code_line = inspect.stack()[1].code_context[0][:-1]
-        if "['runs']" in code_line:
+        if isinstance(item, str) and item == "runs":
             raise ValidationError(
                 "As of version 2.0.1 MobsPy has changed the data output format. \n"
                 "Now data can be accessed through the following syntax: \n"
                 "S.results[Meta-Species Object] or "
                 "S.results[Meta-Species string name] \n"
-                "Both can perform queries")
+                "Both can perform queries"
+            )
 
         series_index = None
         if isinstance(item, tuple):
             if len(item) != 2 or not isinstance(item[1], int):
                 raise ValidationError(
-                    "Only len 2 and ints allowed in tuple-based assignments")
+                    "Only len 2 and ints allowed in tuple-based assignments"
+                )
             series_index = item[1]
             item = item[0]
 

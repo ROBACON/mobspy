@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import libsbml as sbml
 
 if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import (
         AssignmentsForSbml,
         EventsForSbml,
@@ -54,6 +55,7 @@ def create_model(
     reactions: ReactionsForSbml | None = None,
     events: EventsForSbml | None = None,
     assignments: AssignmentsForSbml | None = None,
+    model_context: ModelUnitContext | None = None,
 ) -> Any:
     """
     Returns an SBML Level 3 model.
@@ -103,23 +105,31 @@ def create_model(
 
     model = document.createModel()
     check(model, "create model")
-    check(model.setTimeUnits("second"), "set model-wide time units")
-    check(model.setExtentUnits("item"), "set model units of extent")
-    check(
-        model.setSubstanceUnits("item"), "set model substance units"
-    )  # mole, item, gram, kilogram, dimensionless
 
-    # Create a unit definition we will need later.
+    if model_context is not None:
+        time_id = model_context.get_sbml_time_units_id()
+        substance_id = model_context.get_sbml_substance_units_id()
+        spatial_dim = model_context.dimension
+        # Create all unit definitions from the context
+        model_context.create_sbml_unit_definitions(model)
+    else:
+        time_id = "second"
+        substance_id = "item"
+        spatial_dim = 3
+        # Legacy per_min unit definition
+        per_second = model.createUnitDefinition()
+        check(per_second, "create unit definition")
+        check(per_second.setId("per_min"), "set unit definition id")
+        unit = per_second.createUnit()
+        check(unit, "create unit")
+        check(unit.setKind(sbml.UNIT_KIND_SECOND), "set unit kind")
+        check(unit.setExponent(-1), "set unit exponent")
+        check(unit.setScale(0), "set unit scale")
+        check(unit.setMultiplier(1), "set unit multiplier")
 
-    per_second = model.createUnitDefinition()
-    check(per_second, "create unit definition")
-    check(per_second.setId("per_min"), "set unit definition id")
-    unit = per_second.createUnit()
-    check(unit, "create unit")
-    check(unit.setKind(sbml.UNIT_KIND_SECOND), "set unit kind")
-    check(unit.setExponent(-1), "set unit exponent")
-    check(unit.setScale(0), "set unit scale")
-    check(unit.setMultiplier(1), "set unit multiplier")
+    check(model.setTimeUnits(time_id), "set model-wide time units")
+    check(model.setExtentUnits(substance_id), "set model units of extent")
+    check(model.setSubstanceUnits(substance_id), "set model substance units")
 
     # Create a compartment inside this model
 
@@ -128,7 +138,7 @@ def create_model(
     check(c1.setId("c1"), "set compartment id")
     check(c1.setConstant(True), 'set compartment "constant"')
     check(c1.setSize(1), 'set compartment "size"')
-    check(c1.setSpatialDimensions(3), "set compartment dimensions")
+    check(c1.setSpatialDimensions(spatial_dim), "set compartment dimensions")
     check(c1.setUnits("dimensionless"), "set compartment size units")
 
     # Create species inside this model, set the required attributes
@@ -144,7 +154,7 @@ def create_model(
         check(s.setCompartment("c1"), "set species compartment")
         check(s.setConstant(False), 'set "constant" attribute')
         check(s.setInitialAmount(float(s_val)), "set initial amount")
-        check(s.setSubstanceUnits("item"), "set substance units")
+        check(s.setSubstanceUnits(substance_id), "set substance units")
         check(s.setBoundaryCondition(False), 'set "boundaryCondition"')
         check(s.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits"')
 
