@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
 from mobspy.modules.mobspy_expressions import (
@@ -15,7 +15,6 @@ from mobspy.modules.mobspy_expressions import (
 if TYPE_CHECKING:
     pass
 
-_logger = get_logger(__name__)
 
 
 class MathFunctionWrapper:
@@ -57,13 +56,17 @@ class MathFunctionWrapper:
 
     def __call__(self, expression: Any) -> MobsPyExpression | None:
         if not Assign.check_context():
-            _logger.error("The expression functions must only be called ")
+            raise ValidationError(
+                f"ms_{self.name}() can only be called inside a rate expression "
+                "(reaction rate lambda or ODE assignment)"
+            )
 
         # MobsPy Expressions
         if isinstance(expression, MobsPyExpression):
             if expression._has_units == "T":
-                _logger.error(
-                    "At this current version, MobsPy functions do not support "
+                raise ValidationError(
+                    f"ms_{self.name}() does not support unit-bearing expressions. "
+                    "Extract the numeric value before applying the function."
                 )
 
             new_operation = FunctionCallNode(
@@ -77,11 +80,9 @@ class MathFunctionWrapper:
         ) and Assign.check_context():
             if isinstance(expression, Reacting_Species):  # noqa: SIM102
                 if len(expression.list_of_reactants) > 1:
-                    _logger.error(
-                        message="Reacting species with multiple"
+                    raise ValidationError("Reacting species with multiple"
                         " reactants should not be applied"
-                        " to a function",
-                        full_exception_log=True,
+                        " to a function"
                     )
 
             expression = Assign.mul(1, expression)
@@ -91,9 +92,9 @@ class MathFunctionWrapper:
             return self._create_expression(expression, new_operation)
 
         else:
-            _logger.error(
-                message="MobsPy functions were called on a non-valid context",
-                full_exception_log=True,
+            raise ValidationError(f"ms_{self.name}() received an unsupported argument type: "
+                f"{type(expression).__name__}. "
+                "Expected a species, MobsPyExpression, or numeric value."
             )
         return None
 

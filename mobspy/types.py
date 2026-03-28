@@ -1,99 +1,159 @@
 """Type definitions for MobsPy.
 
-Provides TypedDicts and type aliases used throughout the
-MobsPy package for structured, type-safe dictionary access.
+Provides dataclasses and type aliases used throughout the
+MobsPy package for structured, type-safe data access.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from typing import Any
+
 
 # --- SBML data structures (compiler -> builder -> SBMLWriter) ---
 
 
-class ReactionData(TypedDict):
+@dataclass
+class ReactionData:
     """Single reaction in SBML format."""
 
-    re: list[tuple[float | int, str]]
-    pr: list[tuple[float | int, str]]
-    kin: str
+    reactants: list[tuple[float | int, str]] = field(default_factory=list)
+    products: list[tuple[float | int, str]] = field(default_factory=list)
+    kinetics: str = ""
+
+    def __str__(self) -> str:
+        """Backward-compatible dict-style string representation."""
+        return str({"re": self.reactants, "pr": self.products, "kin": self.kinetics})
 
 
-class EventData(TypedDict):
+@dataclass
+class EventData:
     """Single event in SBML format."""
 
-    trigger: str
-    delay: str | float | int
-    assignments: list[tuple[str, str | int | float]]
+    trigger: str = ""
+    delay: str | float | int = "0"
+    assignments: list[tuple[str, str | int | float]] = field(default_factory=list)
+
+    def __str__(self) -> str:
+        """Backward-compatible dict-style string representation."""
+        return str(
+            {
+                "trigger": self.trigger,
+                "delay": self.delay,
+                "assignments": self.assignments,
+            }
+        )
 
 
-class AssignmentData(TypedDict):
+@dataclass
+class AssignmentData:
     """Single assignment in SBML format."""
 
-    species: str
-    expression: str
+    species: str = ""
+    expression: str = ""
+
+    def __str__(self) -> str:
+        """Backward-compatible dict-style string representation."""
+        return str({"species": self.species, "expression": self.expression})
 
 
-class ParameterUsedInfo(TypedDict):
+@dataclass
+class ParameterUsedInfo:
     """Metadata for a parameter tracked during compilation."""
 
-    name: str
-    values: float | int | list[float | int]
-    used_in: set[str]
-    object: Any
+    name: str = ""
+    values: float | int | list[float | int] = 0
+    used_in: set[str] = field(default_factory=set)
+    object: Any = None
 
 
-# --- Composite dict structures ---
+# --- Composite structures ---
 
 
-class SBMLModelDict(TypedDict):
-    """Dict passed to builder.build() / SBMLWriter."""
+@dataclass
+class SBMLModelData:
+    """Data passed to builder.build() / SBMLWriter."""
 
-    species_for_sbml: dict[str, int | float]
-    parameters_for_sbml: dict[str, tuple[float | int, str]]
-    reactions_for_sbml: dict[str, ReactionData]
-    events_for_sbml: dict[str, EventData]
-    assignments_for_sbml: dict[str, AssignmentData]
+    species_for_sbml: dict[str, int | float] = field(default_factory=dict)
+    parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
+        default_factory=dict
+    )
+    reactions_for_sbml: dict[str, ReactionData] = field(default_factory=dict)
+    events_for_sbml: dict[str, EventData] = field(default_factory=dict)
+    assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
 
 
-class CompiledModelDict(TypedDict):
+@dataclass
+class CompiledModel:
     """Full compiled model stored in _list_of_models."""
 
-    species_for_sbml: dict[str, int | float]
-    parameters_for_sbml: dict[str, tuple[float | int, str]]
-    reactions_for_sbml: dict[str, ReactionData]
-    events_for_sbml: dict[str, EventData]
-    assignments_for_sbml: dict[str, AssignmentData]
-    species_not_mapped: dict[str, int | float]
-    mappings: dict[str, list[str]]
-    assigned_species: list[str]
+    species_for_sbml: dict[str, int | float] = field(default_factory=dict)
+    parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
+        default_factory=dict
+    )
+    reactions_for_sbml: dict[str, ReactionData] = field(default_factory=dict)
+    events_for_sbml: dict[str, EventData] = field(default_factory=dict)
+    assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
+    species_not_mapped: dict[str, int | float] = field(default_factory=dict)
+    mappings: dict[str, list[str]] = field(default_factory=dict)
+    assigned_species: list[str] = field(default_factory=list)
+
+    # Backward compatibility: dict-like access for gradual migration
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        setattr(self, key, value)
+
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self, key)
+
+    def items(self) -> list[tuple[str, Any]]:
+        """Dict-like items() for backward compat."""
+        return [
+            (f.name, getattr(self, f.name))
+            for f in self.__dataclass_fields__.values()
+        ]
 
 
-class SimulationEventData(TypedDict):
+@dataclass
+class SimulationEventData:
     """Internal event data collected during event context."""
 
-    event_time: float
-    event_counts: list[Any]
-    trigger: str
+    event_time: float = 0.0
+    event_counts: list[Any] = field(default_factory=list)
+    trigger: str = ""
 
 
-class TimeSeriesDataDict(TypedDict):
+class TimeSeriesDataDict:
     """Data structure passed to MobsPyTimeSeries constructor."""
 
-    data: dict[str, list[float]]
-    params: SimulationParameters
-    models: list[CompiledModelDict]
+    def __init__(
+        self,
+        data: dict[str, list[float]] | None = None,
+        params: SimulationParameters | None = None,
+        models: list[CompiledModel] | None = None,
+    ) -> None:
+        self.data: dict[str, list[float]] = data or {}
+        self.params: SimulationParameters | None = params
+        self.models: list[CompiledModel] = models or []
+
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        setattr(self, key, value)
 
 
 # --- Simulation parameters ---
+# Kept as TypedDict because it's used as a loose config bag with
+# optional keys, comment keys, and dict-spread patterns.
+
+from typing import TypedDict  # noqa: E402
 
 
 class SimulationParameters(TypedDict, total=False):
-    """Parameters dict used throughout Simulation (from default_reader).
-
-    Uses total=False because comment keys and optional keys coexist.
-    """
+    """Parameters dict used throughout Simulation (from default_reader)."""
 
     volume: float | int
     repetitions: int
@@ -131,8 +191,12 @@ EventsForSbml = dict[str, EventData]
 AssignmentsForSbml = dict[str, AssignmentData]
 MappingsForSbml = dict[str, list[str]]
 ParametersUsed = dict[str, ParameterUsedInfo]
-ParameterSweepList = list[list[CompiledModelDict]]
+ParameterSweepList = list[list[CompiledModel]]
 SimParams = SimulationParameters
+
+# Backward compat aliases for the old TypedDict names
+SBMLModelDict = SBMLModelData
+CompiledModelDict = CompiledModel
 
 
 # --- Compiler result ---
@@ -159,19 +223,28 @@ class CompilerResult:
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
     has_mole: bool = False
 
+    def to_compiled_model(
+        self,
+        species_not_mapped: dict[str, int | float],
+        mappings: dict[str, list[str]],
+    ) -> CompiledModel:
+        """Create a CompiledModel from compiler output."""
+        return CompiledModel(
+            species_for_sbml=self.species_for_sbml,
+            parameters_for_sbml=self.parameters_for_sbml,
+            reactions_for_sbml=self.reactions_for_sbml,
+            events_for_sbml=self.events_for_sbml,
+            assignments_for_sbml=self.assignments_for_sbml,
+            species_not_mapped=species_not_mapped,
+            mappings=mappings,
+            assigned_species=self.assigned_species,
+        )
+
+    # Keep old name as alias
     def to_compiled_model_dict(
         self,
         species_not_mapped: dict[str, int | float],
         mappings: dict[str, list[str]],
-    ) -> CompiledModelDict:
-        """Create a CompiledModelDict from compiler output."""
-        return {
-            "species_for_sbml": self.species_for_sbml,
-            "parameters_for_sbml": self.parameters_for_sbml,
-            "reactions_for_sbml": self.reactions_for_sbml,
-            "events_for_sbml": self.events_for_sbml,
-            "assignments_for_sbml": self.assignments_for_sbml,
-            "species_not_mapped": species_not_mapped,
-            "mappings": mappings,
-            "assigned_species": self.assigned_species,
-        }
+    ) -> CompiledModel:
+        """Backward compat alias for to_compiled_model."""
+        return self.to_compiled_model(species_not_mapped, mappings)

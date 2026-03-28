@@ -5,10 +5,8 @@ from typing import Any
 from pint import Quantity
 from scipy.constants import N_A
 
-from mobspy.mobspy_logging import get_logger
-
-simlog = get_logger(__name__)
-from mobspy.modules.mobspy_expressions import OverrideQuantity, u  # noqa: E402
+from mobspy.exceptions import UnitError
+from mobspy.modules.mobspy_expressions import OverrideQuantity, u
 
 
 def convert_rate(
@@ -75,7 +73,7 @@ def convert_rate(
                 )
                 return converted_quantity.magnitude, dimension, False
         except Exception as e:
-            simlog.error(
+            raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
                 f"Is the rate in the form [volume]**{volume_power}/[time]?"
             )
@@ -111,7 +109,7 @@ def convert_counts(
         is_dimensionless = len(dim) == 0
 
         if not has_length and not has_substance and not is_dimensionless:
-            simlog.error(
+            raise UnitError(
                 f"The assigned quantity {quantity} is neither a count or concentration"
             )
         elif is_dimensionless:
@@ -134,7 +132,7 @@ def convert_counts(
                     converted_quantity = converted_quantity * volume
                 converted_quantity = converted_quantity.magnitude
         except Exception as e:
-            simlog.error(
+            raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
                 f"Is it really a count or concentration?"
             )
@@ -173,7 +171,7 @@ def check_dimension(
             )
             if error_context:
                 message = message + "\n " + error_context
-            simlog.error(message)
+            raise UnitError(message)
     return dimension
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import re
-import weakref
+from contextvars import ContextVar
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -27,14 +27,18 @@ from numpy import (
 from pint import Quantity, UnitRegistry
 from scipy.constants import N_A
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import CompilationError, UnitError
 
 if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
 
     from mobspy.modules.meta_class import Species
 
-simlog = get_logger(__name__)
+
+# Global context variable for expression mode.
+# When True, arithmetic on ExpressionDefiner subclasses builds expression
+# trees instead of performing plain numeric/unit operations.
+_ms_active_ctx: ContextVar[bool] = ContextVar("_ms_active_ctx", default=False)
 
 
 # ---------------------------------------------------------------------------
@@ -317,10 +321,10 @@ class Specific_Species_Operator(Bool_Override):
         if not self._stocked_characteristics:
             return reference in self._species_object.get_references()
         else:
-            simlog.error(
-                "Concatenation of is_a and dot operator "
-                "not supported. Please use them separately",
-            )
+            raise CompilationError(
+                "Cannot chain is_a() with dot-notation characteristic queries. "
+                "Use them in separate conditions: "
+                "'r.is_a(X) and r.alive' instead of chaining.")
 
     def add(self, characteristic: str) -> None:
         """
@@ -357,16 +361,10 @@ class ExpressionDefiner:
     operations an object has gone through.
     """
 
-    # Global registry of all live ExpressionDefiner instances.
-    # Used by Unit_Context_Setter to flip _ms_active without walking the stack.
-    # Keyed by id() with weak ref + callback for auto-cleanup, avoiding
-    # OverrideQuantity's problematic __hash__ from Pint.
-    _registry: dict[int, weakref.ref[ExpressionDefiner]] = {}
-
     _operation: Any
     _unit_count_op: Any
     _unit_conc_op: Any
-    _ms_active: bool
+    _force_expression_mode: bool
     _parameter_set: set[Any]
     _expression_variables: set[Any]
     _has_units: bool | str
@@ -377,6 +375,20 @@ class ExpressionDefiner:
     _dimension: int | None
     species_list_operation_order: list[Any]
 
+    @property
+    def _ms_active(self) -> bool:
+        """True when expression-building mode is active.
+
+        Combines the global context (set during compilation) with an
+        instance-level override used by parameters and MobsPyExpression
+        instances that are always in expression mode.
+        """
+        return self._force_expression_mode or _ms_active_ctx.get()
+
+    @_ms_active.setter
+    def _ms_active(self, value: bool) -> None:
+        self._force_expression_mode = value
+
     @classmethod
     def execute_op(cls, first: Any, second: Any, operation: str) -> Any:
         """
@@ -386,53 +398,55 @@ class ExpressionDefiner:
         :param second: second number
         :param operation: operation to be executed
         """
-        # TODO: FIX HERE NOW!
-        # CHANGED HERE
-        # if isinstance(first, OverrideQuantity) or
-        #     isinstance(second, OverrideQuantity):
-        #    raise Exception(
-        #       'Override quantity is not supposed to be
-        #        in execute op')
+        # Always unwrap OverrideQuantity to plain Quantity to avoid:
+        # 1. "different registries" errors in Pint operations
+        # 2. ExpressionDefiner overrides when _ms_active is True
+        raw_first = (
+            first.q_object if isinstance(first, OverrideQuantity) else first
+        )
+        raw_second = (
+            second.q_object if isinstance(second, OverrideQuantity) else second
+        )
 
         q_object = None
-        if isinstance(first, Quantity) and isinstance(second, Quantity):
+        if isinstance(raw_first, Quantity) and isinstance(raw_second, Quantity):
             if operation == "__add__":
-                q_object = Quantity.__add__(first, second)
+                q_object = Quantity.__add__(raw_first, raw_second)
             elif operation == "__radd__":
-                q_object = Quantity.__radd__(first, second)
+                q_object = Quantity.__radd__(raw_first, raw_second)
             elif operation == "__sub__":
-                q_object = Quantity.__sub__(first, second)
+                q_object = Quantity.__sub__(raw_first, raw_second)
             elif operation == "__rsub__":
-                q_object = Quantity.__rsub__(first, second)
+                q_object = Quantity.__rsub__(raw_first, raw_second)
             elif operation == "__mul__":
-                q_object = Quantity.__mul__(first, second)
+                q_object = Quantity.__mul__(raw_first, raw_second)
             elif operation == "__rmul__":
-                q_object = Quantity.__rmul__(first, second)
+                q_object = Quantity.__rmul__(raw_first, raw_second)
             elif operation == "__truediv__":
-                q_object = Quantity.__truediv__(first, second)
+                q_object = Quantity.__truediv__(raw_first, raw_second)
             elif operation == "__rtruediv__":
-                q_object = Quantity.__rtruediv__(first, second)
+                q_object = Quantity.__rtruediv__(raw_first, raw_second)
         else:
             if operation == "__add__":
-                q_object = first + second
+                q_object = raw_first + raw_second
             elif operation == "__radd__":
-                q_object = second + first
+                q_object = raw_second + raw_first
             elif operation == "__sub__":
-                q_object = first - second
+                q_object = raw_first - raw_second
             elif operation == "__rsub__":
-                q_object = second - first
+                q_object = raw_second - raw_first
             elif operation == "__mul__":
-                q_object = first * second
+                q_object = raw_first * raw_second
             elif operation == "__rmul__":
-                q_object = second * first
+                q_object = raw_second * raw_first
             elif operation == "__truediv__":
-                q_object = first / second
+                q_object = raw_first / raw_second
             elif operation == "__rtruediv__":
-                q_object = second / first
+                q_object = raw_second / raw_first
             elif operation == "__pow__":
-                q_object = first**second
+                q_object = raw_first**raw_second
             elif operation == "__rpow__":
-                q_object = second**first
+                q_object = raw_second**raw_first
 
         if q_object is not None:
             return q_object
@@ -493,24 +507,24 @@ class ExpressionDefiner:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__radd__(inputs[0])
             else:
-                simlog.error(self._NUMPY_ARRAY_ERR)
+                raise CompilationError(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rsub__(inputs[0])
             else:
-                simlog.error(self._NUMPY_ARRAY_ERR)
+                raise CompilationError(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rmul__(inputs[0])
             else:
-                simlog.error(self._NUMPY_ARRAY_ERR)
+                raise CompilationError(self._NUMPY_ARRAY_ERR)
         elif ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rtruediv__(inputs[0])
             else:
-                simlog.error(self._NUMPY_ARRAY_ERR)
+                raise CompilationError(self._NUMPY_ARRAY_ERR)
         else:
-            simlog.error("Numpy operation not yet supported by MobsPy")
+            raise CompilationError("Numpy operation not yet supported by MobsPy")
 
     # T avoids problems with __getattr__ from units/quantities
     def __add__(self, other: Any) -> Any:
@@ -636,28 +650,15 @@ class ExpressionDefiner:
         multiple Pint objects. Gives the object all necessary
         attributes to execute create_from_new_operation.
         """
-        # Register in the global registry for context activation.
-        # Use weak refs with id-based keys to avoid OverrideQuantity's __hash__.
-        obj_id = id(self)
-
-        def _remove_from_registry(ref: weakref.ref[ExpressionDefiner]) -> None:
-            ExpressionDefiner._registry.pop(obj_id, None)
-
-        try:
-            ExpressionDefiner._registry[obj_id] = weakref.ref(
-                self, _remove_from_registry
-            )
-        except TypeError:
-            # Some Pint Quantity subclasses may not support weak refs
-            pass
-
         # Operation variables
         self._operation = None
         self._unit_count_op = 1
         self._unit_conc_op = 1
 
-        # MobsPy active - Behavior change
-        self._ms_active = False
+        # Per-instance override for always-active expression mode
+        # (used by parameters and MobsPyExpression).
+        # The global context var handles the compilation context.
+        self._force_expression_mode = False
 
         # Parameter Variables
         self._parameter_set: set[Any] = set()
@@ -723,13 +724,13 @@ class ExpressionDefiner:
             and isinstance(count_op, Exception)
             and isinstance(conc_op, Exception)
         ):
-            simlog.error(
-                "The units cannot be resolved. "
-                "Ex: This error is cased by summing two "
-                "number with different units "
-                "(1/u.s) + 1*(u.l/u.s), \n"
-                "or other impossible unit operations",
-            )
+            raise UnitError(
+                "Incompatible units in expression. "
+                "Both the count and concentration interpretations failed:\n"
+                f"  count path: {count_op}\n"
+                f"  concentration path: {conc_op}\n"
+                "Check that all terms in additions/subtractions have matching dimensions. "
+                "Example of an invalid expression: (1/u.s) + (1*u.l/u.s)")
 
         if isinstance(self, (Quantity, OverrideQuantity)):
             self = QuantityConverter.convert_received_unit(self)
@@ -819,12 +820,12 @@ class ExpressionDefiner:
         )
 
         if _count_in_model and _concentration_in_model:
-            simlog.error(
+            raise UnitError(
                 "A meta-species in a model cannot be both a count and a concentration"
             )
 
         if _count_in_expression and _concentration_in_expression:
-            simlog.error(
+            raise UnitError(
                 "A meta-species in an expression cannot be "
                 "both a count and a concentration"
             )
@@ -881,23 +882,17 @@ class OverrideUnitRegistry:
 
     def __init__(self) -> None:
         self.unit_registry_object = UnitRegistry()
-        self._ms_active = False
 
     def __call__(self, *args: Any, **kwargs: Any) -> OverrideQuantity:
         q_object = self.unit_registry_object(*args, **kwargs)
-        owq_obj = OverrideQuantity(q_object)
-        owq_obj._ms_active = self._ms_active
-        return owq_obj
+        return OverrideQuantity(q_object)
 
     def __getattr__(self, item: str) -> OverrideQuantity:
-        # Convert here
         if item == "h":
             item = "hour"
 
         q_object = 1 * self.unit_registry_object.__getattr__(item)
-        owq_obj = OverrideQuantity(q_object)
-        owq_obj._ms_active = self._ms_active
-        return owq_obj
+        return OverrideQuantity(q_object)
 
 
 # u is defined here
@@ -905,11 +900,11 @@ u = OverrideUnitRegistry()
 
 
 def set_u_context() -> None:
-    u._ms_active = True
+    _ms_active_ctx.set(True)
 
 
 def reset_u_context() -> None:
-    u._ms_active = False
+    _ms_active_ctx.set(False)
 
 
 class QuantityConverter:
@@ -973,9 +968,7 @@ class QuantityConverter:
         if not is_override:
             return copied_quantity
         else:
-            temp = OverrideQuantity(copied_quantity)
-            temp.set_ms_active(quantity._ms_active)
-            return temp
+            return OverrideQuantity(copied_quantity)
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
@@ -1001,7 +994,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) + self.q_object)
             else:
-                simlog.error(
+                raise CompilationError(
                     "MobsPy does not yet support array-wise "
                     "numpy operations, only element-wise"
                 )
@@ -1009,7 +1002,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) - self.q_object)
             else:
-                simlog.error(
+                raise CompilationError(
                     "MobsPy does not yet support array-wise "
                     "numpy operations, only element-wise"
                 )
@@ -1017,7 +1010,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) * self.q_object)
             else:
-                simlog.error(
+                raise CompilationError(
                     "MobsPy does not yet support array-wise "
                     "numpy operations, only element-wise"
                 )
@@ -1025,12 +1018,12 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) / self.q_object)
             else:
-                simlog.error(
+                raise CompilationError(
                     "MobsPy does not yet support array-wise "
                     "numpy operations, only element-wise"
                 )
         else:
-            simlog.error("Numpy operation not yet supported by MobsPy")
+            raise CompilationError("Numpy operation not yet supported by MobsPy")
         return None
 
     def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
@@ -1150,23 +1143,10 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def __repr__(self) -> str:
         return str(self.q_object)
 
-    def set_ms_active(self, ms_active: bool) -> None:
-        """
-        ms_active is the boolean responsible for activating
-        the context. This function can be used to set it.
-
-        :param ms_active: boolean with the state to set
-            the expression or normal unit context
-        """
-        self._ms_active = ms_active
-
-    # Had to propose new functions for conversion as Pint is
-    # doing something strange and checking the returned object
     def convert(self, unit: str) -> OverrideQuantity:
+        """Convert to a different unit, returning a new OverrideQuantity."""
         new_q_object = self.q_object.to(unit)
-        temp = OverrideQuantity(new_q_object)
-        temp._ms_active = self._ms_active
-        return temp
+        return OverrideQuantity(new_q_object)
 
     def convert_into(self, unit: str) -> None:
         self.q_object.ito(unit)
@@ -1236,9 +1216,6 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         self._unit_count_op = unit_count_op
         self._unit_conc_op = unit_conc_op
 
-        if self._count_in_model_in_model:
-            self._unit_conc_op = None
-
         if self._concentration_in_model:
             self._unit_conc_op = None
 
@@ -1295,15 +1272,12 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         c2 = isinstance(self._unit_count_op, Exception)
         c3 = isinstance(self._unit_conc_op, Exception)
         if c1 and (c2 and c3):
-            raise Exception(
-                "The unit for the reaction did not resolve due to an illegal operation"
-                + "\n"
-                + "With meta-species as count: "
-                + str(self._unit_count_op)
-                + "\n"
-                + "With meta-species as concentration: "
-                + str(self._unit_conc_op)
-                + "\n"
+            raise TypeError(
+                "Unit resolution failed for reaction rate. "
+                "Both count and concentration interpretations produced errors:\n"
+                f"  count: {self._unit_count_op}\n"
+                f"  concentration: {self._unit_conc_op}\n"
+                "Verify that all arithmetic operations have compatible dimensions."
             )
 
         # If both count and concentration are valid, count takes priority
@@ -1316,6 +1290,9 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 )
             ):
                 self._concentration_in_expression = True
+            elif self._unit_conc_op.units == (1 / u.unit_registry_object.second):
+                # Concentration dimensions canceled (e.g. Michaelis-Menten)
+                self._concentration_in_expression = True
 
         if c1 and not c2:  # noqa: SIM102
             if self._unit_count_op.units == (1 / u.unit_registry_object.second):
@@ -1327,19 +1304,11 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             and not self._concentration_in_expression
         ):
             raise TypeError(
-                "The automated unit detection resulted "
-                "was unable to compile the reaction rate. "
-                + "With meta-species as count: "
-                + str(self._unit_count_op)
-                + ". "
-                + "With meta-species as concentration: "
-                + str(self._unit_conc_op)
-                + ". "
-                "Please check if the resulting units "
-                "are valid. "
-                "For counts the expression must result "
-                "in units 1/[time] and for concentration"
-                " in 1/([time][volume])."
+                "Could not determine whether the rate expression uses counts or concentrations.\n"
+                f"  count interpretation: {self._unit_count_op}\n"
+                f"  concentration interpretation: {self._unit_conc_op}\n"
+                "The rate must resolve to 1/[time] for counts "
+                "or 1/([time]*[volume]) for concentrations."
             )
 
         if isinstance(self._operation, ExprNode):
@@ -1510,7 +1479,7 @@ class _Count_Base:
                     )
             return item
         except AttributeError:
-            simlog.error("Count[] operator can only be used in MobsPy expressions")
+            raise CompilationError("Count[] operator can only be used in MobsPy expressions")
             return None
 
 
@@ -1531,7 +1500,7 @@ class _Conc_Base:
                     )
             return item
         except AttributeError:
-            simlog.error(
+            raise CompilationError(
                 "Concentration[] operator can only be used in MobsPy expressions"
             )
         return None

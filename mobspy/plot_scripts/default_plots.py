@@ -6,9 +6,8 @@ from typing import Any
 
 import mobspy.plot_scripts.hierarchical_plot as hp
 import mobspy.plot_scripts.statistics_calculations as sc
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 
-simlog = get_logger(__name__)
 from pint import Quantity  # noqa: E402
 
 import mobspy.plot_scripts.process_plot_data as ppd  # noqa: E402
@@ -26,7 +25,7 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
         try:
             json_data = json.load(file)
         except Exception as e:
-            simlog.error(
+            raise ValidationError(
                 "The following error happened while "
                 f"decoding json file "
                 f'"{plot_json_filename}":\n' + str(e)
@@ -132,7 +131,7 @@ def stochastic_plot(
             )
 
         except ValueError:
-            simlog.error(f"{spe} species not found in data")
+            raise ValidationError(f"{spe} species not found in data")
         new_plot_params["figures"].append(
             {"ylabel": spe + " " + new_plot_params["ylabel"], "plots": plots_for_spe_i}
         )
@@ -350,7 +349,7 @@ def raw_plot(
     elif type(parameters_or_file) == dict:  # noqa: E721
         plot_params = parameters_or_file
     else:
-        simlog.error("Raw plot only takes json files or parameters for configuration")
+        raise ValidationError("Raw plot only takes json files or parameters for configuration")
 
     species = list(data.ts_data[0].keys())
     ppd.check_plot_parameters(species, plot_params)

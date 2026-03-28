@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Reacting_Species, Species
 
 if TYPE_CHECKING:
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     )
     from mobspy.types import TimeSeriesDataDict
 
-simlog = get_logger(__name__)
 
 
 class MobsPyTimeSeries:
@@ -164,20 +163,18 @@ class MobsPyList_of_TS:
         """
         code_line = inspect.stack()[1].code_context[0][:-1]
         if "['runs']" in code_line:
-            simlog.error(
+            raise ValidationError(
                 "As of version 2.0.1 MobsPy has changed the data output format. \n"
                 "Now data can be accessed through the following syntax: \n"
                 "S.results[Meta-Species Object] or "
                 "S.results[Meta-Species string name] \n"
-                "Both can perform queries",
-            )
+                "Both can perform queries")
 
         series_index = None
         if isinstance(item, tuple):
             if len(item) != 2 or not isinstance(item[1], int):
-                simlog.error(
-                    "Only len 2 and ints allowed in tuple-based assignments",
-                )
+                raise ValidationError(
+                    "Only len 2 and ints allowed in tuple-based assignments")
             series_index = item[1]
             item = item[0]
 
@@ -252,7 +249,7 @@ class MobsPyList_of_TS:
                     found_flag = True
 
         if not found_flag:
-            simlog.error(f"{item} was not found in data")
+            raise ValidationError(f"{item} was not found in data")
 
         return to_return
 

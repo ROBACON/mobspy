@@ -11,14 +11,14 @@ from random import randint as rd_randint
 from typing import TYPE_CHECKING, Any
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import SBMLError
 from mobspy.sbml_simulator.builder import build as sbml_build
+from mobspy.types import AssignmentData, EventData, ReactionData
 
 if TYPE_CHECKING:
     from mobspy.types import (
         CompiledModelDict,
-        EventData,
         ParameterSweepList,
-        ReactionData,
         SBMLModelDict,
         SimulationParameters,
     )
@@ -39,14 +39,14 @@ class ModelGenerationMixin:
 
         def check_convertible() -> None:
             if len(self._list_of_parameters) == 1:
-                logger.error(
+                raise SBMLError(
                     "Single simulations cannot generate a composed "
                     "sbml or antimony string"
                 )
 
             for i in range(len(self._list_of_parameters)):
                 if self._list_of_parameters[i]["_end_condition"] is not None:
-                    logger.error(
+                    raise SBMLError(
                         "Composite Simulations with conditional "
                         "duration cannot be converted to "
                         "sbml or antimony"
@@ -62,14 +62,14 @@ class ModelGenerationMixin:
             for reaction_key, reaction in current_sbml_reaction.items():
                 if "phantom" in reaction_key:
                     continue
-                new_reaction: ReactionData = {
-                    "re": reaction["re"],
-                    "pr": reaction["pr"],
-                    "kin": "("
-                    + reaction["kin"].replace("volume", f"_vol{i}")
+                new_reaction = ReactionData(
+                    reactants=reaction.reactants,
+                    products=reaction.products,
+                    kinetics="("
+                    + reaction.kinetics.replace("volume", f"_vol{i}")
                     + ") * "
                     + str(flag_species_name),
-                }
+                )
 
                 reaction_number = len(new_sbml_file["reactions_for_sbml"])
                 new_sbml_file["reactions_for_sbml"][
@@ -84,20 +84,20 @@ class ModelGenerationMixin:
         ) -> None:
             if self._list_of_parameters[simulation_index]["_end_condition"] is None:
                 event_name = "e" + str(len(new_sbml_file["events_for_sbml"]))
-                event: EventData = {
-                    "trigger": "true",
-                    "delay": cul_duration,
-                    "assignments": [(next_spe, 1)],
-                }
+                event = EventData(
+                    trigger="true",
+                    delay=cul_duration,
+                    assignments=[(next_spe, 1)],
+                )
                 new_sbml_file["events_for_sbml"][event_name] = event
             else:
-                end_trigger = sim_sbml["events_for_sbml"]["end_event"]["trigger"]
+                end_trigger = sim_sbml["events_for_sbml"]["end_event"].trigger
                 event_name = "e" + str(len(new_sbml_file["events_for_sbml"]))
-                event = {
-                    "trigger": end_trigger,
-                    "delay": 0,
-                    "assignments": [(next_spe, 1)],
-                }
+                event = EventData(
+                    trigger=end_trigger,
+                    delay=0,
+                    assignments=[(next_spe, 1)],
+                )
                 new_sbml_file["events_for_sbml"][event_name] = event
 
         def parameter_process(sim_index: int, sim_sbml: CompiledModelDict) -> None:
@@ -127,11 +127,11 @@ class ModelGenerationMixin:
             for spe in sim_sbml["species_for_sbml"]:
                 if spe not in new_sbml_file["species_for_sbml"] and spe[0] != "_":
                     event_number = len(new_sbml_file["events_for_sbml"])
-                    spe_event: EventData = {
-                        "trigger": f"_SFS_{str(i)} > 0",
-                        "delay": 0,
-                        "assignments": [(spe, sim_sbml["species_for_sbml"][spe])],
-                    }
+                    spe_event = EventData(
+                        trigger=f"_SFS_{str(i)} > 0",
+                        delay=0,
+                        assignments=[(spe, sim_sbml["species_for_sbml"][spe])],
+                    )
                     new_sbml_file["events_for_sbml"]["e" + str(event_number)] = (
                         spe_event
                     )
@@ -210,11 +210,11 @@ class ModelGenerationMixin:
             ]["volume"]
 
             for re_name, reaction in sim_sbml["reactions_for_sbml"].items():
-                new_reaction: ReactionData = {
-                    "re": reaction["re"],
-                    "pr": reaction["pr"],
-                    "kin": reaction["kin"].replace("volume", "_vol"),
-                }
+                new_reaction = ReactionData(
+                    reactants=reaction.reactants,
+                    products=reaction.products,
+                    kinetics=reaction.kinetics.replace("volume", "_vol"),
+                )
                 new_sbml_file["reactions_for_sbml"][re_name] = new_reaction
 
             new_sims.append([new_sbml_file])
@@ -299,8 +299,8 @@ class ModelGenerationMixin:
                         "assignments_for_sbml"
                     ].items():
                         antimony_model = (
-                            antimony_model + f"    {assign_data['species']}"
-                            f" := {assign_data['expression']}\n"
+                            antimony_model + f"    {assign_data.species}"
+                            f" := {assign_data.expression}\n"
                         )
 
                 for reaction_name, reaction_data in sbml_data[
@@ -310,7 +310,7 @@ class ModelGenerationMixin:
                         continue
 
                     antimony_model = antimony_model + f"    {reaction_name}: "
-                    for i, r in enumerate(reaction_data["re"]):
+                    for i, r in enumerate(reaction_data.reactants):
                         if i == 0 and r[0] > 1:
                             antimony_model = antimony_model + f"{r[0]}*{r[1]}"
                             continue
@@ -324,7 +324,7 @@ class ModelGenerationMixin:
                             antimony_model = antimony_model + f" + {r[1]}"
 
                     antimony_model = antimony_model + " -> "
-                    for i, p in enumerate(reaction_data["pr"]):
+                    for i, p in enumerate(reaction_data.products):
                         if i == 0 and p[0] > 1:
                             antimony_model = antimony_model + f" {p[0]} {p[1]}"
                             continue
@@ -337,24 +337,24 @@ class ModelGenerationMixin:
                         else:
                             antimony_model = antimony_model + f" + {p[1]}"
 
-                    antimony_model = antimony_model + f"; {reaction_data['kin']}"
+                    antimony_model = antimony_model + f"; {reaction_data.kinetics}"
 
                     antimony_model = antimony_model + "\n"
 
                 if sbml_data["events_for_sbml"]:
                     for event_name, event_data in sbml_data["events_for_sbml"].items():
-                        if event_data["trigger"] == "true":
+                        if event_data.trigger == "true":
                             antimony_model = (
                                 antimony_model + f"    {event_name}: at("
-                                f"time > {event_data['delay']}): "
+                                f"time > {event_data.delay}): "
                             )
                         else:
                             antimony_model = (
                                 antimony_model
-                                + f"    {event_name}: at({event_data['trigger']}): "
+                                + f"    {event_name}: at({event_data.trigger}): "
                             )
 
-                        for asg in event_data["assignments"]:
+                        for asg in event_data.assignments:
                             antimony_model = antimony_model + f" {asg[0]}={asg[1]},"
                         antimony_model = antimony_model[:-1] + "\n"
 

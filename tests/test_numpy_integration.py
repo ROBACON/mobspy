@@ -41,7 +41,7 @@ reaction_0,{'re': [(1, 'A')], 'pr': [(1, 'B')], 'kin': 'A * 1.0'}
 def test_numpy_in_expression_function():
     def test_numpy_in_expression(r, op):
         np_array = np.array([3])
-        u._ms_active = True
+
         for a in np_array:
             if op == 1:
                 b = a + r
@@ -70,7 +70,7 @@ def test_numpy_with_units():
     np_array = np.array([3])
 
     def test_numpy_in_expression(r):
-        u._ms_active = True
+
         for a in np_array:
             b = a / u.hour
         return b

@@ -173,7 +173,7 @@ def create_model(
         check(r.setReversible(False), "set reaction reversibility flag")
         check(r.setFast(False), 'set reaction "fast" attribute')
 
-        reactants = reactions[r_str]["re"]
+        reactants = reactions[r_str].reactants
         for re_val, re_str in reactants:
             species_ref = r.createReactant()
             check(species_ref, "create reactant")
@@ -181,7 +181,7 @@ def create_model(
             check(species_ref.setStoichiometry(re_val), "set set stoichiometry")
             check(species_ref.setConstant(True), 'set "constant" on species')
 
-        products = reactions[r_str]["pr"]
+        products = reactions[r_str].products
         for pr_val, pr_str in products:
             species_ref = r.createProduct()
             check(species_ref, "create product")
@@ -189,7 +189,7 @@ def create_model(
             check(species_ref.setStoichiometry(pr_val), "set set stoichiometry")
             check(species_ref.setConstant(True), 'set "constant" on species')
 
-        math_ast = sbml.parseL3Formula(reactions[r_str]["kin"])
+        math_ast = sbml.parseL3Formula(reactions[r_str].kinetics)
         kinetic_law = r.createKineticLaw()
         check(math_ast, "create AST for rate expression")
         check(kinetic_law, "create kinetic law")
@@ -205,7 +205,7 @@ def create_model(
         t = model.createTrigger()
         check(t, "create trigger")
         check(
-            t.setMath(sbml.parseL3Formula(events[e_str]["trigger"])),
+            t.setMath(sbml.parseL3Formula(events[e_str].trigger)),
             "set trigger condition",
         )
         check(t.setPersistent(False), "default not persistent")
@@ -218,18 +218,18 @@ def create_model(
 
         d = model.createDelay()
         check(d, "create delay")
-        check(d.setMath(sbml.parseFormula(events[e_str]["delay"])), "set math")
+        check(d.setMath(sbml.parseFormula(str(events[e_str].delay))), "set math")
         check(e.setDelay(d), "set delay")
 
-        for ass in events[e_str]["assignments"]:
+        for ass in events[e_str].assignments:
             ea = model.createEventAssignment()
             check(ea, "check event assignment")
-            check(ea.setVariable(ass[0]), "set variable")
-            check(ea.setMath(sbml.parseL3Formula(ass[1])), "set math")
+            check(ea.setVariable(str(ass[0])), "set variable")
+            check(ea.setMath(sbml.parseL3Formula(str(ass[1]))), "set math")
 
     for _, asg in assignments.items():
-        species_id = asg["species"]
-        expression = asg["expression"]
+        species_id = asg.species
+        expression = asg.expression
 
         # Create an AssignmentRule for species
         assignment_rule = model.createAssignmentRule()

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import EventError
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     _CompNum = int | float | "SpeciesComparator" | Quantity
     _ScalarNum = int | float | Quantity
 
-_logger = get_logger(__name__)
 
 
 class SpeciesComparator:
@@ -74,7 +73,7 @@ class SpeciesComparator:
 
                 if i == 0 or i == len(code_line):
                     if number_of_comp > 1:
-                        _logger.error(
+                        raise EventError(
                             f"At: {code_line} \n"
                             + f"Line number: {line_number} \n"
                             + "All clauses must be "
@@ -88,7 +87,7 @@ class SpeciesComparator:
 
                 char = code_line[i]
                 if char == "<" or char == ">" or char == "|" or char == "&":
-                    _logger.error(
+                    raise EventError(
                         f"At: {code_line} \n"
                         + f"Line number: {line_number} \n"
                         + "All clauses must be isolated "
@@ -102,7 +101,7 @@ class SpeciesComparator:
                 elif char == "(" and number_of_comp > 1 and symbol == "(":
                     condition_not_satisfied = False
             except IndexError:
-                _logger.error(
+                raise EventError(
                     f"Error Compiling the following line {line_number}: {code_line}"
                 )
         return condition_not_satisfied
@@ -119,7 +118,7 @@ class SpeciesComparator:
         code_line = inspect_stack()[2].code_context[0][:-1]
         line_number = inspect_stack()[2].lineno
         if "and" in code_line or "or" in code_line:
-            _logger.error(
+            raise EventError(
                 f"At: {code_line} \n"
                 + f"Line number: {line_number} \n"
                 + "Event notation did not compile, "
@@ -139,7 +138,7 @@ class SpeciesComparator:
                 temp_code_line[pos - 1].isnumeric()
                 or temp_code_line[pos + 1].isnumeric()
             ):
-                _logger.error(
+                raise EventError(
                     f"At: {code_line} \n"
                     + f"Line number: {line_number} \n"
                     + "Multiplication between "
@@ -266,7 +265,7 @@ class SpeciesComparator:
         self, other: object
     ) -> bool:
         if self._simulation_context is not None:
-            _logger.error(
+            raise EventError(
                 "Equality assignment not allowed for "
                 "event condition in MobsPy.\n"
                 "Please if necessary "
@@ -368,7 +367,7 @@ class MetaSpeciesLogicResolver:
         symbol: str,
     ) -> MetaSpeciesLogicResolver:
         if not isinstance(other, MetaSpeciesLogicResolver):
-            _logger.error("Logic operations require MetaSpeciesLogicResolver operands")
+            raise EventError("Logic operations require MetaSpeciesLogicResolver operands")
 
         new_operation: list[_OpElem] = (
             ["("]

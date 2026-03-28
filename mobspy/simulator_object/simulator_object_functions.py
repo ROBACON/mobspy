@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParametersUsed
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import SimulationError
 
-simlog = get_logger(__name__)
 from mobspy.modules.mobspy_parameters import (  # noqa: E402
     Internal_Parameter_Constructor,
 )
@@ -35,7 +34,7 @@ class Simulation_Utils:
     def update_model(self, *args: Any) -> None:
         # Check if the model was already compiled
         if not self._list_of_models:
-            simlog.error(
+            raise SimulationError(
                 "In .update_model method - \n"
                 "The model was not compiled yet. The update_model"
                 " method is reserved for simulations that "
@@ -45,7 +44,7 @@ class Simulation_Utils:
         # Check every argument to see if it is in the proper format - len 2
         for arg in args:
             if len(arg) != 2:
-                simlog.error(
+                raise SimulationError(
                     "In .update_model method - \n"
                     "Please all parameters and species changes"
                     " must be in the format: \n"
@@ -83,7 +82,7 @@ class Simulation_Utils:
 
             # If it is in neither - throw an error
             if not_species and not_parameter:
-                simlog.error(
+                raise SimulationError(
                     f"The string {arg[0]} was not found either in parameters or species"
                 )
 
@@ -91,7 +90,7 @@ class Simulation_Utils:
             self._update_species(arg)
 
         else:
-            simlog.error("Placeholder error for now")
+            raise SimulationError("Placeholder error for now")
 
     def _update_parameter(self, arg: Any) -> None:
         try:
@@ -117,23 +116,23 @@ class Simulation_Utils:
                     "dimensionless",
                 )
             except KeyError:
-                simlog.error(
+                raise SimulationError(
                     f"The parameter named {parameter_str} was not found in the model"
                 )
 
-        parameter_object = self.model_parameters[parameter_str]["object"]
+        parameter_object = self.model_parameters[parameter_str].object
         parameter_object.update_value(arg[1])
 
         # Update parameter in model_parameters in the simulation object
         try:
             if not iterable:
-                self.model_parameters[parameter_str]["values"] = [
+                self.model_parameters[parameter_str].values = [
                     parameter_object.value
                 ]
             else:
-                self.model_parameters[parameter_str]["values"] = parameter_object.value
+                self.model_parameters[parameter_str].values = parameter_object.value
         except KeyError:
-            simlog.error(
+            raise SimulationError(
                 f"The parameter named {parameter_str} was not found in the model"
             )
 

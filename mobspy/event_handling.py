@@ -10,19 +10,16 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from inspect import stack as inspect_stack
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pint import Quantity
 
+from mobspy.types import SimulationEventData
+
 from mobspy.exceptions import EventError, ValidationError
-from mobspy.mobspy_logging import get_logger
 from mobspy.modules.meta_class import Species
 from mobspy.modules.unit_handler import convert_time as uh_convert_time
 
-if TYPE_CHECKING:
-    from mobspy.types import SimulationEventData
-
-logger = get_logger(__name__)
 
 
 class EventHandlingMixin:
@@ -39,7 +36,7 @@ class EventHandlingMixin:
 
     @classmethod
     def event_compilation_error(cls) -> None:
-        logger.error(
+        raise EventError(
             "The event condition did not compile.\n"
             "Please make sure it follows the following format:\n"
             "For simple conditions - if C1 \n"
@@ -61,17 +58,17 @@ class EventHandlingMixin:
             trigger: Condition that triggers the event when fulfilled.
             time: Time to wait before triggering the event.
         """
-        event_data = {
-            "event_time": time,
-            "event_counts": list(self.current_event_count_data),
-            "trigger": trigger,
-        }
+        event_data = SimulationEventData(
+            event_time=time,
+            event_counts=list(self.current_event_count_data),
+            trigger=trigger,
+        )
 
         self.current_event_count_data = []
         self.pre_number_of_context_comparisons = self.number_of_context_comparisons
         self.number_of_context_comparisons = 0
 
-        if len(event_data["event_counts"]) != 0:
+        if len(event_data.event_counts) != 0:
             self.total_packed_events.append(event_data)
 
         self.event_context_finish()
@@ -87,7 +84,7 @@ class EventHandlingMixin:
             self.__dict__["parameters"]["_with_event"] = True
             self.event_context_initiator()
         else:
-            logger.error("MobsPy does not support multiple context calls")
+            raise EventError("MobsPy does not support multiple context calls")
 
     @contextmanager
     def event_condition(

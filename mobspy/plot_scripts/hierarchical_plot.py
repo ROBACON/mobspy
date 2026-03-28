@@ -5,6 +5,7 @@ from collections.abc import Generator
 from typing import Any
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 
 simlog = get_logger(__name__)
 import matplotlib.pyplot as plt  # noqa: E402
@@ -291,7 +292,7 @@ def plot_curves(
                 plot_params, key="species_to_plot", index=(figure_index, plot_index)
             )
         else:
-            simlog.error(
+            raise ValidationError(
                 "No species found for plotting in one of the curves or figures"
             )
 
@@ -445,7 +446,7 @@ def plot_curves(
                                 label=label,
                             )
                         except IndexError:
-                            simlog.error(
+                            raise ValidationError(
                                 "Fill_between must only have "
                                 "two or less runs referring "
                                 "to it"

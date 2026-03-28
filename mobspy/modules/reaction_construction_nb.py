@@ -8,10 +8,11 @@ from inspect import signature as inspect_signature
 from itertools import product as itertools_product
 from typing import TYPE_CHECKING, Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import CompilationError
+from mobspy.types import ReactionData
 
 if TYPE_CHECKING:
-    from mobspy.types import ReactionData, ReactionsForSbml
+    from mobspy.types import ReactionsForSbml
 
 # from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.context_related_scripts import (
@@ -29,7 +30,6 @@ from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
 
-_logger = get_logger(__name__)
 
 
 def iterator_for_combinations(
@@ -112,7 +112,7 @@ def check_for_invalid_reactions(
 
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    _logger.error(
+                    raise CompilationError(
                         f"Illegal reaction: {reaction}. \n"
                         "There is a query with two "
                         "characteristics "
@@ -136,7 +136,7 @@ def check_for_invalid_reactions(
                     try:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
                     except KeyError:
-                        _logger.error(
+                        raise CompilationError(
                             "A base object for"
                             f" characteristic {cha} was"
                             " not found in the species"
@@ -150,7 +150,7 @@ def check_for_invalid_reactions(
             for cha in product["characteristics"]:
                 try:
                     check_for_duplicates[ref_characteristics_to_object[cha]]
-                    _logger.error(
+                    raise CompilationError(
                         f"Illegal reaction: {reaction}. \n"
                         "There is a transformation"
                         " with two characteristics "
@@ -292,16 +292,15 @@ def construct_single_reaction_for_sbml(
 
     :return: to_return (dict) = dictionary that packs the reactants products and rate
     """
-    to_return: ReactionData = {"re": [], "pr": [], "kin": reaction_rate}
+    to_return = ReactionData(reactants=[], products=[], kinetics=reaction_rate)
     reactant_count_dict = mcu_count_string_dictionary(reactant_species_string_list)
-    # print('p', product_species_string_list)
     product_count_dict = mcu_count_string_dictionary(product_species_string_list)
 
     for key in reactant_count_dict:
-        to_return["re"].append((reactant_count_dict[key], key))
+        to_return.reactants.append((reactant_count_dict[key], key))
 
     for key in product_count_dict:
-        to_return["pr"].append((product_count_dict[key], key))
+        to_return.products.append((product_count_dict[key], key))
 
     return to_return
 
@@ -348,7 +347,7 @@ def get_involved_species(
                     flag_absent_reactant = True
 
             if not flag_absent_reactant:
-                _logger.error(
+                raise CompilationError(
                     f"Species {reactant['object']} or any"
                     " inheritors were not found"
                     " in model \n"
@@ -369,7 +368,7 @@ def construct_rate_function_arguments(
 
     black_list = ["*", "="]
     if any(i in rate_function_arguments for i in black_list):
-        _logger.error(
+        raise CompilationError(
             f"Rate arguments must not contain = or *. \n"
             f"Error in reaction {reaction}. \n"
             "Error in rate function"
@@ -488,7 +487,7 @@ def create_all_reactions(
                                 )
                             )
                         except TypeError as e:
-                            _logger.error(f"On reaction {reaction} \n" + str(e))
+                            raise CompilationError(f"On reaction {reaction} \n" + str(e))
 
                         if rate_string == 0:
                             continue

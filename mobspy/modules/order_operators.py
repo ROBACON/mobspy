@@ -12,9 +12,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ReactionError
 
-simlog = get_logger(__name__)
 from mobspy.modules.meta_class import Reactions, Species  # noqa: E402
 from mobspy.modules.species_string_generator import (  # noqa: E402
     construct_all_combinations as ssg_construct_all_combinations,
@@ -48,10 +47,9 @@ class __Operator_Base:
                     reactant["characteristics"].add("all$")
                 return item
         except AttributeError:
-            simlog.error(
+            raise ReactionError(
                 "All can only be used on species, reacting"
-                " species and strings under set_count",
-            )
+                " species and strings under set_count")
         return None
 
     # Transform product function
@@ -239,7 +237,7 @@ class __Operator_Base:
                         species_is_referenced_by.append(spe_obe)
 
                 if len(species_is_referenced_by) == 0:
-                    simlog.error(
+                    raise ReactionError(
                         f"Species {species} was used in a "
                         "reaction but itself or any inheritors"
                         " are not in the model."
@@ -388,9 +386,9 @@ class __Set_Reversible_Rate:
         """
         try:
             if len(both_rates) != 2:
-                simlog.error("The reversible reaction must receive 2 rates")
+                raise ReactionError("The reversible reaction must receive 2 rates")
         except TypeError:
-            simlog.error("The reversible reaction must receive 2 rates")
+            raise ReactionError("The reversible reaction must receive 2 rates")
 
         self.reaction_direct.rate = both_rates[0]
         self.reaction_reverse.rate = both_rates[1]
@@ -447,10 +445,9 @@ class _Set_Reaction_Method:
 
     def __init__(self, reaction: Reactions) -> None:
         if reaction.rate is None:
-            simlog.error(
+            raise ReactionError(
                 "A reaction rate was not found in the"
-                " reaction used in the Set Operator",
-            )
+                " reaction used in the Set Operator")
 
         self.reaction = reaction
 

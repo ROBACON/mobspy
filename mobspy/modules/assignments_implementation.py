@@ -4,10 +4,12 @@ from re import compile as re_compile
 from re import escape as re_escape
 from typing import TYPE_CHECKING, Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import CompilationError
 
 if TYPE_CHECKING:
     from mobspy.types import AssignmentsForSbml
+
+from mobspy.types import AssignmentData
 from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
@@ -16,7 +18,6 @@ from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 
-_logger = get_logger(__name__)
 
 
 class Assignment_Operator:
@@ -171,7 +172,7 @@ class Assignment_Operator:
                 "One of the meta-species in the assignment"
                 " expression was not found in the model"
             )
-            _logger.error(error_message)
+            raise CompilationError(error_message)
 
         if len(spe_str) == 1:
             str_comb = ssg_construct_all_combinations(
@@ -241,10 +242,10 @@ class Assignment_Operator:
             )
 
             for spe in spe_to_asgn:
-                assignments_for_sbml["assignment_" + str(assignment_counter)] = {
-                    "species": spe,
-                    "expression": asgn_expression,
-                }
+                assignments_for_sbml["assignment_" + str(assignment_counter)] = AssignmentData(
+                    species=spe,
+                    expression=asgn_expression,
+                )
                 assignment_counter += 1
 
         for asg in unprocessed_asgns:
@@ -262,10 +263,10 @@ class Assignment_Operator:
                 (asg, str(unprocessed_asgns[asg])),
             )
 
-            assignments_for_sbml["assignment_" + str(assignment_counter)] = {
-                "species": spe_to_asgn,
-                "expression": asgn_expression,
-            }
+            assignments_for_sbml["assignment_" + str(assignment_counter)] = AssignmentData(
+                species=spe_to_asgn,
+                expression=asgn_expression,
+            )
             assignment_counter += 1
 
         return assignments_for_sbml
@@ -303,7 +304,6 @@ class Asg:
         Assign.reset_context()
 
     def __getattr__(self, item: str) -> None:
-        _logger.error(
+        raise CompilationError(
             "Assignments must be the last query in the"
-            " stack - Ex: A.young.blue.assign()",
-        )
+            " stack - Ex: A.young.blue.assign()")

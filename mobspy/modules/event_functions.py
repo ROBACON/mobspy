@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import EventError
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
+from mobspy.types import EventData, SimulationEventData
 
 if TYPE_CHECKING:
     from mobspy.types import EventsForSbml
 
-_logger = get_logger(__name__)
 from pint import Quantity  # noqa: E402
 
 from mobspy.modules.function_rate_code import (  # noqa: E402
@@ -30,7 +30,7 @@ from mobspy.modules.species_string_generator import (  # noqa: E402
 
 def format_event_dictionary_for_sbml(
     species_for_sbml: dict[str, Any],
-    event_list: list[dict[str, Any]],
+    event_list: list[SimulationEventData],
     characteristics_to_object: dict[str, Any],
     volume: int | float,
     dimension: int,
@@ -55,23 +55,23 @@ def format_event_dictionary_for_sbml(
     :rtype: events = {'e': { 'trigger': 'true',
         'delay': '10', 'assignments': [('M','1'),]}}
     """
-    reformed_event_list: list[dict[str, Any]] = []
+    reformed_event_list: list[SimulationEventData] = []
     species_in_events: set[str] = set()
 
     # Convert count from triggers
     for ev in event_list:
-        if ev["trigger"] != "true":
-            for i, e in enumerate(ev["trigger"].operation):
+        if ev.trigger != "true":
+            for i, e in enumerate(ev.trigger.operation):
                 if isinstance(e, Quantity):
-                    ev["trigger"].operation[i] = uh_convert_counts(e, volume, dimension)
+                    ev.trigger.operation[i] = uh_convert_counts(e, volume, dimension)
 
     for ev in event_list:
-        if not ev["event_counts"]:
+        if not ev.event_counts:
             continue
         event_dictionary: dict[str, Any] = {}
 
         # All assignments never take priority over specific assignments
-        for ec in ev["event_counts"]:
+        for ec in ev.event_counts:
             if "all$" not in ec["characteristics"]:
                 continue
 
@@ -88,7 +88,7 @@ def format_event_dictionary_for_sbml(
                 else:
                     event_dictionary[d] = ec["quantity"]
 
-        for ec in ev["event_counts"]:
+        for ec in ev.event_counts:
             if "all$" in ec["characteristics"]:
                 continue
 
@@ -114,58 +114,58 @@ def format_event_dictionary_for_sbml(
                     )
                 event_dictionary[dummy] = ec["quantity"]
 
-        if type(ev["trigger"]) == str:  # noqa: E721
+        if type(ev.trigger) == str:  # noqa: E721
             reformed_event_list.append(
-                {
-                    "event_time": ev["event_time"],
-                    "event_counts": event_dictionary,
-                    "trigger": ev["trigger"],
-                }
+                SimulationEventData(
+                    event_time=ev.event_time,
+                    event_counts=event_dictionary,
+                    trigger=ev.trigger,
+                )
             )
         else:
-            for e in ev["trigger"].operation:
+            for e in ev.trigger.operation:
                 if type(e) == dict:  # noqa: SIM102, E721
                     if e["object"] not in meta_species_to_simulate:
-                        _logger.error(
+                        raise EventError(
                             f"Meta species {e['object']} was used"
                             " in an event but is not in the model"
                         )
             reformed_event_list.append(
-                {
-                    "event_time": ev["event_time"],
-                    "event_counts": event_dictionary,
-                    "trigger": ev["trigger"].generate_string(
+                SimulationEventData(
+                    event_time=ev.event_time,
+                    event_counts=event_dictionary,
+                    trigger=ev.trigger.generate_string(
                         characteristics_to_object, to_sort=True
                     ),
-                }
+                )
             )
 
-    events_for_sbml: dict[str, dict[str, Any]] = {}
+    events_for_sbml: dict[str, EventData] = {}
     for i, event in enumerate(reformed_event_list):
         assignments: list[tuple[str, str]] = []
-        for key in event["event_counts"]:
+        for key in event.event_counts:
             if key in species_for_sbml:
-                assignments.append((key, str(event["event_counts"][key])))
+                assignments.append((key, str(event.event_counts[key])))
                 species_in_events.add(key)
             else:
-                _logger.error(
+                raise EventError(
                     f"Species {key} used in an event assignment"
                     " but it is not in the model"
                 )
 
         assignments.sort()
 
-        if event["event_time"]:
+        if event.event_time:
             pass
 
-        if isinstance(event["event_time"], mp_Mobspy_Parameter):
-            for par in event["event_time"]._parameter_set:
+        if isinstance(event.event_time, mp_Mobspy_Parameter):
+            for par in event.event_time._parameter_set:
                 parameters_in_events.add(par)
 
-        events_for_sbml["e" + str(i)] = {
-            "trigger": event["trigger"],
-            "delay": str(event["event_time"]),
-            "assignments": assignments,
-        }
+        events_for_sbml["e" + str(i)] = EventData(
+            trigger=event.trigger,
+            delay=str(event.event_time),
+            assignments=assignments,
+        )
 
     return events_for_sbml, species_in_events

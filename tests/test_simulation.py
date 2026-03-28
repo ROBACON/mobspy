@@ -373,16 +373,15 @@ class TestErrorHandling:
             assert True
 
     def test_wrong_dimension_error(self):
-        try:
-            A, B = BaseSpecies()
-            A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / u.decimeter**3 / r)]
-            S = Simulation(A)
-            S.level = -1
-            S.compile()
-            assert False
-        except (SystemExit, MobsPyError):
-            assert True
+        # First case: 1/hour * (1 + 10/dm³/r) is valid in concentration mode
+        # because 10/dm³/r simplifies to dimensionless when r is concentration
+        A, B = BaseSpecies()
+        A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / u.decimeter**3 / r)]
+        S = Simulation(A)
+        S.level = -1
+        S.compile()
 
+        # Second case: 1/(hour*dm³) * (1 + 10/r) - genuinely wrong dimensions
         try:
             A, B = BaseSpecies()
             A >> 2 * A[lambda r: (1 / (u.hour * u.decimeter**3)) * (1 + 10 / r)]

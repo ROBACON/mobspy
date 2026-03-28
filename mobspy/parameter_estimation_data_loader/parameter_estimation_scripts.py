@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ParameterError
 
-simlog = get_logger(__name__)
 from mobspy.import_manager.lazy_import_class import (  # noqa: E402
     LazyImporter as ipm_LazyImporter,
 )
@@ -60,7 +59,7 @@ def basiCO_parameter_estimation(
         and type(parameters_to_estimate) != set  # noqa: E721
         and type(parameters_to_estimate) != tuple  # noqa: E721
     ):
-        simlog.error(
+        raise ParameterError(
             "The parameter that will be estimated must be inside a list, set or tuple"
         )
 
@@ -85,7 +84,7 @@ def basiCO_parameter_estimation(
     if simulation_object.experimental_data is not None:
         experimental_data = simulation_object.experimental_data.return_pandas()[0]
     if experimental_data is None:
-        simlog.error(
+        raise ParameterError(
             "No experimental data found in the simulation object or as argument of the "
             "basiCO_parameter_estimation function"
         )
@@ -97,7 +96,7 @@ def basiCO_parameter_estimation(
         and type(experimental_data) != tuple  # noqa: E721
         and not isinstance(experimental_data, DataFrame)
     ):
-        simlog.error(
+        raise ParameterError(
             "Experimental for basiCO estimation must be a "
             "list of pandas dataframes or a pandas dataframe"
         )
@@ -111,7 +110,7 @@ def basiCO_parameter_estimation(
 
         for par in parameters_to_estimate:
             if par not in bound:
-                simlog.error(
+                raise ParameterError(
                     "If a dictionary is used for the bounds,"
                     " all parameters range for estimation "
                     "must be specified. Make sure the "
@@ -123,13 +122,13 @@ def basiCO_parameter_estimation(
     else:
         try:
             if len(bound) != 2:
-                simlog.error(
+                raise ParameterError(
                     "The bound argument must be a list with "
                     "the lower and upper bound of all "
                     "parameters"
                 )
         except Exception:
-            simlog.error(
+            raise ParameterError(
                 "The bound argument must be a list with "
                 "the lower and upper bound of all "
                 "parameters"
@@ -138,7 +137,7 @@ def basiCO_parameter_estimation(
 
     sbml_list = simulation_object.generate_sbml()
     if len(sbml_list) > 1:
-        simlog.error(
+        raise ParameterError(
             "BasiCO optimization does not support composite simulation optimization"
         )
 
@@ -153,7 +152,7 @@ def basiCO_parameter_estimation(
         try:
             basico_parameter_name = list(basico_reaction_dict["reaction"].keys())[0]
         except IndexError:
-            simlog.error(
+            raise ParameterError(
                 f"Parameter {par} was not found in the "
                 f"Simulation model. \n "
                 f"Please make sure that any of the "

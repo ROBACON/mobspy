@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 
-_logger = get_logger(__name__)
 from inspect import stack as inspect_stack  # noqa: E402
 
 from numpy import floating as np_float_  # noqa: E402
@@ -54,10 +53,9 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
         elif isinstance(item, (np_int_, np_float_)):
             new_count_dict[key] = float(item)
         else:
-            _logger.error(
+            raise ValidationError(
                 "Reactant_species count assignment does not"
-                f" support the type {type(item)}",
-            )
+                f" support the type {type(item)}")
     count_dic = new_count_dict
 
     def find_species() -> set[Species]:
@@ -100,33 +98,29 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
                     if temp_set.issubset(spe.get_all_characteristics()):
                         spe.add_quantities(str_characteristics, item)
                     else:
-                        _logger.error(
-                            "Characteristics not found in species with equal name",
-                        )
+                        raise ValidationError(
+                            "Characteristics not found in species with equal name")
                     model.add(spe)
                 elif spe.get_name() == str_name and already_found:
-                    _logger.error(
+                    raise ValidationError(
                         "There are two different meta-species with"
-                        " the same name. Set_counts cannot resolve",
-                    )
+                        " the same name. Set_counts cannot resolve")
             if not already_found:
-                _logger.error(
-                    f"Meta-species with the following name {key} not found",
-                )
+                raise ValidationError(
+                    f"Meta-species with the following name {key} not found")
         else:
             try:
                 if isinstance(key, Species) or isinstance(key, Reacting_Species):  # noqa: SIM101
                     if not isinstance(key, Species):
                         if len(key.list_of_reactants) != 1:
-                            _logger.error(
+                            raise ValidationError(
                                 "Assignment used incorrectly."
-                                " Only one species at a time",
-                            )
+                                " Only one species at a time")
                         model.add(key.list_of_reactants[0]["object"])
                     if isinstance(key, Species):
                         model.add(key)
                     key(item)
             except AttributeError:
-                _logger.error("Keys must be either meta-species or strings")
+                raise ValidationError("Keys must be either meta-species or strings")
 
     return List_Species(model)

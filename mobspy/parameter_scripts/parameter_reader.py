@@ -14,10 +14,8 @@ from typing import Any
 from pint import Quantity
 
 import mobspy.modules.unit_handler as uh
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ParameterError
 from mobspy.modules.mobspy_expressions import u
-
-simlog = get_logger(__name__)
 
 
 def read_json(json_file_name: str) -> Any:
@@ -34,7 +32,7 @@ def read_json(json_file_name: str) -> Any:
         try:
             json_data = json.load(file)
         except json.decoder.JSONDecodeError:
-            simlog.error("Error reading file")
+            raise ParameterError("Error reading file")
 
     return json_data
 
@@ -61,9 +59,9 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
     if "seeds" in params:
         try:
             if params["repetitions"] != len(params["seeds"]):
-                simlog.error("Seeds must be equal to the number of repetitions")
+                raise ParameterError("Seeds must be equal to the number of repetitions")
         except Exception:
-            simlog.error("Parameter seeds must be a list")
+            raise ParameterError("Parameter seeds must be a list")
 
 
 def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
@@ -79,7 +77,7 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
             and isinstance(p, Quantity)
             and p.dimensionality != "[time]"
         ):
-            simlog.error("The duration of the simulation is not in units of time")
+            raise ParameterError("The duration of the simulation is not in units of time")
 
         if (
             isinstance(p, Quantity)
@@ -101,7 +99,7 @@ def convert_unit_parameters(params: dict[str, Any]) -> None:
                 try:
                     params[un] = u.unit_registry_object(params[un])
                 except Exception:
-                    simlog.error(f"The unit in parameter {un} did not parse")
+                    raise ParameterError(f"The unit in parameter {un} did not parse")
 
 
 def convert_time_parameters_after_compilation(
@@ -178,7 +176,7 @@ def check_method_parameter(params: dict[str, Any]) -> None:
         params["simulation_method"]
         not in valid_basiCO_deterministic + valid_basiCO_stochastic
     ):
-        simlog.error(
+        raise ParameterError(
             "The simulation method "
             f"{params['simulation_method']}"
             " is not compatible with MobsPy"

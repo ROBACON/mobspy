@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 
-simlog = get_logger(__name__)
 import mobspy.data_handler.time_series_object as tso  # noqa: E402
 
 
@@ -16,7 +15,7 @@ class Experimental_Data_Holder:
         flag_jump_checks = True if isinstance(data, tso.MobsPyList_of_TS) else False  # noqa: SIM210
 
         if type(data) != list and not flag_jump_checks:  # noqa: E721
-            simlog.error(
+            raise ValidationError(
                 "Data added must be in the format of list with"
                 " each element being a dictionary "
                 "with species names and time as keys"
@@ -24,7 +23,7 @@ class Experimental_Data_Holder:
             )
         for e in data:
             if type(e) != dict and not flag_jump_checks:  # noqa: E721
-                simlog.error(
+                raise ValidationError(
                     "Data added must be in the format of list"
                     " with each element being a dictionary "
                     "with species names and time as keys"

@@ -51,13 +51,13 @@ def generate_all_sbml_models(
     for key in keys:
         item = model_parameters[key]
 
-        names.append(item["name"])
-        used_in.append(item["used_in"])
+        names.append(item.name)
+        used_in.append(item.used_in)
         try:
-            if len(item["values"]):
-                values.append(item["values"])
+            if len(item.values):
+                values.append(item.values)
         except TypeError:
-            values.append([item["values"]])
+            values.append([item.values])
 
     parameter_list_of_dic: list[dict[str, int | float]] = []
     for v in itertools.product(*values):
@@ -80,7 +80,7 @@ def unite_parameter_dictionaries(
         if key not in dict_1:
             dict_1[key] = dict_2[key]
         else:
-            new_used_in = dict_1[key]["used_in"].union(dict_2[key]["used_in"])
-            dict_1[key]["used_in"] = new_used_in
+            new_used_in = dict_1[key].used_in.union(dict_2[key].used_in)
+            dict_1[key].used_in = new_used_in
 
     return dict_1

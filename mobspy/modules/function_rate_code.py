@@ -16,6 +16,7 @@ from typing import Any
 from pint import Quantity
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import CompilationError
 from mobspy.modules.meta_class import Zero as mc_Zero
 from mobspy.modules.meta_class_utils import (
     count_stoichiometry as mcu_count_string_dictionary,
@@ -169,18 +170,18 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
                 reactant_string_list, str(rate), type_of_model
             )
         elif rate is None:
-            _logger.error(
+            raise CompilationError(
                 "There is a reaction rate missing for the "
                 "following reactants: \n" + str(reactant_string_list)
             )
         else:
-            _logger.error(
+            raise CompilationError(
                 f"The rate function {reaction_rate_function},"
                 " returned a non-valid value. \n"
                 "Only int, floats and str are accepted"
             )
     elif reaction_rate_function is None:
-        _logger.error(
+        raise CompilationError(
             "There is a reaction rate missing for the "
             "following reactants: \n" + str(reactant_string_list)
         )
@@ -188,7 +189,7 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
         reaction_rate_string = reaction_rate_function
     else:
         _logger.debug(type(reaction_rate_function))
-        _logger.error(
+        raise CompilationError(
             f"The {type(reaction_rate_function)},"
             f" from {reaction_rate_function} is not supported"
         )

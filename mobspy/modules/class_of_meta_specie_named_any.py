@@ -8,10 +8,9 @@ from __future__ import annotations
 from inspect import stack as inspect_stack
 from typing import Any as TypingAny
 
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Species
 
-_logger = get_logger(__name__)
 
 
 class Context_specie_named_any(Species):
@@ -54,7 +53,7 @@ class Context_specie_named_any(Species):
         if is_with == "with":
             pass
         else:
-            _logger.error(
+            raise ValidationError(
                 "Characteristics cannot be added to the Any specie outside of a context"
             )
         self._set_of_characteristics_currently_under_the_any_context.add(item)
@@ -116,21 +115,21 @@ class Context_specie_named_any(Species):
         cannot be called, as it is not supposed to be used
         this way. Thus, it raises an error when called.
         """
-        _logger.error("The Any specie cannot be called")
+        raise ValidationError("The Any specie cannot be called")
 
     def __add__(self, other: TypingAny) -> None:
         """
         The add operator is overloaded as the Any specie
         cannot be added. Raises an error when added.
         """
-        _logger.error("The Any specie cannot be added")
+        raise ValidationError("The Any specie cannot be added")
 
     def __radd__(self, other: TypingAny) -> None:
         """
         The add operator is overloaded as the Any specie
         cannot be added. Raises an error when added.
         """
-        _logger.error("The Any specie cannot be added")
+        raise ValidationError("The Any specie cannot be added")
 
     def __rmul__(self, other: TypingAny) -> None:
         """
@@ -138,13 +137,13 @@ class Context_specie_named_any(Species):
         Any specie cannot be multiplied. Raises an error
         when multiplied.
         """
-        _logger.error("The Any specie cannot be multiplied")
+        raise ValidationError("The Any specie cannot be multiplied")
 
     def __rshift__(self, other: TypingAny) -> None:
         """
         The >> operator is overloaded so that  it raises an error when used.
         """
-        _logger.error("The >> operator cannot be used on the Any specie")
+        raise ValidationError("The >> operator cannot be used on the Any specie")
 
 
 # Any is the only object of the Any_specie class that will be used. It is defined here.

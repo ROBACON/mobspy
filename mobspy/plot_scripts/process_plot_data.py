@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ValidationError
 
 simlog = get_logger(__name__)
 import mobspy.plot_params.example_plot_reader as epr  # noqa: E402
@@ -51,11 +52,11 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
     dictionary = epr.get_example_plot_parameters()
 
     if "Time" in plot_params:
-        simlog.error("Time must not be a plot parameter name")
+        raise ValidationError("Time must not be a plot parameter name")
 
     for spe in species:
         if spe in dictionary.keys():  # noqa: SIM118
-            simlog.error(f"Plotting is impossible, species {spe} is a parameter name")
+            raise ValidationError(f"Plotting is impossible, species {spe} is a parameter name")
 
     # Check if parameters are valid
     validated_keys: set[str] = set()

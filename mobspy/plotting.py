@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from mobspy.exceptions import SimulationError
-from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import SimulationError, ValidationError
 from mobspy.modules.meta_class import Reacting_Species, Species
 from mobspy.plot_scripts.default_plots import (
     deterministic_plot as dp_deterministic_plot,
@@ -28,7 +27,6 @@ from mobspy.plot_scripts.default_plots import (
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict
 
-logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from mobspy.data_handler.time_series_object import MobsPyList_of_TS
@@ -66,9 +64,8 @@ class PlottingMixin:
             elif isinstance(spe, str):
                 species_strings.add(spe)
             else:
-                logger.error(
-                    "Only species objects or strings for plotting arguments",
-                )
+                raise ValidationError(
+                    "Only species objects or strings for plotting arguments")
 
         return species_strings, self.results, self.plot_parameters
 

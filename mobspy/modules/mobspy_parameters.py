@@ -4,6 +4,7 @@ from inspect import stack as inspect_stack
 from typing import Any
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import ParameterError
 
 simlog = get_logger(__name__)
 from pint import Quantity, UnitRegistry  # noqa: E402
@@ -47,16 +48,19 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
     def unit_process(self, value: Quantity) -> tuple[Any, Any]:  # type: ignore[type-arg]
         # We convert into MobsPy units already during the definition of a parameter
-        self.value = self.convert_received_unit(value).magnitude
+        converted = self.convert_received_unit(value)
+        self.value = converted.magnitude
 
         self.original_magnitude = value.magnitude
         self.conversion_factor = self.value / self.original_magnitude
         self.original_unit = value.units
 
-        # For future developers, the T is there to avoid potential bugs with the . query
-        self._unit_count_op = value
-        self._unit_conc_op = value
-        self._unit_operation = value
+        # Store the converted (MobsPy standard) unit for unit tracking.
+        # This ensures concentration parameters (e.g. millimolar -> counts/dm³)
+        # are compatible with species unit_conc_op (1/dm³) during addition.
+        self._unit_count_op = converted
+        self._unit_conc_op = converted
+        self._unit_operation = converted
         self._has_units = "T"
 
         return self.value, self.original_unit
@@ -71,11 +75,11 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 if isinstance(val, Quantity) and i == 0:
                     new_value, first_unit = self.unit_process(val)
                 elif isinstance(val, Quantity) and i > 0 and first_unit is None:
-                    simlog.error("MobsPy parameters must all be the same unit")
+                    raise ParameterError("MobsPy parameters must all be the same unit")
                 elif isinstance(val, Quantity) and i > 0 and first_unit is not None:
                     new_value, unit = self.unit_process(val)
                     if unit != first_unit:
-                        simlog.error("MobsPy parameters must all be the same unit")
+                        raise ParameterError("MobsPy parameters must all be the same unit")
                 else:
                     new_value = val
 
@@ -156,9 +160,8 @@ def ModelParameters(
     parameter_variable_names = separated_line.split(",")
 
     if len(args) != len(parameter_variable_names):
-        simlog.error(
-            "You must provide an initial value for every parameter variable declared",
-        )
+        raise ParameterError(
+            "You must provide an initial value for every parameter variable declared")
 
     if len(parameter_variable_names) > 1:
         parameters_to_return: (

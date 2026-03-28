@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from pint import Quantity
 
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import CompilationError
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
 )
@@ -36,7 +37,12 @@ from mobspy.modules.unit_handler import (
 from mobspy.modules.unit_handler import (
     extract_length_dimension as uh_extract_length_dimension,
 )
-from mobspy.types import CompilerResult
+from mobspy.types import (
+    CompilerResult,
+    EventData,
+    ParameterUsedInfo,
+    ReactionData,
+)
 
 if TYPE_CHECKING:
     from mobspy.types import (
@@ -58,11 +64,6 @@ class Compiler:
     if it is a valid MobsPy model.
     """
 
-    # Basic storage of defined variables for Compiler
-    entity_counter: int = 0
-    ref_characteristics_to_object: dict[str, Any] = {}
-    last_rate: Any = None
-
     @classmethod
     def add_to_parameters_to_sbml(
         cls,
@@ -72,15 +73,14 @@ class Compiler:
     ) -> None:
         for parameter in parameters_to_add:
             if parameter.name in parameters_used:
-                parameters_used[parameter.name]["used_in"].add("$sbml")
+                parameters_used[parameter.name].used_in.add("$sbml")
             else:
-                temp = {
-                    "name": parameter.name,
-                    "values": parameter.value,
-                    "used_in": {"$sbml"},
-                    "object": parameter,
-                }
-                parameters_used[parameter.name] = temp
+                parameters_used[parameter.name] = ParameterUsedInfo(
+                    name=parameter.name,
+                    values=parameter.value,
+                    used_in={"$sbml"},
+                    object=parameter,
+                )
 
             try:
                 parameters_for_sbml[parameter.name] = (
@@ -92,25 +92,6 @@ class Compiler:
                     parameter.value,
                     "dimensionless",
                 )
-
-    @classmethod
-    def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
-        """Store a rate before the reaction is defined.
-
-        Due to priority in Python the item is stored
-        before the reaction. So it is stored in the
-        Compiler level and passed to the reaction object
-        in the end. Important: the rate is used before
-        the compilation level, it's used when the
-        reaction has been completely defined.
-
-        :param object_to_return: (Species or Reacting)
-            returns the object __getitem__ was called on
-        :param item: (int, float, callable, Quantity)
-            stored reaction rate
-        """
-        cls.last_rate = item
-        return object_to_return
 
     @classmethod
     def add_phantom_reactions(
@@ -128,11 +109,11 @@ class Compiler:
         of 1e-100.
         """
         for i, spe in enumerate(species_to_add_phantom_reaction):
-            reactions_for_sbml["phantom_reaction_" + str(i)] = {
-                "re": [(1, spe)],
-                "pr": [],
-                "kin": str(spe) + " * 1e-100",
-            }
+            reactions_for_sbml["phantom_reaction_" + str(i)] = ReactionData(
+                reactants=[(1, spe)],
+                products=[],
+                kinetics=str(spe) + " * 1e-100",
+            )
 
     # ------------------------------------------------------------------
     # Private helpers: each handles one phase of compilation
@@ -153,15 +134,15 @@ class Compiler:
         for i, species in enumerate(meta_species_to_simulate):
             name = species.get_name()
             if "_dot_" in name:
-                _logger.error(
+                raise CompilationError(
                     f"In species: {name} \n _dot_ cannot be used in meta-species names"
                 )
             if name in black_listed_names:
-                _logger.error(
+                raise CompilationError(
                     f"The name {name} is not allowed for meta-species please change it"
                 )
             if "$" in name:
-                _logger.error(
+                raise CompilationError(
                     f"In species: {name} \n"
                     "An error has occurred and one of"
                     " the species was either not named"
@@ -169,7 +150,7 @@ class Compiler:
                     " restricted $ symbol"
                 )
             if name in names_used:
-                _logger.error(
+                raise CompilationError(
                     "Names must be unique for all species\n"
                     + f"The repeated name is {name} "
                     + f"in position {i}\n"
@@ -264,19 +245,18 @@ class Compiler:
             if isinstance(count["quantity"], mp_Mobspy_Parameter):
                 parameters_in_counts.add(count["quantity"])
                 if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name]["used_in"] = (
-                        parameters_used[count["quantity"].name]["used_in"].union(
+                    parameters_used[count["quantity"].name].used_in = (
+                        parameters_used[count["quantity"].name].used_in.union(
                             set(species_strings)
                         )
                     )
                 else:
-                    temp = {
-                        "name": count["quantity"].name,
-                        "values": count["quantity"].value,
-                        "used_in": set(species_strings),
-                        "object": count["quantity"],
-                    }
-                    parameters_used[count["quantity"].name] = temp
+                    parameters_used[count["quantity"].name] = ParameterUsedInfo(
+                        name=count["quantity"].name,
+                        values=count["quantity"].value,
+                        used_in=set(species_strings),
+                        object=count["quantity"],
+                    )
 
             temp_count = uh_convert_counts(count["quantity"], volume, dimension)
             for spe_str in species_strings:
@@ -304,17 +284,16 @@ class Compiler:
             if isinstance(count["quantity"], mp_Mobspy_Parameter):
                 parameters_in_counts.add(count["quantity"])
                 if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name]["used_in"].add(
+                    parameters_used[count["quantity"].name].used_in.add(
                         species_string
                     )
                 else:
-                    temp = {
-                        "name": count["quantity"].name,
-                        "values": count["quantity"].value,
-                        "used_in": {species_string},
-                        "object": count["quantity"],
-                    }
-                    parameters_used[count["quantity"].name] = temp
+                    parameters_used[count["quantity"].name] = ParameterUsedInfo(
+                        name=count["quantity"].name,
+                        values=count["quantity"].value,
+                        used_in={species_string},
+                        object=count["quantity"],
+                    )
 
             temp_count = uh_convert_counts(count["quantity"], volume, dimension)
             if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
@@ -365,9 +344,9 @@ class Compiler:
                 if i >= j:
                     continue
                 if (
-                    reactions_for_sbml[r1]["re"] == reactions_for_sbml[r2]["re"]
-                    and reactions_for_sbml[r1]["pr"] == reactions_for_sbml[r2]["pr"]
-                    and reactions_for_sbml[r1]["kin"] == reactions_for_sbml[r2]["kin"]
+                    reactions_for_sbml[r1].reactants == reactions_for_sbml[r2].reactants
+                    and reactions_for_sbml[r1].products == reactions_for_sbml[r2].products
+                    and reactions_for_sbml[r1].kinetics == reactions_for_sbml[r2].kinetics
                 ):
                     _logger.warning(
                         "The following reaction: \n"
@@ -408,9 +387,9 @@ class Compiler:
         # Phantom reactions for species in events but not in reactions
         species_in_reactions: set[str] = set()
         for reaction in reactions_for_sbml.values():
-            for reactant in reaction["re"]:
+            for reactant in reaction.reactants:
                 species_in_reactions.add(reactant[1])
-            for product in reaction["pr"]:
+            for product in reaction.products:
                 species_in_reactions.add(product[1])
         cls.add_phantom_reactions(
             reactions_for_sbml, species_in_events.difference(species_in_reactions)
@@ -418,18 +397,18 @@ class Compiler:
 
         # End condition event for continuous simulations
         if continuous_sim:
-            end_event = {
-                "trigger": ending_condition.generate_string(
+            end_event = EventData(
+                trigger=ending_condition.generate_string(
                     orthogonal_vector_structure
                 ),
-                "delay": "0",
-                "assignments": [("_End_Flag_MetaSpecies", "1")],
-            }
-            reactions_for_sbml["phantom_reaction_end"] = {
-                "re": [(10, "_End_Flag_MetaSpecies")],
-                "pr": [],
-                "kin": "_End_Flag_MetaSpecies * 1e-100",
-            }
+                delay="0",
+                assignments=[("_End_Flag_MetaSpecies", "1")],
+            )
+            reactions_for_sbml["phantom_reaction_end"] = ReactionData(
+                reactants=[(10, "_End_Flag_MetaSpecies")],
+                products=[],
+                kinetics="_End_Flag_MetaSpecies * 1e-100",
+            )
             events_for_sbml["end_event"] = end_event
 
         return events_for_sbml, parameters_in_events
@@ -446,7 +425,7 @@ class Compiler:
         """Check parameter names are unique and don't collide with species."""
         for p in parameters_for_sbml:
             if p in names_used:
-                _logger.error(
+                raise CompilationError(
                     "Parameters names must be unique"
                     " and they must not share a"
                     " name with a species"
@@ -462,7 +441,7 @@ class Compiler:
         for p1 in all_params:
             for p2 in all_params:
                 if p1 is not p2 and p1.name == p2.name:
-                    _logger.error(
+                    raise CompilationError(
                         "There are two different Parameter Objects with the same name"
                     )
 

@@ -8,6 +8,7 @@ from joblib import Parallel, delayed
 import mobspy.sbml_simulator.builder as sbml_builder
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
+from mobspy.exceptions import SimulationError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -85,7 +86,7 @@ def job_execution(
     )
 
     if not parallel_data:
-        simlog.error(
+        raise SimulationError(
             "Error: The parallel model has not produced an output."
             + "Try addding ('sequential': True) to parameters"
         )
@@ -292,7 +293,7 @@ def __remap_species(
                 mapped_data[group] = this_run
 
         except IndexError:
-            simlog.error(
+            raise SimulationError(
                 f'run: remap_species: error when remapping "{the_mapping}".'
                 + "Possible fix: All runs must have the same time"
             )
@@ -304,7 +305,7 @@ def __remap_species(
                 " not provide an output"
             )
             simlog.warning("Please check the output data to see if this is the problem")
-            simlog.error(
+            raise SimulationError(
                 "TypeError while mapping simulation results. "
                 "This may be caused by A >> A identity reactions."
             )

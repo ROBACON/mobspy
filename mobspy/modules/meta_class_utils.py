@@ -5,9 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from mobspy.mobspy_logging import get_logger
-
-simlog = get_logger(__name__)
+from mobspy.exceptions import ValidationError
 
 
 def count_stoichiometry(
@@ -58,7 +56,7 @@ def check_orthogonality_between_references(references: set[Any]) -> None:
                 )
                 != 0
             ):
-                simlog.error(
+                raise ValidationError(
                     "The same characteristic can only be "
                     "shared through inheritance. " + "There are two characteristics "
                     "directly added to two "
@@ -103,7 +101,7 @@ def complete_characteristics_with_first_values(
     for cha in characteristics:
         vector = characteristics_to_object[cha]
         if vector in vector_elements:
-            simlog.error("The assignment refers to multiple strings")
+            raise ValidationError("The assignment refers to multiple strings")
         else:
             vector_elements[vector] = True
 
@@ -158,7 +156,7 @@ def create_orthogonal_vector_structure(
                 elif ref_characteristics_to_object[cha] == prop:
                     pass
                 else:
-                    simlog.error(
+                    raise ValidationError(
                         "The same characteristic can only "
                         "be shared through inheritance. "
                         + "There are two characteristics "
