@@ -1,6 +1,7 @@
-from mobspy import *
-import seaborn
 import matplotlib.pyplot as plt
+import seaborn
+
+from mobspy import *
 
 A, B, C, Pa, Pb = BaseSpecies()
 C >> Zero[1]

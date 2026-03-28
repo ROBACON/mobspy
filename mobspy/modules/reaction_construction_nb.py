@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
 from inspect import signature as inspect_signature
 from itertools import product as itertools_product
 from typing import TYPE_CHECKING, Any
@@ -11,6 +10,10 @@ from mobspy.exceptions import CompilationError
 from mobspy.types import ReactionData
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Sequence
+
+    from mobspy.modules.meta_class import Reactions
+    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import ReactionsForSbml
 
 # from mobspy.modules.mobspy_parameters import *
@@ -20,7 +23,6 @@ from mobspy.modules.context_related_scripts import (
 from mobspy.modules.function_rate_code import (
     extract_reaction_rate as fr_extract_reaction_rate,
 )
-from mobspy.modules.meta_class import Reactions
 from mobspy.modules.meta_class_utils import (
     count_stoichiometry as mcu_count_string_dictionary,
 )
@@ -187,7 +189,7 @@ def construct_order_structure(
         are lists of species
     """
     cyclic_dict: dict[Any, list[Any]] = {}
-    for species_object, species_string in zip(  # noqa: B905
+    for species_object, species_string in zip(
         species_order_list, current_species_string_list
     ):
         try:
@@ -335,11 +337,10 @@ def construct_rate_function_arguments(
             f" {inspect_signature(rate_function)!s}"
         )
 
-    rate_function_arguments = str(rate_function_arguments).replace("(", "")
-    rate_function_arguments = str(rate_function_arguments).replace(")", "")
-    rate_function_arguments = str(rate_function_arguments).replace(" ", "")
-    rate_function_arguments = rate_function_arguments.split(",")
-    return rate_function_arguments
+    rate_function_arguments_str = str(rate_function_arguments).replace("(", "")
+    rate_function_arguments_str = str(rate_function_arguments_str).replace(")", "")
+    rate_function_arguments_str = str(rate_function_arguments_str).replace(" ", "")
+    return rate_function_arguments_str.split(",")
 
 
 def create_all_reactions(
@@ -349,9 +350,10 @@ def create_all_reactions(
     type_of_model: str,
     dimension: int,
     parameter_exist: dict[str, Any],
-    parameters_in_reaction: dict[str, Any],
+    parameters_in_reaction: Any,
     skip_check: bool,
-) -> tuple[ReactionsForSbml, dict[str, Any]]:
+    model_context: ModelUnitContext | None = None,
+) -> tuple[ReactionsForSbml, Any]:
     """This function creates all reactions
     Returns the reactions_for_sbml and parameters_for_sbml dictionary
     Those will be used by another module to create the SBML file
@@ -425,7 +427,7 @@ def create_all_reactions(
                             )
 
                         reactant_strings = [
-                            "_dot_".join([reactant[0].get_name()] + reactant[1:])
+                            "_dot_".join([reactant[0].get_name(), *reactant[1:]])
                             if len(reactant) > 1
                             else reactant[0].get_name()
                             for reactant in reactant_string_list
@@ -434,7 +436,7 @@ def create_all_reactions(
                         try:
                             rate_string, parameters_in_reaction = (
                                 fr_extract_reaction_rate(
-                                    combination_of_reactant_species,
+                                    list(combination_of_reactant_species),
                                     reactant_strings,
                                     reaction.rate,
                                     type_of_model,
@@ -443,6 +445,7 @@ def create_all_reactions(
                                     parameter_exist,
                                     parameters_in_reaction,
                                     skip_check,
+                                    model_context=model_context,
                                 )
                             )
                         except TypeError as e:
@@ -456,7 +459,7 @@ def create_all_reactions(
                         reactions_for_sbml[
                             "reaction_" + str(len(reactions_for_sbml))
                         ] = construct_single_reaction_for_sbml(
-                            reactant_strings, product_string_list, rate_string
+                            reactant_strings, product_string_list, str(rate_string)
                         )
 
     return reactions_for_sbml, parameters_in_reaction

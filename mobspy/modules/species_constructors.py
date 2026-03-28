@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import linecache
 import sys
-from typing import TYPE_CHECKING
 
 from mobspy.exceptions import ReactionError, ValidationError
 from mobspy.modules.assignments_implementation import (
@@ -14,9 +13,6 @@ from mobspy.modules.list_species import List_Species
 from mobspy.modules.reactions import _Last_rate_storage
 from mobspy.modules.species import Species, clean_species_name
 
-if TYPE_CHECKING:
-    pass
-
 
 def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
     """Compile code line for BaseSpecies and New.
@@ -24,7 +20,7 @@ def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
     :param code_line: Line of code where BaseSpecies or New was called
     :return: (number of variables, list of name strings)
     """
-    before_eq, after_eq = code_line.split("=")[0], code_line.split("=")[1]
+    before_eq, after_eq = code_line.split("=", maxsplit=1)[0], code_line.split("=")[1]
     if after_eq.count("BaseSpecies") > 1:
         raise ReactionError(
             f"At {after_eq}: \n" + "BaseSpecies can only be called once at a time"
@@ -128,7 +124,7 @@ def ListSpecies(
 ) -> List_Species:
     frame = sys._getframe(1)
     code = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
-    before_eq, after_eq = code.split("=")
+    before_eq, _after_eq = code.split("=")
     before_eq = before_eq.replace(" ", "")
     if "," in before_eq:
         raise ReactionError(
@@ -148,7 +144,7 @@ def ListSpecies(
         else:
             temp_list.append(New(inherits_from, [temp_name]))
 
-    return List_Species(temp_list)
+    return List_Species(temp_list)  # type: ignore[arg-type]
 
 
 # Module-level singletons created at import time

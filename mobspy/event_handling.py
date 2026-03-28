@@ -7,16 +7,18 @@ and related event management capabilities to the Simulation class.
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
-
-from pint import Quantity
+from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import EventError, ValidationError
 from mobspy.modules.meta_class import Species
 from mobspy.modules.unit_handler import convert_time as uh_convert_time
 from mobspy.types import SimulationEventData
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from pint import Quantity
 
 
 class EventHandlingMixin:
@@ -78,7 +80,7 @@ class EventHandlingMixin:
         """Activate the current context, checking it is the only one active."""
         if self._context_not_active:
             self._context_not_active = False
-            self._set_parameter("_with_event", True)
+            self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
             self.event_context_initiator()
         else:
             raise EventError("MobsPy does not support multiple context calls")
@@ -115,9 +117,10 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            delay = uh_convert_time(delay)
+            converted_delay = uh_convert_time(delay)
             self._conditional_event = False
-            self.event_context_add(delay, trigger)
+            assert converted_delay is not None
+            self.event_context_add(converted_delay, trigger)  # type: ignore[arg-type]
 
     @contextmanager
     def event_time(self, time: float | int | Quantity) -> Generator[int, None, None]:
@@ -136,5 +139,6 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            time = uh_convert_time(time)
-            self.event_context_add(time, "true")
+            converted_time = uh_convert_time(time)
+            assert converted_time is not None
+            self.event_context_add(converted_time, "true")

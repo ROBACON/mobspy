@@ -81,6 +81,13 @@ class SBMLModelData:
     events_for_sbml: dict[str, EventData] = field(default_factory=dict)
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
 
+    # Backward compatibility: dict-like access for gradual migration
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        setattr(self, key, value)
+
 
 @dataclass
 class CompiledModel:
@@ -151,7 +158,7 @@ class TimeSeriesDataDict:
 from typing import TypedDict  # noqa: E402
 
 
-class SimulationParameters(TypedDict, total=False):
+class SimulationParameters(TypedDict):
     """Parameters dict used throughout Simulation (from default_reader)."""
 
     volume: float | int
@@ -178,6 +185,10 @@ class SimulationParameters(TypedDict, total=False):
     _continuous_simulation: bool
     _end_condition: str | None
     _with_event: bool
+    absolute_output_file: str
+    initial_conditional_duration: float | int
+    step_size: float | None
+    seeds: list[int] | None
 
 
 # --- Type aliases ---

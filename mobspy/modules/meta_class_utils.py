@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import ValidationError
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def count_stoichiometry(
@@ -29,7 +31,7 @@ def combine_references(species1: Any, species2: Any) -> set[Any]:
     :param species1: (Meta-species object)
     :param species2: (Meta-species object)
     """
-    return species1.get_references().union(species2.get_references())
+    return species1.get_references().union(species2.get_references())  # type: ignore[no-any-return]
 
 
 def check_orthogonality_between_references(references: set[Any]) -> None:

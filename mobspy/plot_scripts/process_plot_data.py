@@ -37,7 +37,7 @@ def query_plot_data(species: set[str] | list[str], data: Any) -> tuple[list[str]
 
         species_to_plot.add(spe)
 
-    species_to_plot_list = sorted([spe for spe in species])
+    species_to_plot_list = sorted(species)
     return species_to_plot_list, new_data
 
 
@@ -65,18 +65,16 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
     for key in plot_params:
         if key not in dictionary and key not in species:
             continue
-        else:
-            validated_keys.add(key)
+        validated_keys.add(key)
 
     # Check if query is present
     for key in plot_params:
         if key in validated_keys:
             continue
-        else:
-            spe_name = key.split(".")[0]
-            if spe_name not in species:
-                simlog.warning(f"Parameter {key} not supported")
-            validated_keys.add(key)
+        spe_name = key.split(".")[0]
+        if spe_name not in species:
+            simlog.warning(f"Parameter {key} not supported")
+        validated_keys.add(key)
 
 
 def time_filter_operation(
@@ -85,10 +83,10 @@ def time_filter_operation(
     new_time_data: list[float] = []
     new_data: list[float] = []
 
-    for t, d in zip(time_data, data):  # noqa: B905
+    for t, d in zip(time_data, data):
         if t < low:
             continue
-        elif low < t < high:
+        if low < t < high:
             new_time_data.append(t)
             new_data.append(d)
         elif t > high:
@@ -103,10 +101,10 @@ def y_filter_operation(
     new_time_data: list[float] = []
     new_data: list[float] = []
 
-    for t, d in zip(time_data, data):  # noqa: B905
+    for t, d in zip(time_data, data):
         if d < low_y:
             continue
-        elif low_y <= d <= high_y:
+        if low_y <= d <= high_y:
             new_time_data.append(t)
             new_data.append(d)
         elif d > high_y:

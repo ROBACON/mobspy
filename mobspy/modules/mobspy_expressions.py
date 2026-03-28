@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
 
     from mobspy.modules.meta_class import Species
+    from mobspy.modules.model_unit_context import ModelUnitContext
 
 
 # Global context variable for expression mode.
@@ -91,7 +92,7 @@ class SpeciesRefNode(ExprNode):
       'assignment'    -> ($asg_species_string)
     """
 
-    __slots__ = ("species_string", "mode")
+    __slots__ = ("mode", "species_string")
 
     def __init__(self, species_string: str, mode: str = "default") -> None:
         self.species_string = species_string
@@ -145,7 +146,7 @@ class BinaryOpNode(ExprNode):
 class FunctionCallNode(ExprNode):
     """A function call: name(arg)."""
 
-    __slots__ = ("name", "arg")
+    __slots__ = ("arg", "name")
 
     def __init__(self, name: str, arg: ExprNode) -> None:
         self.name = name
@@ -261,9 +262,7 @@ class Bool_Override:
             return False
 
         species_string_split = self.species_string.split("_dot_")[1:]
-        if all(
-            [char in species_string_split for char in self._stocked_characteristics]
-        ):
+        if all(char in species_string_split for char in self._stocked_characteristics):
             to_return_boolean = True
         else:
             to_return_boolean = False
@@ -329,6 +328,7 @@ class Specific_Species_Operator(Bool_Override):
             reference, False otherwise
         """
         if not self._stocked_characteristics:
+            assert self._species_object is not None
             return reference in self._species_object.get_references()
         else:
             raise CompilationError(
@@ -350,6 +350,7 @@ class Specific_Species_Operator(Bool_Override):
         """
         Returns: The name of the species the reactant is in string format
         """
+        assert self._species_object is not None
         return self._species_object.get_name()
 
     def get_characteristics(self) -> set[str]:
@@ -386,6 +387,39 @@ class ExpressionDefiner:
     _dimension: int | None
     species_list_operation_order: list[Any]
 
+    def non_expression_add(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_radd(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_sub(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_rsub(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_mul(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_rmul(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_truediv(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_rtruediv(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_pow(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_rpow(self, other: Any) -> Any:
+        raise NotImplementedError
+
+    def non_expression_neg(self) -> Any:
+        raise NotImplementedError
+
     @property
     def _ms_active(self) -> bool:
         """True when expression-building mode is active.
@@ -420,7 +454,7 @@ class ExpressionDefiner:
             if operation == "__add__":
                 q_object = Quantity.__add__(raw_first, raw_second)
             elif operation == "__radd__":
-                q_object = Quantity.__radd__(raw_first, raw_second)
+                q_object = Quantity.__radd__(raw_first, raw_second)  # type: ignore[misc]
             elif operation == "__sub__":
                 q_object = Quantity.__sub__(raw_first, raw_second)
             elif operation == "__rsub__":
@@ -428,32 +462,31 @@ class ExpressionDefiner:
             elif operation == "__mul__":
                 q_object = Quantity.__mul__(raw_first, raw_second)
             elif operation == "__rmul__":
-                q_object = Quantity.__rmul__(raw_first, raw_second)
+                q_object = Quantity.__rmul__(raw_first, raw_second)  # type: ignore[misc]
             elif operation == "__truediv__":
                 q_object = Quantity.__truediv__(raw_first, raw_second)
             elif operation == "__rtruediv__":
                 q_object = Quantity.__rtruediv__(raw_first, raw_second)
-        else:
-            if operation == "__add__":
-                q_object = raw_first + raw_second
-            elif operation == "__radd__":
-                q_object = raw_second + raw_first
-            elif operation == "__sub__":
-                q_object = raw_first - raw_second
-            elif operation == "__rsub__":
-                q_object = raw_second - raw_first
-            elif operation == "__mul__":
-                q_object = raw_first * raw_second
-            elif operation == "__rmul__":
-                q_object = raw_second * raw_first
-            elif operation == "__truediv__":
-                q_object = raw_first / raw_second
-            elif operation == "__rtruediv__":
-                q_object = raw_second / raw_first
-            elif operation == "__pow__":
-                q_object = raw_first**raw_second
-            elif operation == "__rpow__":
-                q_object = raw_second**raw_first
+        elif operation == "__add__":
+            q_object = raw_first + raw_second
+        elif operation == "__radd__":
+            q_object = raw_second + raw_first
+        elif operation == "__sub__":
+            q_object = raw_first - raw_second
+        elif operation == "__rsub__":
+            q_object = raw_second - raw_first
+        elif operation == "__mul__":
+            q_object = raw_first * raw_second
+        elif operation == "__rmul__":
+            q_object = raw_second * raw_first
+        elif operation == "__truediv__":
+            q_object = raw_first / raw_second
+        elif operation == "__rtruediv__":
+            q_object = raw_second / raw_first
+        elif operation == "__pow__":
+            q_object = raw_first**raw_second
+        elif operation == "__rpow__":
+            q_object = raw_second**raw_first
 
         if q_object is not None:
             return q_object
@@ -468,13 +501,19 @@ class ExpressionDefiner:
         mol -> N_A counts. Otherwise return as-is.
         """
         if isinstance(value, (Quantity, OverrideQuantity)):
-            dim = value.dimensionality if not isinstance(value, OverrideQuantity) \
+            dim = (
+                value.dimensionality
+                if not isinstance(value, OverrideQuantity)
                 else value.q_object.dimensionality
+            )
             if "[substance]" in str(dim):
                 try:
                     result = QuantityConverter.convert_received_unit(value)
-                    return result.q_object if isinstance(result, OverrideQuantity) \
+                    return (
+                        result.q_object
+                        if isinstance(result, OverrideQuantity)
                         else result
+                    )
                 except Exception:
                     pass
         return value
@@ -727,7 +766,7 @@ class ExpressionDefiner:
         count_op: Any,
         conc_op: Any,
         direct_sense: bool = True,
-        operation: str | None = None,
+        operation: str | ExprNode | None = None,
     ) -> MobsPyExpression:
         """
         Executes the storing based operation. Also executes a unit
@@ -777,7 +816,7 @@ class ExpressionDefiner:
             )
 
         if isinstance(self, (Quantity, OverrideQuantity)):
-            self = QuantityConverter.convert_received_unit(self)
+            self = QuantityConverter.convert_received_unit(self)  # type: ignore[assignment]
         if isinstance(other, (Quantity, OverrideQuantity)):
             other = QuantityConverter.convert_received_unit(other)
 
@@ -824,6 +863,8 @@ class ExpressionDefiner:
             if operation is None:
                 operation = BinaryOpNode(left, symbol, right)
         else:
+            if isinstance(count_op, Exception):
+                raise count_op
             operation = count_op.magnitude
 
         new_parameter_set = self._parameter_set
@@ -895,8 +936,7 @@ class ExpressionDefiner:
                     "Dimensions are inconsistent between "
                     "different MobsPy expression objects"
                 )
-            else:
-                dimension = dimension_1
+            dimension = dimension_1
         else:
             dimension = None
 
@@ -929,14 +969,14 @@ class OverrideUnitRegistry:
 
     def __call__(self, *args: Any, **kwargs: Any) -> OverrideQuantity:
         q_object = self.unit_registry_object(*args, **kwargs)
-        return OverrideQuantity(q_object)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
 
     def __getattr__(self, item: str) -> OverrideQuantity:
         if item == "h":
             item = "hour"
 
         q_object = 1 * self.unit_registry_object.__getattr__(item)
-        return OverrideQuantity(q_object)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
 
 
 # u is defined here
@@ -952,6 +992,7 @@ class QuantityConverter:
     def convert_received_unit(
         cls,
         quantity: Quantity | OverrideQuantity,
+        model_context: ModelUnitContext | None = None,
     ) -> Quantity | OverrideQuantity:
         """
         Converts a received quantity to L-s-counts, standard MobsPy units
@@ -969,10 +1010,25 @@ class QuantityConverter:
 
         to_convert_into = str(copied_quantity.dimensionality)
 
+        # Determine base units from model_context or defaults
+        length_repl = "dm"
+        time_repl = "s"
+        has_model_substance = False
+
+        if model_context is not None:
+            vol_q = ur.Quantity(1, str(model_context.volume_unit))
+            vol_dim = dict(vol_q.dimensionality)
+            length_exp = int(vol_dim.get("[length]", 3))
+            if length_exp != 0:
+                base_length_q = vol_q ** (1.0 / length_exp)
+                length_repl = str(base_length_q.units)
+            time_repl = str(model_context.time_unit)
+            has_model_substance = model_context.substance_is_molar
+
         if "[length]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[length]", "dm")
+            to_convert_into = to_convert_into.replace("[length]", length_repl)
         if "[time]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[time]", "s")
+            to_convert_into = to_convert_into.replace("[time]", time_repl)
         if "[temperature]" in to_convert_into:
             to_convert_into = to_convert_into.replace("[temperature]", "K")
         if "[mass]" in to_convert_into:
@@ -980,21 +1036,24 @@ class QuantityConverter:
         if "[substance]" in to_convert_into:
             mol_power = int(dict(copied_quantity.dimensionality).get("[substance]", 1))
 
-            copied_quantity = copied_quantity * (N_A / (1 * ur.mol)) ** mol_power
-            if "[substance]" in str(copied_quantity.dimensionality):
-                raise TypeError(
-                    f"Could not convert molar quantity {quantity} "
-                    f"(substance power={mol_power})"
-                )
-
-            to_convert_into = to_convert_into.replace("[substance]", "1")
+            if has_model_substance:
+                sub_repl = str(model_context.substance_unit)  # type: ignore[union-attr]
+                to_convert_into = to_convert_into.replace("[substance]", sub_repl)
+            else:
+                copied_quantity = copied_quantity * (N_A / (1 * ur.mol)) ** mol_power
+                if "[substance]" in str(copied_quantity.dimensionality):
+                    raise TypeError(
+                        f"Could not convert molar quantity {quantity} "
+                        f"(substance power={mol_power})"
+                    )
+                to_convert_into = to_convert_into.replace("[substance]", "1")
 
         copied_quantity.ito(to_convert_into)
 
         if not is_override:
-            return copied_quantity
+            return copied_quantity  # pyright: ignore[reportReturnType]
         else:
-            return OverrideQuantity(copied_quantity)
+            return OverrideQuantity(copied_quantity)  # pyright: ignore[reportReturnType]
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
@@ -1018,7 +1077,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         # Implement all numpy operations
         if ufunc == np_add:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) + self.q_object)
+                return OverrideQuantity(float(inputs[0]) + self.q_object)  # pyright: ignore[reportReturnType]
             else:
                 raise CompilationError(
                     "MobsPy does not yet support array-wise "
@@ -1026,7 +1085,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
                 )
         elif ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) - self.q_object)
+                return OverrideQuantity(float(inputs[0]) - self.q_object)  # pyright: ignore[reportReturnType]
             else:
                 raise CompilationError(
                     "MobsPy does not yet support array-wise "
@@ -1034,7 +1093,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
                 )
         elif ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) * self.q_object)
+                return OverrideQuantity(float(inputs[0]) * self.q_object)  # pyright: ignore[reportReturnType]
             else:
                 raise CompilationError(
                     "MobsPy does not yet support array-wise "
@@ -1042,7 +1101,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
                 )
         elif ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) / self.q_object)
+                return OverrideQuantity(float(inputs[0]) / self.q_object)  # pyright: ignore[reportReturnType]
             else:
                 raise CompilationError(
                     "MobsPy does not yet support array-wise "
@@ -1067,11 +1126,11 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__add__ to avoid infinite loops
             # Just perform the operation directly
-            q_object = Quantity.__radd__(self.q_object, other.q_object)
+            q_object = Quantity.__radd__(self.q_object, other.q_object)  # type: ignore[misc]
         elif isinstance(other, ExpressionDefiner):
             return other.__add__(self)
         else:
-            q_object = Quantity.__radd__(self.q_object, other)
+            q_object = Quantity.__radd__(self.q_object, other)  # type: ignore[misc]
         return OverrideQuantity(q_object)
 
     def non_expression_sub(self, other: Any) -> OverrideQuantity | Any:
@@ -1108,12 +1167,12 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
 
     def non_expression_rmul(self, other: Any) -> OverrideQuantity | Any:
         if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__rmul__(self.q_object, other.q_object)
+            q_object = Quantity.__rmul__(self.q_object, other.q_object)  # type: ignore[misc]
         elif isinstance(other, ExpressionDefiner):
             # If multiplying with an expression, delegate to its __mul__
             return other.__mul__(self)
         else:
-            q_object = Quantity.__rmul__(self.q_object, other)
+            q_object = Quantity.__rmul__(self.q_object, other)  # type: ignore[misc]
         return OverrideQuantity(q_object)
 
     def non_expression_truediv(self, other: Any) -> OverrideQuantity | Any:
@@ -1131,21 +1190,21 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
             q_object = Quantity.__rtruediv__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__rtruediv__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
 
     def non_expression_pow(self, other: Any) -> OverrideQuantity:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__pow__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__pow__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
 
     def non_expression_rpow(self, other: Any) -> OverrideQuantity:
         if isinstance(other, OverrideQuantity):
             q_object = Quantity.__rpow__(self.q_object, other.q_object)
         else:
             q_object = Quantity.__rpow__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
 
     def __init__(self, quantity_object: Quantity) -> None:
         self._generate_necessary_attributes()
@@ -1172,7 +1231,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def convert(self, unit: str) -> OverrideQuantity:
         """Convert to a different unit, returning a new OverrideQuantity."""
         new_q_object = self.q_object.to(unit)
-        return OverrideQuantity(new_q_object)
+        return OverrideQuantity(new_q_object)  # pyright: ignore[reportReturnType]
 
     def convert_into(self, unit: str) -> None:
         self.q_object.ito(unit)
@@ -1203,9 +1262,11 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         concentration_in_expression: bool = False,
         has_units: bool = False,
         species_list_operation_order: list[Any] | None = None,
+        model_context: ModelUnitContext | None = None,
     ) -> None:
         super().__init__(species_string, species_object)
         self._generate_necessary_attributes()
+        self._model_context = model_context
 
         if species_list_operation_order is None:
             self.species_list_operation_order = []
@@ -1256,6 +1317,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         skip_check: bool = False,
         reaction_order: int | None = None,
         dimension: int | None = None,
+        model_context: ModelUnitContext | None = None,
     ) -> tuple[str, bool]:
         """
         Converts the expression from what has been stored
@@ -1282,15 +1344,31 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         if not self._has_units:
             self._count_in_expression = True
 
+        # Resolve effective model_context (parameter or instance attribute)
+        _ctx = model_context or getattr(self, "_model_context", None)
+
+        # Determine validation units from context or defaults
+        _time_u = ur.second
+        _vol_u = ur.decimeter
+        if _ctx is not None:
+            _time_u = ur.Quantity(1, str(_ctx.time_unit)).units  # type: ignore[assignment]
+            vol_q = ur.Quantity(1, str(_ctx.volume_unit))
+            vol_dim = dict(vol_q.dimensionality)
+            length_exp = int(vol_dim.get("[length]", 3))
+            if length_exp != 0:
+                _vol_u = (vol_q ** (1.0 / length_exp)).units
+            else:
+                _vol_u = ur.decimeter
+
         if (
             self._has_units
             and self._expression_variables == set()
             and reaction_order is not None
         ):
-            if self._unit_count_op.units == (1 / ur.second).units:
+            if self._unit_count_op.units == (1 / _time_u).units:  # pyright: ignore[reportAttributeAccessIssue]
                 return operation, True
-            elif self._unit_conc_op.units == (
-                ur.decimeter ** (dimension * (reaction_order - 1)) / ur.second
+            elif self._unit_conc_op.units == (  # pyright: ignore[reportAttributeAccessIssue]
+                _vol_u ** (dimension * (reaction_order - 1)) / _time_u
             ):
                 return operation, False
 
@@ -1307,21 +1385,15 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             )
 
         # If both count and concentration are valid, count takes priority
-        if c1 and not c3:  # noqa: SIM102
-            if self._unit_conc_op.units == (
-                1
-                / (
-                    u.unit_registry_object.second
-                    * u.unit_registry_object.decimeter**dimension
-                )
-            ):
+        if c1 and not c3:
+            if self._unit_conc_op.units == (1 / (_time_u * _vol_u**dimension)):
                 self._concentration_in_expression = True
-            elif self._unit_conc_op.units == (1 / u.unit_registry_object.second):
+            elif self._unit_conc_op.units == (1 / _time_u):
                 # Concentration dimensions canceled (e.g. Michaelis-Menten)
                 self._concentration_in_expression = True
 
         if c1 and not c2:  # noqa: SIM102
-            if self._unit_count_op.units == (1 / u.unit_registry_object.second):
+            if self._unit_count_op.units == (1 / _time_u):
                 self._count_in_expression = True
 
         if (
@@ -1509,7 +1581,7 @@ class _Count_Base:
                         "count",
                     )
                 else:
-                    item._operation = str(item._operation).replace(
+                    item._operation = str(item._operation).replace(  # type: ignore[assignment]
                         v.species_string, "$count$" + v.species_string
                     )
             return item
@@ -1531,7 +1603,7 @@ class _Conc_Base:
                         item._operation, v.species_string, "concentration"
                     )
                 else:
-                    item._operation = str(item._operation).replace(
+                    item._operation = str(item._operation).replace(  # type: ignore[assignment]
                         v.species_string, "$concentration$" + v.species_string
                     )
             return item

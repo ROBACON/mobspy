@@ -11,7 +11,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from mobspy import *  # noqa: F403, F401
+from mobspy import *
 from mobspy.modules.meta_class import ListSpecies
 
 # ---------------------------------------------------------------------------
@@ -95,12 +95,12 @@ class TestDonorReceptor:
         Donor, Phage = New(Mortal)
         Donor(100)
 
-        dup_rate = lambda _, resource: 0.2 if resource.is_a(AA) else 0.1  # noqa: E731
+        dup_rate = lambda _, resource: 0.2 if resource.is_a(AA) else 0.1
         Donor + Resource >> 2 * Donor[dup_rate]
         Donor + Resource >> Donor + Resource + Phage[0.1]
         Infectible.low_inf >> Infectible.high_inf[0.1]
         Receptor = Mortal * Infectible
-        inf_rate = lambda receptor: 0.2 if receptor.high_inf else 0.1  # noqa: E731
+        inf_rate = lambda receptor: 0.2 if receptor.high_inf else 0.1
         Receptor.not_infected + Phage >> Receptor.early_infection[inf_rate]
         Receptor.early_infection >> Receptor.late_infection[0.1]
         Receptor + Resource >> Receptor.low_inf + Receptor[dup_rate]
@@ -129,7 +129,7 @@ class TestOscillator:
 
         repressed = ["TetR", "Lcl", "Lacl"]
         repressors = ["Lacl", "TetR", "Lcl"]
-        hill = lambda che: f"10/(1 + ({che})^3)"  # noqa: E731
+        hill = lambda che: f"10/(1 + ({che})^3)"
         for rpsor, rpsed in zip(repressed, repressors, strict=False):
             Chemical.c(rpsor) >> Chemical.c(rpsed) + Chemical.c(rpsor)[hill]
 
@@ -146,7 +146,7 @@ class TestCRISPROscillator:
         Promoter, dCas, CasBinding = BaseSpecies()
         Promoter.active, Promoter.inactive, CasBinding.no_cas, CasBinding.cas
 
-        DNAPro = New(Promoter)  # noqa: F841
+        DNAPro = New(Promoter)
         gRNA = New(CasBinding)
 
         G = ListSpecies(3, gRNA)
@@ -160,7 +160,7 @@ class TestCRISPROscillator:
         Promoter >> Zero[2.3e-2 / u.minute]
 
         for Prom, Grna in zip(P, G, strict=False):
-            act_rt = lambda dna: 5 / u.minute if dna.active else 0  # noqa: E731
+            act_rt = lambda dna: 5 / u.minute if dna.active else 0
             Prom >> Grna.no_cas + Prom[act_rt]
 
         gRNA_rep_List = [G[-1], G[0], G[1]]
@@ -264,7 +264,7 @@ class TestPositivePhageFeedbackLoop:
         Age.young >> Age.old[1 / u.h]
         Reproducer >> 2 * Reproducer.young[0.1 / u.h]
 
-        infection_rate = lambda r1, r2: 2 / u.h if r1.old else 1 / u.h  # noqa: E731
+        infection_rate = lambda r1, r2: 2 / u.h if r1.old else 1 / u.h
         Infected.not_infected + Phage >> Infected.infected[infection_rate]
 
         Cell = Activatable * Reproducer * Infected * Mortal
@@ -671,21 +671,17 @@ class TestPhageTransmissionSystem:
 
         Age.young >> Age.old[1 / 4 * (1 / u.min)]
 
-        rm = lambda r: 1 / c_r1 if r.is_a(R1) else 1 / c_r2  # noqa: E731
-        cm = lambda r: 1 / c_donor if r.is_a(Donor) else 1 / c_rec  # noqa: E731
-        grw_r = (  # noqa: E731
-            lambda r1, r2: (
-                1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
-                if r2.is_a(R1)
-                else 0.08 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
-            )
+        rm = lambda r: 1 / c_r1 if r.is_a(R1) else 1 / c_r2
+        cm = lambda r: 1 / c_donor if r.is_a(Donor) else 1 / c_rec
+        grw_r = lambda r1, r2: (
+            1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
+            if r2.is_a(R1)
+            else 0.08 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
         )
-        inf_r = (  # noqa: E731
-            lambda r1, r2: (
-                10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
-                if r1.old
-                else 0.004 * 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
-            )
+        inf_r = lambda r1, r2: (
+            10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
+            if r1.old
+            else 0.004 * 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
         )
         Receiver.not_infected + Phage >> Receiver.early_infection[inf_r]
         Receiver.early_infection >> Receiver.late_infection[1 / (3 * u.min)]
@@ -693,8 +689,8 @@ class TestPhageTransmissionSystem:
         Receiver.old + Resource >> Receiver.young + Receiver.not_infected.young[grw_r]
         Receiver >> Dead[1e-4 / u.s]
 
-        phage_rate = (  # noqa: E731
-            lambda r1, r2: cm(r1) * rm(r2) * 850 * (u.l / u.s) if r2.is_a(R1) else 0
+        phage_rate = lambda r1, r2: (
+            cm(r1) * rm(r2) * 850 * (u.l / u.s) if r2.is_a(R1) else 0
         )
         Donor.old + Resource >> 2 * Donor.young[lambda r1, r2: grw_r(r1, r2) / 2]
         Donor + Resource >> Donor + Phage + Resource[phage_rate]

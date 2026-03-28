@@ -511,7 +511,7 @@ class TestModelReference:
 
     def test_replacing_species_name_in_expression(self):
         Resource, R = BaseSpecies()
-        death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)  # noqa: E731
+        death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)
         Resource + R >> mobspy.Zero[death_rate]
         S = Simulation(Resource | R)
         S.duration = 10

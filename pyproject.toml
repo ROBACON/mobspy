@@ -38,14 +38,82 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "SIM"]
-ignore = ["S101"]
+select = [
+    "E", "W",       # pycodestyle
+    "F",             # pyflakes
+    "I",             # isort
+    "N",             # pep8-naming
+    "UP",            # pyupgrade
+    "B",             # flake8-bugbear
+    "A",             # flake8-builtins
+    "SIM",           # flake8-simplify
+    # TCH (flake8-type-checking) disabled: codebase uses re-export patterns
+    # and circular imports that TCH cannot safely handle
+    "RUF",           # ruff-specific
+    "S",             # flake8-bandit (security)
+    "C4",            # flake8-comprehensions
+    "PT",            # flake8-pytest-style
+    "RET",           # flake8-return
+    "ARG",           # flake8-unused-arguments
+    "PTH",           # flake8-use-pathlib
+    "ERA",           # eradicate (commented-out code)
+    "PL",            # pylint subset
+    "PERF",          # perflint
+]
+ignore = [
+    "S101",    # allow assert in tests
+    "PLR0913", # too many arguments - common in this DSL codebase
+    "PLR0912", # too many branches - common in compiler/expression code
+    "PLR0911", # too many return statements
+    "PLR0915", # too many statements
+    "PLR2004", # magic value comparison - common in scientific code
+    "RET505",  # unnecessary else after return - sometimes clearer
+    "RET504",  # unnecessary assignment before return
+    "ARG002",  # unused method argument - common in operator overloading
+    "N802",    # function name should be lowercase - existing API uses mixed case
+    "N803",    # argument name should be lowercase - existing API
+    "N806",    # variable in function should be lowercase - scientific naming (A, B, N_A)
+    "N815",    # mixed case variable in class scope
+    "N816",    # mixed case variable in global scope
+    "N801",    # class name should use CapWords - DSL uses List_Species, etc.
+    "PLC0414", # import X as X - intentional re-export pattern
+    "E731",    # lambda assignment - common in DSL rate definitions
+    "E741",    # ambiguous variable name - scientific code uses l, I, O
+    "B905",    # zip without strict= - not needed for this codebase
+    "RUF012",  # mutable class variable without ClassVar - DSL pattern
+    "PERF401", # use list comprehension - existing style
+    "PTH",     # pathlib suggestions - existing codebase uses os.path
+    "A001",    # shadowing builtin - DSL names overlap (e.g. All, Any)
+    "A004",    # shadowing builtin import
+    "ERA001",  # commented-out code - prevalent in existing codebase
+    "PLC0415", # import not at top level - used for lazy/conditional imports
+    "PLC0206", # string contains unescaped Unicode - SBML string constants
+    "PLW2901", # redefined loop variable - common pattern in this codebase
+    "PLW0642", # self/cls reassignment - used in DSL metaclass patterns
+    "PLW0127", # self-assignment - used intentionally in some patterns
+    "S112",    # try-except-pass - used in fallback patterns
+    "S110",    # try-except-pass - same as above
+    "S311",    # pseudo-random generator - used for non-security purposes
+    "N999",    # invalid module name - existing file naming
+    "B017",    # assertRaises(Exception) too broad - existing test patterns
+]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests use `from mobspy import *` (F403/F405) and MobsPy DSL side-effect
-# expressions like `Species.char` (B018), `assert False` in expected-failure
-# tests (B011), and species comparisons in lambdas (B015).
-"tests/**" = ["F403", "F405", "B018", "B011", "B015"]
+"tests/**" = ["F403", "F405", "F841", "B018", "B011", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "RUF059"]
+"docs/**" = ["F403", "F405", "E501", "B018", "S", "ARG", "ERA", "T20", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "RUF005"]
+"mobspy/patch_scripts/**" = ["ALL"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

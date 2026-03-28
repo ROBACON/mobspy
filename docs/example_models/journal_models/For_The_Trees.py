@@ -6,7 +6,7 @@ if __name__ == "__main__":
         We have a population of Trees
         The Trees can die, age, have different colors and be in two different forests
         The colors can change randomly from time to time
-        All old Trees can reproduce, but the Three is born green and young 
+        All old Trees can reproduce, but the Three is born green and young
     """
     Age, Mortal, Colored, Location = BaseSpecies()
     Colored.green, Colored.yellow, Colored.brown
@@ -23,10 +23,8 @@ if __name__ == "__main__":
 
     # reproduction
     bf = 1e-10 * u.decimeter**2 / u.year
-    rep_r = (
-        lambda t1, t2: 5 * bf
-        if (Location(t1) == Location(t2) and Colored(t1) == Colored(t2))
-        else bf
+    rep_r = lambda t1, t2: (
+        5 * bf if (Location(t1) == Location(t2) and Colored(t1) == Colored(t2)) else bf
     )
     2 * Tree >> 2 * Tree + Tree.yound[rep_r]
 

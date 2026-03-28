@@ -44,8 +44,10 @@ def build(
 
     :return: sbml_str (str) = string describing the model in sbml format
     """
-    doc = create_model(species, parameters, reactions, events, assignments, model_context)
+    doc = create_model(
+        species, parameters, reactions, events, assignments, model_context
+    )
 
     # Convert sbml document into a string for basico
     sbml_str = sbml_writeSBMLToString(doc)
-    return sbml_str
+    return sbml_str  # type: ignore[no-any-return]

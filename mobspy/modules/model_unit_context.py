@@ -7,17 +7,15 @@ conversion methods for rates, counts, volumes, and time.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import libsbml as sbml
 from pint import Quantity, Unit
 from scipy.constants import N_A
 
 from mobspy.exceptions import UnitError
-from mobspy.modules.mobspy_expressions import OverrideQuantity, u as _mobspy_u
-
-if TYPE_CHECKING:
-    pass
+from mobspy.modules.mobspy_expressions import OverrideQuantity
+from mobspy.modules.mobspy_expressions import u as _mobspy_u
 
 _ur = _mobspy_u.unit_registry_object
 
@@ -25,6 +23,7 @@ _ur = _mobspy_u.unit_registry_object
 # ---------------------------------------------------------------------------
 # Pint unit -> libsbml UnitDefinition mapping
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class _SbmlUnitComponent:
@@ -74,6 +73,7 @@ _PINT_TO_SBML: dict[str, list[_SbmlUnitComponent]] = {
 # ModelUnitContext
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ModelUnitContext:
     """Resolved model-wide unit system for a single compilation.
@@ -82,9 +82,9 @@ class ModelUnitContext:
     which reproduces the legacy MobsPy behavior identically.
     """
 
-    time_unit: Unit = field(default_factory=lambda: _ur.second)
+    time_unit: Unit = field(default_factory=lambda: _ur.second)  # type: ignore[assignment]
     substance_unit: Unit | None = field(default=None)  # None = counts (item)
-    volume_unit: Unit = field(default_factory=lambda: _ur.decimeter**3)
+    volume_unit: Unit = field(default_factory=lambda: _ur.decimeter**3)  # type: ignore[assignment]
     dimension: int = 3
 
     # ---- internal cache set by from_simulation ----
@@ -100,8 +100,8 @@ class ModelUnitContext:
     def _to_plain_quantity(q: Any) -> Quantity:  # type: ignore[type-arg]
         """Convert OverrideQuantity to a plain Pint Quantity for safe .to() calls."""
         if isinstance(q, OverrideQuantity):
-            return q.q_object  # type: ignore[return-value]
-        return q  # type: ignore[return-value]
+            return q.q_object  # type: ignore[no-any-return]
+        return q  # type: ignore[no-any-return]
 
     # ------------------------------------------------------------------
     # Properties
@@ -197,17 +197,17 @@ class ModelUnitContext:
 
         # Update default volume unit to match resolved dimension
         if not ctx._volume_set:
-            ctx.volume_unit = _ur.decimeter ** ctx.dimension
+            ctx.volume_unit = _ur.decimeter**ctx.dimension  # type: ignore[assignment]
 
         # Only activate non-default volume/time units when substance units
         # are present. This ensures backward compatibility for models with
         # unit volumes but dimensionless rates/counts.
         if has_substance_units:
             if _vol_unit_from_input is not None and not ctx._volume_set:
-                ctx.volume_unit = _vol_unit_from_input
+                ctx.volume_unit = _vol_unit_from_input  # type: ignore[assignment]
                 ctx._volume_set = True
             if _time_unit_from_input is not None and not ctx._time_set:
-                ctx.time_unit = _time_unit_from_input
+                ctx.time_unit = _time_unit_from_input  # type: ignore[assignment]
                 ctx._time_set = True
 
         return ctx
@@ -250,6 +250,7 @@ class ModelUnitContext:
             elif has_substance and not has_length:
                 # [substance]/[time] rate (e.g. mol/s)
                 if self.substance_is_molar:
+                    assert self.substance_unit is not None
                     target = self.substance_unit / self.time_unit
                     converted = quantity.to(target)
                     return converted.magnitude, dimension, True
@@ -262,17 +263,16 @@ class ModelUnitContext:
             elif has_substance:
                 # Concentration rate with moles: [length]^n/([substance]^m*[time])
                 if self.substance_is_molar:
-                    target = (
-                        self.volume_unit**volume_power
-                        / (self.substance_unit**volume_power * self.time_unit)
+                    assert self.substance_unit is not None
+                    target = self.volume_unit**volume_power / (
+                        self.substance_unit**volume_power * self.time_unit
                     )
                     converted = quantity.to(target)
                     return converted.magnitude, dimension, False
                 else:
                     # Convert substance to moles then to counts via N_A
-                    target = (
-                        self.volume_unit**volume_power
-                        / (_ur.mole**volume_power * self.time_unit)
+                    target = self.volume_unit**volume_power / (
+                        _ur.mole**volume_power * self.time_unit
                     )
                     converted = quantity.to(target)
                     return (
@@ -322,6 +322,7 @@ class ModelUnitContext:
                 if has_length:
                     # Concentration (e.g. molar, millimolar)
                     if self.substance_is_molar:
+                        assert self.substance_unit is not None
                         target = self.substance_unit / self.volume_unit
                         converted = quantity.to(target)
                         # Multiply by volume to get amount
@@ -331,14 +332,14 @@ class ModelUnitContext:
                         target = _ur.mole / self.volume_unit
                         converted = quantity.to(target)
                         return converted.magnitude * volume * N_A
+                # Pure substance amount (e.g. 5 * u.mole)
+                elif self.substance_is_molar:
+                    assert self.substance_unit is not None
+                    converted = quantity.to(self.substance_unit)
+                    return converted.magnitude
                 else:
-                    # Pure substance amount (e.g. 5 * u.mole)
-                    if self.substance_is_molar:
-                        converted = quantity.to(self.substance_unit)
-                        return converted.magnitude
-                    else:
-                        converted = quantity.to(_ur.mole)
-                        return converted.magnitude * N_A
+                    converted = quantity.to(_ur.mole)
+                    return converted.magnitude * N_A
             else:
                 if has_length:
                     # Count concentration (e.g. 1/L)
@@ -358,8 +359,8 @@ class ModelUnitContext:
         """Convert a volume quantity to model volume units."""
         if isinstance(volume, Quantity):
             pq = self._to_plain_quantity(volume)
-            return pq.to(self.volume_unit).magnitude  # type: ignore[union-attr]
-        return volume
+            return pq.to(self.volume_unit).magnitude  # type: ignore[no-any-return]
+        return volume  # pyright: ignore[reportReturnType]
 
     def convert_time(self, time: int | float | Quantity) -> int | float:  # type: ignore[type-arg]
         """Convert a time quantity to model time units."""
@@ -367,8 +368,8 @@ class ModelUnitContext:
             pq = self._to_plain_quantity(time)
             dim = dict(pq.dimensionality)
             if dim.get("[time]") and len(dim) == 1:
-                return pq.to(self.time_unit).magnitude  # type: ignore[union-attr]
-        return time
+                return pq.to(self.time_unit).magnitude  # type: ignore[no-any-return]
+        return time  # type: ignore[return-value]
 
     # ------------------------------------------------------------------
     # SBML unit definition generation
@@ -399,6 +400,7 @@ class ModelUnitContext:
 
         # Substance unit
         if self.substance_is_molar:
+            assert self.substance_unit is not None
             sub_id = self.get_sbml_substance_units_id()
             _create_unit_def(model, sub_id, self.substance_unit)
 
@@ -415,6 +417,7 @@ class ModelUnitContext:
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
+
 
 def _extract_substance_unit(quantity: Quantity) -> Unit:  # type: ignore[type-arg]
     """Extract the substance component from a Quantity's units.
@@ -447,17 +450,20 @@ def _extract_substance_unit(quantity: Quantity) -> Unit:  # type: ignore[type-ar
 
     # Try to match against standard substance units
     candidates: list[Any] = [
-        _ur.nanomole, _ur.micromole, _ur.millimole, _ur.mole,
+        _ur.nanomole,
+        _ur.micromole,
+        _ur.millimole,
+        _ur.mole,
     ]
     for target in candidates:
         try:
             converted = isolated.to(target)
             if 0.99 < abs(converted.magnitude) < 1.01:
-                return target  # type: ignore[return-value]
+                return target  # type: ignore[no-any-return]
         except Exception:
             continue
 
-    return _ur.mole  # type: ignore[return-value]
+    return _ur.mole  # type: ignore[no-any-return]
 
 
 def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: ignore[type-arg]
@@ -485,12 +491,12 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
             try:
                 converted = q_norm.to(target)
                 if 0.99 < abs(converted.magnitude) < 1.01:
-                    return target  # type: ignore[return-value]
+                    return target  # type: ignore[no-any-return]
             except Exception:
                 continue
 
     # For compound units (e.g. millimolar = mmol/L), convert to base units
-    base = q.to_base_units()
+    q.to_base_units()
 
     if abs_power == dimension:
         # It's a volume: figure out which standard volume from the base magnitude
@@ -498,27 +504,27 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
         # against known volume units
         # Use a reference: 1 liter = 0.001 m^3
         candidates_vol: list[tuple[Any, float]] = [
-            (_ur.microliter, 1e-9),   # m^3
-            (_ur.milliliter, 1e-6),   # m^3
-            (_ur.liter, 1e-3),        # m^3
+            (_ur.microliter, 1e-9),  # m^3
+            (_ur.milliliter, 1e-6),  # m^3
+            (_ur.liter, 1e-3),  # m^3
         ]
         # The base quantity has the volume contribution embedded.
         # For molar: base = 1e3 mol/m^3, volume part is m^-3 -> 1/m^3 -> 1000 L
         # We can't easily extract it from compound units.
         # Simpler: for concentrations (substance + length), just use liter as default.
         if "[substance]" in dim:
-            return _ur.liter  # type: ignore[return-value]
+            return _ur.liter  # type: ignore[no-any-return]
 
         # For pure volume quantities, match by converting
         for target, _base_m3 in candidates_vol:
             try:
                 test = q.to(target)
                 if 0.99 < abs(test.magnitude) < 1.01:
-                    return target  # type: ignore[return-value]
+                    return target  # type: ignore[no-any-return]
             except Exception:
                 continue
 
-    return _ur.decimeter**dimension  # type: ignore[return-value]
+    return _ur.decimeter**dimension  # type: ignore[no-any-return, return-value]
 
 
 def _sanitize_sbml_id(unit_str: str) -> str:
@@ -581,10 +587,9 @@ def _create_rate_unit_def(model: Any, rate_id: str, time_unit: Unit) -> None:
 
 def _decompose_pint_unit(pint_unit: Unit) -> list[_SbmlUnitComponent] | None:
     """Decompose a Pint unit into SBML unit components via base units."""
-    ur = _ur
     try:
         # Get the quantity in base SI units
-        q = (1 * pint_unit).to_base_units()
+        q = (1 * pint_unit).to_base_units()  # pyright: ignore[reportAttributeAccessIssue]
         magnitude = q.magnitude
         dim = dict(q.dimensionality)
     except Exception:

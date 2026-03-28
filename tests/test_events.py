@@ -120,7 +120,7 @@ class TestLogicOperators:
             pass
 
         try:
-            (10 >= A >= 10 >= A)  # noqa: SIM300
+            (10 >= A >= 10 >= A)
             test_failed = True
         except (SystemExit, MobsPyError):
             pass

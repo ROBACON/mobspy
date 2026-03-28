@@ -1,5 +1,6 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 A, B = BaseSpecies()
 

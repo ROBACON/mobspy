@@ -7,7 +7,6 @@ simulating a Model.
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
 from copy import deepcopy
 from json import dump as json_dump
 from json import load as json_load
@@ -43,10 +42,9 @@ from mobspy.modules.assignments_implementation import (
     Assign,  # noqa: F401
 )
 from mobspy.modules.class_of_meta_specie_named_any import (
-    Any,  # noqa: F401
+    Any as Any,
 )
 from mobspy.modules.compiler import Compiler
-from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.logic_operator_objects import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
@@ -62,13 +60,14 @@ from mobspy.modules.meta_class import (
 from mobspy.modules.meta_class_utils import (
     create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
-from mobspy.modules.mobspy_expressions import u  # noqa: F401
+from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as _ParameterConstructor,
 )
 from mobspy.modules.mobspy_parameters import (
     ModelParameters,  # noqa: F401
 )
+from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.order_operators import (
     All,  # noqa: F401
     Default,
@@ -119,9 +118,11 @@ from mobspy.simulator_object.simulator_object_functions import (
 from mobspy.simulator_object.simulator_object_functions import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
-from mobspy.types import SimulationEventData
+from mobspy.types import SimulationEventData, TimeSeriesDataDict
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from mobspy.types import (
         CompiledModelDict,
         EventsForSbml,
@@ -131,7 +132,6 @@ if TYPE_CHECKING:
         ReactionsForSbml,
         SimulationParameters,
         SpeciesForSbml,
-        TimeSeriesDataDict,
     )
 
 # Initialize logger
@@ -195,19 +195,19 @@ class Simulation(
         self._list_of_models: list[CompiledModelDict] = []
         self._list_of_parameters: list[SimulationParameters] = []
         self._context_not_active = True
-        self._assigned_species_list = []
+        self._assigned_species_list: list[str] = []
         self._conditional_event = False
         self._end_condition = None
         self.model_parameters = {}
         self.sbml_data_list: ParameterSweepList = []
-        self._parameter_list_of_dic = []
+        self._parameter_list_of_dic: list[dict[str, TypingAny]] = []
         self._is_compiled = False
-        self.dimension = None
-        self.model_parameter_objects_dict = None
+        self.dimension: int | None = None
+        self.model_parameter_objects_dict: dict[str, TypingAny] | None = None
 
         # Must copy to avoid reference assignment
         # Change model to include linked species
-        model_pre_link = List_Species(model)
+        model_pre_link = List_Species(model)  # type: ignore[arg-type]
         model_pos_link: set[Species] = set()
         for spe in model_pre_link:
             model_pos_link.add(spe)
@@ -223,7 +223,7 @@ class Simulation(
                 f"Received type {type(model)} with value {model}"
             )
 
-        self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)
+        self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]
         if reactions is not None:
             self._reactions_set = set(reactions)
         else:
@@ -246,14 +246,14 @@ class Simulation(
                 )
 
         if not parameters:
-            self.parameters: SimulationParameters = get_default_parameters()
+            self.parameters: SimulationParameters = get_default_parameters()  # type: ignore[assignment]
 
         if not plot_parameters:
             self.plot_parameters = get_default_plot_parameters()
 
         # Other needed things for simulating
-        self.results = {}
-        self.fres = {}
+        self.results: MobsPyList_of_TS | dict[str, TypingAny] = {}
+        self.fres: MobsPyList_of_TS | dict[str, TypingAny] = {}
         self.default_order = Default
 
         self._species_for_sbml: SpeciesForSbml | None = None
@@ -301,7 +301,7 @@ class Simulation(
             log_level = self.parameters.get("level", logging.INFO)
             logger.set_log_level(log_level)
 
-            pr_parameter_process(self.parameters)
+            pr_parameter_process(self.parameters)  # type: ignore[arg-type]
             if self.parameters["method"] is not None:
                 self.parameters["simulation_method"] = self.parameters["method"]
 
@@ -337,7 +337,7 @@ class Simulation(
                 orthogonal_vector_structure=self.orthogonal_vector_structure,
                 volume=self.parameters["volume"],
                 dimension=self.dimension,
-                type_of_model=self.parameters["rate_type"],
+                type_of_model=self.parameters.get("rate_type") or "stochastic",
                 verbose=verbose,
                 event_dictionary=self.total_packed_events,
                 continuous_sim=self.parameters["_continuous_simulation"],
@@ -348,7 +348,7 @@ class Simulation(
             )
         except Exception as e:
             logger.exception("Model compilation failed")
-            raise CompilationError(f"Model compilation failed: {str(e)}") from e
+            raise CompilationError(f"Model compilation failed: {e!s}") from e
 
         self._species_for_sbml = _result.species_for_sbml
         self._reactions_for_sbml = _result.reactions_for_sbml
@@ -491,7 +491,7 @@ class Simulation(
 
         self._assemble_multi_simulation_structure()
 
-        jobs = self.set_job_number(self.parameters)
+        jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
 
         def simulation_function(x):
             return sbml_simulate(jobs, self._list_of_parameters, x)
@@ -525,9 +525,9 @@ class Simulation(
         volume_list, time_list, flag_concentration = dh_extract_time_and_volume_list(
             self._list_of_parameters
         )
+        _unit_y = self.parameters["unit_y"]
         tcb = (
-            self.parameters["unit_y"] is not None
-            and "[length]" not in self.parameters["unit_y"].dimensionality
+            _unit_y is not None and "[length]" not in _unit_y.dimensionality  # type: ignore[union-attr,attr-defined]
         )
         if not flag_concentration or tcb:
             self.parameters["output_concentration"] = False
@@ -545,27 +545,27 @@ class Simulation(
             )
 
         def convert_all_ts_to_correct_format(
-            single_ts: Any,
-            parameters: Any,
+            single_ts: TypingAny,
+            parameters: TypingAny,
             unit_convert: bool = False,
-        ) -> Any:
-            data_dict: TimeSeriesDataDict = {
-                "data": convert_one_ts_to_desired_unit(single_ts)
+        ) -> TypingAny:
+            data_dict = TimeSeriesDataDict(
+                data=convert_one_ts_to_desired_unit(single_ts)
                 if unit_convert
                 else single_ts,
-                "params": self.parameters,
-                "models": self._list_of_models,
-            }
+                params=self.parameters,
+                models=self._list_of_models,
+            )
             return MobsPyTimeSeries(data_dict, parameters)
 
         flatt_ts = []
         if self._parameter_list_of_dic:
-            for r, params in zip(results, self._parameter_list_of_dic):  # noqa: B905
-                for ts in r:
+            for r, params in zip(results, self._parameter_list_of_dic):
+                for ts in r:  # pyright: ignore[reportOptionalIterable]
                     flatt_ts.append((ts, params))
         else:
             for r in results:
-                for ts in r:
+                for ts in r:  # pyright: ignore[reportOptionalIterable]
                     flatt_ts.append((ts, {}))
 
         ta = self.parameters["unit_x"] is not None
@@ -584,9 +584,10 @@ class Simulation(
             )
 
         self.results = MobsPyList_of_TS(
-            all_processed_data, self.model_parameter_objects_dict
+            all_processed_data,  # pyright: ignore[reportArgumentType]
+            self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
         )
-        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)
+        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
 
         if self.parameters["save_data"]:
             self.save_data()
@@ -603,12 +604,13 @@ class Simulation(
 
             if len(self._parameter_list_of_dic) > 1:
                 self.plot_parametric()
-                return 0
+                return
 
             if "stochastic" in methods_list:
                 self.plot_stochastic()
             else:
                 self.plot_deterministic()
+        return
 
     def save_data(self, file: str | None = None) -> None:
         """
@@ -648,20 +650,20 @@ class Simulation(
                         "No default output file specified in parameters"
                     )
                 with open(self.parameters["absolute_output_file"], "w") as f:
-                    json_dump(self.results.to_dict(), f, indent=4)
+                    json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]
             else:
                 # Add .json extension if not present
                 if not file.endswith(".json"):
                     file += ".json"
                 with open(file, "w") as jf:
-                    json_dump(self.results.to_dict(), jf, indent=4)
+                    json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]
                     logger.info(f"Successfully saved simulation results to {file}")
         except OSError as e:
-            raise SimulationError(f"Error saving data to file: {str(e)}") from e
+            raise SimulationError(f"Error saving data to file: {e!s}") from e
         except Exception as e:
             logger.exception("Unexpected error during data saving")
             raise SimulationError(
-                f"Unexpected error saving simulation data: {str(e)}"
+                f"Unexpected error saving simulation data: {e!s}"
             ) from e
 
     def _pack_data(self, time_series_data: TypingAny) -> None:
@@ -751,13 +753,15 @@ class Simulation(
 
         # Simulation parameters
         if name in self._SIMULATION_PARAMS:
-            if self._is_compiled and name != "unit_x" and name != "unit_y":
+            if self._is_compiled and name not in {"unit_x", "unit_y"}:
                 value = pr_convert_time_parameters_after_compilation(
                     value, model_context=self._model_context
                 )
             if self._is_compiled and name == "volume":
                 value = pr_convert_volume_after_compilation(
-                    self.dimension, self._parameters_for_sbml, value,
+                    self.dimension,
+                    self._parameters_for_sbml,  # type: ignore[arg-type]
+                    value,
                     model_context=self._model_context,
                 )
 
@@ -818,7 +822,7 @@ class Simulation(
 
         :param file_name: (str) name of the json file
         """
-        self.parameters = self.__config_parameters(config)
+        self.parameters = self.__config_parameters(config)  # type: ignore[assignment]
 
     def configure_plot_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
@@ -836,7 +840,7 @@ class Simulation(
         if type(config) == str:  # noqa: E721
             if os_path_splitext(config)[1] != ".json":
                 raise ParameterError("Wrong file extension")
-            parameters_to_config = pr_read_json(config)
+            parameters_to_config: dict[str, TypingAny] = pr_read_json(config)
         elif type(config) == dict:  # noqa: E721
             parameters_to_config = config
         else:
@@ -875,11 +879,9 @@ class Simulation(
             )
 
         try:
-            return self.results.return_pandas()
+            return self.results.return_pandas()  # type: ignore[union-attr]
         except Exception as e:
-            raise ImportError(
-                f"Failed to convert results to DataFrame: {str(e)}"
-            ) from e
+            raise ImportError(f"Failed to convert results to DataFrame: {e!s}") from e
 
     @classmethod
     def is_simulation(cls) -> bool:
@@ -896,13 +898,13 @@ class Simulation(
                 jobs = params["jobs"]
         except KeyError:
             jobs = -1
-        return jobs
+        return int(jobs)
 
     def __sub__(self, other: TypingAny) -> Simulation:
-        return sof_sim_remove_reaction(self, other, Simulation)
+        return sof_sim_remove_reaction(self, other, Simulation)  # type: ignore[no-any-return,return-value]
 
     def __rsub__(self, other: TypingAny) -> Simulation:
-        return sof_sim_remove_reaction(other, self, Simulation)
+        return sof_sim_remove_reaction(other, self, Simulation)  # type: ignore[no-any-return,return-value]
 
 
 class SimulationComposition:
@@ -942,11 +944,11 @@ class SimulationComposition:
         S2: Simulation | SimulationComposition,
     ) -> None:
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
-            self.list_of_simulations = [S1] + [S2]
+            self.list_of_simulations = [S1, S2]
         elif isinstance(S1, SimulationComposition) and isinstance(S2, Simulation):
-            self.list_of_simulations = S1.list_of_simulations + [S2]
+            self.list_of_simulations = [*S1.list_of_simulations, S2]
         elif isinstance(S1, Simulation) and isinstance(S2, SimulationComposition):
-            self.list_of_simulations = [S1] + S2.list_of_simulations
+            self.list_of_simulations = [S1, *S2.list_of_simulations]
         elif isinstance(S1, SimulationComposition) and isinstance(
             S2, SimulationComposition
         ):
@@ -955,8 +957,8 @@ class SimulationComposition:
             raise SimulationError(
                 "Simulation compositions can only be performed with other simulations"
             )
-        self.results = None
-        self.fres = None
+        self.results: MobsPyList_of_TS | dict[str, TypingAny] | None = None
+        self.fres: MobsPyList_of_TS | dict[str, TypingAny] | None = None
         self.base_sim = self.list_of_simulations[0]
 
     def __add__(
@@ -1028,11 +1030,10 @@ class SimulationComposition:
         elif name in broad_cast_parameters:
             for sim in self:
                 sim._set_parameter(name, value)
+        elif name in white_list:
+            self.__dict__[name] = value
         else:
-            if name in white_list:
-                self.__dict__[name] = value
-            else:
-                self.base_sim.__setattr__(name, value)
+            self.base_sim.__setattr__(name, value)
 
     @property
     def plot_config(self) -> PlotConfigProxy:
@@ -1040,9 +1041,11 @@ class SimulationComposition:
         return self.base_sim.plot_config
 
     def compile(self, verbose: bool = True) -> str | None:
-        str = ""
+        result_str = ""
         for sim in self.list_of_simulations:
-            str += sim.compile(verbose)
+            compiled = sim.compile(verbose)
+            if compiled is not None:
+                result_str += compiled
 
         self._compile_multi_simulation()
 
@@ -1055,8 +1058,9 @@ class SimulationComposition:
 
         self.base_sim._assemble_multi_simulation_structure()
 
-        if str != "":
-            return str
+        if result_str != "":
+            return result_str
+        return None
 
     def _check_all_sims_compilation(self) -> None:
         for sim in self.list_of_simulations:
@@ -1154,7 +1158,7 @@ class SimulationComposition:
             plot_type,
         )
 
-        multi_parameter_dictionary = {}
+        multi_parameter_dictionary: dict[str, TypingAny] = {}
 
         for sim in self.list_of_simulations:
             multi_parameter_dictionary = ps_unite_parameter_dictionaries(

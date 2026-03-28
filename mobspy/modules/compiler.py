@@ -28,7 +28,6 @@ from mobspy.modules.species_string_generator import (
 from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
-from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.unit_handler import (
     convert_counts as uh_convert_counts,
 )
@@ -46,6 +45,7 @@ from mobspy.types import (
 )
 
 if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import (
         MappingsForSbml,
         ParametersForSbml,
@@ -271,7 +271,9 @@ class Compiler:
                         object=count["quantity"],
                     )
 
-            temp_count = uh_convert_counts(count["quantity"], volume, dimension, model_context=model_context)
+            temp_count = uh_convert_counts(
+                count["quantity"], volume, dimension, model_context=model_context
+            )
             for spe_str in species_strings:
                 if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
                     _logger.warning(
@@ -287,11 +289,16 @@ class Compiler:
             if "all$" in count["characteristics"]:
                 continue
 
-            species_string = ssg_construct_species_char_list(
+            species_string_result = ssg_construct_species_char_list(
                 count["object"],
                 count["characteristics"],
                 orthogonal_vector_structure,
                 symbol="_dot_",
+            )
+            species_string: str = (
+                species_string_result
+                if isinstance(species_string_result, str)
+                else str(species_string_result)
             )
 
             if isinstance(count["quantity"], mp_Mobspy_Parameter):
@@ -306,7 +313,9 @@ class Compiler:
                         object=count["quantity"],
                     )
 
-            temp_count = uh_convert_counts(count["quantity"], volume, dimension, model_context=model_context)
+            temp_count = uh_convert_counts(
+                count["quantity"], volume, dimension, model_context=model_context
+            )
             if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
                 _logger.warning("The stochastic simulation rounds floats to integers")
                 species_for_sbml[species_string] = int(temp_count)
@@ -326,11 +335,12 @@ class Compiler:
         dimension: int,
         parameter_exist: dict[str, Any],
         skip_expression_check: bool,
+        model_context: ModelUnitContext | None = None,
     ) -> tuple[ReactionsForSbml, set[Any]]:
         """Expand meta-reactions into concrete SBML reactions."""
         reactions_set = cof_create_all_not_reactions(reactions_set)
 
-        parameters_in_reaction: set[Any] = set()
+        parameters_in_reaction: Any = set()
         reactions_for_sbml, parameters_in_reaction = rc_create_all_reactions(
             reactions_set,
             meta_species_to_simulate,
@@ -340,6 +350,7 @@ class Compiler:
             parameter_exist,
             parameters_in_reaction,
             skip_expression_check,
+            model_context=model_context,
         )
         return reactions_for_sbml, parameters_in_reaction
 
@@ -380,6 +391,7 @@ class Compiler:
         parameter_exist: dict[str, Any],
         continuous_sim: bool,
         ending_condition: Any,
+        model_context: ModelUnitContext | None = None,
     ) -> tuple[dict[str, Any], set[Any]]:
         """Build events and add phantom reactions for event-only species.
 
@@ -388,13 +400,14 @@ class Compiler:
         parameters_in_events: set[Any] = set()
         events_for_sbml, species_in_events = eh_format_event_dictionary_for_sbml(
             species_for_sbml,
-            event_dictionary,
+            event_dictionary or [],
             orthogonal_vector_structure,
             volume,
             dimension,
             meta_species_to_simulate,
             parameter_exist,
             parameters_in_events,
+            model_context=model_context,
         )
 
         # Phantom reactions for species in events but not in reactions
@@ -466,7 +479,7 @@ class Compiler:
         non_processed_assignments: dict[str, Any] = {}
         for spe in meta_species_to_simulate:
             for asgn, expression in spe._assignments.items():
-                non_processed_assignments[asgn] = expression
+                non_processed_assignments[asgn] = expression  # noqa: PERF403
         return asgi_Assign.compile_assignments_for_sbml(
             non_processed_assignments,
             orthogonal_vector_structure,
@@ -610,7 +623,9 @@ class Compiler:
             model_context=model_context,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_counts,
+            parameters_used,
+            parameters_for_sbml,
+            parameters_in_counts,
             model_context=model_context,
         )
 
@@ -623,9 +638,12 @@ class Compiler:
             dimension,
             parameter_exist,
             skip_expression_check,
+            model_context=model_context,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_reaction,
+            parameters_used,
+            parameters_for_sbml,
+            parameters_in_reaction,
             model_context=model_context,
         )
 
@@ -644,9 +662,12 @@ class Compiler:
             parameter_exist,
             continuous_sim,
             ending_condition,
+            model_context=model_context,
         )
         cls.add_to_parameters_to_sbml(
-            parameters_used, parameters_for_sbml, parameters_in_events,
+            parameters_used,
+            parameters_for_sbml,
+            parameters_in_events,
             model_context=model_context,
         )
 

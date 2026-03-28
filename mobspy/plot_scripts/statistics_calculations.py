@@ -37,7 +37,7 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
                 )
                 war_1 = False
 
-            for t1, t2 in zip(s1["Time"], s2["Time"]):  # noqa: B905
+            for t1, t2 in zip(s1["Time"], s2["Time"]):
                 if t1 != t2 and war_2:
                     simlog.warning(
                         "Times in Time Series Objects are different. \n"
@@ -122,7 +122,7 @@ def average_plus_standard_deviation(
 
     plus: list[float] = []
     minus: list[float] = []
-    for average, deviation in zip(series_average, series_deviation):  # noqa: B905
+    for average, deviation in zip(series_average, series_deviation):
         plus.append(average + deviation)
         minus.append(average - deviation)
 

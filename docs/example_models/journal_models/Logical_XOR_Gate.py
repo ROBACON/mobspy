@@ -1,8 +1,8 @@
-from mobspy import *
-import seaborn
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn
 
+from mobspy import *
 
 max_plas, max_pbad, max_ptet = (1, 1, 1)
 
@@ -48,11 +48,8 @@ def promoter_activation(
 
 # Inverter for each nor gate
 def inverter_wire(P, R, Signal, locations):
-    rate_f = (
-        lambda r1, r2: 181
-        * r1
-        * 350
-        / (1 + 350 + 15 * r2 + 50 * r2 + 15 * 50 * 0.18 * r2**2)
+    rate_f = lambda r1, r2: (
+        181 * r1 * 350 / (1 + 350 + 15 * r2 + 50 * r2 + 15 * 50 * 0.18 * r2**2)
     )
     for l in locations:
         with Location.c(l):
@@ -66,15 +63,12 @@ def buffer(L, Signal, l, n, K):
 
 
 # Each promoter expression is written here and assign to the promoter function
-pbad_p_rate = (
-    lambda r1, r2, r3: 765
-    * r1
-    * (0.009 + 37.5 * r2)
-    / (1 + 0.009 + 37.5 * r2 + 3.4 * r3)
+pbad_p_rate = lambda r1, r2, r3: (
+    765 * r1 * (0.009 + 37.5 * r2) / (1 + 0.009 + 37.5 * r2 + 3.4 * r3)
 )
 promoter_activation(PBad, Ara, Cl, max_pbad, 2.8, 90, pbad_p_rate, ["c1", "c2"])
-ptet_p_rate = (
-    lambda r1, r2, r3: 300 * r1 * 350 / (1 + 350 + 2 * 160 * r3 + 160**2 * r3**2)
+ptet_p_rate = lambda r1, r2, r3: (
+    300 * r1 * 350 / (1 + 350 + 2 * 160 * r3 + 160**2 * r3**2)
 )
 promoter_activation(PTet, aTc, Cl, max_ptet, 1.0, 250, ptet_p_rate, ["c1", "c3"])
 plas_p_rate = lambda r1, r2, r3: 69 * r1 * (0.002 + 100 * r2) / (1 + 0.002 + 100 * r2)

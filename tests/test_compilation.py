@@ -609,12 +609,10 @@ class TestParameters:
         Color.red, Color.blue
         Location.here, Location.there
         Something = Color * Location
-        rate = (  # noqa: E731
-            lambda r1, r2: (
-                1 * u.decimeter**2 / u.h
-                if Location(r1) == Location(r2)
-                else 0.5 * u.decimeter**2 / u.h
-            )
+        rate = lambda r1, r2: (
+            1 * u.decimeter**2 / u.h
+            if Location(r1) == Location(r2)
+            else 0.5 * u.decimeter**2 / u.h
         )
         2 * Something >> 3 * Something[rate]
         S = Simulation(Something)

@@ -1,0 +1,45 @@
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.8
+    hooks:
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+        pass_filenames: false
+        always_run: true
+      - id: ruff-format
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy mobspy/
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: pyright
+        name: pyright
+        entry: pyright mobspy/
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: pytest
+        name: pytest (fast)
+        entry: python -m pytest tests/test_compilation.py tests/test_events.py tests/test_assignments.py tests/test_types.py tests/test_units_with_rates.py tests/test_units_handling.py tests/test_logging_module.py tests/test_multiline_reactions.py tests/test_ode.py -q
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-commit]

@@ -211,7 +211,7 @@ class MobsPyList_of_TS:
             return to_return[0]
 
     def _sum_reacting_species_data(
-        self, item: str | Reacting_Species, ts_index: int
+        self, item: str | Species | Reacting_Species, ts_index: int
     ) -> list[float]:
         """
         Maps meta-species according to characteristics.
@@ -228,7 +228,7 @@ class MobsPyList_of_TS:
             return rt
 
         time_series = self.ts_data[ts_index]
-        to_return = [0 for _ in range(len(time_series["Time"]))]
+        to_return: list[float] = [0.0 for _ in range(len(time_series["Time"]))]
 
         found_flag = False
         if isinstance(item, Reacting_Species):
@@ -273,7 +273,7 @@ class MobsPyList_of_TS:
         if max_ts is None:
             msg = "Could not find maximal time series."
             raise ValueError(msg)
-        return max_ts["Time"]
+        return max_ts["Time"]  # type: ignore[no-any-return]
 
     def return_pandas(self) -> list[pd.DataFrame]:
         to_return: list[pd.DataFrame] = []

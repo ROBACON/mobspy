@@ -34,13 +34,12 @@ class Assignment_Operator:
 
             if not flag_found:
                 continue
+            if char != ")":
+                stack += char
             else:
-                if char != ")":
-                    stack += char
-                else:
-                    flag_found = False
-                    arg_strings.append(stack)
-                    stack = ""
+                flag_found = False
+                arg_strings.append(stack)
+                stack = ""
 
         return arg_strings
 
@@ -51,9 +50,8 @@ class Assignment_Operator:
     def set_context(self) -> None:
         self._asg_context = True
 
-    def __exit__(self, *args: Any) -> int:
+    def __exit__(self, *args: Any) -> None:
         self._asg_context = False
-        yield 0  # type: ignore[misc]
 
     def reset_context(self) -> None:
         self._asg_context = False
@@ -126,27 +124,27 @@ class Assignment_Operator:
     @staticmethod
     def add(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
-        return first + second
+        return first + second  # type: ignore[no-any-return]
 
     @staticmethod
     def sub(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
-        return first - second
+        return first - second  # type: ignore[no-any-return]
 
     @staticmethod
     def mul(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
-        return first * second
+        return first * second  # type: ignore[no-any-return]
 
     @staticmethod
     def div(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
-        return first / second
+        return first / second  # type: ignore[no-any-return]
 
     @staticmethod
     def pow(first: Any, second: Any) -> mbe_MobsPyExpression:
         first, second = Assignment_Operator.check_arguments(first, second)
-        return first**second
+        return first**second  # type: ignore[no-any-return]
 
     @staticmethod
     def generate_replacement_in_expression(
@@ -155,8 +153,8 @@ class Assignment_Operator:
         meta_species_in_model: list[Any],
         expression_tuple: tuple[Any, str],
     ) -> str:
-        spe_str = express_spe.replace("$asg_", "")
-        spe_str = spe_str.split(".")
+        spe_str_raw = express_spe.replace("$asg_", "")
+        spe_str = spe_str_raw.split(".")
 
         # CHECK HERE FOR MISSING SPECIES IN MODEL
         for meta_spe in meta_species_in_model:
@@ -223,7 +221,7 @@ class Assignment_Operator:
         ortogonal_vector_structure: dict[str, Any],
         meta_species_in_model: list[Any],
     ) -> AssignmentsForSbml:
-        assignments_for_sbml: dict[str, dict[str, str]] = {}
+        assignments_for_sbml: AssignmentsForSbml = {}
         assignment_counter = 0
         for asg in unprocessed_asgns:
             if "all$" not in asg[1]:
@@ -252,7 +250,7 @@ class Assignment_Operator:
             if "all$" in asg[1]:
                 continue
 
-            spe_to_asgn = ssg_construct_species_char_list(
+            spe_to_asgn_result = ssg_construct_species_char_list(
                 asg[0], asg[1], ortogonal_vector_structure, symbol="_dot_"
             )
 
@@ -265,7 +263,7 @@ class Assignment_Operator:
 
             key = "assignment_" + str(assignment_counter)
             assignments_for_sbml[key] = AssignmentData(
-                species=spe_to_asgn,
+                species=str(spe_to_asgn_result),
                 expression=asgn_expression,
             )
             assignment_counter += 1
@@ -290,7 +288,7 @@ class Asg:
         self.asgn_key: list[tuple[Any, tuple[Any, ...]]] = []
         if species_or_reacting:
             self.meta_spe.append(meta_spe)
-            self.asgn_key.append((meta_spe, tuple()))
+            self.asgn_key.append((meta_spe, ()))
         else:
             for reacting_spe in meta_spe.list_of_reactants:
                 self.meta_spe.append(reacting_spe["object"])
@@ -300,7 +298,7 @@ class Asg:
         self.species_or_reacting = species_or_reacting
 
     def __call__(self, assignment: Any) -> None:
-        for spe, key in zip(self.meta_spe, self.asgn_key):  # noqa: B905
+        for spe, key in zip(self.meta_spe, self.asgn_key):
             spe._assignments[key] = assignment
         Assign.reset_context()
 

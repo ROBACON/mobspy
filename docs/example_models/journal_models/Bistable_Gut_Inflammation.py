@@ -1,5 +1,6 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 # Conversion taking to much time - why?
 

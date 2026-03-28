@@ -30,7 +30,7 @@ def check(value: Any, message: str = "error") -> None:
     if value is None:
         raise RuntimeError(f"LibSBML returned a null value trying to {message}.")
 
-    elif type(value) is int:
+    if type(value) is int:
         if value == sbml.LIBSBML_OPERATION_SUCCESS:
             return
         else:
@@ -237,7 +237,7 @@ def create_model(
             check(ea.setVariable(str(ass[0])), "set variable")
             check(ea.setMath(sbml.parseL3Formula(str(ass[1]))), "set math")
 
-    for _, asg in assignments.items():
+    for asg in assignments.values():
         species_id = asg.species
         expression = asg.expression
 

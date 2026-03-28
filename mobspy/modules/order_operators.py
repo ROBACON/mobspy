@@ -13,11 +13,11 @@ from copy import deepcopy
 from typing import Any
 
 from mobspy.exceptions import ReactionError
-from mobspy.modules.meta_class import Reactions, Species  # noqa: E402
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.meta_class import Reactions, Species
+from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 
@@ -77,8 +77,8 @@ class __Operator_Base:
             objects as values
         """
         species_object = species_string[0]
-        species_to_return: list[Any] = (
-            [species_object.get_name()] + deepcopy(species_string[1:])
+        species_to_return_list: list[Any] = (
+            [species_object.get_name(), *deepcopy(species_string[1:])]
             if len(species_string) > 1
             else [species_object.get_name()]
         )
@@ -86,15 +86,18 @@ class __Operator_Base:
         for characteristic in characteristics_to_transform:
             obj = ref_characteristics_to_object[characteristic]
             i = species_object.get_index_from_reference_dict(obj)
-            species_to_return[i] = characteristic
+            species_to_return_list[i] = characteristic
 
-        if isinstance(species_to_return[-1], str):
-            species_to_return = "_dot_".join(species_to_return)
-        elif isinstance(species_to_return[-1], float):
+        species_to_return: str | tuple[str, float]
+        if isinstance(species_to_return_list[-1], str):
+            species_to_return = "_dot_".join(species_to_return_list)
+        elif isinstance(species_to_return_list[-1], float):
             species_to_return = (
-                "_dot_".join(species_to_return[:-1]),
-                species_to_return[-1],
+                "_dot_".join(species_to_return_list[:-1]),
+                species_to_return_list[-1],
             )
+        else:
+            species_to_return = "_dot_".join(species_to_return_list)
 
         return species_to_return
 
@@ -469,3 +472,5 @@ class _Set_Reaction_Method:
         for spe_obj in self.reaction.reactants + self.reaction.products:
             spe_obj = spe_obj["object"]
             spe_obj.link_a_species(self._set_species)
+
+        return self

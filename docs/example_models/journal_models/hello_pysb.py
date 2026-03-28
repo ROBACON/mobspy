@@ -29,8 +29,8 @@ Rule("L_binds_R", L(s=None) + R(s=None) | L(s=1) % R(s=1), kf, kr)
 Observable("LR", L(s=1) % R(s=1))
 
 if __name__ == "__main__":
+    from matplotlib.pyplot import plot, show, xlabel, ylabel
     from numpy import linspace
-    from matplotlib.pyplot import plot, xlabel, ylabel, show
     from pysb.simulator import ScipyOdeSimulator
 
     print(__doc__)

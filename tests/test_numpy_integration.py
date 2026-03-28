@@ -70,13 +70,12 @@ def test_numpy_with_units():
     np_array = np.array([3])
 
     def test_numpy_in_expression(r):
-
         for a in np_array:
             b = a / u.hour
         return b
 
     A, B, C, D = BaseSpecies()
-    A >> mobspy.Zero[lambda r: test_numpy_in_expression(r)]
+    A >> mobspy.Zero[test_numpy_in_expression]
     for a in np_array:
         B >> mobspy.Zero[a / u.hour]
     S = Simulation(A | B | C | D)

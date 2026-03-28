@@ -52,14 +52,16 @@ def construct_species_char_list(
         the elements from the list using the specified
         symbol
     """
-    if characteristics == "std$":
-        characteristics = set()
+    if characteristics == "std$" or isinstance(characteristics, str):
+        char_set: set[str] = set()
+    else:
+        char_set = characteristics
     spe_object = spe_or_reactiong_object.get_spe_object()
 
     ordered_references_list = spe_object.get_ordered_references()
 
     objects_to_characteristic = characteristics_dictionary(
-        characteristics, characteristics_to_object
+        char_set, characteristics_to_object
     )
 
     species_char_list: list[Any] = [spe_object]
@@ -71,11 +73,12 @@ def construct_species_char_list(
             species_char_list.append(obj.first_characteristic)
 
     if symbol is not None:
-        species_char_list = (
-            symbol.join([spe_object.get_name()] + species_char_list[1:])
+        result: str = (
+            symbol.join([spe_object.get_name(), *species_char_list[1:]])
             if len(species_char_list) > 1
             else spe_object.get_name()
         )
+        return result
 
     return species_char_list
 
@@ -105,15 +108,17 @@ def construct_all_combinations(
         symbol
     """
 
-    if characteristics == "std$":
-        characteristics = set()
+    if characteristics == "std$" or isinstance(characteristics, str):
+        char_set2: set[str] = set()
+    else:
+        char_set2 = characteristics
     spe_object = spe_or_reactiong_object.get_spe_object()
 
     spe_object.order_references()
     ordered_references_list = spe_object.get_ordered_references()
 
     objects_to_characteristic = characteristics_dictionary(
-        characteristics, characteristics_to_object
+        char_set2, characteristics_to_object
     )
 
     list_of_all_possibilities: list[list[Any]] = [[spe_object]]
@@ -127,7 +132,7 @@ def construct_all_combinations(
     for i in itertools_product(*list_of_all_possibilities):
         if symbol is not None:
             to_return.append(
-                symbol.join([spe_object.get_name()] + list(i)[1:])
+                symbol.join([spe_object.get_name(), *list(i)[1:]])
                 if len(i) > 1
                 else spe_object.get_name()
             )

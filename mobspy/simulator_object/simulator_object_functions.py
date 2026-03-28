@@ -6,16 +6,16 @@ if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParametersUsed
 
 from mobspy.exceptions import SimulationError
-from mobspy.modules.mobspy_parameters import (  # noqa: E402
+from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor,
 )
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.species_string_generator import (
     construct_all_combinations as sp_construct_all_combinations,
 )
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.species_string_generator import (
     construct_species_char_list as sp_construct_species_char_list,
 )
-from mobspy.modules.unit_handler import (  # noqa: E402
+from mobspy.modules.unit_handler import (
     convert_counts as uh_convert_counts,
 )
 
@@ -29,6 +29,7 @@ def sim_remove_reaction(sim: Any, reaction: Any, Simulation_Constructor: Any) ->
 class Simulation_Utils:
     _list_of_models: list[CompiledModelDict]
     model_parameters: ParametersUsed
+    orthogonal_vector_structure: dict[str, Any]
 
     def update_model(self, *args: Any) -> None:
         # Check if the model was already compiled

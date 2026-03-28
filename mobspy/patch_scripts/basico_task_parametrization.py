@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import pandas as pd
-import yaml
+import yaml  # type: ignore[import-untyped]
 from basico.callbacks import get_default_handler
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class PE:
         if cls._values is None:
             cls._values = cls._create_value_map()
 
-        return cls._values.get(value, COPASI.CTaskEnum.Method_Statistics)
+        return cls._values.get(value, COPASI.CTaskEnum.Method_Statistics)  # type: ignore[no-any-return]
 
     @classmethod
     def all_method_names(cls) -> list[str]:
@@ -128,9 +128,9 @@ class PE:
 try:
     from basico import model_io
 except ValueError:
-    import model_io
+    import model_io  # pyright: ignore[reportMissingImports]
 
-try:  # noqa: SIM105
+try:
     from builtins import ValueError
 except ImportError:
     pass
@@ -156,7 +156,7 @@ def num_experiment_files(**kwargs: Any) -> int:
     problem = task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
 
-    return problem.getExperimentSet().size()
+    return problem.getExperimentSet().size()  # type: ignore[no-any-return]
 
 
 def get_experiment_names(**kwargs: Any) -> list[str]:
@@ -223,7 +223,7 @@ def num_validations_files(**kwargs: Any) -> int:
     problem = task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
 
-    return problem.getCrossValidationSet().size()
+    return problem.getCrossValidationSet().size()  # type: ignore[no-any-return]
 
 
 def _role_to_string(role: int) -> str:
@@ -243,7 +243,7 @@ def _role_to_int(role: str) -> int:
         "independent": COPASI.CExperiment.independent,
         "dependent": COPASI.CExperiment.dependent,
     }
-    return values.get(role, COPASI.CExperiment.ignore)
+    return values.get(role, COPASI.CExperiment.ignore)  # type: ignore[no-any-return]
 
 
 def get_experiment(experiment: int | str | Any, **kwargs: Any) -> Any:
@@ -369,25 +369,25 @@ def _get_experiment_file(experiment: Any, **kwargs: Any) -> str:
     full_path = os.path.join(directory, os.path.basename(file_name_only))
     if os.path.isfile(full_path):
         if return_relative:
-            return os.path.relpath(full_path, directory)
-        return full_path
+            return os.path.relpath(full_path, directory)  # type: ignore[no-any-return]
+        return full_path  # type: ignore[no-any-return]
 
     full_path = os.path.join(directory, file_name_only)
     if os.path.isfile(full_path):
         if return_relative:
-            return os.path.relpath(full_path, directory)
-        return full_path
+            return os.path.relpath(full_path, directory)  # type: ignore[no-any-return]
+        return full_path  # type: ignore[no-any-return]
 
     if os.path.isfile(file_name_only):
         if return_relative and directory:
-            return os.path.relpath(file_name_only, directory)
-        return file_name_only
+            return os.path.relpath(file_name_only, directory)  # type: ignore[no-any-return]
+        return file_name_only  # type: ignore[no-any-return]
 
     file_name = experiment.getFileName()
     if os.path.exists(file_name):
         if return_relative and directory:
-            return os.path.relpath(file_name, directory)
-        return file_name
+            return os.path.relpath(file_name, directory)  # type: ignore[no-any-return]
+        return file_name  # type: ignore[no-any-return]
 
     raise_error = kwargs.get("raise_error", True)
     if raise_error:
@@ -395,15 +395,15 @@ def _get_experiment_file(experiment: Any, **kwargs: Any) -> str:
 
     if return_relative and directory and os.path.exists(file_name_only):
         try:
-            return os.path.relpath(file_name_only, directory)
+            return os.path.relpath(file_name_only, directory)  # type: ignore[no-any-return]
         except ValueError:
             # if we can't create a relative path,
             # copy the file over and return it
             dst = os.path.join(directory, os.path.basename(file_name_only))
             shutil.copy(file_name_only, dst)
-            return os.path.relpath(dst, directory)
+            return os.path.relpath(dst, directory)  # type: ignore[no-any-return]
 
-    return file_name_only
+    return file_name_only  # type: ignore[no-any-return]
 
 
 def get_data_from_experiment(experiment: Any, **kwargs: Any) -> pandas.DataFrame:
@@ -434,8 +434,8 @@ def get_data_from_experiment(experiment: Any, **kwargs: Any) -> pandas.DataFrame
         for line in f:
             num_lines += 1
             if num_lines == header_row:
-                original_headers = line.strip().split(separator)
-                original_headers = dict(enumerate(original_headers))
+                header_parts = line.strip().split(separator)
+                original_headers = dict(enumerate(header_parts))
     have_headers = header_row < num_lines
     skip_idx = [
         x - 1
@@ -443,7 +443,7 @@ def get_data_from_experiment(experiment: Any, **kwargs: Any) -> pandas.DataFrame
         if not (experiment.getFirstRow() <= x <= experiment.getLastRow())
     ]
 
-    if "rename_headers" in kwargs:  # noqa: SIM401, SIM108
+    if "rename_headers" in kwargs:  # noqa: SIM401
         rename_headers = kwargs["rename_headers"]
     else:
         rename_headers = True
@@ -622,11 +622,11 @@ def get_fit_item_template(
                 )
 
     if include_local:
-        from . import model_info
+        from . import model_info  # type: ignore[attr-defined]
 
         local_params = model_info.get_reaction_parameters().reset_index()
         if "name" in local_params:
-            for name, local, value in zip(  # noqa: B905
+            for name, local, value in zip(
                 local_params["name"], local_params["type"], local_params["value"]
             ):
                 if local == "local":
@@ -774,7 +774,6 @@ def set_fit_parameters(
     :type model: COPASI.CDataModel or None
     :return: None
     """
-    # type: (pandas.DataFrame, COPASI.CDataModel)
     if model is None:
         model = model_io.get_current_model()
 
@@ -794,7 +793,7 @@ def set_fit_parameters(
         return
 
     for i in range(len(fit_parameters)):
-        item = fit_parameters.iloc[i]
+        item = fit_parameters.iloc[i]  # type: ignore[union-attr]
         cn = None
         name = None
 
@@ -858,7 +857,6 @@ def set_fit_constraints(
     :type model: COPASI.CDataModel or None
     :return: None
     """
-    # type: (pandas.DataFrame, COPASI.CDataModel)
     if model is None:
         model = model_io.get_current_model()
 
@@ -879,7 +877,7 @@ def set_fit_constraints(
         return
 
     for i in range(len(fit_constraints)):
-        item = fit_constraints.iloc[i]
+        item = fit_constraints.iloc[i]  # type: ignore[union-attr]
         cn = None
         name = None
 
@@ -926,11 +924,10 @@ def _get_name_for_key(key: str) -> str:
     obj = factory.get(key)
     if not obj:
         return ""
-    return obj.getObjectName()
+    return obj.getObjectName()  # type: ignore[no-any-return]
 
 
 def _get_affected_experiments(optitem: Any) -> list[str]:
-    # type: (COPASI.CCopasiParameterGroup) -> [str]
     result: list[str] = []
     affected = optitem.getGroup(AFFECTED_EXPERIMENTS)
     assert isinstance(affected, COPASI.CCopasiParameterGroup)
@@ -1008,7 +1005,7 @@ def _get_role_for_reference(reference_name: str) -> int:
         "Value": COPASI.CExperiment.dependent,
         "Volume": COPASI.CExperiment.dependent,
     }
-    return role_map.get(reference_name, COPASI.CExperiment.ignore)
+    return role_map.get(reference_name, COPASI.CExperiment.ignore)  # type: ignore[no-any-return]
 
 
 def add_experiment(name: str, data: pd.DataFrame, **kwargs: Any) -> str | None:
@@ -1106,7 +1103,7 @@ def add_experiment(name: str, data: pd.DataFrame, **kwargs: Any) -> str | None:
                 assert isinstance(obj, COPASI.CDataObject)
                 if obj.getObjectType() != "Reference":
                     try:
-                        obj = obj.getValueReference()
+                        obj = obj.getValueReference()  # pyright: ignore[reportAttributeAccessIssue]
                     except AttributeError:
                         logger.warning(f"Cannot map the element {current}")
                 role = _get_role_for_reference(obj.getObjectName())
@@ -1254,7 +1251,7 @@ def run_parameter_estimation(**kwargs: Any) -> pandas.DataFrame:
     num_messages_before = COPASI.CCopasiMessage.size()
 
     task.setCallBack(get_default_handler())
-    result = task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)
+    result = task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)  # pyright: ignore[reportAttributeAccessIssue]
     if not result:
         logger.error(
             "Error while initializing parameter estimation: "
@@ -1307,7 +1304,7 @@ def get_simulation_results(
 
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
@@ -1344,8 +1341,8 @@ def get_simulation_results(
             experiment.getExperimentType() == COPASI.CTaskEnum.Task_steadyState
         )
         num_independent_points = df.shape[0]
-        steady_state_task = dm.getTask(basico.T.STEADY_STATE)
-        container = dm.getModel().getMathContainer()
+        steady_state_task = dm.getTask(basico.T.STEADY_STATE)  # pyright: ignore[reportOptionalMemberAccess]
+        container = dm.getModel().getMathContainer()  # pyright: ignore[reportOptionalMemberAccess]
 
         if update_parameters:
             _update_fit_parameters_from(dm, solution, exp_name)
@@ -1361,10 +1358,10 @@ def get_simulation_results(
 
         if is_steady_state:
             # run steady state
-            steady_state_task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)
+            steady_state_task.initializeRaw(COPASI.CCopasiTask.OUTPUT_UI)  # pyright: ignore[reportAttributeAccessIssue]
             steady_state_task.processRaw(True)
-            data = basico.model_info._collect_data(
-                cns=mapping[mapping.type == "dependent"]["cn"].to_list()
+            data = basico.model_info._collect_data(  # pyright: ignore[reportAttributeAccessIssue]
+                cns=mapping[mapping.type == "dependent"]["cn"].to_list()  # pyright: ignore[reportAttributeAccessIssue]
             ).transpose()
 
             for j in range(1, num_independent_points):
@@ -1379,15 +1376,15 @@ def get_simulation_results(
                     _update_fit_parameters_from(dm, solution, exp_name)
                 steady_state_task.processRaw(True)
 
-                new_row = basico.model_info._collect_data(
-                    cns=mapping[mapping.type == "dependent"]["cn"].to_list()
+                new_row = basico.model_info._collect_data(  # pyright: ignore[reportAttributeAccessIssue]
+                    cns=mapping[mapping.type == "dependent"]["cn"].to_list()  # pyright: ignore[reportAttributeAccessIssue]
                 ).transpose()
                 data = pd.concat([data, new_row], ignore_index=True)
 
         else:
             # run time course (getting only the data from the experiment)
             duration = df.iloc[-1].Time
-            cols = ["Time"] + mapping[mapping.type == "dependent"]["cn"].to_list()
+            cols = ["Time", *mapping[mapping.type == "dependent"]["cn"].to_list()]  # pyright: ignore[reportAttributeAccessIssue]
             if values_only:
                 data = basico.run_time_course_with_output(
                     output_selection=cols,
@@ -1455,7 +1452,7 @@ def _get_value_from_bound(bound: str) -> float:
         value = float(bound)
     except ValueError:
         value = basico.get_value(bound)
-    return value
+    return value  # pyright: ignore[reportReturnType]
 
 
 def _update_fit_parameters_from(
@@ -1477,7 +1474,7 @@ def _update_fit_parameters_from(
         lower = _get_value_from_bound(solution.iloc[j].lower)
         upper = _get_value_from_bound(solution.iloc[j].upper)
 
-        cn = params.iloc[j].cn
+        cn = params.iloc[j].cn  # type: ignore[union-attr]
         if np.isnan(value):
             continue
         affected = solution.iloc[j].affected
@@ -1485,10 +1482,8 @@ def _update_fit_parameters_from(
             continue
 
         # ensure that values is within the constraint
-        if value < lower:
-            value = lower
-        if value > upper:
-            value = upper
+        value = max(value, lower)
+        value = min(value, upper)
 
         obj = dm.getObject(COPASI.CCommonName(cn))
 
@@ -1528,7 +1523,7 @@ def plot_per_experiment(**kwargs: Any) -> list[tuple[Any, Any]]:
     """
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
@@ -1546,7 +1541,7 @@ def plot_per_experiment(**kwargs: Any) -> list[tuple[Any, Any]]:
 
     for i in range(num_experiments):
         fig, ax = plt.subplots()
-        cycler = plt.cycler("color", plt.cm.tab20c.colors)()
+        cycler = plt.cycler("color", plt.cm.tab20c.colors)()  # type: ignore[attr-defined]
         experiment = experiments.getExperiment(i)
         exp_name = experiment.getObjectName()
         mapping = get_experiment_mapping(experiment)
@@ -1592,7 +1587,7 @@ def plot_per_dependent_variable(**kwargs: Any) -> list[tuple[Any, Any]]:
     """
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
@@ -1625,7 +1620,7 @@ def plot_per_dependent_variable(**kwargs: Any) -> list[tuple[Any, Any]]:
 
     for dependent in dependent_variables:
         fig, ax = plt.subplots()
-        cycler = plt.cycler("color", plt.cm.tab20c.colors)()
+        cycler = plt.cycler("color", plt.cm.tab20c.colors)()  # type: ignore[attr-defined]
         ax.set_title(dependent)
         experiment_indices = dependent_variables[dependent]
 
@@ -1712,7 +1707,7 @@ def get_fit_statistic(
     """
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
@@ -1749,7 +1744,7 @@ def get_fit_statistic(
         for i in range(problem.getOptItemSize()):
             current = problem.getOptItem(i)
             assert isinstance(current, COPASI.COptItem)
-            obj = dm.getObject(current.getObjectCN())
+            obj = dm.getObject(current.getObjectCN())  # pyright: ignore[reportOptionalMemberAccess]
             name = obj.getObjectDisplayName() if obj is not None else "Not Found"
             parameters.append(
                 {
@@ -1768,7 +1763,7 @@ def get_fit_statistic(
         result["parameters"] = parameters
 
     if include_experiments:
-        if COPASI.CVersion.VERSION.getVersionDevel() < 263:
+        if COPASI.CVersion.VERSION.getVersionDevel() < 263:  # pyright: ignore[reportAttributeAccessIssue]
             raise ValueError(
                 "Newer COPASI version required to return experiment statistic"
             )
@@ -1850,7 +1845,7 @@ def remove_experiments(**kwargs: Any) -> None:
     """
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     assert isinstance(task, COPASI.CFitTask)
 
     problem = task.getProblem()
@@ -1875,7 +1870,7 @@ def remove_fit_parameters(**kwargs: Any) -> None:
     """
     dm = model_io.get_model_from_dict_or_default(kwargs)
 
-    pe_task = dm.getTask(TASK_PARAMETER_ESTIMATION)
+    pe_task = dm.getTask(TASK_PARAMETER_ESTIMATION)  # pyright: ignore[reportOptionalMemberAccess]
     problem = pe_task.getProblem()
     assert isinstance(problem, COPASI.CFitProblem)
     while problem.getOptItemSize() > 0:
@@ -1913,7 +1908,7 @@ def _weight_method_to_int(weight_method: str) -> int:
         "Standard Deviation": COPASI.CExperiment.SD,
         "Value Scaling": COPASI.CExperiment.VALUE_SCALING,
     }
-    return weight_map.get(weight_method, COPASI.CExperiment.MEAN_SQUARE)
+    return weight_map.get(weight_method, COPASI.CExperiment.MEAN_SQUARE)  # type: ignore[no-any-return]
 
 
 def get_experiment_dict(experiment: Any, **kwargs: Any) -> dict[str, Any]:
@@ -2027,12 +2022,12 @@ def save_experiments_to_yaml(filename: str | None = None, **kwargs: Any) -> str:
         experiments, indent=2, sort_keys=False, default_flow_style=False
     )
     if not filename:
-        return yaml_str
+        return yaml_str  # type: ignore[no-any-return]
 
     with open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(yaml_str)
 
-    return yaml_str
+    return yaml_str  # type: ignore[no-any-return]
 
 
 def load_experiments_from_yaml(experiment_description: str, **kwargs: Any) -> None:
@@ -2083,7 +2078,7 @@ def load_experiments_from_dict(
         experiments = [experiments]
 
     for exp_dict in experiments:
-        add_experiment_from_dict(exp_dict, **kwargs)
+        add_experiment_from_dict(exp_dict, **kwargs)  # type: ignore[arg-type]
 
     # update fit items, as the affected experiments might need updating
     set_fit_parameters(fit_items, model=model)
@@ -2176,7 +2171,7 @@ def add_experiment_from_dict(exp_dict: dict[str, Any], **kwargs: Any) -> None:
     if names is not None:
         names = names.split(exp_dict["separator"])
     else:
-        names = [i for i in range(columnNumber)]
+        names = list(range(columnNumber))
 
     max_col = min(len(names), len(exp_dict["mapping"]))
     obj_map.setNumCols(max_col)

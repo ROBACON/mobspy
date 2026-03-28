@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Self
 
 from mobspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Sequence
+
     from mobspy.modules.species import Species
 
 
@@ -43,8 +44,7 @@ class List_Species:
 
         if not isinstance(species, Species):
             raise ValidationError("Only Species can be appended")
-        else:
-            self._list_species.append(species)
+        self._list_species.append(species)
 
     def __str__(self) -> str:
         """String representation: list of meta-species names."""

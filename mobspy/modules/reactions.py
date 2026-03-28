@@ -231,7 +231,7 @@ class Reactions:
 
         :param item: (int, float, callable, Quantity) = reaction rate
         """
-        return _Last_rate_storage.override_get_item(self, item)
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
 
     def set_rate(self, rate: Any) -> None:
         """Set the stored reaction rate.
@@ -406,7 +406,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
         item = str(item)
         Species.check_if_valid_characteristic(self, item)
-        return self.__getattr__(item)
+        return self.__getattr__(item)  # type: ignore[no-any-return]
 
     def label(self, label: int | float | str) -> Self:
         """Assign a label to a meta-species for compiler matching.
@@ -427,7 +427,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
         :param item: (int, float, callable, Quantity) = reaction rate
         """
-        return _Last_rate_storage.override_get_item(self, item)
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
 
     def get_spe_object(self) -> Species:
         if len(self.list_of_reactants) != 1:
@@ -435,8 +435,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 "The internal method get_queried_characteristics can only be used for "
                 "Reacting_Species with a single "
             )
-        else:
-            return self.list_of_reactants[0]["object"]
+        return self.list_of_reactants[0]["object"]  # type: ignore[no-any-return]
 
     def get_query_characteristics(self) -> Any:
         if len(self.list_of_reactants) != 1:
@@ -444,8 +443,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                 "The internal method get_queried_characteristics can only be used for "
                 "Reacting_Species with a single "
             )
-        else:
-            return self.list_of_reactants[0]["characteristics"]
+        return self.list_of_reactants[0]["characteristics"]
 
     def __rmul__(self, stoichiometry: Any) -> Self | Any:
         """Multiply by stoichiometry for reactions.
@@ -528,7 +526,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         reaction = Reactions(self.list_of_reactants, p.list_of_reactants)
         return reaction
 
-    def __call__(self, quantity: Any) -> Self | None:
+    def __call__(self, quantity: Any) -> Self | None:  # type: ignore[return]
         """Assign counts to species non-default state.
 
         :param quantity: (int, float, Quantity) count to be assigned
@@ -540,7 +538,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
         if len(Species.meta_specie_named_any_context) > 0:
             for i in Species.meta_specie_named_any_context:
-                self = self.c(i)
+                self = self.c(i)  # type: ignore[assignment]
 
         species_object = self.list_of_reactants[0]["object"]
         characteristics = self.list_of_reactants[0]["characteristics"]
@@ -584,7 +582,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                     + "\n Only species count assignments are allowed in a model context"
                 ) from e
         else:
-            return self
+            return self  # pyright: ignore[reportReturnType]
 
     def __getattr__(self, characteristic: str) -> Any:
         """Implementation of the .dot operation.

@@ -1,5 +1,6 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 # n_0 = 10 - dimensionless
 # lysis_0 = 2
@@ -67,8 +68,9 @@ AHL + Cell >> Cell[lambda ahl, cell: mu * ahl / (1 + cell / n_0)]
     AHL
     >> AHL
     + Lysis[
-        lambda ahl: c_l
-        * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+        lambda ahl: (
+            c_l * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+        )
     ]
 )
 Lysis >> Zero[gamma_l + mu_g]
@@ -78,8 +80,9 @@ Lysis >> Zero[gamma_l + mu_g]
     AHL
     >> AHL
     + LuxI[
-        lambda ahl: c_i
-        * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+        lambda ahl: (
+            c_i * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+        )
     ]
 )
 LuxI >> Zero[gamma_i + mu_g + gamma_c]

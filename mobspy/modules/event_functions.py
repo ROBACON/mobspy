@@ -7,20 +7,21 @@ from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 from mobspy.types import EventData, SimulationEventData
 
 if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import EventsForSbml
 
-from pint import Quantity  # noqa: E402
+from pint import Quantity
 
-from mobspy.modules.function_rate_code import (  # noqa: E402
+from mobspy.modules.function_rate_code import (
     search_for_parameters_in_str as frc_search_for_parameters_in_str,
 )
-from mobspy.modules.mobspy_parameters import (  # noqa: E402
+from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
-from mobspy.modules.species_string_generator import (  # noqa: E402
+from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 
@@ -37,6 +38,7 @@ def format_event_dictionary_for_sbml(
     meta_species_to_simulate: Any,
     parameter_exist: dict[str, Any],
     parameters_in_events: set[Any],
+    model_context: ModelUnitContext | None = None,
 ) -> tuple[EventsForSbml, set[str]]:
     """
     Creates events_for_sbml dictionary for sbml file construction
@@ -61,9 +63,15 @@ def format_event_dictionary_for_sbml(
     # Convert count from triggers
     for ev in event_list:
         if ev.trigger != "true":
+            assert not isinstance(ev.trigger, str)
             for i, e in enumerate(ev.trigger.operation):
                 if isinstance(e, Quantity):
-                    ev.trigger.operation[i] = uh_convert_counts(e, volume, dimension)
+                    ev.trigger.operation[i] = uh_convert_counts(
+                        e,
+                        volume,
+                        dimension,
+                        model_context=model_context,
+                    )
 
     for ev in event_list:
         if not ev.event_counts:
@@ -83,7 +91,10 @@ def format_event_dictionary_for_sbml(
             for d in dummy:
                 if not isinstance(ec["quantity"], str):
                     event_dictionary[d] = uh_convert_counts(
-                        ec["quantity"], volume, dimension
+                        ec["quantity"],
+                        volume,
+                        dimension,
+                        model_context=model_context,
                     )
                 else:
                     event_dictionary[d] = ec["quantity"]
@@ -92,38 +103,44 @@ def format_event_dictionary_for_sbml(
             if "all$" in ec["characteristics"]:
                 continue
 
-            dummy = ssg_construct_species_char_list(
+            dummy_result = ssg_construct_species_char_list(
                 ec["species"],
                 ec["characteristics"],
                 characteristics_to_object,
                 symbol="_dot_",
             )
+            dummy_key: str = (
+                dummy_result if isinstance(dummy_result, str) else str(dummy_result)
+            )
 
             if not isinstance(ec["quantity"], str):
                 if isinstance(ec["quantity"], mp_Mobspy_Parameter):
                     parameters_in_events.add(ec["quantity"])
-                    event_dictionary[dummy] = ec["quantity"].name
+                    event_dictionary[dummy_key] = ec["quantity"].name
                 else:
-                    event_dictionary[dummy] = uh_convert_counts(
-                        ec["quantity"], volume, dimension
+                    event_dictionary[dummy_key] = uh_convert_counts(
+                        ec["quantity"],
+                        volume,
+                        dimension,
+                        model_context=model_context,
                     )
             else:
                 if parameter_exist != {}:
                     frc_search_for_parameters_in_str(
                         ec["quantity"], parameter_exist, parameters_in_events
                     )
-                event_dictionary[dummy] = ec["quantity"]
+                event_dictionary[dummy_key] = ec["quantity"]
 
         if isinstance(ev.trigger, str):
             reformed_event_list.append(
                 SimulationEventData(
                     event_time=ev.event_time,
-                    event_counts=event_dictionary,
+                    event_counts=event_dictionary,  # type: ignore[arg-type]
                     trigger=ev.trigger,
                 )
             )
         else:
-            for e in ev.trigger.operation:
+            for e in ev.trigger.operation:  # pyright: ignore[reportGeneralTypeIssues]
                 if isinstance(e, dict):  # noqa: SIM102
                     if e["object"] not in meta_species_to_simulate:
                         raise EventError(
@@ -133,7 +150,7 @@ def format_event_dictionary_for_sbml(
             reformed_event_list.append(
                 SimulationEventData(
                     event_time=ev.event_time,
-                    event_counts=event_dictionary,
+                    event_counts=event_dictionary,  # type: ignore[arg-type]
                     trigger=ev.trigger.generate_string(
                         characteristics_to_object, to_sort=True
                     ),
@@ -142,7 +159,7 @@ def format_event_dictionary_for_sbml(
 
     events_for_sbml: dict[str, EventData] = {}
     for i, event in enumerate(reformed_event_list):
-        assignments: list[tuple[str, str]] = []
+        assignments: list[tuple[str, str | int | float]] = []
         for key in event.event_counts:
             if key in species_for_sbml:
                 assignments.append((key, str(event.event_counts[key])))

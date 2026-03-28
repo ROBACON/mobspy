@@ -88,7 +88,7 @@ def new_reaction_with_new_characteristics(
     :return: New Reactions object
     """
     # Build new reactants list
-    React = Zero
+    React: Any = Zero
     for reactant in r.reactants:
         if reactant["object"] == spe_to_modify:
             rs = Reacting_Species(
@@ -108,7 +108,7 @@ def new_reaction_with_new_characteristics(
         React = React + rs
 
     # Build new products list
-    Product = Zero
+    Product: Any = Zero
     for product in r.products:
         if product["object"] == spe_to_modify:
             ps = Reacting_Species(

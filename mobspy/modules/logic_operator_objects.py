@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-from pint import Quantity
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from mobspy.exceptions import EventError
 from mobspy.modules.species_string_generator import (
@@ -10,12 +8,14 @@ from mobspy.modules.species_string_generator import (
 )
 
 if TYPE_CHECKING:
+    from pint import Quantity
+
     from mobspy.simulation import Simulation
 
-    _SpeciesDict = dict[str, Any]
-    _OpElem = _SpeciesDict | int | float | str
-    _CompNum = int | float | "SpeciesComparator" | Quantity
-    _ScalarNum = int | float | Quantity
+_SpeciesDict: TypeAlias = dict[str, Any]
+_OpElem: TypeAlias = "_SpeciesDict | int | float | str | Quantity"
+_CompNum: TypeAlias = "int | float | SpeciesComparator | Quantity"
+_ScalarNum: TypeAlias = "int | float | Quantity"
 
 
 class SpeciesComparator:
@@ -51,11 +51,19 @@ class SpeciesComparator:
                 "cannot be used directly in event comparisons.\n"
                 "The * operator creates inheritance, not multiplication."
             )
-        number = self.reformat_number_and_species(number)
-        if isinstance(number, list):
-            operation = [self.logical_add_species(self)] + [symbol] + number
+        reformatted = self.reformat_number_and_species(number)
+        if isinstance(reformatted, list):
+            operation: list[_OpElem] = [
+                self.logical_add_species(self),
+                symbol,
+                *reformatted,
+            ]
         else:
-            operation = [self.logical_add_species(self)] + [symbol] + [number]
+            operation = [
+                self.logical_add_species(self),
+                symbol,
+                reformatted,
+            ]  # type: ignore[list-item]
         return MetaSpeciesLogicResolver(operation, self._simulation_context)
 
     def reformat_number_and_species(
@@ -71,7 +79,7 @@ class SpeciesComparator:
             to the objects
         """
         if isinstance(number, SpeciesComparator):
-            if number.is_species():
+            if number.is_species():  # type: ignore[attr-defined]
                 return self.logical_add_species(number)
             return self.logical_add_reacting_species(number)
         return number
@@ -101,18 +109,19 @@ class SpeciesComparator:
         """
         operation: list[_OpElem] = []
 
-        react_spe.check_context()
-        for i, react_dict in enumerate(react_spe.list_of_reactants):
+        react_spe.check_context()  # type: ignore[attr-defined]
+        for i, react_dict in enumerate(react_spe.list_of_reactants):  # type: ignore[attr-defined]
             if i > 0:
                 dl: list[_OpElem] = ["+"]
             else:
                 dl = []
-            dl = dl + [react_dict["stoichiometry"], "*"]
-            dl = dl + [
+            dl = [*dl, react_dict["stoichiometry"], "*"]
+            dl = [
+                *dl,
                 {
                     "object": react_dict["object"],
                     "characteristics": react_dict["characteristics"],
-                }
+                },
             ]
             operation = operation + dl
         return operation
@@ -139,8 +148,7 @@ class SpeciesComparator:
                 "Please if necessary "
                 "use ( >= ) & ( =< )"
             )
-        else:
-            return id(self) == id(other)
+        return id(self) == id(other)
 
     def __ne__(  # type: ignore[override]
         self, other: object
@@ -169,7 +177,7 @@ class ReactingSpeciesComparator(SpeciesComparator):
         context and adds it to the attribute
         self._simulation_context.
         """
-        for react_dict in self.list_of_reactants:
+        for react_dict in self.list_of_reactants:  # type: ignore[attr-defined]
             if react_dict["object"]._simulation_context is not None:
                 self._simulation_context = react_dict["object"]._simulation_context
                 break
@@ -193,11 +201,19 @@ class ReactingSpeciesComparator(SpeciesComparator):
         :returns: MetaSpeciesLogicResolver object
             containing the comparison
         """
-        number = self.reformat_number_and_species(number)
-        if isinstance(number, list):
-            operation = self.logical_add_reacting_species(self) + [symbol] + number
+        reformatted = self.reformat_number_and_species(number)
+        if isinstance(reformatted, list):
+            operation: list[_OpElem] = [
+                *self.logical_add_reacting_species(self),
+                symbol,
+                *reformatted,
+            ]
         else:
-            operation = self.logical_add_reacting_species(self) + [symbol] + [number]
+            operation = [
+                *self.logical_add_reacting_species(self),
+                symbol,
+                reformatted,
+            ]  # type: ignore[list-item]
         return MetaSpeciesLogicResolver(operation, self._simulation_context)
 
 
@@ -247,17 +263,17 @@ class MetaSpeciesLogicResolver:
                 "Logic operations require MetaSpeciesLogicResolver operands"
             )
 
-        new_operation: list[_OpElem] = (
-            ["("]
-            + ["("]
-            + self.operation
-            + [")"]
-            + [symbol]
-            + ["("]
-            + other.operation
-            + [")"]
-            + [")"]
-        )
+        new_operation: list[_OpElem] = [
+            "(",
+            "(",
+            *self.operation,
+            ")",
+            symbol,
+            "(",
+            *other.operation,
+            ")",
+            ")",
+        ]
         self.operation = new_operation
         return self
 
@@ -287,7 +303,7 @@ class MetaSpeciesLogicResolver:
                 "Chained comparisons are not supported in MobsPy events.\n"
                 "Use logical operators instead: (A >= 10) & (A <= 20)"
             )
-        self.operation = [number, symbol] + self.operation
+        self.operation = [number, symbol, *self.operation]  # type: ignore[list-item]
 
     @classmethod
     def find_all_species_strings(
@@ -325,7 +341,7 @@ class MetaSpeciesLogicResolver:
                 copasi_str = copasi_str + "("
                 ite = ssg_construct_all_combinations(
                     e["object"],
-                    e["characteristics"],
+                    e["characteristics"],  # pyright: ignore[reportArgumentType]
                     characteristics_to_object,
                     "_dot_",
                 )

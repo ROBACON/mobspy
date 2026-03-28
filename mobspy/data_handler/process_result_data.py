@@ -63,10 +63,9 @@ def extract_time_and_volume_list(
 
             if i == 1:
                 continue
-            else:
-                current_time: float = previous_time + list_of_params[i]["duration"]
-                sim_time_list.append(current_time)
-                previous_time = current_time
+            current_time: float = previous_time + par["duration"]
+            sim_time_list.append(current_time)
+            previous_time = current_time
     else:
         volume_list = [initial_volume]
         sim_time_list = [sum([par["duration"] for par in list_of_params])]
@@ -107,13 +106,10 @@ def convert_data_to_desired_unit(
     if unit_x is not None:
         new_time: list[float] = []
         # Time from COPASI is in model time units (default: seconds)
-        if model_context is not None:
-            time_unit = model_context.time_unit
-        else:
-            time_unit = ur.seconds
+        time_unit = model_context.time_unit if model_context is not None else ur.seconds
         for time in data["Time"]:
             quantity = time * time_unit
-            new_time.append(quantity.to(unit_x).magnitude)
+            new_time.append(quantity.to(unit_x).magnitude)  # pyright: ignore[reportAttributeAccessIssue]
         converted_data["Time"] = new_time
 
     def multiply_data_by_factor(data: dict[str, list[float]], factor: float) -> None:
@@ -129,9 +125,7 @@ def convert_data_to_desired_unit(
         )
 
     # Convert substance units
-    _substance_is_molar = (
-        model_context is not None and model_context.substance_is_molar
-    )
+    _substance_is_molar = model_context is not None and model_context.substance_is_molar
     if unit_y is not None:
         if "mol" in str(unit_y):
             if not _substance_is_molar:
@@ -140,27 +134,28 @@ def convert_data_to_desired_unit(
             if output_concentration:
                 if _substance_is_molar:
                     # Data is in model substance/volume, convert to target
-                    source = 1 * model_context.substance_unit / model_context.volume_unit
-                    factor = source.to(unit_y).magnitude
+                    source = (
+                        1 * model_context.substance_unit / model_context.volume_unit
+                    )
+                    factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
                 else:
-                    factor = (1 * ur.molar).to(unit_y).magnitude
+                    factor = (1 * ur.molar).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
                 multiply_data_by_factor(converted_data, factor)
             else:
                 if _substance_is_molar:
                     source = 1 * model_context.substance_unit
-                    factor = source.to(unit_y).magnitude
+                    factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
                 else:
-                    factor = (1 * ur.moles).to(unit_y).magnitude
+                    factor = (1 * ur.moles).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
                 multiply_data_by_factor(converted_data, factor)
-        else:
-            if output_concentration:
-                if _substance_is_molar:
-                    # Data is already in substance/volume units
-                    source = 1 / model_context.volume_unit
-                    factor = source.to(unit_y).magnitude
-                else:
-                    factor = (1 / ur.l).to(unit_y).magnitude
-                multiply_data_by_factor(converted_data, factor)
+        elif output_concentration:
+            if _substance_is_molar:
+                # Data is already in substance/volume units
+                source = 1 / model_context.volume_unit
+                factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
+            else:
+                factor = (1 / ur.l).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
+            multiply_data_by_factor(converted_data, factor)
 
     return converted_data
 
@@ -195,8 +190,7 @@ def convert_to_concentration(
         for key in data:
             if key == "Time":
                 continue
-            else:
-                new_data[key].append(data[key][i] / current_volume)
+            new_data[key].append(data[key][i] / current_volume)
 
     new_data["Time"] = converted_data["Time"]
 

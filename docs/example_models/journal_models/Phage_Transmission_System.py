@@ -15,13 +15,13 @@ if __name__ == "__main__":
     # Receivers
     rm = lambda r: 1 / c_r1 if r.is_a(R1) else 1 / c_r2
     cm = lambda r: 1 / c_donor if r.is_a(Donor) else 1 / c_rec
-    grw_r = (
-        lambda r1, r2: 1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
+    grw_r = lambda r1, r2: (
+        1 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
         if r2.is_a(R1)
         else 0.08 / 20 * cm(r1) * rm(r2) * (u.l / u.s)
     )
-    inf_r = (
-        lambda r1, r2: 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
+    inf_r = lambda r1, r2: (
+        10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
         if r1.old
         else 0.004 * 10 * 3e-11 * cm(r1) * rm(r2) * (u.l / u.s)
     )
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     Receiver >> Dead[1e-4 / u.s]
 
     # Donors Reactions
-    phage_rate = (
-        lambda r1, r2: cm(r1) * rm(r2) * 850 * (u.l / u.s) if r2.is_a(R1) else 0
+    phage_rate = lambda r1, r2: (
+        cm(r1) * rm(r2) * 850 * (u.l / u.s) if r2.is_a(R1) else 0
     )
     Donor.old + Resource >> 2 * Donor.young[lambda r1, r2: grw_r(r1, r2) / 2]
     Donor + Resource >> Donor + Phage + Resource[phage_rate]
@@ -43,9 +43,11 @@ if __name__ == "__main__":
     (
         Mortal
         >> Zero[
-            lambda r: 1e-4 * cm(r) * 1 / u.s
-            if r.is_a(Donor)
-            else 0.074 * cm(r) / 24 * (1 / u.min)
+            lambda r: (
+                1e-4 * cm(r) * 1 / u.s
+                if r.is_a(Donor)
+                else 0.074 * cm(r) / 24 * (1 / u.min)
+            )
         ]
     )
     Dead + Phage >> Dead[lambda r1, r2: 0.074 / 24 * cm(r1) * rm(r2) * (u.l / u.min)]

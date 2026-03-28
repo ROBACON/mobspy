@@ -100,7 +100,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
     def convert_to_original_unit(self) -> None:
         """Converts from MobsPy standard unit to the original unit."""
         if self.has_units():
-            self.set_value(self.value / self.conversion_factor * self.original_unit)
+            self.set_value(self.value / self.conversion_factor * self.original_unit)  # pyright: ignore[reportOperatorIssue]
 
     def rename(self, new_name: str) -> None:
         """Renames a parameter, checking name availability via the parameter stack."""
@@ -170,7 +170,7 @@ def ModelParameters(
             Internal_Parameter_Constructor | list[Internal_Parameter_Constructor]
         ) = [
             Internal_Parameter_Constructor(p, v)
-            for p, v in zip(parameter_variable_names, args)  # noqa: B905
+            for p, v in zip(parameter_variable_names, args)
         ]
     else:
         parameters_to_return = Internal_Parameter_Constructor(
@@ -182,7 +182,7 @@ def ModelParameters(
 
 if __name__ == "__main__":
     u = UnitRegistry()
-    a, b, c = ModelParameters(1, [3, 4, 5], 2)
+    a, b, c = ModelParameters(1, [3, 4, 5], 2)  # type: ignore[misc]
     r1 = (a + b + c) / 5
     print(r1._operation)
     # print(type(r1._parameter_set))

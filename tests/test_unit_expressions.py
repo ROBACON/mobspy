@@ -86,13 +86,16 @@ class TestHasUnitsBoolean:
     def test_has_units_propagates_in_operations(self) -> None:
         q = OverrideQuantity(5.0 / ur.seconds)
         expr = MobsPyExpression(
-            "A", None, count_in_model=True,
+            "A",
+            None,
+            count_in_model=True,
             concentration_in_model=False,
             count_in_expression=False,
             concentration_in_expression=False,
         )
         # Trigger expression mode for the operation
         from mobspy.modules.mobspy_expressions import _ms_active_ctx
+
         token = _ms_active_ctx.set(True)
         try:
             result = q * expr
@@ -111,7 +114,8 @@ class TestSubstanceNormalization:
 
         K_m = OverrideQuantity(100.0 * ur.moles / ur.liters)
         expr = MobsPyExpression(
-            "A", None,
+            "A",
+            None,
             count_in_model=True,
             concentration_in_model=False,
             count_in_expression=False,
@@ -125,8 +129,9 @@ class TestSubstanceNormalization:
             result = K_m + expr
             assert isinstance(result, MobsPyExpression)
             # The conc_op should not be an Exception
-            assert not isinstance(result._unit_conc_op, Exception), \
+            assert not isinstance(result._unit_conc_op, Exception), (
                 f"conc_op should succeed but got: {result._unit_conc_op}"
+            )
         finally:
             _ms_active_ctx.reset(token)
 
@@ -137,7 +142,8 @@ class TestSubstanceNormalization:
         k = OverrideQuantity(1.0 / ur.seconds)
         K_m = OverrideQuantity(100.0 * ur.moles / ur.liters)
         expr = MobsPyExpression(
-            "A", None,
+            "A",
+            None,
             count_in_model=True,
             concentration_in_model=False,
             count_in_expression=False,
@@ -162,7 +168,8 @@ class TestSubstanceNormalization:
         K = OverrideQuantity(50.0 * ur.moles / ur.liters)
         n = 2
         expr = MobsPyExpression(
-            "A", None,
+            "A",
+            None,
             count_in_model=True,
             concentration_in_model=False,
             count_in_expression=False,

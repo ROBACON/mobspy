@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
@@ -11,9 +11,6 @@ from mobspy.modules.mobspy_expressions import (
     MobsPyExpression,
     _to_expr_node,
 )
-
-if TYPE_CHECKING:
-    pass
 
 
 class MathFunctionWrapper:

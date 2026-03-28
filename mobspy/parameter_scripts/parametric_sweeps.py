@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from mobspy.types import CompiledModelDict, ParameterSweepList
+    from mobspy.types import CompiledModelDict, ParameterSweepList, ParameterUsedInfo
 
 
 def assign_values_to_model(
@@ -35,7 +35,7 @@ def assign_values_to_model(
 
 
 def generate_all_sbml_models(
-    model_parameters: dict[str, dict[str, Any]],
+    model_parameters: dict[str, ParameterUsedInfo],
     list_of_models: list[CompiledModelDict],
 ) -> tuple[ParameterSweepList, list[dict[str, int | float]]]:
     names: list[str] = []
@@ -53,10 +53,10 @@ def generate_all_sbml_models(
 
         names.append(item.name)
         used_in.append(item.used_in)
-        try:
+        if isinstance(item.values, list):
             if len(item.values):
                 values.append(item.values)
-        except TypeError:
+        else:
             values.append([item.values])
 
     parameter_list_of_dic: list[dict[str, int | float]] = []
@@ -73,9 +73,9 @@ def generate_all_sbml_models(
 
 
 def unite_parameter_dictionaries(
-    dict_1: dict[str, dict[str, Any]],
-    dict_2: dict[str, dict[str, Any]],
-) -> dict[str, dict[str, Any]]:
+    dict_1: dict[str, Any],
+    dict_2: dict[str, Any],
+) -> dict[str, Any]:
     for key in dict_2:
         if key not in dict_1:
             dict_1[key] = dict_2[key]

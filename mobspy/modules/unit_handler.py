@@ -64,6 +64,7 @@ def convert_rate(
                 return converted_quantity.magnitude * N_A, dimension, True
             elif has_substance:
                 # [length]^n/([substance]^m*[time]) concentration rate with moles
+                assert dimension is not None
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}"
                     f"/(moles ** {volume_power} * seconds)"
@@ -75,6 +76,7 @@ def convert_rate(
                 )
             else:
                 # [length]^n/[time] concentration rate
+                assert dimension is not None
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}/seconds"
                 )
@@ -123,7 +125,7 @@ def convert_counts(
             raise UnitError(
                 f"The assigned quantity {quantity} is neither a count or concentration"
             )
-        elif is_dimensionless:
+        if is_dimensionless:
             return quantity.magnitude
 
         try:
@@ -173,16 +175,15 @@ def check_dimension(
     """
     if dimension is None:
         dimension = int(value)
-    else:
-        if dimension != int(value):
-            message = (
-                "The dimensions are not consistent. "
-                "There are at least two units given "
-                "for different dimension models."
-            )
-            if error_context:
-                message = message + "\n " + error_context
-            raise UnitError(message)
+    elif dimension != int(value):
+        message = (
+            "The dimensions are not consistent. "
+            "There are at least two units given "
+            "for different dimension models."
+        )
+        if error_context:
+            message = message + "\n " + str(error_context)
+        raise UnitError(message)
     return dimension
 
 
@@ -267,10 +268,10 @@ def convert_volume(
 
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
-        volume = volume.convert(f"decimeter ** {dimension}").magnitude
-        return volume
+        converted: int | float = volume.convert(f"decimeter ** {dimension}").magnitude  # type: ignore[assignment]
+        return converted
     else:
-        return volume
+        return volume  # pyright: ignore[reportReturnType]
 
 
 def convert_time(
@@ -289,9 +290,9 @@ def convert_time(
     if isinstance(time, Quantity):
         dim = dict(time.dimensionality)
         if dim.get("[time]") and len(dim) == 1:
-            return time.convert("second").magnitude
+            return time.convert("second").magnitude  # type: ignore[no-any-return]
     else:
-        return time
+        return time  # pyright: ignore[reportReturnType]
     return None
 
 
@@ -307,9 +308,9 @@ def time_convert_to_other_unit(
     if isinstance(time, Quantity):
         dim = dict(time.dimensionality)
         if dim.get("[time]") and len(dim) == 1:
-            return time.convert(other_unit).magnitude
+            return time.convert(other_unit).magnitude  # type: ignore[no-any-return]
     else:
-        return time
+        return time  # pyright: ignore[reportReturnType]
     return None
 
 

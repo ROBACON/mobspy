@@ -6,6 +6,7 @@ for defining the Context_specie_named_any class.
 from __future__ import annotations
 
 from typing import Any as TypingAny
+from typing import NoReturn
 
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Species
@@ -136,7 +137,7 @@ class Context_specie_named_any(Species):
         """
         raise ValidationError("The Any specie cannot be multiplied")
 
-    def __rshift__(self, other: TypingAny) -> None:
+    def __rshift__(self, other: TypingAny) -> NoReturn:
         """
         The >> operator is overloaded so that  it raises an error when used.
         """

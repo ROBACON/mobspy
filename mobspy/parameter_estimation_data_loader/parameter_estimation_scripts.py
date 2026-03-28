@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from mobspy.exceptions import ParameterError
-from mobspy.import_manager.lazy_import_class import (  # noqa: E402
+from mobspy.import_manager.lazy_import_class import (
     LazyImporter as ipm_LazyImporter,
 )
 
@@ -74,6 +74,7 @@ def basiCO_parameter_estimation(
     original_parameters = parameters_to_estimate
     for par in parameters_to_estimate:
         if flag_auto_set:
+            assert isinstance(bound, dict)
             bound[str(par)] = [par.value / 1000, par.value * 1000]
 
         converted_parameters.append(str(par))
@@ -149,7 +150,7 @@ def basiCO_parameter_estimation(
             basico.get_reaction_parameters(), par
         ).to_dict()
         try:
-            basico_parameter_name = list(basico_reaction_dict["reaction"].keys())[0]
+            basico_parameter_name = next(iter(basico_reaction_dict["reaction"].keys()))
         except IndexError as e:
             raise ParameterError(
                 f"Parameter {par} was not found in the "
@@ -170,6 +171,7 @@ def basiCO_parameter_estimation(
                 "upper": bound[par][1],
             }
         else:
+            assert isinstance(bound, (list, tuple))
             fit_dictionary = {
                 "name": basico_parameter_name,
                 "lower": bound[0],

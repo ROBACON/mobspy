@@ -9,7 +9,6 @@ from __future__ import annotations
 import linecache
 import re
 import sys
-from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -54,6 +53,8 @@ from mobspy.modules.species_string_generator import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from mobspy.modules.list_species import List_Species
 
 _logger = get_logger(__name__)
@@ -151,8 +152,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 "Please pick another name"
             )
             return False
-        else:
-            return True
+        return True
 
     @classmethod
     def str_under_context(cls, species_object: Species, characteristics: Any) -> str:
@@ -174,10 +174,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         for i, e in enumerate(all_strings):
             if i == 0:
                 continue
-            else:
-                to_str = to_str + " + " + e
+            to_str = to_str + " + " + e
         to_str = "(" + to_str + ")"
-        return to_str
+        return to_str  # type: ignore[no-any-return]
 
     def __str__(self) -> str:
         """String representation, returns the species name."""
@@ -193,7 +192,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         item = str(item)
         Species.check_if_valid_characteristic(self, item)
-        return self.__getattr__(item)
+        return self.__getattr__(item)  # type: ignore[no-any-return]
 
     def label(self, label: int | float | str) -> Reacting_Species:
         """Label function implementation.
@@ -208,7 +207,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         _logger.debug(str(self) + "_dot_")
         for reference in self._references:
             for reaction in reference.get_reactions():
-                _logger.debug(reaction)
+                _logger.debug(str(reaction))
 
     def show_characteristics(self) -> None:
         """Print the directly characteristics inside the object."""
@@ -259,7 +258,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         :param item: (int, float, callable, Quantity) reaction rate
         """
-        return _Last_rate_storage.override_get_item(self, item)
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
 
     def __rmul__(self, stoichiometry: Any) -> Reacting_Species | Any:
         """Multiplication by the stoichiometry.
@@ -341,6 +340,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 + "There must be a rate in the end of the reaction. "
                 "Avoid comments in the same line as the reaction."
             )
+        return None
 
     def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
         """Reaction definition (``>>`` operator).
@@ -384,7 +384,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Species.check_if_valid_characteristic(self, characteristic)
 
         characteristics_from_references = mcu_unite_characteristics(
-            self.get_references()
+            list(self.get_references())
         )
         characteristics = {characteristic}
 
@@ -397,7 +397,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             self.add_characteristic(characteristic)
         return Reacting_Species(self, characteristics)
 
-    def __call__(self, quantity: Any) -> Self | str | None:
+    def __call__(self, quantity: Any) -> Self | str | None:  # type: ignore[return]
         """Handle count assignment and characteristic extraction.
 
         :param quantity: (int, float, Quantity) for count assignment,
@@ -446,6 +446,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             if isinstance(quantity, str):
                 quantity_dict = self.add_quantities("std$", quantity)
             try:
+                assert quantity_dict is not None
                 sim_under_context.current_event_count_data.append(
                     {
                         "species": self,
@@ -483,6 +484,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 )
         else:
             return {"characteristics": characteristics, "quantity": quantity}
+        return None
 
     def reset_quantities(self) -> None:
         """Reset the counts inside a species."""
@@ -519,7 +521,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         new_entity = Species(name)
         new_entity.set_references(mcu_combine_references(self, other))
         new_entity.add_reference(new_entity)
-        new_entity._from_mul = True
+        new_entity._from_mul = True  # type: ignore[attr-defined]
 
         mcu_check_orthogonality_between_references(new_entity.get_references())
 
@@ -572,14 +574,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self._characteristics.remove(characteristic)
 
     def print_characteristics(self) -> None:
-        _logger.debug(self._characteristics)
+        _logger.debug(str(self._characteristics))
 
     def get_references(self) -> set[Species]:
         return self._references
 
     def get_all_characteristics(self) -> set[str]:
         """Get all characteristics including from references."""
-        all_char = set()
+        all_char: set[str] = set()
         for reference in self._references:
             all_char = all_char.union(reference.get_characteristics())
         return all_char
@@ -648,7 +650,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             x for x in self.get_references() if x.get_characteristics() != set()
         ]
         self._ordered_references = sorted(
-            cleaned_references, key=lambda x: sorted(list(x.get_characteristics()))
+            cleaned_references, key=lambda x: sorted(x.get_characteristics())
         )
         i = 1
         for reference in self._ordered_references:

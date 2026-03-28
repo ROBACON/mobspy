@@ -93,9 +93,9 @@ class ODEBinding:
 
         # Create reaction based on type
         if is_birth:
-            reactants >> self.state_variable + reactants[rate_fn]
+            reactants >> self.state_variable + reactants[rate_fn]  # type: ignore[index]
         else:
-            reactants + self.state_variable >> reactants[rate_fn]
+            reactants + self.state_variable >> reactants[rate_fn]  # type: ignore[index]
 
         return self
 

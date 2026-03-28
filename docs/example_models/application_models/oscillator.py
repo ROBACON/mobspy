@@ -1,6 +1,5 @@
 from mobspy import *
 
-
 """
     This is a more classical oscillator
     Here the repression is implemented using a hill function as a string

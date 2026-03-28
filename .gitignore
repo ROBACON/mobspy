@@ -49,6 +49,7 @@ test_plot_images/*
 
 # Claude Code
 CLAUDE.md
+.claude/
 
 # Docs build (keep example sources)
 docs/*

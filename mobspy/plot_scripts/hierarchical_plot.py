@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import ValidationError
 from mobspy.mobspy_logging import get_logger
@@ -14,6 +13,9 @@ from pint import Quantity  # noqa: E402
 
 import mobspy.modules.unit_handler as uh  # noqa: E402
 import mobspy.plot_scripts.process_plot_data as ppd  # noqa: E402
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 ####################### PRACTICAL FUNCTIONS
@@ -209,6 +211,7 @@ def find_parameter(
                     return params[key]
                 except (KeyError, IndexError):
                     return None
+    return None
 
 
 def annotation_handling(
@@ -248,8 +251,7 @@ def annotation_handling(
                     argument_dict[arg] = annotation_dict[arg]
 
             axs.annotate(text, coordinates, **argument_dict)
-        else:
-            return 0
+        return 0
     return None
 
 
@@ -296,7 +298,7 @@ def plot_curves(
                 "No species found for plotting in one of the curves or figures"
             )
 
-        species = sorted([spe for spe in species])
+        species = sorted(species)
 
         # Get the time series to plot
         if (

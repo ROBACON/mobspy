@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from mobspy.exceptions import SBMLError
 from mobspy.mobspy_logging import get_logger
 from mobspy.sbml_simulator.builder import build as sbml_build
-from mobspy.types import EventData, ReactionData
+from mobspy.types import EventData, ReactionData, SBMLModelData
 
 if TYPE_CHECKING:
     from mobspy.types import (
@@ -33,6 +33,14 @@ class ModelGenerationMixin:
     _list_of_parameters: list[SimulationParameters]
     sbml_data_list: ParameterSweepList
     _species_for_sbml: dict[str, Any] | None
+
+    def compile(self, verbose: bool = True) -> Any:
+        """Provided by Simulation at runtime."""
+        ...
+
+    def _assemble_multi_simulation_structure(self) -> None:
+        """Provided by Simulation at runtime."""
+        ...
 
     def compose_sbml(self) -> list[list[SBMLModelDict]]:
         list_of_composite_dicts_for_sbml = []
@@ -128,7 +136,7 @@ class ModelGenerationMixin:
                 if spe not in new_sbml_file["species_for_sbml"] and spe[0] != "_":
                     event_number = len(new_sbml_file["events_for_sbml"])
                     spe_event = EventData(
-                        trigger=f"_SFS_{str(i)} > 0",
+                        trigger=f"_SFS_{i!s} > 0",
                         delay=0,
                         assignments=[(spe, sim_sbml["species_for_sbml"][spe])],
                     )
@@ -146,7 +154,7 @@ class ModelGenerationMixin:
                 if i == 0:
                     cul_duration = self._list_of_parameters[i]["duration"]
                     continue
-                elif i == len(multi_sims) - 1:
+                if i == len(multi_sims) - 1:
                     skip_end_event = True
                 else:
                     cul_duration = (
@@ -166,13 +174,7 @@ class ModelGenerationMixin:
                 )
 
         for multi_sims in self.sbml_data_list:
-            new_sbml_file: SBMLModelDict = {
-                "species_for_sbml": {},
-                "parameters_for_sbml": {},
-                "reactions_for_sbml": {},
-                "events_for_sbml": {},
-                "assignments_for_sbml": {},
-            }
+            new_sbml_file: SBMLModelDict = SBMLModelData()
 
             initial_sim = multi_sims[0]
 
@@ -197,13 +199,12 @@ class ModelGenerationMixin:
         new_sims = []
         for multi_sims in self.sbml_data_list:
             sim_sbml = multi_sims[0]
-            new_sbml_file: SBMLModelDict = {
-                "species_for_sbml": sim_sbml["species_for_sbml"],
-                "parameters_for_sbml": sim_sbml["parameters_for_sbml"],
-                "reactions_for_sbml": {},
-                "events_for_sbml": sim_sbml["events_for_sbml"],
-                "assignments_for_sbml": sim_sbml["assignments_for_sbml"],
-            }
+            new_sbml_file: SBMLModelDict = SBMLModelData(
+                species_for_sbml=sim_sbml["species_for_sbml"],
+                parameters_for_sbml=sim_sbml["parameters_for_sbml"],
+                events_for_sbml=sim_sbml["events_for_sbml"],
+                assignments_for_sbml=sim_sbml["assignments_for_sbml"],
+            )
 
             new_sbml_file["parameters_for_sbml"]["_vol"] = sim_sbml[
                 "parameters_for_sbml"
@@ -297,9 +298,7 @@ class ModelGenerationMixin:
                         )
 
                 if sbml_data["assignments_for_sbml"]:
-                    for _assign_name, assign_data in sbml_data[
-                        "assignments_for_sbml"
-                    ].items():
+                    for assign_data in sbml_data["assignments_for_sbml"].values():
                         antimony_model = (
                             antimony_model + f"    {assign_data.species}"
                             f" := {assign_data.expression}\n"

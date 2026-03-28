@@ -81,7 +81,7 @@ def job_execution(
 
         return added_data
 
-    parallel_data: list[dict[str, list[float]]] | None = Parallel(n_jobs=jobs)(
+    parallel_data: list[dict[str, list[float]]] | None = Parallel(n_jobs=jobs)(  # pyright: ignore[reportAssignmentType]
         delayed(__single_run)(i) for i in range(params[0]["repetitions"])
     )
 
@@ -115,11 +115,11 @@ def __run_time_course(
         "output_event": params["output_event"],
     }
 
-    if "seeds" in params:
+    if "seeds" in params and params["seeds"] is not None:
         kargs["use_seed"] = True
         kargs["seed"] = params["seeds"][index]
 
-    if "step_size" in params:
+    if "step_size" in params and params["step_size"] is not None:
         kargs["automatic"] = False
         kargs["step_number"] = int(params["duration"] / params["step_size"])
 
@@ -183,7 +183,11 @@ def __sbml_new_initial_values(
             species_for_sbml["_End_Flag_MetaSpecies"] = 0
 
     # Extract model_context if available (for proper SBML unit declarations)
-    model_context = model.get("model_context") if hasattr(model, "get") else getattr(model, "model_context", None)
+    model_context = (
+        model.get("model_context")  # pyright: ignore[reportAttributeAccessIssue]
+        if hasattr(model, "get")
+        else getattr(model, "model_context", None)
+    )
 
     return sbml_builder.build(
         species_for_sbml,
@@ -232,12 +236,11 @@ def __add_simulations_data(
 
         if key in already_added_keys:
             continue
+        if time_to_add != 0:
+            new_data[key] = [0 for _ in added_data["Time"]]
+            new_data[key] = new_data[key] + reformatted_data[key]
         else:
-            if time_to_add != 0:
-                new_data[key] = [0 for _ in added_data["Time"]]
-                new_data[key] = new_data[key] + reformatted_data[key]
-            else:
-                new_data[key] = reformatted_data[key]
+            new_data[key] = reformatted_data[key]
 
     if time_to_add != 0:
         new_data["Time"] = added_data["Time"] + reformatted_data["Time"]

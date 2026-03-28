@@ -1,5 +1,6 @@
-from mobspy import *
 import numpy as np
+
+from mobspy import *
 
 Activatable, Age, Infected, Mortal, Signal, Phage = BaseSpecies()
 Signal, Phage = New(Mortal)

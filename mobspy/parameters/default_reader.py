@@ -38,5 +38,9 @@ def get_default_parameters() -> dict[str, Any]:
         "_continuous_simulation": False,
         "_end_condition": None,
         "_with_event": False,
+        "absolute_output_file": "",
+        "initial_conditional_duration": 0,
+        "step_size": None,
+        "seeds": None,
     }
     return default_parameters

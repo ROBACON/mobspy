@@ -64,7 +64,7 @@ class TestUnitRateFunctions:
         result = S.compile()
         kin = _kinetics_from_compiled(result)
         assert len(kin) == 1
-        rate_str = list(kin.values())[0]
+        rate_str = next(iter(kin.values()))
         assert "A" in rate_str
         assert "0.000555" in rate_str or "5.555" in rate_str
 
@@ -85,7 +85,7 @@ class TestUnitRateFunctions:
         result = S.compile()
         kin = _kinetics_from_compiled(result)
         assert len(kin) == 1
-        rate_str = list(kin.values())[0]
+        rate_str = next(iter(kin.values()))
         assert "volume" in rate_str
 
     def test_zero_order_unit_rate(self):
@@ -96,7 +96,7 @@ class TestUnitRateFunctions:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        rate_str = list(kin.values())[0]
+        rate_str = next(iter(kin.values()))
         assert "1.0" in rate_str or "1" in rate_str
 
     def test_unit_rate_with_volume(self):
@@ -117,7 +117,7 @@ class TestUnitRateFunctions:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        rate_str = list(kin.values())[0]
+        rate_str = next(iter(kin.values()))
         assert "A" in rate_str
 
     def test_mixed_unit_and_unitless_in_expression(self):
@@ -147,7 +147,7 @@ class TestUnitRateFunctions:
 
         kin1 = _kinetics_from_compiled(r1)
         kin2 = _kinetics_from_compiled(r2)
-        assert kin1[list(kin1.keys())[0]] == kin2[list(kin2.keys())[0]]
+        assert kin1[next(iter(kin1.keys()))] == kin2[next(iter(kin2.keys()))]
 
 
 # ===========================================================================
@@ -206,7 +206,7 @@ class TestIsAInRates:
         result = S.compile()
         kin = _kinetics_from_compiled(result)
         # TypeA+TypeA and TypeA+TypeB get rate 1, TypeB+TypeB and TypeB+TypeA get 0.001
-        assert len(kin) >= 2  # noqa: PLR2004
+        assert len(kin) >= 2
 
     def test_is_a_combined_with_arithmetic(self):
         Organism = BaseSpecies()
@@ -240,7 +240,7 @@ class TestIsAInRates:
         kin = _kinetics_from_compiled(result)
         # Leaf gets rate 1 (mass-action: Leaf * 1), Mid gets rate 0.5 (Mid * 0.5)
         rates = sorted(kin.values())
-        assert len(rates) == 2  # noqa: PLR2004
+        assert len(rates) == 2
         assert any("Leaf" in r and "1" in r for r in rates)
         assert any("Mid" in r and "0.5" in r for r in rates)
 
@@ -264,7 +264,7 @@ class TestCharacteristicQueries:
         kin = _kinetics_from_compiled(result)
         # Mass-action rates: alive -> "A.alive * 1", dead -> "A.dead * 0.5"
         rates = sorted(kin.values())
-        assert len(rates) == 2  # noqa: PLR2004
+        assert len(rates) == 2
         assert any("A.dead" in r and "0.5" in r for r in rates)
         assert any("A.alive" in r and "1" in r for r in rates)
 
@@ -329,10 +329,10 @@ class TestCharacteristicQueries:
         kin = _kinetics_from_compiled(result)
         # Human.young -> 0.1 (mass-action: "Human.young * 0.1")
         # Human.old, Animal.young, Animal.old -> 1.0 (mass-action: "X * 1")
-        assert len(kin) == 4  # noqa: PLR2004
+        assert len(kin) == 4
         rates = sorted(kin.values())
         assert any("0.1" in r for r in rates)
-        assert sum(1 for r in rates if "* 1" in r) == 3  # noqa: PLR2004
+        assert sum(1 for r in rates if "* 1" in r) == 3
 
     def test_is_a_and_characteristic_with_units(self):
         Base = BaseSpecies()
@@ -372,7 +372,7 @@ class TestODEWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) >= 2  # noqa: PLR2004
+        assert len(kin) >= 2
 
     def test_ode_with_exp_function(self):
         A = BaseSpecies()
@@ -447,7 +447,7 @@ class TestODEWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) >= 3  # noqa: PLR2004
+        assert len(kin) >= 3
 
     def test_ode_with_inheritance(self):
         Mortal = BaseSpecies()
@@ -459,7 +459,7 @@ class TestODEWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) >= 2  # noqa: PLR2004
+        assert len(kin) >= 2
 
     def test_ode_with_characteristics(self):
         A = BaseSpecies()
@@ -470,7 +470,7 @@ class TestODEWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) >= 2  # noqa: PLR2004
+        assert len(kin) >= 2
 
 
 # ===========================================================================
@@ -504,7 +504,7 @@ class TestParametersWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        rate_str = list(kin.values())[0]
+        rate_str = next(iter(kin.values()))
         assert "k1" in rate_str
         assert "k2" in rate_str
         assert "A" in rate_str
@@ -636,7 +636,7 @@ class TestReversibleWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) == 2  # noqa: PLR2004
+        assert len(kin) == 2
 
     def test_rev_lambda_rates_with_units(self):
         from mobspy import Rev
@@ -651,7 +651,7 @@ class TestReversibleWithUnits:
         S.level = -1
         result = S.compile()
         kin = _kinetics_from_compiled(result)
-        assert len(kin) == 2  # noqa: PLR2004
+        assert len(kin) == 2
 
 
 # ===========================================================================
@@ -667,12 +667,10 @@ class TestCharacteristicEqualityInRates:
         Color.red, Color.blue
         Location.here, Location.there
         Something = Color * Location
-        rate = (  # noqa: E731
-            lambda r1, r2: (
-                1 * u.decimeter**2 / u.h
-                if Location(r1) == Location(r2)
-                else 0.5 * u.decimeter**2 / u.h
-            )
+        rate = lambda r1, r2: (
+            1 * u.decimeter**2 / u.h
+            if Location(r1) == Location(r2)
+            else 0.5 * u.decimeter**2 / u.h
         )
         2 * Something >> 3 * Something[rate]
         S = Simulation(Something)
@@ -701,7 +699,7 @@ class TestEdgeCases:
         # Zero-rate reactions may be omitted or have rate "0"
         kin = _kinetics_from_compiled(result)
         if len(kin) > 0:
-            assert kin[list(kin.keys())[0]] == "0"
+            assert kin[next(iter(kin.keys()))] == "0"
 
     def test_very_small_rate_with_units(self):
         A = BaseSpecies()
@@ -738,8 +736,8 @@ class TestEdgeCases:
         S2.level = -1
         r2 = S2.compile()
 
-        kin1 = list(_kinetics_from_compiled(r1).values())[0]
-        kin2 = list(_kinetics_from_compiled(r2).values())[0]
+        kin1 = next(iter(_kinetics_from_compiled(r1).values()))
+        kin2 = next(iter(_kinetics_from_compiled(r2).values()))
         assert kin1 == kin2
 
     def test_event_with_unit_condition(self):
@@ -773,7 +771,7 @@ class TestSimulationRunWithUnits:
         S.run(plot_data=False)
         # After 5 seconds at rate 1/s, should be ~1000*exp(-5) ~ 6.7
         final = S.fres[A][-1]
-        assert final < 50  # noqa: PLR2004
+        assert final < 50
 
     def test_growth_with_unit_rate(self):
         A = BaseSpecies()
@@ -785,7 +783,7 @@ class TestSimulationRunWithUnits:
         S.run(plot_data=False)
         final = S.fres[A][-1]
         # Should have grown: 10 * exp(1/60 * 60) ~ 10*e ~ 27
-        assert final > 20  # noqa: PLR2004
+        assert final > 20
 
     def test_is_a_produces_different_dynamics(self):
         Mortal = BaseSpecies()
@@ -811,3 +809,81 @@ class TestSimulationRunWithUnits:
         S.run(plot_data=False)
         # Sick cells decay faster
         assert S.fres["Cell.healthy"][-1] > S.fres["Cell.sick"][-1]
+
+
+# ===========================================================================
+# End-to-end: model runs in user-provided units
+# ===========================================================================
+
+
+class TestModelInUserUnits:
+    """Verify that models with substance units run in the user's unit system."""
+
+    def test_compile_molar_species_uses_moles(self):
+        """Species in moles should stay in moles, not be converted to N_A counts."""
+        A = BaseSpecies()
+        A >> mobspy.Zero[1 / u.minute]
+        A(2 * u.mmol)
+        S = Simulation(A)
+        S.level = -1
+        compiled = S.compile()
+        counts = _species_counts_from_compiled(compiled)
+        # 2 mmol stays as 2 (model substance unit = millimole, first-unit-wins)
+        assert abs(float(counts["A"]) - 2.0) < 1e-6
+
+    def test_compile_molar_concentration_with_volume(self):
+        """Molar concentration * volume should give moles."""
+        A = BaseSpecies()
+        A >> mobspy.Zero[1 / u.second]
+        A(0.5 * u.mol / u.liter)
+        S = Simulation(A)
+        S.volume = 2 * u.liter
+        S.level = -1
+        compiled = S.compile()
+        counts = _species_counts_from_compiled(compiled)
+        # 0.5 M * 2 L = 1.0 mol
+        assert abs(float(counts["A"]) - 1.0) < 1e-6
+
+    def test_run_molar_model_time_axis(self):
+        """Time axis in model time units when duration uses minutes."""
+        A = BaseSpecies()
+        A >> mobspy.Zero[0.1 / u.minute]
+        A(1 * u.mol)
+        S = Simulation(A)
+        S.duration = 10 * u.minute
+        S.level = -1
+        S.run(plot_data=False)
+        time_vals = S.fres["Time"]
+        # Time should go from 0 to 10 (minutes), not 0 to 600 (seconds)
+        assert time_vals[-1] == pytest.approx(10.0, rel=1e-2)
+
+    def test_run_molar_model_dynamics(self):
+        """Exponential decay A -> 0 with rate k: A(t) = A0 * exp(-k*t)."""
+        A = BaseSpecies()
+        k = 0.5  # 1/second (dimensionless)
+        A >> mobspy.Zero[k]
+        A(1 * u.mol)
+        S = Simulation(A)
+        S.duration = 4
+        S.level = -1
+        S.run(plot_data=False)
+        final_A = S.fres[A][-1]
+        import math
+
+        expected = 1.0 * math.exp(-k * 4)
+        assert final_A == pytest.approx(expected, rel=0.05)
+
+    def test_plain_number_model_unchanged(self):
+        """Model with no Pint units should produce identical results to legacy."""
+        A = BaseSpecies()
+        A >> mobspy.Zero[0.1]
+        A(100)
+        S = Simulation(A)
+        S.duration = 10
+        S.level = -1
+        S.run(plot_data=False)
+        final_A = S.fres[A][-1]
+        import math
+
+        expected = 100 * math.exp(-0.1 * 10)
+        assert final_A == pytest.approx(expected, rel=0.05)

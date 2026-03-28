@@ -1,9 +1,9 @@
 import plotly.express as px
+
 from mobspy import *
 
-
 """
-    Here we have a NOR_GATE 
+    Here we have a NOR_GATE
     There are two possible repressors for the Promoter A and B
     If any of them bind to the Promoter the protein can no longer be expressed
 """

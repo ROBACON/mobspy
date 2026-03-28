@@ -55,7 +55,7 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
 
     :param params (dict) = Dictionary with simulation parameters
     """
-    if "seeds" in params:
+    if "seeds" in params and params["seeds"] is not None:
         try:
             if params["repetitions"] != len(params["seeds"]):
                 raise ParameterError("Seeds must be equal to the number of repetitions")
@@ -82,7 +82,7 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
 
         if (
             isinstance(p, Quantity)
-            and (key != "unit_x" and key != "unit_y")
+            and (key not in {"unit_x", "unit_y"})
             and str(p.dimensionality) == "[time]"
         ):
             params[key] = p.convert("second").magnitude

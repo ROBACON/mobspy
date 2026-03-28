@@ -4,10 +4,10 @@ import json
 from copy import deepcopy
 from typing import Any
 
-from pint import Quantity  # noqa: E402
+from pint import Quantity
 
 import mobspy.plot_scripts.hierarchical_plot as hp
-import mobspy.plot_scripts.process_plot_data as ppd  # noqa: E402
+import mobspy.plot_scripts.process_plot_data as ppd
 import mobspy.plot_scripts.statistics_calculations as sc
 from mobspy.exceptions import ValidationError
 
@@ -30,7 +30,7 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
                 f'"{plot_json_filename}":\n' + str(e)
             ) from e
 
-    return json_data
+    return json_data  # type: ignore[no-any-return]
 
 
 def set_plot_units(new_plot_params: dict[str, Any]) -> None:
@@ -43,8 +43,7 @@ def set_plot_units(new_plot_params: dict[str, Any]) -> None:
         new_plot_params["xlabel"] = "Time"
 
         if new_plot_params["unit_x"] is not None and not (
-            "ignore_unit_label_x" in new_plot_params
-            and new_plot_params["ignore_unit_label_x"]
+            new_plot_params.get("ignore_unit_label_x")
         ):
             if not isinstance(new_plot_params["unit_x"], Quantity):
                 new_plot_params["xlabel"] += f" ({new_plot_params['unit_x']}s)"

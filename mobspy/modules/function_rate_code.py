@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from re import split as re_split
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
 
@@ -35,6 +35,9 @@ from mobspy.modules.mobspy_parameters import (
 )
 from mobspy.modules.unit_handler import convert_rate as uh_convert_rate
 
+if TYPE_CHECKING:
+    from mobspy.modules.model_unit_context import ModelUnitContext
+
 _logger = get_logger(__name__)
 
 _RateFunction = (
@@ -42,7 +45,7 @@ _RateFunction = (
 )
 
 
-def extract_reaction_rate(  # noqa: PLR0912, PLR0911
+def extract_reaction_rate(
     combination_of_reactant_species: list[dict[str, Any]],
     reactant_string_list: list[str],
     reaction_rate_function: _RateFunction,
@@ -52,6 +55,7 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
     parameter_exist: dict[str, mp_Mobspy_Parameter] | bool,
     parameters_in_reaction: set[mp_Mobspy_Parameter],
     skip_check: bool,
+    model_context: ModelUnitContext | None = None,
 ) -> tuple[str | int, set[mp_Mobspy_Parameter]]:
     """Return the reaction rate string for model construction.
 
@@ -80,13 +84,14 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
             reaction_rate_function,
             len(reactant_string_list),
             dimension,
+            model_context=model_context,
         )
 
         if reaction_rate_function == 0:
             return 0, parameters_in_reaction
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
-            reaction_rate_function,
+            reaction_rate_function,  # pyright: ignore[reportArgumentType]
             type_of_model,
             is_count,
         )
@@ -109,15 +114,19 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
                 reactant_string_list,
                 function_rate_arguments,
                 dimension,
+                model_context=model_context,
             )
 
-            rate = reaction_rate_function(**arguments)  # type: ignore[operator]
+            rate = reaction_rate_function(**arguments)  # type: ignore[operator, misc]
 
         else:
-            rate = reaction_rate_function()  # type: ignore[operator]
+            rate = reaction_rate_function()  # type: ignore[operator, misc]
 
         rate, dimension, is_count = uh_convert_rate(
-            rate, len(reactant_string_list), dimension
+            rate,
+            len(reactant_string_list),
+            dimension,
+            model_context=model_context,
         )
 
         if rate == 0:
@@ -188,7 +197,7 @@ def extract_reaction_rate(  # noqa: PLR0912, PLR0911
     elif isinstance(reaction_rate_function, str):
         reaction_rate_string = reaction_rate_function
     else:
-        _logger.debug(type(reaction_rate_function))
+        _logger.debug(str(type(reaction_rate_function)))
         raise CompilationError(
             f"The {type(reaction_rate_function)},"
             f" from {reaction_rate_function} is not supported"
@@ -222,16 +231,16 @@ def basic_kinetics_string(
     kinetics_string = ""
     for name, number in counts.items():
         if type_of_model.lower() == "stochastic":
-            kinetics_string += stochastic_string(name, number)
+            kinetics_string += stochastic_string(name, int(number))
         elif type_of_model.lower() == "deterministic":
-            kinetics_string += deterministic_string(name, number)
+            kinetics_string += deterministic_string(name, int(number))
         kinetics_string += " * "
 
     kinetics_string += str(reaction_rate)
 
-    n = 0
-    for _key, item in counts.items():
-        n += item
+    n: int = 0
+    for item in counts.values():
+        n += int(item)
     n = n - 1
 
     if n > 0 and not is_count:
@@ -298,6 +307,7 @@ def prepare_arguments_for_callable(
     reactant_string_list: list[str],
     rate_function_arguments: list[str],
     dimension: int | None,
+    model_context: ModelUnitContext | None = None,  # noqa: ARG001
 ) -> dict[str, mbe_MobsPyExpression | mbe_Specific_Species_Operator]:
     """Prepare arguments for the rate function.
 

@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import sys
+from types import FrameType
 from typing import Any
 
-from numpy import floating as np_float_  # noqa: E402
-from numpy import integer as np_int_  # noqa: E402
-from pint import Quantity  # noqa: E402
+from numpy import floating as np_float_
+from numpy import integer as np_int_
+from pint import Quantity
 
 from mobspy.exceptions import ValidationError
-from mobspy.modules.meta_class import (  # noqa: E402
+from mobspy.modules.meta_class import (
     List_Species,
     Reacting_Species,
     Species,
 )
-from mobspy.modules.mobspy_parameters import (  # noqa: E402
+from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
 
@@ -60,10 +61,10 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
     def find_species() -> set[Species]:
         found_species: set[Species] = set()
 
-        frame = sys._getframe(1)
+        frame: FrameType | None = sys._getframe(1)
         while frame is not None:
             for ns in (frame.f_locals, frame.f_globals):
-                for _name, obj in ns.items():
+                for obj in ns.values():
                     try:
                         if isinstance(obj, Species) and type(obj) != type:  # noqa: E721
                             found_species.add(obj)
