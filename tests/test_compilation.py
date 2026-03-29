@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import mobspy
 from mobspy import (
     All,
@@ -17,6 +19,7 @@ from mobspy.exceptions import MobsPyError
 from .conftest import compare_model, compare_model_ignore_order
 
 
+@pytest.mark.compilation
 class TestBasicModels:
     def test_model_1(self):
         A, B, C = BaseSpecies()
@@ -97,6 +100,7 @@ class TestBasicModels:
         assert compare_model(oscillator(), "model_7.txt")
 
 
+@pytest.mark.compilation
 class TestInheritanceAndQueries:
     def test_zero_rate_reactions(self):
         A, B = BaseSpecies(2)
@@ -182,6 +186,7 @@ class TestInheritanceAndQueries:
         hi_inside_hi()
 
 
+@pytest.mark.compilation
 class TestAllOperator:
     def test_all(self):
         A, B = BaseSpecies()
@@ -205,6 +210,7 @@ class TestAllOperator:
         assert compare_model(S.compile(), "model_22.txt")
 
 
+@pytest.mark.compilation
 class TestSetCounts:
     def test_set_counts(self):
         A, C = BaseSpecies()
@@ -243,6 +249,7 @@ class TestSetCounts:
         assert compare_model(S.compile(), "model_32.txt")
 
 
+@pytest.mark.compilation
 class TestDimensions:
     def test_unit_bi_dimension(self):
         A = BaseSpecies()
@@ -284,6 +291,7 @@ class TestDimensions:
         assert compare_model(S.compile(), "model_54.txt")
 
 
+@pytest.mark.compilation
 class TestEmptyArgAndExpressions:
     def test_empty_arguments(self):
         A, B = BaseSpecies()
@@ -340,6 +348,7 @@ class TestEmptyArgAndExpressions:
         assert compare_model(S.compile(), "model_37.txt")
 
 
+@pytest.mark.compilation
 class TestReversibleReactions:
     def test_rev(self):
         from mobspy import Rev
@@ -362,6 +371,7 @@ class TestReversibleReactions:
         assert compare_model(S.compile(), "model_63.txt")
 
 
+@pytest.mark.compilation
 class TestSpeciesNaming:
     def test_silicon_valley(self):
         A = BaseSpecies()
@@ -405,6 +415,7 @@ class TestSpeciesNaming:
         assert compare_model(S.compile(), "model_56.txt")
 
 
+@pytest.mark.compilation
 class TestSBMLGeneration:
     def test_sbml_generation(self):
         A = BaseSpecies()
@@ -436,6 +447,7 @@ class TestSBMLGeneration:
         assert True
 
 
+@pytest.mark.compilation
 class TestWithStatement:
     def test_with_statement_any_and_species_characteristics(self):
         Age, Color, Dense = BaseSpecies()
@@ -490,6 +502,7 @@ class TestWithStatement:
         assert compare_model(S.compile(), "model_42.txt")
 
 
+@pytest.mark.compilation
 class TestParameters:
     def test_parameter_operation_in_rate(self):
         A, B = BaseSpecies()

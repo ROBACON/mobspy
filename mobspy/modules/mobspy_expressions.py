@@ -888,11 +888,6 @@ class ExpressionDefiner:
         except AttributeError:
             pass
 
-        if isinstance(other, ExpressionDefiner):
-            new_parameter_set = self._parameter_set.union(other._parameter_set)
-        elif isinstance(other, MobsPyExpression):
-            self._expression_variables.union(other._expression_variables)
-
         _count_in_model = self.combine_binary_attributes(other, "_count_in_model")
         _concentration_in_model = self.combine_binary_attributes(
             other, "_concentration_in_model"

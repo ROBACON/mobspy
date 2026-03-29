@@ -37,8 +37,8 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
       - id: pytest
-        name: pytest (fast)
-        entry: python -m pytest tests/test_compilation.py tests/test_events.py tests/test_assignments.py tests/test_types.py tests/test_units_with_rates.py tests/test_units_handling.py tests/test_logging_module.py tests/test_multiline_reactions.py tests/test_ode.py -q
+        name: pytest
+        entry: python -m pytest tests/ -q
         language: system
         always_run: true
         pass_filenames: false

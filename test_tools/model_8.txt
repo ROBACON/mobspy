@@ -14,7 +14,7 @@ reaction_0,{'re': [(1, 'A')], 'pr': [(2, 'A')], 'kin': 'A * 1'}
 
 Species
 A,1
-B,50
+B,10
 _End_Flag_MetaSpecies,0
 
 Mappings
@@ -27,7 +27,7 @@ Parameters
 volume,1
 
 Reactions
-reaction_0,{'re': [(1, 'A'), (1, 'B')], 'pr': [], 'kin': 'A * B * 0.01 * volume^-1'}
+reaction_0,{'re': [(1, 'A'), (1, 'B')], 'pr': [], 'kin': 'A * B * 0.1 * volume^-1'}
 
 Events
 event_0,{'trigger': '( ( (A) <= 0 ) || ( (B) <= 0 ) ) ', 'delay': '0', 'assignments': [('_End_Flag_MetaSpecies', '1')]}

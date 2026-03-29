@@ -484,7 +484,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
     abs_power = abs(length_power)
 
     # For pure volume quantities (e.g. 5 * u.mL), try direct matching
-    if len(dim) == 1 or (len(dim) == 1 and "[length]" in dim):
+    if len(dim) == 1:
         q_norm = q if length_power > 0 else (1 / q)
         candidates: list[Any] = [_ur.microliter, _ur.milliliter, _ur.liter]
         for target in candidates:

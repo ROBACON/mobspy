@@ -396,6 +396,176 @@ class Simulation(
         self.sbml_data_list = data_for_sbml_construction
         self._parameter_list_of_dic = parameter_list_of_dic
 
+    def _process_run_parameters(
+        self,
+        *,
+        duration: float | Quantity | None = None,
+        volume: float | Quantity | None = None,
+        dimension: int | None = None,
+        repetitions: int | None = None,
+        level: int | None = None,
+        simulation_method: str | None = None,
+        rate_type: str | None = None,
+        plot_type: str | None = None,
+        start_time: float | None = None,
+        r_tol: float | None = None,
+        a_tol: float | None = None,
+        seeds: list[int] | None = None,
+        step_size: float | None = None,
+        jobs: int | None = None,
+        unit_x: Quantity | None = None,
+        unit_y: Quantity | None = None,
+        output_concentration: bool | None = None,
+        output_event: bool | None = None,
+        output_file: str | None = None,
+        save_data: bool | None = None,
+        plot_data: bool | None = None,
+    ) -> None:
+        """Process and apply run-time parameter overrides, then ensure compilation."""
+        pr_manually_process_each_parameter(
+            self,
+            duration=duration,
+            volume=volume,
+            dimension=dimension,
+            repetitions=repetitions,
+            level=level,
+            simulation_method=simulation_method,
+            start_time=start_time,
+            r_tol=r_tol,
+            a_tol=a_tol,
+            seeds=seeds,
+            step_size=step_size,
+            jobs=jobs,
+            unit_x=unit_x,
+            unit_y=unit_y,
+            output_concentration=output_concentration,
+            output_event=output_event,
+            output_file=output_file,
+            save_data=save_data,
+            plot_data=plot_data,
+            rate_type=rate_type,
+            plot_type=plot_type,
+        )
+
+        if level is not None:
+            self.level = level
+
+        # Base case - If there are no events we compile the model here
+        if self._species_for_sbml is None:
+            self.compile(verbose=False)
+
+        self._assemble_multi_simulation_structure()
+
+    def _execute_simulations(self) -> tuple[list[TypingAny], int]:
+        """Run SBML simulations via joblib and return raw results with job count."""
+        jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
+
+        def simulation_function(x: TypingAny) -> TypingAny:
+            return sbml_simulate(jobs, self._list_of_parameters, x)
+
+        results: list[TypingAny] = list(  # pyright: ignore[reportArgumentType]
+            joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(simulation_function)(sbml)
+                for sbml in self.sbml_data_list
+            )
+        )
+
+        return results, jobs
+
+    def _convert_and_store_results(
+        self,
+        raw_results: TypingAny,
+        jobs: int,
+    ) -> None:
+        """Convert raw time-series data to desired units and store in self.results."""
+        # Auto-set unit_y when user used molar units.
+        # When model_context is active and substance is molar, data from COPASI
+        # is already in moles - no auto-conversion needed.
+        _substance_is_molar = (
+            self._model_context is not None and self._model_context.substance_is_molar
+        )
+        if not _substance_is_molar:
+            if (
+                self.parameters["unit_y"] is None
+                and self.parameters["output_concentration"]
+                and self._has_mole
+            ):
+                self.parameters["unit_y"] = 1 * u.unit_registry_object.molar
+            elif (
+                self.parameters["unit_y"] is None
+                and not self.parameters["output_concentration"]
+                and self._has_mole
+            ):
+                self.parameters["unit_y"] = 1 * u.unit_registry_object.mol
+
+        # Volume list and time list are to convert into concentrations
+        # This section also checks if the output_concentration parameter is valid
+        volume_list, time_list, flag_concentration = dh_extract_time_and_volume_list(
+            self._list_of_parameters
+        )
+        _unit_y = self.parameters["unit_y"]
+        tcb = (
+            _unit_y is not None and "[length]" not in _unit_y.dimensionality  # type: ignore[union-attr,attr-defined]
+        )
+        if not flag_concentration or tcb:
+            self.parameters["output_concentration"] = False
+
+        def convert_one_ts_to_desired_unit(unconverted_data: TypingAny) -> TypingAny:
+            return dh_convert_data_to_desired_unit(
+                unconverted_data,
+                time_list,
+                volume_list,
+                self.parameters["unit_x"],
+                self.parameters["unit_y"],
+                self.parameters["output_concentration"],
+                model_context=self._model_context,
+            )
+
+        def convert_all_ts_to_correct_format(
+            single_ts: TypingAny,
+            parameters: TypingAny,
+            unit_convert: bool = False,
+        ) -> TypingAny:
+            data_dict = TimeSeriesDataDict(
+                data=convert_one_ts_to_desired_unit(single_ts)
+                if unit_convert
+                else single_ts,
+                params=self.parameters,
+                models=self._list_of_models,
+            )
+            return MobsPyTimeSeries(data_dict, parameters)
+
+        flatt_ts: list[tuple[TypingAny, TypingAny]] = []
+        if self._parameter_list_of_dic:
+            for r, params in zip(raw_results, self._parameter_list_of_dic):
+                for ts in r:  # pyright: ignore[reportOptionalIterable]
+                    flatt_ts.append((ts, params))
+        else:
+            for r in raw_results:
+                for ts in r:  # pyright: ignore[reportOptionalIterable]
+                    flatt_ts.append((ts, {}))
+
+        ta = self.parameters["unit_x"] is not None
+        tb = self.parameters["unit_y"] is not None
+        tc = self.parameters["output_concentration"] if flag_concentration else False
+
+        if ta or tb or tc:
+            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, True)
+                for ts, params in flatt_ts
+            )
+        else:
+            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, False)
+                for ts, params in flatt_ts
+            )
+
+        self.results = MobsPyList_of_TS(
+            all_processed_data,  # pyright: ignore[reportArgumentType]
+            self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
+        )
+        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
+
     def run(
         self,
         duration: float | Quantity | None = None,
@@ -454,16 +624,15 @@ class Simulation(
             ParameterError: If invalid parameters are provided
             CompilationError: If model needs recompilation but fails
         """
-        # This is only here so the ide gives the users tips about the function argument.
-        # I wish there was a way to loop over all argument without args and kargs
-        pr_manually_process_each_parameter(
-            self,
+        self._process_run_parameters(
             duration=duration,
             volume=volume,
             dimension=dimension,
             repetitions=repetitions,
             level=level,
             simulation_method=simulation_method,
+            rate_type=rate_type,
+            plot_type=plot_type,
             start_time=start_time,
             r_tol=r_tol,
             a_tol=a_tol,
@@ -477,117 +646,10 @@ class Simulation(
             output_file=output_file,
             save_data=save_data,
             plot_data=plot_data,
-            rate_type=rate_type,
-            plot_type=plot_type,
         )
 
-        # Level needs to be set before compilation
-        if level is not None:
-            self.level = level
-
-        # Base case - If there are no events we compile the model here
-        if self._species_for_sbml is None:
-            self.compile(verbose=False)
-
-        self._assemble_multi_simulation_structure()
-
-        jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
-
-        def simulation_function(x):
-            return sbml_simulate(jobs, self._list_of_parameters, x)
-
-        results = joblib.Parallel(n_jobs=jobs, prefer="threads")(
-            joblib.delayed(simulation_function)(sbml) for sbml in self.sbml_data_list
-        )
-
-        # Auto-set unit_y when user used molar units.
-        # When model_context is active and substance is molar, data from COPASI
-        # is already in moles - no auto-conversion needed.
-        _substance_is_molar = (
-            self._model_context is not None and self._model_context.substance_is_molar
-        )
-        if not _substance_is_molar:
-            if (
-                self.parameters["unit_y"] is None
-                and self.parameters["output_concentration"]
-                and self._has_mole
-            ):
-                self.parameters["unit_y"] = 1 * u.unit_registry_object.molar
-            elif (
-                self.parameters["unit_y"] is None
-                and not self.parameters["output_concentration"]
-                and self._has_mole
-            ):
-                self.parameters["unit_y"] = 1 * u.unit_registry_object.mol
-
-        # Volume list and time list are to convert into concentrations
-        # This section also checks if the output_concentration parameter is valid
-        volume_list, time_list, flag_concentration = dh_extract_time_and_volume_list(
-            self._list_of_parameters
-        )
-        _unit_y = self.parameters["unit_y"]
-        tcb = (
-            _unit_y is not None and "[length]" not in _unit_y.dimensionality  # type: ignore[union-attr,attr-defined]
-        )
-        if not flag_concentration or tcb:
-            self.parameters["output_concentration"] = False
-
-        def convert_one_ts_to_desired_unit(unconverted_data):
-            # Convert all the data from a single ts to desired unit
-            return dh_convert_data_to_desired_unit(
-                unconverted_data,
-                time_list,
-                volume_list,
-                self.parameters["unit_x"],
-                self.parameters["unit_y"],
-                self.parameters["output_concentration"],
-                model_context=self._model_context,
-            )
-
-        def convert_all_ts_to_correct_format(
-            single_ts: TypingAny,
-            parameters: TypingAny,
-            unit_convert: bool = False,
-        ) -> TypingAny:
-            data_dict = TimeSeriesDataDict(
-                data=convert_one_ts_to_desired_unit(single_ts)
-                if unit_convert
-                else single_ts,
-                params=self.parameters,
-                models=self._list_of_models,
-            )
-            return MobsPyTimeSeries(data_dict, parameters)
-
-        flatt_ts = []
-        if self._parameter_list_of_dic:
-            for r, params in zip(results, self._parameter_list_of_dic):
-                for ts in r:  # pyright: ignore[reportOptionalIterable]
-                    flatt_ts.append((ts, params))
-        else:
-            for r in results:
-                for ts in r:  # pyright: ignore[reportOptionalIterable]
-                    flatt_ts.append((ts, {}))
-
-        ta = self.parameters["unit_x"] is not None
-        tb = self.parameters["unit_y"] is not None
-        tc = self.parameters["output_concentration"] if flag_concentration else False
-
-        if ta or tb or tc:
-            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, True)
-                for ts, params in flatt_ts
-            )
-        else:
-            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, False)
-                for ts, params in flatt_ts
-            )
-
-        self.results = MobsPyList_of_TS(
-            all_processed_data,  # pyright: ignore[reportArgumentType]
-            self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
-        )
-        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
+        raw_results, num_jobs = self._execute_simulations()
+        self._convert_and_store_results(raw_results, num_jobs)
 
         if self.parameters["save_data"]:
             self.save_data()
@@ -766,7 +828,7 @@ class Simulation(
                 )
 
             if name == "duration":
-                if type(value) == bool:  # noqa: E721
+                if isinstance(value, bool):
                     raise SimulationError(
                         "MobsPy has received an invalid "
                         f"trigger type: {type(value)} \n"
@@ -776,9 +838,8 @@ class Simulation(
                 if isinstance(value, lop_MetaSpeciesLogicResolver):
                     self._set_parameter("_continuous_simulation", True)
                     self.__dict__["_end_condition"] = value
-                    if (
+                    if not self.__dict__["parameters"].get(
                         "initial_conditional_duration"
-                        not in self.__dict__["parameters"]
                     ):
                         self._set_parameter("initial_conditional_duration", 1)
                     return
@@ -837,11 +898,11 @@ class Simulation(
         """
         Encapsulation for config_plot and config_parameters
         """
-        if type(config) == str:  # noqa: E721
+        if isinstance(config, str):
             if os_path_splitext(config)[1] != ".json":
                 raise ParameterError("Wrong file extension")
             parameters_to_config: dict[str, TypingAny] = pr_read_json(config)
-        elif type(config) == dict:  # noqa: E721
+        elif isinstance(config, dict):
             parameters_to_config = config
         else:
             raise ParameterError("Parameters must be python dictionary or json file")

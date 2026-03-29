@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
@@ -37,6 +38,11 @@ def convert_rate(
     if model_context is not None:
         return model_context.convert_rate(quantity, reaction_order, dimension)
 
+    warnings.warn(
+        "Legacy unit conversion without model_context is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     volume_power = reaction_order - 1
     # For objects that cannot be deep copied
     converted_quantity = deep_copy_quantities(quantity)
@@ -113,6 +119,11 @@ def convert_counts(
     if model_context is not None:
         return model_context.convert_counts(quantity, volume)
 
+    warnings.warn(
+        "Legacy unit conversion without model_context is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     converted_quantity = deep_copy_quantities(quantity)
 
     if isinstance(quantity, Quantity):
@@ -266,6 +277,11 @@ def convert_volume(
     if model_context is not None:
         return model_context.convert_volume(volume)
 
+    warnings.warn(
+        "Legacy unit conversion without model_context is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(volume, Quantity):
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
         converted: int | float = volume.convert(f"decimeter ** {dimension}").magnitude  # type: ignore[assignment]
@@ -287,6 +303,11 @@ def convert_time(
     if model_context is not None:
         return model_context.convert_time(time)
 
+    warnings.warn(
+        "Legacy unit conversion without model_context is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(time, Quantity):
         dim = dict(time.dimensionality)
         if dim.get("[time]") and len(dim) == 1:

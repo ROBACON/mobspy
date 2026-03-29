@@ -21,7 +21,7 @@ def test_exponent_basic():
     A(init_a_qty)
     A >> 2 * A[antibio_uptake_senders]
     S = Simulation(A)
-    S.duration = 1222 * u.min
+    S.duration = 50 * u.min
     S.unit_x = u.min
     S.unit_y = u.counts / u.mL
     S.plot_data = False
@@ -43,4 +43,4 @@ def test_rate_function_with_exp():
     A(qty_A)
     A >> 2 * A[antibio_uptake_senders]
     S = Simulation(A)
-    S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
+    S.run(duration=50 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)

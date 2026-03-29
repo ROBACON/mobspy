@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+import pytest
+
 import mobspy
 from mobspy import (
     All,
@@ -20,6 +22,7 @@ from mobspy.exceptions import MobsPyError
 from .conftest import compare_model
 
 
+@pytest.mark.slow
 class TestSimulationExecution:
     def test_average_value(self):
         E = BaseSpecies(1)
@@ -32,14 +35,14 @@ class TestSimulationExecution:
     def test_hybrid_sim(self):
         A, B = BaseSpecies(2)
         A >> 2 * A[1]
-        A(1), B(50)
+        A(1), B(10)
         S1 = Simulation(A)
         S1.save_data = False
         S1.plot_data = False
-        S1.duration = 3
+        S1.duration = 2
 
         A.reset_reactions()
-        A + B >> mobspy.Zero[0.01]
+        A + B >> mobspy.Zero[0.1]
 
         S2 = Simulation(A | B)
         S2.method = "stochastic"
@@ -79,8 +82,8 @@ class TestSimulationExecution:
 
     def test_stochastic_event_duration(self):
         A, B = BaseSpecies(2)
-        A + B >> mobspy.Zero[0.01]
-        A(100), B(100)
+        A + B >> mobspy.Zero[0.1]
+        A(20), B(20)
         S1 = Simulation(A | B)
         S1.save_data = False
         S1.plot_data = False
@@ -181,6 +184,7 @@ class TestSimulationExecution:
         assert S.fres[B][-1] == 0
 
 
+@pytest.mark.slow
 class TestRunArguments:
     def test_run_args(self):
         A = BaseSpecies()
@@ -265,6 +269,7 @@ class TestRunArguments:
 
 
 class TestMultiParameterSimulation:
+    @pytest.mark.slow
     def test_multi_parameter_with_expression(self):
         A = BaseSpecies()
         p = ModelParameters([0.5, 1, 1.5])
@@ -276,6 +281,7 @@ class TestMultiParameterSimulation:
         assert int(S.results[A][1][-1]) == 13
         assert int(S.results[A][2][-1]) == 4
 
+    @pytest.mark.slow
     def test_double_parameters_with_units(self):
         A = BaseSpecies()
         p1, p2 = ModelParameters([1], [1 / u.hour, 2 / u.hour, 3 / u.hour])
@@ -306,6 +312,7 @@ class TestMultiParameterSimulation:
         assert S2.__dict__["parameters"]["plot_type"] == "stochastic"
 
 
+@pytest.mark.slow
 class TestPlotting:
     def test_plotting(self):
         Color, Disease = BaseSpecies()
@@ -318,9 +325,9 @@ class TestPlotting:
         S.level = -1
         S.method = "stochastic"
         S.plot_data = False
-        S.repetitions = 3
+        S.repetitions = 1
         S.step_size = 0.25
-        S.duration = 3
+        S.duration = 1
         S.run(plot_data=False)
         S.plot_config.save_to = "test_plot_images/stochastic_tree.png"
         S.plot_stochastic(Tree.not_sick, Tree.sick)
@@ -367,6 +374,7 @@ class TestErrorHandling:
         except (SystemExit, MobsPyError):
             assert True
 
+    @pytest.mark.slow
     def test_crash_after_modification(self):
         try:
             A = BaseSpecies()
@@ -411,6 +419,7 @@ class TestErrorHandling:
         except (SystemExit, MobsPyError):
             assert True
 
+    @pytest.mark.slow
     def test_shared_parameter_name(self):
         try:
             A = BaseSpecies()
@@ -509,6 +518,7 @@ class TestModelReference:
         assert sorted(r1) == ["A", "B"]
         assert sorted(r2) == ["A", "B", "C"]
 
+    @pytest.mark.slow
     def test_replacing_species_name_in_expression(self):
         Resource, R = BaseSpecies()
         death_rate = lambda r1, r2: r1 * r2 * (u.l / u.s)

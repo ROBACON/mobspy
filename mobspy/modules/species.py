@@ -274,7 +274,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                     "Stoichiometry can only be an int or "
                     f"float - Received {stoichiometry}"
                 )
-                raise ValueError("wrong stoichiometry")
             return r
         else:
             return asgi_Assign.mul(stoichiometry, self)

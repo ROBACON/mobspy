@@ -95,7 +95,7 @@ class Compiler:
                     parameter.value[0],
                     param_unit,
                 )
-            except Exception:
+            except (IndexError, TypeError):
                 parameters_for_sbml[parameter.name] = (
                     parameter.value,
                     param_unit,
@@ -227,6 +227,45 @@ class Compiler:
         parameters_for_sbml: ParametersForSbml = {"volume": (volume, vol_unit_id)}
         return volume, dimension, parameters_for_sbml
 
+    @staticmethod
+    def _apply_count_to_species(
+        quantity: Any,
+        species_strings: set[str] | list[str],
+        species_for_sbml: SpeciesForSbml,
+        assigned_species: list[str],
+        parameters_in_counts: set[Any],
+        parameters_used: ParametersUsed,
+        volume: int | float,
+        dimension: int,
+        type_of_model: str,
+        model_context: ModelUnitContext | None = None,
+    ) -> None:
+        """Register a parameter if applicable, convert count, and assign."""
+        if isinstance(quantity, mp_Mobspy_Parameter):
+            parameters_in_counts.add(quantity)
+            if quantity.name in parameters_used:
+                parameters_used[quantity.name].used_in = parameters_used[
+                    quantity.name
+                ].used_in.union(set(species_strings))
+            else:
+                parameters_used[quantity.name] = ParameterUsedInfo(
+                    name=quantity.name,
+                    values=quantity.value,
+                    used_in=set(species_strings),
+                    object=quantity,
+                )
+
+        temp_count = uh_convert_counts(
+            quantity, volume, dimension, model_context=model_context
+        )
+        for spe_str in species_strings:
+            if isinstance(temp_count, float) and type_of_model != "deterministic":
+                _logger.warning("The stochastic simulation rounds floats to integers")
+                species_for_sbml[spe_str] = int(temp_count)
+            else:
+                species_for_sbml[spe_str] = temp_count
+            assigned_species.append(spe_str)
+
     @classmethod
     def _assign_initial_counts(
         cls,
@@ -257,32 +296,18 @@ class Compiler:
                 count["object"], temp_set, orthogonal_vector_structure, symbol="_dot_"
             )
 
-            if isinstance(count["quantity"], mp_Mobspy_Parameter):
-                parameters_in_counts.add(count["quantity"])
-                if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name].used_in = parameters_used[
-                        count["quantity"].name
-                    ].used_in.union(set(species_strings))
-                else:
-                    parameters_used[count["quantity"].name] = ParameterUsedInfo(
-                        name=count["quantity"].name,
-                        values=count["quantity"].value,
-                        used_in=set(species_strings),
-                        object=count["quantity"],
-                    )
-
-            temp_count = uh_convert_counts(
-                count["quantity"], volume, dimension, model_context=model_context
+            cls._apply_count_to_species(
+                count["quantity"],
+                species_strings,
+                species_for_sbml,
+                assigned_species,
+                parameters_in_counts,
+                parameters_used,
+                volume,
+                dimension,
+                type_of_model,
+                model_context,
             )
-            for spe_str in species_strings:
-                if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
-                    _logger.warning(
-                        "The stochastic simulation rounds floats to integers"
-                    )
-                    species_for_sbml[spe_str] = int(temp_count)
-                else:
-                    species_for_sbml[spe_str] = temp_count
-                assigned_species.append(spe_str)
 
         # Specific assignments (higher priority)
         for count in species_counts:
@@ -301,27 +326,18 @@ class Compiler:
                 else str(species_string_result)
             )
 
-            if isinstance(count["quantity"], mp_Mobspy_Parameter):
-                parameters_in_counts.add(count["quantity"])
-                if count["quantity"].name in parameters_used:
-                    parameters_used[count["quantity"].name].used_in.add(species_string)
-                else:
-                    parameters_used[count["quantity"].name] = ParameterUsedInfo(
-                        name=count["quantity"].name,
-                        values=count["quantity"].value,
-                        used_in={species_string},
-                        object=count["quantity"],
-                    )
-
-            temp_count = uh_convert_counts(
-                count["quantity"], volume, dimension, model_context=model_context
+            cls._apply_count_to_species(
+                count["quantity"],
+                [species_string],
+                species_for_sbml,
+                assigned_species,
+                parameters_in_counts,
+                parameters_used,
+                volume,
+                dimension,
+                type_of_model,
+                model_context,
             )
-            if type(temp_count) == float and not type_of_model == "deterministic":  # noqa: SIM201, E721
-                _logger.warning("The stochastic simulation rounds floats to integers")
-                species_for_sbml[species_string] = int(temp_count)
-            else:
-                species_for_sbml[species_string] = temp_count
-            assigned_species.append(species_string)
 
         return assigned_species, parameters_in_counts
 

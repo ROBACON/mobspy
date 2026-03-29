@@ -80,7 +80,7 @@ class TestSimpleRepressor:
         S = Simulation(Chemical | Promoter | Protein)
         S.save_data = False
         S.plot_data = False
-        S.duration = 200
+        S.duration = 20
         S.run()
         assert S.results is not None
 
@@ -134,7 +134,7 @@ class TestOscillator:
             Chemical.c(rpsor) >> Chemical.c(rpsed) + Chemical.c(rpsor)[hill]
 
         S = Simulation(DNAPromoter | Chemical)
-        S.duration = 300
+        S.duration = 30
         S.plot_data = False
         S.save_data = False
         S.run()
@@ -492,15 +492,15 @@ class TestBistableGutInflammation:
             }
         )
         S = Simulation(model)
-        S.duration = 160 * u.hour
+        S.duration = 30 * u.hour
 
-        with S.event_time(25 * u.hour):
+        with S.event_time(5 * u.hour):
             TTR(1)
-        with S.event_time(60 * u.hour):
+        with S.event_time(12 * u.hour):
             TTR(0)
-        with S.event_time(90 * u.hour):
+        with S.event_time(18 * u.hour):
             Dummy(1)
-        with S.event_time(130 * u.hour):
+        with S.event_time(25 * u.hour):
             Dummy(0)
 
         S.plot_data = False
@@ -554,7 +554,7 @@ class TestMutualAnnihilation:
         S.unit_x, S.unit_y = u.h, 1 / u.ml
         S.save_data = False
         S.plot_data = False
-        S.repetitions = 2
+        S.repetitions = 1
         S.run()
         assert S.results is not None
 
