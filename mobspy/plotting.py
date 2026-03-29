@@ -65,7 +65,7 @@ class PlottingMixin:
                 species_strings.add(spe)
             else:
                 raise ValidationError(
-                    "Only species objects or strings for plotting arguments"
+                    "Only species objects or strings are accepted as plotting arguments"
                 )
 
         return species_strings, self.results, self.plot_parameters

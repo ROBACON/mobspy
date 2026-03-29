@@ -1,8 +1,11 @@
+"""Convert ODE-style differential equations into MobsPy reaction rate closures."""
+
 from __future__ import annotations
 
 import inspect
 from typing import Any
 
+from mobspy.constants import ASSIGNMENT_PREFIX, POSITION_PREFIX
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
@@ -19,15 +22,18 @@ def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any)
     # Convert $asg_X to $pos_N based on position in list
     for i, spe in enumerate(list_of_used_species):
         spe_name = str(spe)
-        expr_template = expr_template.replace(f"($asg_{spe_name})", f"$_pos_{i}")
+        old = f"({ASSIGNMENT_PREFIX}{spe_name})"
+        new = f"{POSITION_PREFIX}{i}"
+        expr_template = expr_template.replace(old, new)
 
     n = len(list_of_used_species)
     param_names = [f"r{i + 1}" for i in range(n)]
 
     def rate_fn(**kwargs: Any) -> str:
+        """Evaluate the ODE rate expression with given species values."""
         result = expr_template
         for i, name in enumerate(param_names):
-            result = result.replace(f"$_pos_{i}", str(kwargs[name]))
+            result = result.replace(f"{POSITION_PREFIX}{i}", str(kwargs[name]))
         return result
 
     # Set proper signature so inspect.signature() returns (r1, r2, ...)

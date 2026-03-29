@@ -9,6 +9,7 @@ from typing import Any
 
 
 def get_example_plot_parameters() -> dict[str, Any]:
+    """Return an example plot parameter dictionary for validation."""
     example_parameters = {
         "output_dir": "",
         "logscale": ["X", "Y"],

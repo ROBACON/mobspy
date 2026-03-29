@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 
 import libsbml as sbml
 
+from mobspy.exceptions import SBMLError
+
 if TYPE_CHECKING:
     from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import (
@@ -28,7 +30,7 @@ def check(value: Any, message: str = "error") -> None:
     libSBML explaining the meaning of the code, and exits with status code 1.
     """
     if value is None:
-        raise RuntimeError(f"LibSBML returned a null value trying to {message}.")
+        raise SBMLError(f"LibSBML returned a null value trying to {message}.")
 
     if type(value) is int:
         if value == sbml.LIBSBML_OPERATION_SUCCESS:
@@ -44,7 +46,7 @@ def check(value: Any, message: str = "error") -> None:
                 + sbml.OperationReturnValue_toString(value).strip()
                 + '"'
             )
-            raise RuntimeError(err_msg)
+            raise SBMLError(err_msg)
     else:
         return
 
@@ -99,7 +101,7 @@ def create_model(
     try:
         document = sbml.SBMLDocument(3, 1)
     except ValueError as exc:
-        raise RuntimeError("Could not create SBMLDocumention object") from exc
+        raise SBMLError("Could not create SBMLDocumentation object") from exc
 
     # Create the basic Model object inside the SBMLDocument object.
 

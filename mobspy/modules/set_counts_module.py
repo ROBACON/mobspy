@@ -1,3 +1,5 @@
+"""Assign initial species counts from user calls, resolving inheritance and units."""
+
 from __future__ import annotations
 
 import sys
@@ -8,6 +10,7 @@ from numpy import floating as np_float_
 from numpy import integer as np_int_
 from pint import Quantity
 
+from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import (
     List_Species,
@@ -25,20 +28,14 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
     Keys from this dictionary can be either meta-species objects or
     strings. Items must be the assigned counts to species.
 
-    :param count_dic: Dictionary where keys can be either
-        meta-species or strings
-    :raise simlog.error:
-        - If a count is assigned to a Reacting_Species with more
-          than one meta-species.
-        - If there are two species with the same name and a string
-          assignment is performed.
-        - If the keys are not strings or meta-species.
-        - If the counts are not Quantities, Floats or Ints.
-        - If the species was not found in the stack.
-    :return: List_Species object. All meta-species that had a count
-        assigned in this dictionary will be returned as a
-        List_Species which can be passed as a model to the
-        simulation object
+    Args:
+        count_dic: Dictionary where keys can be either meta-species or strings.
+
+
+    Returns:
+        List_Species object. All meta-species that had a count assigned in this
+        dictionary will be returned as a List_Species which can be passed as a model to
+        the simulation object.
     """
     new_count_dict: dict[Any, Any] = {}
     for key, item in count_dic.items():
@@ -59,6 +56,7 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
     count_dic = new_count_dict
 
     def find_species() -> set[Species]:
+        """Walk the call stack to collect all Species instances."""
         found_species: set[Species] = set()
 
         frame: FrameType | None = sys._getframe(1)
@@ -89,7 +87,7 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
                 if spe.get_name() == str_name and not already_found:
                     already_found = True
                     temp_set = set(str_characteristics)
-                    temp_set.discard("all$")
+                    temp_set.discard(ALL_CHAR)
                     if temp_set.issubset(spe.get_all_characteristics()):
                         spe.add_quantities(str_characteristics, item)
                     else:

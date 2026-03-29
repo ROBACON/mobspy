@@ -18,13 +18,15 @@ class List_Species:
     Creates a list of species that can be looped through or given
     to the simulator.
 
-    :param list_of_species: Meta-species list to store
+    Args:
+        list_of_species: Meta-species list to store.
     """
 
     def __init__(self, iterable: Sequence[Species] | set[Species]) -> None:
         """Construct from an iterable of Species.
 
-        :param iterable: Species to store
+        Args:
+            iterable: Species to store.
         """
         from mobspy.modules.species import Species
 
@@ -33,12 +35,15 @@ class List_Species:
             if isinstance(item, Species):
                 self._list_species.append(item)
             else:
-                raise ValidationError("Only Species can used to construct List_Species")
+                raise ValidationError(
+                    "Only Species can be used to construct List_Species"
+                )
 
     def append(self, species: Species) -> None:
         """Add species to the list.
 
-        :param species: Meta-species to be added
+        Args:
+            species: Meta-species to be added.
         """
         from mobspy.modules.species import Species
 
@@ -56,7 +61,8 @@ class List_Species:
     def __or__(self, other: Species | List_Species) -> Self:
         """Implementation of the ``|`` operator.
 
-        :param other: Species or List_Species to combine
+        Args:
+            other: Species or List_Species to combine.
         """
         from mobspy.modules.species import Species
 
@@ -66,7 +72,7 @@ class List_Species:
             self._list_species = self._list_species + other._list_species
         else:
             raise ValidationError(
-                "Operator must only be used in Species on List_Species"
+                "Operator must only be used with Species or List_Species"
             )
 
         return self
@@ -79,6 +85,7 @@ class List_Species:
         return len(self._list_species)
 
     def is_in(self, item: Species) -> bool:
+        """Check whether a species is contained in this list."""
         return item in self._list_species
 
     def __setitem__(self, index: int, item: Species) -> None:
@@ -92,22 +99,28 @@ class List_Species:
 
         The order of elements is lost.
 
-        :return: List_Species with no repeated elements
+
+        Returns:
+            List_Species with no repeated elements.
         """
         set_species = set(self._list_species)
         return List_Species(set_species)
 
     def insert(self, index: int, item: Species) -> None:
+        """Insert a species at the given index."""
         self._list_species.insert(index, item)
 
     def extend(self, other: List_Species) -> None:
+        """Append all species from another List_Species."""
         if isinstance(other, List_Species):
             self._list_species = self._list_species + other._list_species
 
     def remove(self, value: object) -> int:
         """Remove all instances of the meta-species.
 
-        :return: The number of instances removed
+
+        Returns:
+            The number of instances removed.
         """
         indexes = []
         for i, e in enumerate(self._list_species):

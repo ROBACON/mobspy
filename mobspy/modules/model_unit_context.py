@@ -114,14 +114,17 @@ class ModelUnitContext:
 
     @property
     def volume_unit_str(self) -> str:
+        """Return the volume unit as a string."""
         return str(self.volume_unit)
 
     @property
     def time_unit_str(self) -> str:
+        """Return the time unit as a string."""
         return str(self.time_unit)
 
     @property
     def substance_unit_str(self) -> str:
+        """Return the substance unit as a string, or ``'item'``."""
         if self.substance_unit is None:
             return "item"
         return str(self.substance_unit)
@@ -250,7 +253,10 @@ class ModelUnitContext:
             elif has_substance and not has_length:
                 # [substance]/[time] rate (e.g. mol/s)
                 if self.substance_is_molar:
-                    assert self.substance_unit is not None
+                    if self.substance_unit is None:
+                        raise UnitError(
+                            "substance_unit is required for molar rate conversion"
+                        )
                     target = self.substance_unit / self.time_unit
                     converted = quantity.to(target)
                     return converted.magnitude, dimension, True
@@ -263,7 +269,11 @@ class ModelUnitContext:
             elif has_substance:
                 # Concentration rate with moles: [length]^n/([substance]^m*[time])
                 if self.substance_is_molar:
-                    assert self.substance_unit is not None
+                    if self.substance_unit is None:
+                        raise UnitError(
+                            "substance_unit is required for "
+                            "molar concentration rate conversion"
+                        )
                     target = self.volume_unit**volume_power / (
                         self.substance_unit**volume_power * self.time_unit
                     )
@@ -311,7 +321,8 @@ class ModelUnitContext:
 
         if not has_length and not has_substance and not is_dimensionless:
             raise UnitError(
-                f"The assigned quantity {quantity} is neither a count or concentration"
+                f"The assigned quantity {quantity} is"
+                " neither a count nor a concentration"
             )
 
         if is_dimensionless:
@@ -322,7 +333,11 @@ class ModelUnitContext:
                 if has_length:
                     # Concentration (e.g. molar, millimolar)
                     if self.substance_is_molar:
-                        assert self.substance_unit is not None
+                        if self.substance_unit is None:
+                            raise UnitError(
+                                "substance_unit is required for "
+                                "molar concentration conversion"
+                            )
                         target = self.substance_unit / self.volume_unit
                         converted = quantity.to(target)
                         # Multiply by volume to get amount
@@ -334,7 +349,10 @@ class ModelUnitContext:
                         return converted.magnitude * volume * N_A
                 # Pure substance amount (e.g. 5 * u.mole)
                 elif self.substance_is_molar:
-                    assert self.substance_unit is not None
+                    if self.substance_unit is None:
+                        raise UnitError(
+                            "substance_unit is required for molar substance conversion"
+                        )
                     converted = quantity.to(self.substance_unit)
                     return converted.magnitude
                 else:
@@ -400,7 +418,8 @@ class ModelUnitContext:
 
         # Substance unit
         if self.substance_is_molar:
-            assert self.substance_unit is not None
+            if self.substance_unit is None:
+                raise UnitError("substance_unit is required for SBML unit definition")
             sub_id = self.get_sbml_substance_units_id()
             _create_unit_def(model, sub_id, self.substance_unit)
 

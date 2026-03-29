@@ -9,12 +9,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-# --- SBML data structures (compiler -> builder -> SBMLWriter) ---
+# --- SBML data structures (compiler -> builder -> sbml_writer) ---
 
 
 @dataclass
 class ReactionData:
-    """Single reaction in SBML format."""
+    """Single reaction in SBML format.
+
+    Examples:
+        >>> r = ReactionData()
+        >>> r.reactants
+        []
+        >>> r.kinetics
+        ''
+    """
 
     reactants: list[tuple[float | int, str]] = field(default_factory=list)
     products: list[tuple[float | int, str]] = field(default_factory=list)
@@ -71,7 +79,7 @@ class ParameterUsedInfo:
 
 @dataclass
 class SBMLModelData:
-    """Data passed to builder.build() / SBMLWriter."""
+    """Data passed to builder.build() / sbml_writer."""
 
     species_for_sbml: dict[str, int | float] = field(default_factory=dict)
     parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
@@ -91,7 +99,15 @@ class SBMLModelData:
 
 @dataclass
 class CompiledModel:
-    """Full compiled model stored in _list_of_models."""
+    """Full compiled model stored in _list_of_models.
+
+    Examples:
+        >>> m = CompiledModel()
+        >>> m.species_for_sbml
+        {}
+        >>> m["species_for_sbml"]
+        {}
+    """
 
     species_for_sbml: dict[str, int | float] = field(default_factory=dict)
     parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
@@ -137,11 +153,11 @@ class TimeSeriesDataDict:
     def __init__(
         self,
         data: dict[str, list[float]] | None = None,
-        params: SimulationParameters | None = None,
+        params: SimulationParameters | Any | None = None,
         models: list[CompiledModel] | None = None,
     ) -> None:
         self.data: dict[str, list[float]] = data or {}
-        self.params: SimulationParameters | None = params
+        self.params: SimulationParameters | Any | None = params
         self.models: list[CompiledModel] = models or []
 
     def __getitem__(self, key: str) -> Any:

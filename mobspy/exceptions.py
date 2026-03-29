@@ -1,6 +1,9 @@
-"""
-Custom exceptions for MobsPy to provide better error handling
-and debugging.
+"""Custom exceptions for MobsPy to provide better error handling and debugging.
+
+Examples:
+    >>> from mobspy.exceptions import CompilationError, MobsPyError
+    >>> issubclass(CompilationError, MobsPyError)
+    True
 """
 
 from __future__ import annotations

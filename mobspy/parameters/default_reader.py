@@ -9,6 +9,7 @@ from typing import Any
 
 # This was just created to avoid potential directory compatibilities
 def get_default_parameters() -> dict[str, Any]:
+    """Return the default simulation parameter dictionary."""
     default_parameters: dict[str, Any] = {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
         "volume": 1,

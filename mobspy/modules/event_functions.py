@@ -1,7 +1,11 @@
+"""Build and validate SBML events from user-defined triggers and assignments."""
+
 from __future__ import annotations
 
+from re import split as re_split
 from typing import TYPE_CHECKING, Any
 
+from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
 from mobspy.exceptions import EventError
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 from mobspy.types import EventData, SimulationEventData
@@ -12,9 +16,6 @@ if TYPE_CHECKING:
 
 from pint import Quantity
 
-from mobspy.modules.function_rate_code import (
-    search_for_parameters_in_str as frc_search_for_parameters_in_str,
-)
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
@@ -25,37 +26,33 @@ from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 
-# @TODO remove search parameters in string
-# don't use it anymore - slowly deprecate this function
-
 
 def format_event_dictionary_for_sbml(
-    species_for_sbml: dict[str, Any],
+    species_for_sbml: dict[str, int | float],
     event_list: list[SimulationEventData],
     characteristics_to_object: dict[str, Any],
     volume: int | float,
     dimension: int,
     meta_species_to_simulate: Any,
     parameter_exist: dict[str, Any],
-    parameters_in_events: set[Any],
+    parameters_in_events: set[mp_Mobspy_Parameter],
     model_context: ModelUnitContext | None = None,
 ) -> tuple[EventsForSbml, set[str]]:
     """
     Creates events_for_sbml dictionary for sbml file construction
-    on the sbml_simulator/SBMLWriter.py
+    on the sbml_simulator/sbml_writer.py
 
-    :param species_for_sbml: (dict)
-        {'species_string': count, ....}
-    :param event_list:
-        [{'species':'meta_species_object',
-        'characteristics':['list of characteristics'],
-        'quantity': number or pint object}
-    :param characteristics_to_object: {'characteristic':'meta_species_object', .....}
-    :param volume: Simulation volume for unit conversion
-    :param dimension: Dimension of the system 2D, 3D, 4D, e
-    :return: event dictionary for the sbml file construction
-    :rtype: events = {'e': { 'trigger': 'true',
-        'delay': '10', 'assignments': [('M','1'),]}}
+    Args:
+        species_for_sbml: {'species_string': count, ....}.
+        event_list:  [{'species':'meta_species_object', 'characteristics':['list of
+            characteristics'], 'quantity': number or pint object}.
+        characteristics_to_object: {'characteristic':'meta_species_object', .....}.
+        volume: Simulation volume for unit conversion.
+        dimension: Dimension of the system 2D, 3D, 4D, e.
+
+
+    Returns:
+        Event dictionary for the sbml file construction.
     """
     reformed_event_list: list[SimulationEventData] = []
     species_in_events: set[str] = set()
@@ -63,7 +60,11 @@ def format_event_dictionary_for_sbml(
     # Convert count from triggers
     for ev in event_list:
         if ev.trigger != "true":
-            assert not isinstance(ev.trigger, str)
+            if isinstance(ev.trigger, str):
+                raise EventError(
+                    "Event trigger must be a condition object, "
+                    f"got string: {ev.trigger!r}"
+                )
             for i, e in enumerate(ev.trigger.operation):
                 if isinstance(e, Quantity):
                     ev.trigger.operation[i] = uh_convert_counts(
@@ -76,17 +77,20 @@ def format_event_dictionary_for_sbml(
     for ev in event_list:
         if not ev.event_counts:
             continue
-        event_dictionary: dict[str, Any] = {}
+        event_dictionary: dict[str, int | float | str] = {}
 
         # All assignments never take priority over specific assignments
         for ec in ev.event_counts:
-            if "all$" not in ec["characteristics"]:
+            if ALL_CHAR not in ec["characteristics"]:
                 continue
 
             temp_char = set(ec["characteristics"])
-            temp_char.remove("all$")
+            temp_char.remove(ALL_CHAR)
             dummy = ssg_construct_all_combinations(
-                ec["species"], temp_char, characteristics_to_object, symbol="_dot_"
+                ec["species"],
+                temp_char,
+                characteristics_to_object,
+                symbol=DOT_SEPARATOR,
             )
             for d in dummy:
                 if not isinstance(ec["quantity"], str):
@@ -100,14 +104,14 @@ def format_event_dictionary_for_sbml(
                     event_dictionary[d] = ec["quantity"]
 
         for ec in ev.event_counts:
-            if "all$" in ec["characteristics"]:
+            if ALL_CHAR in ec["characteristics"]:
                 continue
 
             dummy_result = ssg_construct_species_char_list(
                 ec["species"],
                 ec["characteristics"],
                 characteristics_to_object,
-                symbol="_dot_",
+                symbol=DOT_SEPARATOR,
             )
             dummy_key: str = (
                 dummy_result if isinstance(dummy_result, str) else str(dummy_result)
@@ -125,10 +129,11 @@ def format_event_dictionary_for_sbml(
                         model_context=model_context,
                     )
             else:
-                if parameter_exist != {}:
-                    frc_search_for_parameters_in_str(
-                        ec["quantity"], parameter_exist, parameters_in_events
-                    )
+                if parameter_exist:
+                    for token in re_split(r", |-|!|\*|\+|/|\)|\(| ", ec["quantity"]):
+                        name = token.strip()
+                        if name and name in parameter_exist:
+                            parameters_in_events.add(parameter_exist[name])
                 event_dictionary[dummy_key] = ec["quantity"]
 
         if isinstance(ev.trigger, str):

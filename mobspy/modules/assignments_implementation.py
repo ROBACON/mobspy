@@ -1,9 +1,12 @@
+"""Implement SBML assignment rules that bind species counts to expressions."""
+
 from __future__ import annotations
 
 from re import compile as re_compile
 from re import escape as re_escape
 from typing import TYPE_CHECKING, Any
 
+from mobspy.constants import ALL_CHAR, ASSIGNMENT_PREFIX, DOT_SEPARATOR
 from mobspy.exceptions import CompilationError
 
 if TYPE_CHECKING:
@@ -20,11 +23,18 @@ from mobspy.types import AssignmentData
 
 
 class Assignment_Operator:
+    """Manages assignment context and compiles assignment expressions for SBML.
+
+    Acts as a context manager that activates/deactivates assignment mode,
+    and provides static methods for arithmetic on assignment expressions.
+    """
+
     _asg_context: bool = False
     regex_pattern: str = r"\(\$arg(?:\.[^\s().]+)?\)(?=[^\s()]|$)"
 
     @staticmethod
     def find_arg_strings(input_string: str) -> list[str]:
+        """Extract ``$``-prefixed argument tokens from an assignment expression."""
         arg_strings: list[str] = []
         flag_found = False
         stack = ""
@@ -48,15 +58,18 @@ class Assignment_Operator:
         return self
 
     def set_context(self) -> None:
+        """Activate the assignment context."""
         self._asg_context = True
 
     def __exit__(self, *args: Any) -> None:
         self._asg_context = False
 
     def reset_context(self) -> None:
+        """Deactivate the assignment context."""
         self._asg_context = False
 
     def check_context(self) -> bool:
+        """Return whether the assignment context is currently active."""
         return self._asg_context
 
     @staticmethod
@@ -64,6 +77,10 @@ class Assignment_Operator:
         first: Any,
         second: Any,
     ) -> tuple[mbe_MobsPyExpression, mbe_MobsPyExpression]:
+        """Coerce both operands into MobsPyExpression instances.
+
+        Prepares them for assignment arithmetic.
+        """
         spe_list_first: list[Any] = []
         spe_list_second: list[Any] = []
 
@@ -99,7 +116,7 @@ class Assignment_Operator:
 
         if not isinstance(first, mbe_MobsPyExpression):
             first = mbe_MobsPyExpression(
-                "($asg_" + str(first) + ")",
+                "(" + ASSIGNMENT_PREFIX + str(first) + ")",
                 species_object=None,
                 dimension=None,
                 count_in_model=True,
@@ -123,26 +140,31 @@ class Assignment_Operator:
 
     @staticmethod
     def add(first: Any, second: Any) -> mbe_MobsPyExpression:
+        """Build an addition expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first + second  # type: ignore[no-any-return]
 
     @staticmethod
     def sub(first: Any, second: Any) -> mbe_MobsPyExpression:
+        """Build a subtraction expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first - second  # type: ignore[no-any-return]
 
     @staticmethod
     def mul(first: Any, second: Any) -> mbe_MobsPyExpression:
+        """Build a multiplication expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first * second  # type: ignore[no-any-return]
 
     @staticmethod
     def div(first: Any, second: Any) -> mbe_MobsPyExpression:
+        """Build a division expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first / second  # type: ignore[no-any-return]
 
     @staticmethod
     def pow(first: Any, second: Any) -> mbe_MobsPyExpression:
+        """Build an exponentiation expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first**second  # type: ignore[no-any-return]
 
@@ -153,7 +175,11 @@ class Assignment_Operator:
         meta_species_in_model: list[Any],
         expression_tuple: tuple[Any, str],
     ) -> str:
-        spe_str_raw = express_spe.replace("$asg_", "")
+        """Expand a meta-species token into a sum of concrete species.
+
+        Returns a string of all matching concrete species joined by '+'.
+        """
+        spe_str_raw = express_spe.replace(ASSIGNMENT_PREFIX, "")
         spe_str = spe_str_raw.split(".")
 
         # CHECK HERE FOR MISSING SPECIES IN MODEL
@@ -165,7 +191,7 @@ class Assignment_Operator:
             spe_name = str(expression_tuple[0][0])
             error_message = (
                 f"Assignment {spe_name}, {expression_tuple[0][1]}: "
-                f"{expression_tuple[1].replace('$asg_', '')} failed\n"
+                f"{expression_tuple[1].replace(ASSIGNMENT_PREFIX, '')} failed\n"
                 "One of the meta-species in the assignment"
                 " expression was not found in the model"
             )
@@ -173,11 +199,11 @@ class Assignment_Operator:
 
         if len(spe_str) == 1:
             str_comb = ssg_construct_all_combinations(
-                spe_object, set(), ortogonal_vector_structure, "_dot_"
+                spe_object, set(), ortogonal_vector_structure, DOT_SEPARATOR
             )
         else:
             str_comb = ssg_construct_all_combinations(
-                spe_object, set(spe_str[1:]), ortogonal_vector_structure, "_dot_"
+                spe_object, set(spe_str[1:]), ortogonal_vector_structure, DOT_SEPARATOR
             )
         str_comb.sort()
 
@@ -196,6 +222,10 @@ class Assignment_Operator:
         meta_species_in_model: list[Any],
         for_error_tuple: tuple[Any, str],
     ) -> str:
+        """Replace all meta-species tokens in an assignment expression.
+
+        Substitutes concrete species sums for each token.
+        """
         spe_in_expression = Assignment_Operator.find_arg_strings(asg_expression)
         replacement_dict: dict[str, str] = {}
         for spe in spe_in_expression:
@@ -219,16 +249,17 @@ class Assignment_Operator:
     def compile_assignments_for_sbml(
         unprocessed_asgns: dict[Any, Any],
         ortogonal_vector_structure: dict[str, Any],
-        meta_species_in_model: list[Any],
+        meta_species_in_model: Any,
     ) -> AssignmentsForSbml:
+        """Compile raw assignment definitions into SBML-ready AssignmentData entries."""
         assignments_for_sbml: AssignmentsForSbml = {}
         assignment_counter = 0
         for asg in unprocessed_asgns:
-            if "all$" not in asg[1]:
+            if ALL_CHAR not in asg[1]:
                 continue
 
             spe_to_asgn = ssg_construct_all_combinations(
-                asg[0], asg[1], ortogonal_vector_structure, symbol="_dot_"
+                asg[0], asg[1], ortogonal_vector_structure, symbol=DOT_SEPARATOR
             )
 
             asgn_expression = Assignment_Operator.process_assignments(
@@ -247,11 +278,11 @@ class Assignment_Operator:
                 assignment_counter += 1
 
         for asg in unprocessed_asgns:
-            if "all$" in asg[1]:
+            if ALL_CHAR in asg[1]:
                 continue
 
             spe_to_asgn_result = ssg_construct_species_char_list(
-                asg[0], asg[1], ortogonal_vector_structure, symbol="_dot_"
+                asg[0], asg[1], ortogonal_vector_structure, symbol=DOT_SEPARATOR
             )
 
             asgn_expression = Assignment_Operator.process_assignments(
@@ -272,6 +303,10 @@ class Assignment_Operator:
 
     @staticmethod
     def replace_agn_expr(assignment_ex: str, to_replace: str, replacement: str) -> str:
+        """Replace a token in an assignment expression.
+
+        Uses word-boundary-aware regex to avoid partial matches.
+        """
         pattern = re_compile(re_escape(to_replace) + r"(?![a-zA-Z0-9_])")
         return pattern.sub(replacement, assignment_ex)
 
@@ -280,6 +315,11 @@ Assign = Assignment_Operator()
 
 
 class Asg:
+    """Captures an assignment target for deferred evaluation.
+
+    Stores species and characteristics.
+    """
+
     assignments: dict[Any, Any] = {}
 
     def __init__(self, meta_spe: Any, species_or_reacting: bool) -> None:

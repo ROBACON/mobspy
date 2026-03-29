@@ -14,6 +14,7 @@ import sys
 import traceback
 from typing import Any
 
+from mobspy.constants import DOT_SEPARATOR
 from mobspy.exceptions import MobsPyError
 
 
@@ -28,6 +29,7 @@ class ColoredFormatter(logging.Formatter):
     }
 
     def format(self, record: logging.LogRecord) -> str:
+        """Apply ANSI color codes based on log level."""
         log_message = super().format(record)
         if record.levelname in self.COLORS:
             return f"{self.COLORS[record.levelname]}{log_message}{self.COLORS['RESET']}"
@@ -81,7 +83,7 @@ class MobsPyLogger:
         Returns:
             Formatted message
         """
-        return str(message).replace("_dot_", ".")
+        return str(message).replace(DOT_SEPARATOR, ".")
 
     def set_log_level(self, level: int | str) -> None:
         """

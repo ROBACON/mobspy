@@ -13,6 +13,7 @@ from numpy import floating as np_float_
 from numpy import integer as np_int_
 from pint import Quantity
 
+from mobspy.constants import CONTEXT_SPECIES_NAME, NOT_CHAR, ZERO_SPECIES_NAME
 from mobspy.exceptions import ReactionError, ValidationError
 from mobspy.modules.assignments_implementation import (
     Asg as asgi_Asg,
@@ -20,11 +21,8 @@ from mobspy.modules.assignments_implementation import (
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
 )
-from mobspy.modules.logic_operator_objects import (
+from mobspy.modules.logic_operators import (
     ReactingSpeciesComparator as lop_ReactingSpeciesComparator,
-)
-from mobspy.modules.meta_class_utils import (
-    unite_characteristics as mcu_unite_characteristics,
 )
 from mobspy.modules.mobspy_expressions import (
     ExpressionDefiner as me_ExpressionDefiner,
@@ -34,6 +32,9 @@ from mobspy.modules.mobspy_expressions import (
 )
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
+)
+from mobspy.modules.species_utils import (
+    unite_characteristics as mcu_unite_characteristics,
 )
 
 if TYPE_CHECKING:
@@ -52,15 +53,16 @@ class _Last_rate_storage:
         reaction. It is stored at the Compiler level and passed
         to the reaction object in the end.
 
-        :param object_to_return: returns the object that
-            __getitem__ was performed on
-        :param item: stored reaction rate
+        Args:
+            object_to_return: Returns the object that __getitem__ was performed on.
+            item: Stored reaction rate.
         """
         cls.last_rate = item
         return object_to_return
 
     @classmethod
     def process_rate(cls, rate: Any) -> Any:
+        """Validate and normalize a reaction rate value."""
         from mobspy.modules.species import Species
 
         if isinstance(rate, (np_int_, np_float_)):
@@ -68,9 +70,7 @@ class _Last_rate_storage:
 
         if isinstance(rate, (Species, Reacting_Species, Reactions)):
             raise ReactionError(
-                "Reaction rate of type "
-                + str(type(_Last_rate_storage.last_rate))
-                + " not valid"
+                f"Reaction rate of type {type(_Last_rate_storage.last_rate)} not valid"
             )
 
         if not (
@@ -100,10 +100,11 @@ class Reactions:
     Reactions are created with the ``>>`` operator and stored
     in all involved objects.
 
-    :param reactants: list of meta-species used as reactants
-    :param products: list of meta-species used as products
-    :param order: reaction order operator (Round-Robin default)
-    :param rate: reaction rate
+    Args:
+        reactants: List of meta-species used as reactants.
+        products: List of meta-species used as products.
+        order: Reaction order operator (Round-Robin default).
+        rate: Reaction rate.
     """
 
     def __init__(
@@ -116,22 +117,21 @@ class Reactions:
 
         The order and the rate are assigned later by the compiler.
 
-        :param reactants: list of meta-species reactants
-        :param products: list of meta-species products
-        :raise simlog.error: if defined under simulation context
-        :raise simlog.error: if called from Zero to Zero
+        Args:
+            reactants: List of meta-species reactants.
+            products: List of meta-species products.
         """
         from mobspy.modules.species import Species
 
         for p in products:
-            if p["object"].get_name() == "Context_MetaSpecies":
+            if p["object"].get_name() == CONTEXT_SPECIES_NAME:
                 raise ReactionError("The Any meta-species cannot be used in reactions")
 
         if asgi_Assign.check_context():
             asgi_Assign.reset_context()
             raise ReactionError(
-                "A MobsPy context error has happen. "
-                "A reaction was defined with the assignment context activated."
+                "A MobsPy context error has happened. "
+                "A reaction was defined with the assignment context activated. "
                 "The assignment context was deactivated. "
                 "Please try to redefine the model"
             )
@@ -161,7 +161,7 @@ class Reactions:
             rate = _Last_rate_storage.process_rate(rate)
 
         else:
-            raise ReactionError("To many rate provided")
+            raise ReactionError("Too many rates provided")
         self.rate = rate
         if _Last_rate_storage.last_rate is not None:
             _Last_rate_storage.last_rate = None
@@ -229,19 +229,23 @@ class Reactions:
     def __getitem__(self, item: Any) -> Self:
         """Override of __getitem__ for dealing with reaction rates.
 
-        :param item: (int, float, callable, Quantity) = reaction rate
+        Args:
+            item: Reaction rate.
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
 
     def set_rate(self, rate: Any) -> None:
         """Set the stored reaction rate.
 
-        :param rate: (int, float, callable, Quantity) = reaction rate
+        Args:
+            rate: Reaction rate.
         """
         self.rate = rate
 
 
 class Assignment_Opp_Imp:
+    """Mixin that routes arithmetic operators to the assignment context when active."""
+
     @staticmethod
     def _dispatch_assign_op(
         first: Any,
@@ -316,13 +320,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     ) -> None:
         """Construct a Reacting_Species.
 
-        :param object_reference: meta-species object reference
-        :param characteristics: characteristics used to query
-        :param stoichiometry: stoichiometry in the reaction
-        :param label: label value for matching
+        Args:
+            object_reference: Meta-species object reference.
+            characteristics: Characteristics used to query.
+            stoichiometry: Stoichiometry in the reaction.
+            label: Label value for matching.
         """
         super().__init__()
-        if object_reference.get_name() == "_S0" and characteristics == set():
+        is_zero = object_reference.get_name() == ZERO_SPECIES_NAME
+        if is_zero and characteristics == set():
             self.list_of_reactants: list[dict[str, Any]] = []
         else:
             self.list_of_reactants = [
@@ -339,7 +345,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         self.context_initiator_for_reacting_specie()
         return 0
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """Exit context manager for characteristics."""
         self.context_finish_for_reacting_specie()
 
@@ -371,7 +377,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
         Calls __getattr__ with the value inside the variable.
 
-        :param item: value to query over
+        Args:
+            item: Value to query over.
         """
         from mobspy.modules.species import Species
 
@@ -382,7 +389,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def label(self, label: int | float | str) -> Self:
         """Assign a label to a meta-species for compiler matching.
 
-        :param label: value for the label for matching
+        Args:
+            label: Value for the label for matching.
         """
         if len(self.list_of_reactants) == 1:
             self.list_of_reactants[0]["label"] = label
@@ -396,30 +404,42 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __getitem__(self, item: Any) -> Self:
         """Override of __getitem__ for dealing with reaction rates.
 
-        :param item: (int, float, callable, Quantity) = reaction rate
+        Args:
+            item: Reaction rate.
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
 
     def get_spe_object(self) -> Species:
+        """Return the single underlying Species object.
+
+        Raises:
+            ReactionError: If more than one reactant is present.
+        """
         if len(self.list_of_reactants) != 1:
             raise ReactionError(
                 "The internal method get_queried_characteristics can only be used for "
-                "Reacting_Species with a single "
+                "Reacting_Species with a single reactant."
             )
         return self.list_of_reactants[0]["object"]  # type: ignore[no-any-return]
 
     def get_query_characteristics(self) -> Any:
+        """Return the queried characteristics of the single reactant.
+
+        Raises:
+            ReactionError: If more than one reactant is present.
+        """
         if len(self.list_of_reactants) != 1:
             raise ReactionError(
                 "The internal method get_queried_characteristics can only be used for "
-                "Reacting_Species with a single "
+                "Reacting_Species with a single reactant."
             )
         return self.list_of_reactants[0]["characteristics"]
 
     def __rmul__(self, stoichiometry: Any) -> Self | Any:
         """Multiply by stoichiometry for reactions.
 
-        :param stoichiometry: stoichiometry value
+        Args:
+            stoichiometry: Stoichiometry value.
         """
         if not asgi_Assign.check_context():
             if isinstance(stoichiometry, (int, float)):
@@ -436,7 +456,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __add__(self, other: Species | Reacting_Species | Any) -> Self | Any:
         """Addition of meta-species to construct the reaction.
 
-        :param other: (Species or Reacting Species) other object being added
+        Args:
+            other: Other object being added.
         """
         from mobspy.modules.species import Species
 
@@ -461,7 +482,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
             return asgi_Assign.add(other, self)
 
     def __invert__(self) -> Reacting_Species:
-        return self.c("not$")
+        return self.c(NOT_CHAR)
 
     def __neg__(self) -> Any:
         if asgi_Assign.check_context():
@@ -475,8 +496,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
         """The ``>>`` operator for defining reactions.
 
-        :param other: (Species or Reacting Species)
-            product side of the reaction being added
+        Args:
+            other: Product side of the reaction being added.
         """
         import sys
 
@@ -500,7 +521,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __call__(self, quantity: Any) -> Self | None:  # type: ignore[return]
         """Assign counts to species non-default state.
 
-        :param quantity: (int, float, Quantity) count to be assigned
+        Args:
+            quantity: Count to be assigned.
         """
         from mobspy.modules.species import Species
 
@@ -558,7 +580,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
     def __getattr__(self, characteristic: str) -> Any:
         """Implementation of the .dot operation.
 
-        :param characteristic: (str) characteristic for the query
+        Args:
+            characteristic: Characteristic for the query.
         """
         from mobspy.modules.species import Species
 
@@ -591,10 +614,12 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
 
     @classmethod
     def is_species(cls) -> bool:
+        """Return False; this is a reacting species, not a Species."""
         return False
 
     @classmethod
     def is_spe_or_reac(cls) -> bool:
+        """Return True; this is a species-or-reaction type."""
         return True
 
     old_context: set[str] = set()

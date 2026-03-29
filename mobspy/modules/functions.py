@@ -1,7 +1,10 @@
+"""Mathematical function wrappers for use inside MobsPy rate expressions."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from mobspy.constants import NULL_SPECIES
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
@@ -34,7 +37,7 @@ class MathFunctionWrapper:
     ) -> MobsPyExpression:
         """Create new MobsPyExpression with this function applied."""
         return MobsPyExpression(
-            species_string="$Null",
+            species_string=NULL_SPECIES,
             species_object=None,
             operation=new_operation,
             unit_count_op=1,

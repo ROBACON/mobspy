@@ -1,3 +1,5 @@
+"""Execute compiled SBML models via BasiCO/COPASI with parallel run support."""
+
 from __future__ import annotations
 
 import contextlib
@@ -6,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from joblib import Parallel, delayed
 
 import mobspy.sbml_simulator.builder as sbml_builder
+from mobspy.constants import DOT_SEPARATOR, END_FLAG_SPECIES_NAME
 from mobspy.exceptions import SimulationError
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
@@ -24,6 +27,7 @@ def simulate(
     list_of_params: list[SimParams],
     models: list[CompiledModelDict],
 ) -> list[dict[str, list[float]]] | None:
+    """Run SBML models via BasiCO and return time-series data."""
     data = job_execution(list_of_params, models, jobs)
 
     return data
@@ -34,6 +38,8 @@ def job_execution(
     models: list[CompiledModelDict],
     jobs: int,
 ) -> list[dict[str, list[float]]] | None:
+    """Execute simulation repetitions in parallel via joblib."""
+
     def __single_run(packed: int) -> dict[str, list[float]]:
         i = packed
 
@@ -61,7 +67,7 @@ def job_execution(
                 reformatted_data = reformat_time_series(data)
 
                 if sim_par["_continuous_simulation"]:
-                    if reformatted_data["_End_Flag_MetaSpecies"][-1] > 0:
+                    if reformatted_data[END_FLAG_SPECIES_NAME][-1] > 0:
                         reformatted_data = __filter_condition_event_time_data(
                             reformatted_data
                         )
@@ -87,8 +93,8 @@ def job_execution(
 
     if not parallel_data:
         raise SimulationError(
-            "Error: The parallel model has not produced an output."
-            + "Try addding ('sequential': True) to parameters"
+            "The parallel model has not produced an output. "
+            "Try adding ('sequential': True) to parameters"
         )
 
     return parallel_data
@@ -129,10 +135,11 @@ def __run_time_course(
 def reformat_time_series(
     data: pd.DataFrame,
 ) -> dict[str, list[float]]:
+    """Convert a BasiCO DataFrame to a plain dict of lists."""
     data_dict: dict[str, list[float]] = {"Time": data.index.tolist()}
 
     for key in data:
-        data_dict[key.replace("_dot_", ".")] = list(data[key])
+        data_dict[key.replace(DOT_SEPARATOR, ".")] = list(data[key])
 
     return data_dict
 
@@ -142,7 +149,7 @@ def __filter_condition_event_time_data(
 ) -> dict[str, list[float]]:
     new_data: dict[str, list[float]] = {}
 
-    for i, e in enumerate(data["_End_Flag_MetaSpecies"]):
+    for i, e in enumerate(data[END_FLAG_SPECIES_NAME]):
         if e == 1:
             stop_index = i
             break
@@ -163,7 +170,7 @@ def __sbml_new_initial_values(
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
-        sbml_key = key.replace(".", "_dot_")
+        sbml_key = key.replace(".", DOT_SEPARATOR)
         if sbml_key not in species_for_sbml:
             continue
 
@@ -180,7 +187,7 @@ def __sbml_new_initial_values(
 
     if new_model:
         with contextlib.suppress(KeyError):
-            species_for_sbml["_End_Flag_MetaSpecies"] = 0
+            species_for_sbml[END_FLAG_SPECIES_NAME] = 0
 
     # Extract model_context if available (for proper SBML unit declarations)
     model_context = (
@@ -264,7 +271,8 @@ def __remap_species(
 
     dot_species_not_mapped: dict[str, float] = {}
     for key in species_not_mapped:
-        dot_species_not_mapped[key.replace("_dot_", ".")] = species_not_mapped[key]
+        dot_key = key.replace(DOT_SEPARATOR, ".")
+        dot_species_not_mapped[dot_key] = species_not_mapped[key]
 
     # 1st pass with sum mappings
     for group in mapping:

@@ -66,6 +66,3 @@ from mobspy.modules.species_constructors import (
 from mobspy.modules.species_constructors import (
     compile_species_number_line as compile_species_number_line,
 )
-
-if __name__ == "__main__":
-    pass

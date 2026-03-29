@@ -1,3 +1,5 @@
+"""Provide a proxy object that defers module import until first attribute access."""
+
 from __future__ import annotations
 
 from importlib import import_module as implib_import_module
@@ -15,13 +17,3 @@ class LazyImporter:
         if self._module is None:
             self._module = implib_import_module(self.module_name)
         return getattr(self._module, attr)
-
-
-if __name__ == "__main__":
-    basico = LazyImporter("basico")
-
-    a = basico.model_io.load_model_from_string("")
-
-    print(a)
-
-    # basico_model_io.load_model_from_string(sbml_str)

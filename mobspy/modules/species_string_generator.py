@@ -1,7 +1,11 @@
+"""Generate concrete species name strings from characteristic combinations."""
+
 from __future__ import annotations
 
 from itertools import product as itertools_product
 from typing import Any
+
+from mobspy.constants import STD_CHAR
 
 
 def characteristics_dictionary(
@@ -14,10 +18,10 @@ def characteristics_dictionary(
     This structure allows to easily find where the
     characteristics in a species string are locates
 
-    :param characteristics: (set) of characteristics
-    :param characteristics_to_object: (dict) with
-        characteristics as keys and their respective base
-        meta-species object as value
+    Args:
+        characteristics: Of characteristics.
+        characteristics_to_object: With characteristics as keys and their respective
+            base meta-species object as value.
     """
     object_to_characteristic: dict[Any, str] = {}
     for characteristic in characteristics:
@@ -43,16 +47,15 @@ def construct_species_char_list(
     value. If a symbol is given it generates a string from
     the list using the symbol to join it.
 
-    :param spe_object: meta-species object to be used
-    :param characteristics: (set) of characteristics given
-    :param characteristics_to_object: (dict) with
-        characteristics as keys and their respective base
-        meta-species object as value
-    :param symbol: (str) usually . or _dot_, connects
-        the elements from the list using the specified
-        symbol
+    Args:
+        spe_object: Meta-species object to be used.
+        characteristics: Of characteristics given.
+        characteristics_to_object: With characteristics as keys and their respective
+            base meta-species object as value.
+        symbol: Usually . or _dot_, connects the elements from the list using the
+            specified symbol.
     """
-    if characteristics == "std$" or isinstance(characteristics, str):
+    if characteristics == STD_CHAR or isinstance(characteristics, str):
         char_set: set[str] = set()
     else:
         char_set = characteristics
@@ -98,17 +101,16 @@ def construct_all_combinations(
     generates a string from the list using the symbol
     to join it.
 
-    :param spe_object: meta-species object to be used
-    :param characteristics: (set) of characteristics given
-    :param characteristics_to_object: (dict) with
-        characteristics as keys and their respective base
-        meta-species object as value
-    :param symbol: (str) usually . or _dot_, connects
-        the elements from the list using the specified
-        symbol
+    Args:
+        spe_object: Meta-species object to be used.
+        characteristics: Of characteristics given.
+        characteristics_to_object: With characteristics as keys and their respective
+            base meta-species object as value.
+        symbol: Usually . or _dot_, connects the elements from the list using the
+            specified symbol.
     """
 
-    if characteristics == "std$" or isinstance(characteristics, str):
+    if characteristics == STD_CHAR or isinstance(characteristics, str):
         char_set2: set[str] = set()
     else:
         char_set2 = characteristics

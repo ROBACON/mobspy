@@ -1,3 +1,5 @@
+"""Render multi-panel hierarchical plots for parametric sweep results."""
+
 from __future__ import annotations
 
 import math
@@ -24,8 +26,9 @@ class Color_cycle:
     This class is responsible for cycling through the
     different colors for different curves.
 
-    :param index: (int) Current position in the color cycle
-    :param color_list: (list) = list of available colors
+    Args:
+        index: Current position in the color cycle.
+        color_list: List of available colors.
     """
 
     def __init__(self) -> None:
@@ -37,8 +40,12 @@ class Color_cycle:
         Call updates the index and returns the next color in the list
         Normally n is set to 1
 
-        :param n: (int) number of positions to skip
-        :return: color (str) = color name for pyplot
+        Args:
+            n: Number of positions to skip.
+
+
+        Returns:
+            Color name for pyplot.
         """
         self.index = (self.index + n) % len(self.color_list)
         return self.color_list[self.index]
@@ -54,8 +61,9 @@ def find_species_time_series(spe: str, data: Any) -> Generator[Any, None, None]:
     This function is implemented to allow for the comparison
     of models with experimental data or other models.
 
-    :param spe: (str) Species name
-    :pram  data: (dict) Data in MobsPy format
+    Args:
+        spe: Species name.
+        data: Data in MobsPy format.
     """
     for time_series in data:
         if spe in time_series:
@@ -68,11 +76,13 @@ def get_total_figure_number(axis_matrix: np.ndarray[Any, Any]) -> int:
     by pyplot. Used by the hash to place configs in the
     correct part of the axis_matrix.
 
-    :param axis_matrix: (1D or 2D numpy array) Array returned
-        by pyplot once multiple figures are introduced into
-        a single plot
+    Args:
+        axis_matrix: Array returned by pyplot once multiple figures are introduced into
+            a single plot.
 
-    :return: total_figure_number (int) Total number of figures
+
+    Returns:
+        Total number of figures.
     """
     # Get the number of figures, using the axis_matrix
     try:
@@ -85,18 +95,20 @@ def get_total_figure_number(axis_matrix: np.ndarray[Any, Any]) -> int:
 # Hash for converting linear figure number into index
 def figure_hash(current_figure: int, axis_matrix: np.ndarray[Any, Any]) -> Any:
     """
-    This function allows one to acess the figure grid with a linear input
+    This function allows one to access the figure grid with a linear input
     For instance one can access a 2x2 grid using 0, 1, 2, 3
     0 becomes 0,0
     1 becomes 1,0
     2 becomes 0,1
     3 becomes 1,1
 
-    :param current_figure: (int) linear number of the figure
-    :param axis_matrix: (1D or 2D numpy array) a list with
-        all the created axis on the multiple figure subplot
+    Args:
+        current_figure: Linear number of the figure.
+        axis_matrix: A list with all the created axis on the multiple figure subplot.
 
-    :return: the correct axis based on the number provided
+
+    Returns:
+        The correct axis based on the number provided.
     """
 
     # Get the number of lines
@@ -126,10 +138,13 @@ def figure_hash_creation(
 
     For instance 4 figures with 2 as max_lines creates a 2x2 figure grid automatically
 
-    :param total_figure_number: (int) Number of total figures to create
-    :param max_lines: (int) Maximum number of lines in the grid
+    Args:
+        total_figure_number: Number of total figures to create.
+        max_lines: Maximum number of lines in the grid.
 
-    :return: fig and axs = Figures grid will all the respective axis
+
+    Returns:
+        Fig and axs = Figures grid will all the respective axis.
     """
 
     # Default value if nothing is set up
@@ -171,13 +186,15 @@ def find_parameter(
     Check the readme or the tutorials for more details on
     the plotting structure. It is simple and versatile.
 
-    :param params: (dict) Plot parameters from python
-        dictionary (after json conversion)
-    :param key: (str) Key necessary to access the parameters
-    :param index: (int) None for global search, one index
-        for figure search, and two for figure curve search
+    Args:
+        params: Plot parameters from python dictionary (after json conversion).
+        key: Key necessary to access the parameters.
+        index: None for global search, one index for figure search, and two for figure
+            curve search.
 
-    :return: The parameter if found, and None if not found
+
+    Returns:
+        The parameter if found, and None if not found.
     """
 
     # No index is given, look global
@@ -217,6 +234,7 @@ def find_parameter(
 def annotation_handling(
     axs: Any, figure_index: int, plot_index: int, plot_params: dict[str, Any]
 ) -> int | None:
+    """Apply user-defined annotations to a subplot axis."""
     if (
         find_parameter(plot_params, key="annotations", index=(figure_index, plot_index))
         is not None
@@ -255,17 +273,18 @@ def annotation_handling(
     return None
 
 
-####################### PLOTING FUNCTIONS
+####################### PLOTTING FUNCTIONS
 def plot_curves(
     data: Any, axs: Any, figure_index: int, plot_params: dict[str, Any]
 ) -> None:
     """
     This function plots the programmed curves in the assigned figure
 
-    :param axs: (pyplot axe) axs to plot the data in
-    :param data: (dict) data given in MobsPy format results['data']
-    :param figure_index: (int) index of the current figure to plot curves in
-    :param plot_params: parameters for plotting
+    Args:
+        axs: Axs to plot the data in.
+        data: Data given in MobsPy format results['data'].
+        figure_index: Index of the current figure to plot curves in.
+        plot_params: Parameters for plotting.
     """
 
     # Get the plot number from the list of plots
@@ -514,8 +533,9 @@ def set_figure_characteristics(
     """
     Sets the characteristics for each figure
 
-    :param axis_matrix: (axis from pyplot subplot) Array of all axis in the grid
-    :param plot_params: (dict) Plot parameters received
+    Args:
+        axis_matrix: Array of all axis in the grid.
+        plot_params: Plot parameters received.
     """
     total_figure_number = get_total_figure_number(axis_matrix)
     # Loop through all axis
@@ -574,8 +594,9 @@ def set_global_parameters(fig: Any, plot_params: dict[str, Any]) -> None:
     """
     Sets the characteristics the plot window
 
-    :param fig: (fig from pyplot subplot) Array of all axis in the grid
-    :param plot_params: (dict) Plot parameters received
+    Args:
+        fig: Array of all axis in the grid.
+        plot_params: Plot parameters received.
     """
     if find_parameter(plot_params, "pad") is not None:
         fig.tight_layout(pad=find_parameter(plot_params, "pad"))
@@ -601,8 +622,9 @@ def plot_data(
     """
     This function plots the simulation results according to the specifications
 
-    :param data: (dict) Data in MobsPy format
-    :param plot_params: (dict) Plot parameters received
+    Args:
+        data: Data in MobsPy format.
+        plot_params: Plot parameters received.
     """
     # Get the figure number from the list of figures
     # Add it to parameters

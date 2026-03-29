@@ -12,6 +12,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from mobspy.constants import ALL_CHAR, DOT_SEPARATOR, SET_SPECIES_PREFIX
 from mobspy.exceptions import ReactionError
 from mobspy.modules.meta_class import Reactions, Species
 from mobspy.modules.species_string_generator import (
@@ -37,13 +38,13 @@ class __Operator_Base:
     def __getitem__(self, item: Any) -> Any:
         try:
             if isinstance(item, str):
-                return item + ".all$"
+                return item + "." + ALL_CHAR
 
             if item.is_species():
-                return item.c("all$")
+                return item.c(ALL_CHAR)
             if not item.is_species():
                 for reactant in item.list_of_reactants:
-                    reactant["characteristics"].add("all$")
+                    reactant["characteristics"].add(ALL_CHAR)
                 return item
         except AttributeError as e:
             raise ReactionError(
@@ -67,14 +68,12 @@ class __Operator_Base:
         that one (directly added to the same meta-species) to
         the one in characteristics_to_transform.
 
-        :param species_string: (str) Species string in
-            MobsPy format
-        :param characteristics_to_transform: (str)
-            Characteristics received by the species
-            object in the product
-        :param ref_characteristics_to_object: (dict)
-            Characteristics as keys and meta-species
-            objects as values
+        Args:
+            species_string: Species string in MobsPy format.
+            characteristics_to_transform: Characteristics received by the species object
+                in the product.
+            ref_characteristics_to_object: Characteristics as keys and meta-species
+                objects as values.
         """
         species_object = species_string[0]
         species_to_return_list: list[Any] = (
@@ -90,14 +89,14 @@ class __Operator_Base:
 
         species_to_return: str | tuple[str, float]
         if isinstance(species_to_return_list[-1], str):
-            species_to_return = "_dot_".join(species_to_return_list)
+            species_to_return = DOT_SEPARATOR.join(species_to_return_list)
         elif isinstance(species_to_return_list[-1], float):
             species_to_return = (
-                "_dot_".join(species_to_return_list[:-1]),
+                DOT_SEPARATOR.join(species_to_return_list[:-1]),
                 species_to_return_list[-1],
             )
         else:
-            species_to_return = "_dot_".join(species_to_return_list)
+            species_to_return = DOT_SEPARATOR.join(species_to_return_list)
 
         return species_to_return
 
@@ -112,18 +111,19 @@ class __Operator_Base:
         Includes inheritors. Returns them all in a list
         for the product construction.
 
-        :param species_referenced_by: (meta-species list)
-            Species that inherit from the born-meta
-            species in the reaction
-        :param characteristics: (str) Characteristics
-            queried on the born species in the product
-        :param meta_species_in_model: (list)
-            Meta-species in model as values
+        Args:
+            species_referenced_by: (meta-species list) Species that inherit from the
+                born-meta species in the reaction.
+            characteristics: Characteristics queried on the born species in the product.
+            meta_species_in_model: Meta-species in model as values.
         """
         to_return: list[Any] = []
         for species in species_referenced_by:
             to_return += ssg_construct_all_combinations(
-                species, characteristics, ref_characteristics_to_object, symbol="_dot_"
+                species,
+                characteristics,
+                ref_characteristics_to_object,
+                symbol=DOT_SEPARATOR,
             )
 
         return to_return
@@ -139,16 +139,13 @@ class __Operator_Base:
         Includes inheritors. Returns them all in a list
         for the product construction.
 
-        :param species_referenced_by: (meta-species list)
-            Species that inherit from the born-meta
-            species in the reaction
-        :param characteristics: (str) Characteristics
-            queried on the born species in the product
-        :param meta_species_in_model: (list)
-            Meta-species in model
-        :param ref_characteristics_to_object: (dict)
-            Characteristics as keys and meta-species
-            objects directly added to as values
+        Args:
+            species_referenced_by: (meta-species list) Species that inherit from the
+                born-meta species in the reaction.
+            characteristics: Characteristics queried on the born species in the product.
+            meta_species_in_model: Meta-species in model.
+            ref_characteristics_to_object: Characteristics as keys and meta-species
+                objects directly added to as values.
         """
         to_return: list[Any] = []
         for species in species_referenced_by:
@@ -157,7 +154,7 @@ class __Operator_Base:
                     species,
                     characteristics,
                     ref_characteristics_to_object,
-                    symbol="_dot_",
+                    symbol=DOT_SEPARATOR,
                 )
             ]
 
@@ -177,15 +174,13 @@ class __Operator_Base:
         round-robin application. If it cannot find a
         parrying it considers it a born species.
 
-        :param order_dictionary: (dict) Meta-species as
-            keys and list of meta-species strings
-        :param product_species: (dict) Product species
-            dict with meta-species object (key: species),
-            label (key: label), and characteristics
-            (key: characteristics)
-        :param ref_characteristics_to_object: (dict)
-            Characteristics as keys and meta-species
-            objects directly added to as values
+        Args:
+            order_dictionary: Meta-species as keys and list of meta-species strings.
+            product_species: Product species dict with meta-species object (key:
+                species), label (key: label), and characteristics (key:
+                characteristics).
+            ref_characteristics_to_object: Characteristics as keys and meta-species
+                objects directly added to as values.
         """
         round_robin_index: dict[tuple[Any, Any], int] = {}
         for species, label in [(e["species"], e["label"]) for e in product_species]:
@@ -196,7 +191,7 @@ class __Operator_Base:
             (e["species"], e["label"], e["characteristics"], e["stoichiometry"])
             for e in product_species
         ]:
-            if "all$" in characteristics:
+            if ALL_CHAR in characteristics:
                 species_is_referenced_by: list[Any] = []
                 for spe_obe in model:
                     if species in spe_obe.get_references():
@@ -310,15 +305,13 @@ class __Round_Robin_Base(__Operator_Base):
         round-robin application. If it cannot find a
         parrying it considers it a born species.
 
-        :param order_dictionary: (dict) Meta-species as
-            keys and list of meta-species strings
-        :param product_species: (dict) Product species
-            dict with meta-species object (key: species),
-            label (key: label), and characteristics
-            (key: characteristics)
-        :param ref_characteristics_to_object: (dict)
-            Characteristics as keys and meta-species
-            objects directly added to as values
+        Args:
+            order_dictionary: Meta-species as keys and list of meta-species strings.
+            product_species: Product species dict with meta-species object (key:
+                species), label (key: label), and characteristics (key:
+                characteristics).
+            ref_characteristics_to_object: Characteristics as keys and meta-species
+                objects directly added to as values.
         """
         return super().__call__(
             order_dictionary,
@@ -353,15 +346,13 @@ class __RR_Default_Base(__Operator_Base):
         round-robin application. If it cannot find a
         parrying it considers it a born species.
 
-        :param order_dictionary: (dict) Meta-species as
-            keys and list of meta-species strings
-        :param product_species: (dict) Product species
-            dict with meta-species object (key: species),
-            label (key: label), and characteristics
-            (key: characteristics)
-        :param ref_characteristics_to_object: (dict)
-            Characteristics as keys and meta-species
-            objects directly added to as values
+        Args:
+            order_dictionary: Meta-species as keys and list of meta-species strings.
+            product_species: Product species dict with meta-species object (key:
+                species), label (key: label), and characteristics (key:
+                characteristics).
+            ref_characteristics_to_object: Characteristics as keys and meta-species
+                objects directly added to as values.
         """
         return super().__call__(
             order_dictionary,
@@ -376,16 +367,15 @@ Default = __RR_Default_Base()
 
 
 class __Set_Reversible_Rate:
-    """This class is responsible for dealing with reversible reactions
-    Since reversible reactions have too rates
-    The process is in __getitem__
+    """This class is responsible for dealing with reversible reactions.
+    Since reversible reactions have two rates, the process is in __getitem__.
     """
 
     def __getitem__(self, both_rates: tuple[Any, Any]) -> None:
         """This function extracts both reaction rates from a tuple
 
-        :param both_rates: (rate functions) rate function
-            from the direct and reverse reaction
+        Args:
+            both_rates: Rate function from the direct and reverse reaction.
         """
         try:
             if len(both_rates) != 2:
@@ -402,6 +392,7 @@ class __Set_Reversible_Rate:
         self.reaction_reverse: Any = None
 
     def set_reactions(self, reaction_direct: Any, reaction_reverse: Any) -> None:
+        """Store the forward and reverse reaction pair."""
         self.reaction_direct = reaction_direct
         self.reaction_reverse = reaction_reverse
 
@@ -414,7 +405,8 @@ class __Reversible_Base:
         Uses __Set_Reversible_Rate instance to set rates.
         Also creates the reverse reaction.
 
-        :param reaction: (Reaction object) object from the reaction class
+        Args:
+            reaction: Object from the reaction class.
         """
         reaction_direct = reaction
         reaction_reverse = Reactions(
@@ -433,9 +425,10 @@ Rev = __Reversible_Base(__Set_Reversible_Rate())
 
 class _Set_Reaction_User_Base:
     def __getitem__(self, reaction: Reactions) -> _Set_Reaction_Method:
-        """Operates with the reaction to
+        """Assign a reaction to a Set operator.
 
-        :param reaction: (Reaction object) object from the reaction class
+        Args:
+            reaction: Object from the reaction class.
         """
         return _Set_Reaction_Method(reaction)
 
@@ -455,9 +448,10 @@ class _Set_Reaction_Method:
         self.reaction = reaction
 
     def at(self, time: int | float) -> _Set_Reaction_Method:
+        """Schedule this reaction to activate at the given time."""
         self._number_of_calls += 1
         self._set_species = Species("dummy")
-        self._set_species._bypass_name("_set_spe_" + str(self._number_of_calls))
+        self._set_species._bypass_name(SET_SPECIES_PREFIX + str(self._number_of_calls))
 
         dict_insert_species: dict[str, Any] = {
             "object": self._set_species,

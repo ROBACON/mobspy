@@ -1,3 +1,5 @@
+"""Generate matplotlib plots from simulation time-series data."""
+
 from __future__ import annotations
 
 import json
@@ -9,6 +11,7 @@ from pint import Quantity
 import mobspy.plot_scripts.hierarchical_plot as hp
 import mobspy.plot_scripts.process_plot_data as ppd
 import mobspy.plot_scripts.statistics_calculations as sc
+from mobspy.constants import AVERAGE_SUFFIX, DEVIATION_SUFFIX
 from mobspy.exceptions import ValidationError
 
 
@@ -16,9 +19,12 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
     """
     This function converts a plot_json file into a dictionary
 
-    :param plot_json_filename: (str) JSON file name
+    Args:
+        plot_json_filename: JSON file name.
 
-    :return: json_data (dict) converted JSON as dictionary
+
+    Returns:
+        Converted JSON as dictionary.
     """
     with open(plot_json_filename) as file:
         try:
@@ -37,7 +43,8 @@ def set_plot_units(new_plot_params: dict[str, Any]) -> None:
     """
     Sets the plot labels to the unit names by adding to the xlabel and ylabel
 
-    :param new_plot_params: (dict) plot parameters after some changes
+    Args:
+        new_plot_params: Plot parameters after some changes.
     """
     if "xlabel" not in new_plot_params:
         new_plot_params["xlabel"] = "Time"
@@ -76,14 +83,12 @@ def stochastic_plot(
     hierarchy. It then passes the parameters for plotting
     in the hierarchical plot module.
 
-    :param species: (list of str) list of species names
-        in MobsPy str format (queries are performed with
-        the query plot data function)
-    :param data: (dict) data in MobsPy format
-        Simulation.results['data']
-    :param plot_params: (dict) dictionary with the plot
-        parameters supplied by the user before the
-        modifications from this function
+    Args:
+        species: List of species names in MobsPy str format (queries are performed with
+            the query plot data function).
+        data: Data in MobsPy format Simulation.results['data'].
+        plot_params: Dictionary with the plot parameters supplied by the user before the
+            modifications from this function.
     """
 
     # Data Handling - Copy data object to not interfere with simulation data
@@ -105,15 +110,15 @@ def stochastic_plot(
     color_cycler = hp.Color_cycle()
     for spe in species:
         # We define new 'mappings' with the resulting
-        # runs for the statics for the plot structure
+        # runs for the statistics for the plot structure
         try:
             plots_for_spe_i: list[dict[str, Any]] = []
             plots_for_spe_i_sta: list[dict[str, Any]] = []
 
             processed_runs = sc.average_plus_standard_deviation(spe, data_to_plot)
 
-            key_average = spe + "$" + "average"
-            key_dev = spe + "$" + "deviation"
+            key_average = spe + AVERAGE_SUFFIX
+            key_dev = spe + DEVIATION_SUFFIX
 
             data_to_plot[0][key_average] = processed_runs[0]
             data_to_plot[0][key_dev] = [processed_runs[1], processed_runs[2]]
@@ -142,8 +147,8 @@ def stochastic_plot(
 
     # Setting species parameters
     for spe in species:
-        key_average = spe + "$" + "average"
-        key_dev = spe + "$" + "deviation"
+        key_average = spe + AVERAGE_SUFFIX
+        key_dev = spe + DEVIATION_SUFFIX
 
         color = color_cycler(1)
 
@@ -192,14 +197,12 @@ def deterministic_plot(
     plotting hierarchy. It then passes the parameters
     for plotting in the hierarchical plot module.
 
-    :param species: (list of str) list of species names
-        in MobsPy str format (queries are performed with
-        the query plot data function)
-    :param data: (dict) data in MobsPy format
-        Simulation.results['data']
-    :param plot_params: (dict) dictionary with the plot
-        parameters supplied by the user before the
-        modifications from this function
+    Args:
+        species: List of species names in MobsPy str format (queries are performed with
+            the query plot data function).
+        data: Data in MobsPy format Simulation.results['data'].
+        plot_params: Dictionary with the plot parameters supplied by the user before the
+            modifications from this function.
     """
     # Data Handling
     species, data = ppd.query_plot_data(species, data)
@@ -232,6 +235,7 @@ def parametric_plot(
     data: Any,
     plot_params: dict[str, Any],
 ) -> Any:
+    """Generate a plot overlaying curves for each parameter sweep."""
     max_labels = 15
     current_labels = 0
 
@@ -257,6 +261,7 @@ def parametric_plot(
         previous_parameter: Any,
         current_labels: int,
     ) -> tuple[dict[str, Any], list[int], Any]:
+        """Append a new curve entry for one species/parameter pair."""
         label = (
             str(spe) + " " + str(previous_parameter)
             if current_labels < max_labels
@@ -335,12 +340,10 @@ def raw_plot(
     Simulation object, it must be given the parameters
     in its entirety.
 
-    :param data: (dict) data in MobsPy format
-        Simulation.results['data']
-    :param parameters_or_file: (dict, str) Dictionary
-        originated from a JSON or JSON file name
-    :param return_fig: (bool) return figure instead of
-        plotting
+    Args:
+        data: Data in MobsPy format Simulation.results['data'].
+        parameters_or_file: Dictionary originated from a JSON or JSON file name.
+        return_fig: Return figure instead of plotting.
     """
     if isinstance(parameters_or_file, str) and parameters_or_file[-5:] == ".json":
         plot_params = read_plot_json(parameters_or_file)

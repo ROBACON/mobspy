@@ -1,8 +1,9 @@
+"""Expression evaluation engine for unit-aware rate functions and species references."""
+
 from __future__ import annotations
 
 import contextlib
 import re
-from contextvars import ContextVar
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -27,343 +28,33 @@ from numpy import (
 from pint import Quantity, UnitRegistry
 from scipy.constants import N_A
 
+from mobspy.constants import (
+    CONCENTRATION_PREFIX,
+    COUNT_PREFIX,
+    NULL_SPECIES,
+)
 from mobspy.exceptions import CompilationError, UnitError
+from mobspy.modules.expression_nodes import (  # noqa: F401
+    BinaryOpNode,
+    ExprNode,
+    FunctionCallNode,
+    LiteralNode,
+    ParamRefNode,
+    SpeciesRefNode,
+    _render_resolved,
+    _to_expr_node,
+)
+from mobspy.modules.species_operators import (  # noqa: F401
+    Bool_Override,
+    Specific_Species_Operator,
+    _ms_active_ctx,
+)
 
 if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
 
     from mobspy.modules.meta_class import Species
     from mobspy.modules.model_unit_context import ModelUnitContext
-
-
-# Global context variable for expression mode.
-# When True, arithmetic on ExpressionDefiner subclasses builds expression
-# trees instead of performing plain numeric/unit operations.
-_ms_active_ctx: ContextVar[bool] = ContextVar("_ms_active_ctx", default=False)
-
-
-# ---------------------------------------------------------------------------
-# Expression AST nodes
-# ---------------------------------------------------------------------------
-# These replace raw string concatenation for building rate expressions.
-# `str(node)` renders the same strings the old code produced, so all
-# downstream consumers (SBML writer, ODE operator, etc.) are unaffected.
-
-
-class ExprNode:
-    """Base class for expression AST nodes."""
-
-    def render(self) -> str:
-        raise NotImplementedError
-
-    def __str__(self) -> str:
-        return self.render()
-
-    def __repr__(self) -> str:
-        return self.render()
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        """Return all SpeciesRefNode leaves in this subtree."""
-        return []
-
-
-class LiteralNode(ExprNode):
-    """A numeric or string literal."""
-
-    __slots__ = ("value",)
-
-    def __init__(self, value: int | float | str) -> None:
-        self.value = value
-
-    def render(self) -> str:
-        return str(self.value)
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        return []
-
-
-class SpeciesRefNode(ExprNode):
-    """Reference to a species variable in an expression.
-
-    mode controls the string prefix:
-      'default'       -> species_string  (bare name)
-      'count'         -> $count$species_string
-      'concentration' -> $concentration$species_string
-      'assignment'    -> ($asg_species_string)
-    """
-
-    __slots__ = ("mode", "species_string")
-
-    def __init__(self, species_string: str, mode: str = "default") -> None:
-        self.species_string = species_string
-        self.mode = mode
-
-    def render(self) -> str:
-        if self.mode == "count":
-            return "$count$" + self.species_string
-        elif self.mode == "concentration":
-            return "$concentration$" + self.species_string
-        elif self.mode == "assignment":
-            return "($asg_" + self.species_string + ")"
-        return self.species_string
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        return [self]
-
-
-class ParamRefNode(ExprNode):
-    """Reference to a named parameter."""
-
-    __slots__ = ("name",)
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def render(self) -> str:
-        return str(self.name)
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        return []
-
-
-class BinaryOpNode(ExprNode):
-    """A binary operation: (left op right)."""
-
-    __slots__ = ("left", "op", "right")
-
-    def __init__(self, left: ExprNode, op: str, right: ExprNode) -> None:
-        self.left = left
-        self.op = op
-        self.right = right
-
-    def render(self) -> str:
-        return "(" + self.left.render() + self.op + self.right.render() + ")"
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        return self.left.walk_species() + self.right.walk_species()
-
-
-class FunctionCallNode(ExprNode):
-    """A function call: name(arg)."""
-
-    __slots__ = ("arg", "name")
-
-    def __init__(self, name: str, arg: ExprNode) -> None:
-        self.name = name
-        self.arg = arg
-
-    def render(self) -> str:
-        return self.name + "(" + self.arg.render() + ")"
-
-    def walk_species(self) -> list[SpeciesRefNode]:
-        return self.arg.walk_species()
-
-
-def _to_expr_node(value: Any) -> ExprNode:
-    """Wrap a raw value into an ExprNode if it isn't one already."""
-    if isinstance(value, ExprNode):
-        return value
-    return LiteralNode(value)
-
-
-def _render_resolved(
-    node: ExprNode,
-    expression_vars: set[Any],
-    count_in_model: bool,
-    concentration_in_model: bool,
-    count_in_expression: bool,
-    concentration_in_expression: bool,
-) -> str:
-    """Render an AST with species references resolved for count/concentration context.
-
-    Handles the mode on each SpeciesRefNode:
-      - 'count' in count_in_model -> bare name;
-        in concentration_in_model -> (name*volume)
-      - 'concentration' in count_in_model -> (name/volume);
-        in concentration_in_model -> bare
-      - 'default' resolved based on count_in_expression/concentration_in_expression
-      - 'assignment' -> rendered as-is (for ODE references)
-    """
-    var_names = {v.species_string for v in expression_vars}
-
-    def _resolve(n: ExprNode) -> str:
-        if isinstance(n, SpeciesRefNode) and n.species_string in var_names:
-            name = n.species_string
-            if n.mode == "assignment":
-                return n.render()
-            elif n.mode == "count":
-                if count_in_model:
-                    return name
-                elif concentration_in_model:
-                    return "(" + name + "*volume)"
-                return name
-            elif n.mode == "concentration":
-                if count_in_model:
-                    return "(" + name + "/volume)"
-                elif concentration_in_model:
-                    return name
-                return name
-            else:
-                # default mode - resolved by expression context
-                # Count takes priority when both flags are set
-                if (
-                    count_in_model
-                    and concentration_in_expression
-                    and not count_in_expression
-                ):
-                    return "(" + name + "/volume)"
-                elif (
-                    concentration_in_model
-                    and count_in_expression
-                    and not concentration_in_expression
-                ):
-                    return "(" + name + "*volume)"
-                return name
-
-        if isinstance(n, BinaryOpNode):
-            return "(" + _resolve(n.left) + n.op + _resolve(n.right) + ")"
-        if isinstance(n, FunctionCallNode):
-            return n.name + "(" + _resolve(n.arg) + ")"
-        return n.render()
-
-    return _resolve(node)
-
-
-class Bool_Override:
-    """
-    Just a base class for implementing the . operation in the rate
-    function arguments through boolean overriding. It is responsible
-    for returning true when the reactant has the specified
-    characteristic when using the dot notation
-
-    :param _stocked_characteristics: (str) stocks the characteristics
-        of the queries performed by the user
-    :param species_string: (str) string value from an individual
-        species in MobsPY format
-    """
-
-    species_string: str
-    _stocked_characteristics: set[str]
-
-    def __bool__(self) -> bool:
-        """
-        The implementation of the .dot operation for rate function arguments
-        Returns true when the argument possesses the characteristics
-        Bool is called after the .dot operations
-
-        Parameters:
-            self
-
-        Returns:
-            True if the object contains all the characteristics queried
-            False otherwise
-        """
-        if self.species_string == "$Null":
-            return False
-
-        species_string_split = self.species_string.split("_dot_")[1:]
-        if all(char in species_string_split for char in self._stocked_characteristics):
-            to_return_boolean = True
-        else:
-            to_return_boolean = False
-
-        self._stocked_characteristics = set()
-        return to_return_boolean
-
-
-class Specific_Species_Operator(Bool_Override):
-    """
-    Creates objects from species strings from the meta-species to
-    pass them to rate functions as arguments. Uses Bool_Override to
-    return true or false to the .dot operation inside rate functions.
-
-    :param _stocked_characteristics: (str) stocks the
-        characteristics of the queries performed by the user
-    :param species_string: (str) string value from an individual
-        species in MobsPY format
-    :param species_object: (Species) Meta-species object which
-        originated the meta-species str
-    """
-
-    def __init__(self, species_string: str, species_object: Species | None) -> None:
-        """
-        Constructs the object from the species strings from the
-        meta-species to pass them to rate functions as arguments.
-
-        :param species_string: (str) A string from MobsPy
-            meta-species format
-        :param species_object: (Species) = Meta-species set for
-            which the species_string is contained in
-        """
-        self.species_string = species_string
-        self._stocked_characteristics: set[str] = set()
-        self._species_object = species_object
-
-    def __getattr__(self, characteristic: str) -> Specific_Species_Operator:
-        """
-        Stores the characteristics for the boolean query inside the
-        rate function by adding them to the set.
-
-        :param characteristic: (str) characteristic being queried
-        """
-        self._stocked_characteristics.add(characteristic)
-        return self
-
-    def __str__(self) -> str:
-        """
-        Returns the species_string from the MobsPy meta-species
-        used in the object construction.
-        """
-        return self.species_string
-
-    def is_a(self, reference: Species) -> bool | None:
-        """
-        Checks if the meta-species the species_string belongs to has
-        inherited from the parameter reference (reminder: every
-        meta-species inherits from itself).
-
-        :param reference: (Species) Meta-species object
-        :return: (bool) True if the meta-species in
-            Specific_Species_Operator has inherited from the
-            reference, False otherwise
-        """
-        if not self._stocked_characteristics:
-            assert self._species_object is not None
-            return reference in self._species_object.get_references()
-        else:
-            raise CompilationError(
-                "Cannot chain is_a() with dot-notation characteristic queries. "
-                "Use them in separate conditions: "
-                "'r.is_a(X) and r.alive' instead of chaining."
-            )
-
-    def add(self, characteristic: str) -> None:
-        """
-        Adds characteristic to the set of characteristics when checking for all
-        referred characteristics by the user
-
-        :param characteristic: (str) characteristic to add to the set
-        """
-        self._stocked_characteristics.add(characteristic)
-
-    def get_name(self) -> str:
-        """
-        Returns: The name of the species the reactant is in string format
-        """
-        assert self._species_object is not None
-        return self._species_object.get_name()
-
-    def get_characteristics(self) -> set[str]:
-        """
-        Returns: The characteristics of the species in this given state
-        """
-        return set(self.species_string.split("_dot_")[1:])
-
-    def get_state(self) -> str:
-        """
-        Returns: the string of a state with dots instead of _dot_
-        """
-        return self.species_string.replace("_dot_", ".")
 
 
 class ExpressionDefiner:
@@ -388,6 +79,12 @@ class ExpressionDefiner:
     species_list_operation_order: list[Any]
 
     def non_expression_add(self, other: Any) -> Any:
+        """Perform the operation outside expression mode.
+
+        Same pattern applies to all other ``non_expression_*`` methods:
+        they delegate to the underlying type's arithmetic when
+        expression-building mode is not active.
+        """
         raise NotImplementedError
 
     def non_expression_radd(self, other: Any) -> Any:
@@ -439,9 +136,10 @@ class ExpressionDefiner:
         """
         Executes a unit operation using the Quantity class
 
-        :param first: first number
-        :param second: second number
-        :param operation: operation to be executed
+        Args:
+            first: First number.
+            second: Second number.
+            operation: Operation to be executed.
         """
         # Always unwrap OverrideQuantity to plain Quantity to avoid:
         # 1. "different registries" errors in Pint operations
@@ -525,10 +223,9 @@ class ExpressionDefiner:
         When an operation fails due to [substance] incompatibility (e.g.,
         mol/L + 1/L), retries after converting mol -> N_A counts.
 
-        :param other: other number (or expression) to execute
-            the operation on
-        :param operation: string symbol of the operation to be
-            executed
+        Args:
+            other: Other number (or expression) to execute the operation on.
+            operation: String symbol of the operation to be executed.
         """
         self_count = self._unit_count_op
         self_conc = self._unit_conc_op
@@ -578,10 +275,11 @@ class ExpressionDefiner:
         ufunc is the operation, and inputs are both the numpy
         element (arrays not yet supported) and the quantity object.
 
-        :param ufunc: numpy operation
-        :param _: method, not used, please don't erase or it
-            becomes an input - will break function
-        :param inputs: numpy element and the quantity object
+        Args:
+            ufunc: Numpy operation.
+            _: Method, not used, please don't erase or it becomes an input - will break
+                function.
+            inputs: Numpy element and the quantity object.
         """
         # Implement all numpy operations
         if ufunc == np_add:
@@ -703,8 +401,9 @@ class ExpressionDefiner:
         """
         Or gates to binary True or False attributes from self and other
 
-        :param other: other expression to execute operation
-        :param attribute: attributed to be combined
+        Args:
+            other: Other expression to execute operation.
+            attribute: Attributed to be combined.
         """
         to_return = False
         try:
@@ -772,15 +471,14 @@ class ExpressionDefiner:
         Executes the storing based operation. Also executes a unit
         operation to verify the unit of the given expression.
 
-        :param other: other number (or expression) to execute
-            the operation on
-        :param symbol: string symbol of the operation
-        :param count_op: unit of the expression if the arguments
-            are considered dimensionless
-        :param conc_op: unit of the expression if the arguments
-            are considered 1/v
-        :param direct_sense: sense of the operation
-        :param operation: current operation in the stack
+        Args:
+            other: Other number (or expression) to execute the operation on.
+            symbol: String symbol of the operation.
+            count_op: Unit of the expression if the arguments are considered
+                dimensionless.
+            conc_op: Unit of the expression if the arguments are considered 1/v.
+            direct_sense: Sense of the operation.
+            operation: Current operation in the stack.
         """
         _has_units: bool = False
         try:
@@ -936,7 +634,7 @@ class ExpressionDefiner:
             dimension = None
 
         return MobsPyExpression(
-            species_string="$Null",
+            species_string=NULL_SPECIES,
             species_object=None,
             operation=operation,
             unit_count_op=count_op,
@@ -992,7 +690,8 @@ class QuantityConverter:
         """
         Converts a received quantity to L-s-counts, standard MobsPy units
 
-        :param quantity: received quantity to convert
+        Args:
+            quantity: Received quantity to convert.
         """
         ur = u.unit_registry_object
 
@@ -1052,6 +751,13 @@ class QuantityConverter:
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
+    """Pint Quantity subclass that participates in MobsPy expression building.
+
+    Wraps a Quantity so that arithmetic operators build symbolic rate
+    expressions when expression-building mode is active, while still
+    supporting unit conversions when it is not.
+    """
+
     def __array_ufunc__(
         self,
         ufunc: np_ufunc,
@@ -1064,10 +770,11 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         element (arrays not yet supported) and the quantity
         object.
 
-        :param ufunc: numpy operation
-        :param _: method, not used, please don't erase or
-            it becomes an input - will break function
-        :param inputs: numpy element and the quantity object
+        Args:
+            ufunc: Numpy operation.
+            _: Method, not used, please don't erase or it becomes an input - will break
+                function.
+            inputs: Numpy element and the quantity object.
         """
         # Implement all numpy operations
         if ufunc == np_add:
@@ -1107,6 +814,12 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         return None
 
     def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
+        """Perform unit-aware addition outside expression mode.
+
+        Same pattern applies to all other ``non_expression_*`` methods
+        on OverrideQuantity: they delegate to Pint's Quantity arithmetic
+        when expression-building mode is not active.
+        """
         if isinstance(other, OverrideQuantity):
             # Don't delegate to other.__radd__ to avoid infinite loops
             # Just perform the operation directly
@@ -1229,6 +942,7 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         return OverrideQuantity(new_q_object)  # pyright: ignore[reportReturnType]
 
     def convert_into(self, unit: str) -> None:
+        """Convert this quantity to a different unit in-place."""
         self.q_object.ito(unit)
 
 
@@ -1318,10 +1032,10 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         Converts the expression from what has been stored
         to a string format for the sbml file.
 
-        :param skip_check: skip units check or not - always
-            set to False, True only for debugging
-        :param reaction_order: order of the reaction -
-            to check if the unit is correct
+        Args:
+            skip_check: Skip units check or not - always set to False, True only for
+                debugging.
+            reaction_order: Order of the reaction - to check if the unit is correct.
         """
         ur = u.unit_registry_object
 
@@ -1453,8 +1167,8 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             convert_operation = str(self._operation)
 
             for variable in self._expression_variables:
-                count_name = "$count$" + variable.species_string
-                concentration_name = "$concentration$" + variable.species_string
+                count_name = COUNT_PREFIX + variable.species_string
+                concentration_name = CONCENTRATION_PREFIX + variable.species_string
 
                 default_name = variable.species_string
                 replace_name = variable.species_string
@@ -1520,6 +1234,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 
 
 def check_if_non_expression_operated(other: Any) -> Any:
+    """Wrap non-numeric, non-expression operands as MobsPyExpression."""
     if (
         not isinstance(other, ExpressionDefiner)
         and not isinstance(other, int)
@@ -1545,6 +1260,12 @@ def check_if_non_expression_operated(other: Any) -> Any:
 
 
 def replace_spe_in_expr(string: str, to_replace: str, replacement: str) -> str:
+    """Replace a species name in an expression string at word boundaries.
+
+    Examples:
+        >>> replace_spe_in_expr("A + B * A", "A", "X")
+        'X + B * X'
+    """
     pattern = re.compile(re.escape(to_replace) + r"(?![a-zA-Z0-9_])")
     return pattern.sub(replacement, string)
 
@@ -1577,7 +1298,7 @@ class _Count_Base:
                     )
                 else:
                     item._operation = str(item._operation).replace(  # type: ignore[assignment]
-                        v.species_string, "$count$" + v.species_string
+                        v.species_string, COUNT_PREFIX + v.species_string
                     )
             return item
         except AttributeError as e:
@@ -1599,7 +1320,7 @@ class _Conc_Base:
                     )
                 else:
                     item._operation = str(item._operation).replace(  # type: ignore[assignment]
-                        v.species_string, "$concentration$" + v.species_string
+                        v.species_string, CONCENTRATION_PREFIX + v.species_string
                     )
             return item
         except AttributeError as e:
@@ -1610,32 +1331,3 @@ class _Conc_Base:
 
 
 Concentration = _Conc_Base()
-
-if __name__ == "__main__":
-    print("Ran local script")
-
-    # u = OverrideUnitRegistry(is_active=True)
-    # a = MobsPyExpression(
-    #     'a_dot_alive', None,
-    #     count_in_model=False,
-    #     concentration_in_model=True,
-    #     count_in_expression=False,
-    #     concentration_in_expression=True,
-    # )
-
-    # Don't create new objects
-    # Quantity Object
-    # To much unit registry
-
-    x = MobsPyExpression(
-        "A",
-        None,
-        dimension=3,
-        count_in_model=True,
-        concentration_in_model=False,
-        count_in_expression=False,
-        concentration_in_expression=False,
-    )
-
-    r = x**2.8
-    print(r.generate_string_operation())

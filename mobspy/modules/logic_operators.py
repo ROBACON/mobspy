@@ -1,7 +1,10 @@
+"""Comparison and logical operators for building event triggers on species counts."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeAlias
 
+from mobspy.constants import DOT_SEPARATOR
 from mobspy.exceptions import EventError
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
@@ -23,8 +26,8 @@ class SpeciesComparator:
     for events and conditional durations for Species.
     Ex: (A > 5).
 
-    :param _simulation_context: (Simulation) current
-        simulation under context
+    Args:
+        _simulation_context: Current simulation under context.
     """
 
     def __init__(self) -> None:
@@ -39,11 +42,10 @@ class SpeciesComparator:
         comparison of a meta-species with a value or
         another meta-species.
 
-        :param symbol: Comparison symbol
-            '>=', '<=', '>' or '<'
-        :param number: (int) if compared to a value,
-            (Species or ReactingSpecies) if compared
-            to the objects
+        Args:
+            symbol: Comparison symbol '>=', '<=', '>' or '<'.
+            number: If compared to a value, (Species or ReactingSpecies) if compared to
+                the objects.
         """
         if self.__dict__.get("_from_mul", False):
             raise EventError(
@@ -74,9 +76,9 @@ class SpeciesComparator:
         ReactingSpecies or integer and prepares the
         output accordingly.
 
-        :param number: (int) if compared to a value,
-            (Species or ReactingSpecies) if compared
-            to the objects
+        Args:
+            number: If compared to a value, (Species or ReactingSpecies) if compared to
+                the objects.
         """
         if isinstance(number, SpeciesComparator):
             if number.is_species():  # type: ignore[attr-defined]
@@ -89,7 +91,8 @@ class SpeciesComparator:
         """Adds a species object to an event trigger
         operation.
 
-        :param species: (Species) species object
+        Args:
+            species: Species object.
         """
         return {
             "object": species,
@@ -105,7 +108,8 @@ class SpeciesComparator:
         indicated characteristics. It also accepts sums
         of species multiplied by integers.
 
-        :param react_spe: (ReactingSpecies) object
+        Args:
+            react_spe: Object.
         """
         operation: list[_OpElem] = []
 
@@ -164,8 +168,8 @@ class ReactingSpeciesComparator(SpeciesComparator):
     for events and conditional durations for Reacting
     Species. Ex: (A.a1 > 5).
 
-    :param _simulation_context: (Simulation) current
-        simulation under context
+    Args:
+        _simulation_context: Current simulation under context.
     """
 
     def __init__(self) -> None:
@@ -192,14 +196,14 @@ class ReactingSpeciesComparator(SpeciesComparator):
         """Adds the symbol and number to create a
         MetaSpeciesLogicResolver object.
 
-        :param symbol: Comparative symbols
-            '<=', '<', '>=', or '>'
-        :param number: (int) if compared to a value,
-            (Species or ReactingSpecies) if compared
-            to the objects
+        Args:
+            symbol: Comparative symbols '<=', '<', '>=', or '>'.
+            number: If compared to a value, (Species or ReactingSpecies) if compared to
+                the objects.
 
-        :returns: MetaSpeciesLogicResolver object
-            containing the comparison
+
+        Returns:
+            MetaSpeciesLogicResolver object containing the comparison.
         """
         reformatted = self.reformat_number_and_species(number)
         if isinstance(reformatted, list):
@@ -223,12 +227,10 @@ class MetaSpeciesLogicResolver:
     conditions or the conditional duration for
     simulations.
 
-    :param operation: (list) the logical operation
-        that will be transformed in a string for
-        copasi. Format ex:
-        [{object: ..., characteristics:...}, '<=', 10]
-    :param simulation_context: (Simulation) simulation
-        under context
+    Args:
+        operation: The logical operation that will be transformed in a string for
+            copasi. Format ex: [{object: ..., characteristics:...}, '<=', 10].
+        simulation_context: Simulation under context.
     """
 
     def __init__(
@@ -258,6 +260,7 @@ class MetaSpeciesLogicResolver:
         other: MetaSpeciesLogicResolver,
         symbol: str,
     ) -> MetaSpeciesLogicResolver:
+        """Combine two logic expressions with the given boolean operator symbol."""
         if not isinstance(other, MetaSpeciesLogicResolver):
             raise EventError(
                 "Logic operations require MetaSpeciesLogicResolver operands"
@@ -294,6 +297,11 @@ class MetaSpeciesLogicResolver:
         return self
 
     def add_double_symbol(self, symbol: str, number: _ScalarNum) -> None:
+        """Prepend a comparison operator and value to the expression.
+
+        Raises:
+            EventError: If a comparison operator already exists.
+        """
         comparison_symbols = {"<", "<=", ">", ">="}
         has_cmp = any(
             op in comparison_symbols for op in self.operation if isinstance(op, str)
@@ -312,10 +320,13 @@ class MetaSpeciesLogicResolver:
         characteristics: set[str],
         species_for_sbml: dict[str, Any],
     ) -> list[str]:
+        """Find all SBML species names matching the given characteristics."""
         reference_set = set(characteristics)
         reference_set.add(str(species))
         return [
-            x for x in species_for_sbml if reference_set.issubset(set(x.split("_dot_")))
+            x
+            for x in species_for_sbml
+            if reference_set.issubset(set(x.split(DOT_SEPARATOR)))
         ]
 
     def generate_string(
@@ -328,10 +339,10 @@ class MetaSpeciesLogicResolver:
         meta-species in the sum of all individual
         states.
 
-        :param characteristics_to_object: orthogonal
-            characteristic space
-        :param to_sort: sort strings or not - so the
-            sum will always appear in the same order
+        Args:
+            characteristics_to_object: Orthogonal characteristic space.
+            to_sort: Sort strings or not - so the sum will always appear in the same
+                order.
         """
         copasi_str = ""
         for _i, e in enumerate(self.operation):
@@ -343,7 +354,7 @@ class MetaSpeciesLogicResolver:
                     e["object"],
                     e["characteristics"],  # pyright: ignore[reportArgumentType]
                     characteristics_to_object,
-                    "_dot_",
+                    DOT_SEPARATOR,
                 )
                 if to_sort:
                     ite = sorted(ite)

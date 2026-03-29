@@ -1,27 +1,28 @@
+"""Expand NOT-qualified and composite reactions during compilation."""
+
 from __future__ import annotations
 
 from itertools import product as ite_product
 from typing import Any
 
+from mobspy.constants import NOT_CHAR
 from mobspy.modules.meta_class import Reacting_Species, Zero
-
-"""
-    Species and meta-species supporting scripts
-"""
 
 
 def create_all_not_reactions(reactions: set[Any]) -> set[Any]:
+    """Expand NOT-qualified reactions into explicit combinations."""
     new_reactions_set = reactions
 
     def include_new_combinations(r: Any, attribute_to_get: str) -> bool:
+        """Replace a NOT-qualified side with all valid alternatives."""
         ignore_flag = True
         for x in getattr(r, attribute_to_get):
-            if "not$" in x["characteristics"]:
+            if NOT_CHAR in x["characteristics"]:
                 new_reactions_set.remove(r)
                 ignore_flag = False
                 combinations = get_all_non_listed_characteristics(
                     x["object"],
-                    x["characteristics"] - {"not$"},
+                    x["characteristics"] - {NOT_CHAR},
                 )
 
                 for comb in combinations:
@@ -83,9 +84,13 @@ def new_reaction_with_new_characteristics(
     """
     Create a copy of this reaction, replacing characteristics of a specific dict
 
-    :param dict_to_modify: The specific reactant/product dict to modify
-    :param new_characteristics: New characteristics set for that dict
-    :return: New Reactions object
+    Args:
+        dict_to_modify: The specific reactant/product dict to modify.
+        new_characteristics: New characteristics set for that dict.
+
+
+    Returns:
+        New Reactions object.
     """
     # Build new reactants list
     React: Any = Zero

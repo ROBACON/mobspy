@@ -1,17 +1,23 @@
+"""Run COPASI parameter estimation tasks and collect fitted parameter results."""
+
 from __future__ import annotations
 
 from typing import Any
+
+from pandas import DataFrame
 
 from mobspy.exceptions import ParameterError
 from mobspy.import_manager.lazy_import_class import (
     LazyImporter as ipm_LazyImporter,
 )
+from mobspy.mobspy_logging import get_logger
+
+_logger = get_logger(__name__)
 
 basico = ipm_LazyImporter("basico")
 mobspy_basico_patch = ipm_LazyImporter(
     "mobspy.patch_scripts.basico_task_parametrization"
 )
-from pandas import DataFrame  # noqa: E402
 
 
 def basiCO_parameter_estimation(
@@ -30,25 +36,19 @@ def basiCO_parameter_estimation(
     the original value of the parameter
     The function updates the value of the parameter when it is done
 
-    :param simulation_object: (Simulation Object) - MobsPy Simulation Object
-    :param parameters_to_estimate: (list of MobsPy
-        parameters, or list of str) List of MobsPy
-        parameters to estimate
-    :param experimental_data: (list of pandas Dataframe,
-        or pandas Dataframe) - experimental data to fit
-        the parameter with
-    :param bound: (list, tuple, dict) - list of two
-        elements with a lower and upper bound of the
-        parameters values, or dictionary with the parameter
-        name and a two element for that specific parameter
-    :param method: (str) - method to be used by basiCO
-        optimisation - The options are Random Search,
-        Simulated Annealing, Differential Evolution,
-        Scatter Search, Genetic Algorithm, Evolutionary
-        Programming, Genetic Algorithm SR,
-        Evolution Strategy (SRES), Particle Swarm
-    :param verbose: (bool) print the results after finishing or not
-    :param change_parameter_values: (bool) change/convert parameter values when possible
+    Args:
+        simulation_object: - MobsPy Simulation Object.
+        parameters_to_estimate: List of MobsPy parameters to estimate.
+        experimental_data: - experimental data to fit the parameter with.
+        bound: - list of two elements with a lower and upper bound of the parameters
+            values, or dictionary with the parameter name and a two element for that
+            specific parameter.
+        method: - method to be used by basiCO optimisation - The options are Random
+            Search, Simulated Annealing, Differential Evolution, Scatter Search, Genetic
+            Algorithm, Evolutionary Programming, Genetic Algorithm SR, Evolution
+            Strategy (SRES), Particle Swarm.
+        verbose: Print the results after finishing or not.
+        change_parameter_values: Change/convert parameter values when possible.
     """
 
     # Check inputs in order ############################
@@ -74,7 +74,10 @@ def basiCO_parameter_estimation(
     original_parameters = parameters_to_estimate
     for par in parameters_to_estimate:
         if flag_auto_set:
-            assert isinstance(bound, dict)
+            if not isinstance(bound, dict):
+                raise ParameterError(
+                    "bound must be a dict when auto-setting parameter bounds"
+                )
             bound[str(par)] = [par.value / 1000, par.value * 1000]
 
         converted_parameters.append(str(par))
@@ -171,7 +174,10 @@ def basiCO_parameter_estimation(
                 "upper": bound[par][1],
             }
         else:
-            assert isinstance(bound, (list, tuple))
+            if not isinstance(bound, (list, tuple)):
+                raise ParameterError(
+                    f"bound must be a list or tuple, got {type(bound).__name__}"
+                )
             fit_dictionary = {
                 "name": basico_parameter_name,
                 "lower": bound[0],
@@ -208,9 +214,9 @@ def basiCO_parameter_estimation(
                 p.set_value(results[str(p)])
 
     if verbose:
-        print("Parameter estimation complete. The results follow: ")
+        _logger.info("Parameter estimation complete. The results follow: ")
         for key in results:
-            print(key, results[key])
+            _logger.info(f"{key} {results[key]}")
 
     return results
 
@@ -222,19 +228,20 @@ def find_parameters_in_basico_dataframe(
     Finds the corresponding mobspy parameter in the basico
     reactions parameters dataframe.
 
-    :param basico_reactions_df: (Dataframe) basiCO reactions df
-    :param mobspy_parameter_name: (str) name of the mobspy parameter
+    Args:
+        basico_reactions_df: BasiCO reactions df.
+        mobspy_parameter_name: Name of the mobspy parameter.
     """
 
     def has_mobspy_parameter_in_name(
         basico_reaction_name: str, mobspy_parameter_name: str
     ) -> bool:
-        # Change this function based on your specific
-        # logic for finding common substrings
+        """Check if a BasiCO reaction name contains the parameter."""
         parameter_name = basico_reaction_name.split(".")[1]
         return True if parameter_name == mobspy_parameter_name else False  # noqa: SIM210
 
     def find_common_substrings(df: str) -> bool:
+        """Filter predicate for matching the parameter name."""
         return has_mobspy_parameter_in_name(df, mobspy_parameter_name)
 
     return basico_reactions_df[
@@ -243,5 +250,4 @@ def find_parameters_in_basico_dataframe(
 
 
 def python_parameter_estimation() -> None:
-    # Work in progress
-    pass
+    """Run parameter estimation (not yet implemented)."""

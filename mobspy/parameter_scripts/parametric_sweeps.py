@@ -1,9 +1,13 @@
+"""Expand parametric sweep definitions into concrete model variants."""
+
 from __future__ import annotations
 
 import contextlib
 import itertools
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
+
+from mobspy.constants import DOT_SEPARATOR, SBML_LOCATION
 
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParameterSweepList, ParameterUsedInfo
@@ -15,8 +19,9 @@ def assign_values_to_model(
     models: list[CompiledModelDict],
     locations: set[str],
 ) -> None:
+    """Write a parameter value into compiled model dicts at each location."""
     for location in locations:
-        if location == "$sbml":
+        if location == SBML_LOCATION:
             for model in models:
                 with contextlib.suppress(KeyError):
                     model["parameters_for_sbml"][parameter_name] = (
@@ -27,9 +32,8 @@ def assign_values_to_model(
             for model in models:
                 try:
                     model["species_for_sbml"][location] = parameter_value
-                    model["species_not_mapped"][location.replace("_dot_", ".")] = (
-                        parameter_value
-                    )
+                    dot_loc = location.replace(DOT_SEPARATOR, ".")
+                    model["species_not_mapped"][dot_loc] = parameter_value
                 except KeyError:
                     pass
 
@@ -38,6 +42,7 @@ def generate_all_sbml_models(
     model_parameters: dict[str, ParameterUsedInfo],
     list_of_models: list[CompiledModelDict],
 ) -> tuple[ParameterSweepList, list[dict[str, int | float]]]:
+    """Build model copies for every combination of swept parameters."""
     names: list[str] = []
     used_in: list[set[str]] = []
     values: list[list[int | float]] = []
@@ -76,6 +81,7 @@ def unite_parameter_dictionaries(
     dict_1: dict[str, Any],
     dict_2: dict[str, Any],
 ) -> dict[str, Any]:
+    """Merge two parameter-usage dicts, unifying ``used_in`` sets."""
     for key in dict_2:
         if key not in dict_1:
             dict_1[key] = dict_2[key]

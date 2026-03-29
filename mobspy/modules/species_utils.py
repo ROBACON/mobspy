@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 def count_stoichiometry(
     lst: Sequence[tuple[float, str] | str],
 ) -> dict[str, float | int]:
+    """Sum stoichiometric coefficients for each species name."""
     to_return: dict[str, float | int] = {}
 
     for e in lst:
@@ -28,8 +29,9 @@ def count_stoichiometry(
 def combine_references(species1: Any, species2: Any) -> set[Any]:
     """Combine the sets of references of two species
 
-    :param species1: (Meta-species object)
-    :param species2: (Meta-species object)
+    Args:
+        species1: First meta-species object.
+        species2: Second meta-species object.
     """
     return species1.get_references().union(species2.get_references())  # type: ignore[no-any-return]
 
@@ -40,10 +42,8 @@ def check_orthogonality_between_references(references: set[Any]) -> None:
     characteristics directly added to species must be
     independent.
 
-    :param references: (set) set of meta-species objects
-        to check for independence
-    :raise simlog.error: raises error if there are repeated
-        characteristics in different meta-species
+    Args:
+        references: Set of meta-species objects to check for independence.
     """
     for i, reference1 in enumerate(references):
         for j, reference2 in enumerate(references):
@@ -75,7 +75,8 @@ def check_orthogonality_between_references(references: set[Any]) -> None:
 def unite_characteristics(species: list[Any] | None) -> set[str]:
     """This function unites the characteristics of all the given species
 
-    :param species: (list of species or List_Species object)
+    Args:
+        species: List of species or List_Species object.
     """
     characteristics: set[str] = set()
 
@@ -98,13 +99,13 @@ def create_orthogonal_vector_structure(
     of the 'axis' of each characteristic. Allowing for easy
     transformation on the products and others.
 
-    :param species: (meta-species objects) - meta-species
-        objects used in a model
+    Args:
+        species: Meta-species objects used in a model.
 
-    :return ref_characteristics_to_object: (dict) a
-        dictionary where the keys are characteristics and
-        the values are meta-species objects that have been
-        directly added to that object
+    Returns:
+        Dictionary where the keys are characteristics and the values
+        are meta-species objects that have been directly added to
+        that object.
     """
     ref_characteristics_to_object: dict[str, Any] = {}
     for spe in species:
@@ -127,7 +128,3 @@ def create_orthogonal_vector_structure(
                     )
 
     return ref_characteristics_to_object
-
-
-if __name__ == "__main__":
-    pass

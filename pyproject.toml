@@ -24,7 +24,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest", "pyyaml"]
+test = ["pytest", "pytest-cov", "pyyaml"]
+docs = ["sphinx>=7.0", "myst-parser", "sphinx-rtd-theme", "nbsphinx", "pygments"]
 
 [project.urls]
 Repository = "https://github.com/ROBACON/mobspy"
@@ -117,7 +118,8 @@ typeCheckingMode = "basic"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra -q --strict-markers --strict-config"
+addopts = "-ra -q --strict-markers --strict-config --cov=mobspy --cov-report=term-missing --cov-fail-under=50"
+doctest_optionflags = ["ELLIPSIS", "NORMALIZE_WHITESPACE"]
 markers = [
     "slow: tests that run simulations (may take a while)",
     "compilation: tests that only compile models (fast)",

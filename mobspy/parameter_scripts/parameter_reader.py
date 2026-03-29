@@ -21,11 +21,12 @@ def read_json(json_file_name: str) -> Any:
     """
     Reads json file
 
-    :param plot_json_filename: json file name
+    Args:
+        plot_json_filename: Json file name.
 
-    :raise simlog.error: If the file was not able to be read
 
-    :return: plot parameter dictionary
+    Returns:
+        Plot parameter dictionary.
     """
     with open(json_file_name) as file:
         try:
@@ -41,7 +42,8 @@ def name_output_file(params: dict[str, Any]) -> None:
     Gives a name to the output file - just date
     time in case the user has not specified one
 
-    :param params: (dict) Dictionary with simulation parameters
+    Args:
+        params: Dictionary with simulation parameters.
     """
 
     file_name = "r_"
@@ -53,7 +55,6 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
     """
     The list of seeds must be equal to the number of repetitions specified
 
-    :param params (dict) = Dictionary with simulation parameters
     """
     if "seeds" in params and params["seeds"] is not None:
         try:
@@ -68,7 +69,8 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
     Converts parameters units to MobsPy standard units
     (basiCO needs seconds for simulation duration)
 
-    :param params: (dict) = Dictionary with simulation parameters
+    Args:
+        params: Dictionary with simulation parameters.
     """
     for key, p in params.items():
         if (
@@ -90,6 +92,7 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:
 
 
 def convert_unit_parameters(params: dict[str, Any]) -> None:
+    """Parse unit_x/unit_y strings into Pint Quantity objects."""
     units = ["unit_x", "unit_y"]
 
     for un in units:
@@ -126,6 +129,7 @@ def convert_volume_after_compilation(
     value: int | float | Quantity,
     model_context: Any = None,
 ) -> int | float:
+    """Convert and store a volume value in SBML parameters."""
     if isinstance(value, Quantity):
         message = (
             f"Error converting volume parameter (value={value}, dimension={dimension})."
@@ -165,8 +169,7 @@ methods = {
 
 
 def check_method_parameter(params: dict[str, Any]) -> None:
-    # Method takes preference from the user assignment,
-    # but the code was made for 'simulation_method
+    """Resolve simulation method and infer rate/plot types."""
     if params["method"] is not None:
         params["simulation_method"] = params["method"]
     params["simulation_method"] = params["simulation_method"].lower()
@@ -209,11 +212,13 @@ def check_method_parameter(params: dict[str, Any]) -> None:
 
 
 def check_duration_unit(params: dict[str, Any]) -> None:
+    """Auto-set unit_x from duration when it carries a Pint unit."""
     if isinstance(params["duration"], Quantity) and params["unit_x"] is None:
         params["unit_x"] = 1 * params["duration"].units
 
 
 def parameter_process(params: dict[str, Any]) -> None:
+    """Run all parameter validation and conversion steps."""
     check_duration_unit(params)
     convert_unit_parameters(params)
     name_output_file(params)
@@ -246,6 +251,7 @@ def manually_process_each_parameter(
     rate_type: str | None,
     plot_type: str | None,
 ) -> None:
+    """Apply non-None keyword arguments onto a simulation object."""
     if duration is not None:
         simulation_object.duration = duration
 

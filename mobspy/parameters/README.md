@@ -1,6 +1,6 @@
 # Parameter Explanation
 
-## Model paramters
+## Model parameters
 
 - `volume` (float w/wo unit): sets the volume in the simulation (default is 1 litre)
 

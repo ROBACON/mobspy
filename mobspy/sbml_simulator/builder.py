@@ -21,7 +21,7 @@ if TYPE_CHECKING:
         SpeciesForSbml,
     )
 
-from mobspy.sbml_simulator.SBMLWriter import create_model
+from mobspy.sbml_simulator.sbml_writer import create_model
 
 
 def build(
@@ -35,14 +35,17 @@ def build(
     """
     Constructs the sbml file for a model from the dictionary syntax for python sbml lib
 
-    :param species: (dict) species as keys and counts as values
-    :param parameters: (dict) parameter name and value
-    :param reactions: (dict) reaction name and reaction in python sbml writer format
-    :param events: (dict) event name and event in python sbml writer format
-    :param assignments: (dict) assignments numbers and expressions
-    :param model_context: optional unit context for proper SBML unit declarations
+    Args:
+        species: Species as keys and counts as values.
+        parameters: Parameter name and value.
+        reactions: Reaction name and reaction in python sbml writer format.
+        events: Event name and event in python sbml writer format.
+        assignments: Assignments numbers and expressions.
+        model_context: Optional unit context for proper SBML unit declarations.
 
-    :return: sbml_str (str) = string describing the model in sbml format
+
+    Returns:
+        String describing the model in sbml format.
     """
     doc = create_model(
         species, parameters, reactions, events, assignments, model_context

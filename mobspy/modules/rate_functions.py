@@ -1,4 +1,4 @@
-"""mobspy.modules.process_result_data.py
+"""Rate assignment and mass-action kinetics construction for reactions.
 
 Handles rate_assignment to the reactions:
     The passing of arguments to be executed by the user
@@ -10,17 +10,14 @@ Handles rate_assignment to the reactions:
 from __future__ import annotations
 
 from collections.abc import Callable
-from re import split as re_split
 from typing import TYPE_CHECKING, Any
 
 from pint import Quantity
 
+from mobspy.constants import NULL_SPECIES
 from mobspy.exceptions import CompilationError
 from mobspy.mobspy_logging import get_logger
 from mobspy.modules.meta_class import Zero as mc_Zero
-from mobspy.modules.meta_class_utils import (
-    count_stoichiometry as mcu_count_string_dictionary,
-)
 from mobspy.modules.mobspy_expressions import (
     ExpressionDefiner as mbe_ExpressionDefiner,
 )
@@ -32,6 +29,9 @@ from mobspy.modules.mobspy_expressions import (
 )
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
+)
+from mobspy.modules.species_utils import (
+    count_stoichiometry as mcu_count_string_dictionary,
 )
 from mobspy.modules.unit_handler import convert_rate as uh_convert_rate
 
@@ -64,19 +64,19 @@ def extract_reaction_rate(
     functions). It passes the rate as a string expression
     in MobsPy standard units.
 
-    :param  function_rate_arguments: list of strings of the
-        function rate argument ex:['r1', 'r2', ....]
-    :param  combination_of_reactant_species: (list of Species)
-        Meta-species currently being used in this reaction
-    :param  reactant_string_list: (list of strings) list of
-        species strings in order they apear in the reaction
-    :param  reaction_rate_function: (float, callable, Quantity)
-        rate stored in the reaction object
-    :param  dimension: (int) system dimension
-        (for the rate conversion)
+    Args:
+        function_rate_arguments: List of strings of the function rate argument ex:['r1',
+            'r2', ....].
+        combination_of_reactant_species: Meta-species currently being used in this
+            reaction.
+        reactant_string_list: List of species strings in order they appear in the
+            reaction.
+        reaction_rate_function: Rate stored in the reaction object.
+        dimension: System dimension (for the rate conversion).
 
-    :return: reaction_rate_string (str) the reaction kinetics
-        as a string for SBML
+
+    Returns:
+        The reaction kinetics as a string for SBML.
     """
     is_count = False
     if isinstance(reaction_rate_function, (int, float, Quantity)):
@@ -217,14 +217,14 @@ def basic_kinetics_string(
     Both for stochastic and deterministic depending on the
     type of model.
 
-    :params reactants: (list of str) list of reactants in
-        MobsPy str format
-    :params reaction_rate: (float) reaction constant
-    :params type_of_model: (str) stochastic or deterministic
-        - rate expressions differ depending on each case
+    Args:
+        reactants: List of reactants in MobsPy str format.
+        reaction_rate: Reaction constant.
+        type_of_model: Stochastic or deterministic, rate
+            expressions differ depending on each case.
 
-    :return: kinetics_string (str) mass action kinetics
-        expression for the reaction
+    Returns:
+        Mass action kinetics expression for the reaction.
     """
     counts = mcu_count_string_dictionary(reactants)
 
@@ -260,13 +260,12 @@ def stochastic_string(reactant_name: str, number: int) -> str:
     A*(A-1)/2. It only does so for one reactant, so it
     must be called for all reactants in the reaction.
 
-    :params reactant_name: (str) species string involved
-        in the reaction
-    :params number: (int) stoichiometry (number of times
-        it appears)
+    Args:
+        reactant_name: Species string involved in the reaction.
+        number: Stoichiometry (number of times it appears).
 
-    :return: to_return_string (str) the mass action kinetics
-        string expression for only that species
+    Returns:
+        The mass action kinetics string expression for only that species.
     """
     to_return_string: str = ""
     for i in range(number):
@@ -285,13 +284,12 @@ def deterministic_string(reactant_name: str, number: int) -> str:
     It only does so for one reactant, so it must be called
     for all reactants in the reaction.
 
-    :params reactant_name: (str) species string involved
-        in the reaction
-    :params number: (int) stoichiometry (number of times
-        it appears)
+    Args:
+        reactant_name: Species string involved in the reaction.
+        number: Stoichiometry (number of times it appears).
 
-    :return: to_return_string (str) the mass action kinetics
-        string expression for only that species
+    Returns:
+        The mass action kinetics string expression for only that species.
     """
     to_return_string = ""
     for i in range(number):
@@ -314,14 +312,16 @@ def prepare_arguments_for_callable(
     Creates objects of the Specific_Species_Operator class
     for a given reaction.
 
-    :params combination_of_reactant_species: meta-species
-        involved in the reaction
-    :params reactant_string_list: species strings involved
-        in the reaction
-    :params rate_function_arguments: arguments received
-        by the rate function
-    :return: argument_dict - dictionary with arguments for
-        a rate function
+    Args:
+        combination_of_reactant_species: Meta-species involved
+            in the reaction.
+        reactant_string_list: Species strings involved in the
+            reaction.
+        rate_function_arguments: Arguments received by the rate
+            function.
+
+    Returns:
+        Dictionary with arguments for a rate function.
     """
     argument_dict: dict[
         str,
@@ -355,47 +355,13 @@ def prepare_arguments_for_callable(
             while len(argument_dict) < len(rate_function_arguments):
                 i += 1
                 argument_dict[rate_function_arguments[i]] = (
-                    mbe_Specific_Species_Operator("$Null", mc_Zero)
+                    mbe_Specific_Species_Operator(NULL_SPECIES, mc_Zero)
                 )
         elif i == 0:
             while len(argument_dict) < len(rate_function_arguments):
                 argument_dict[rate_function_arguments[i]] = (
-                    mbe_Specific_Species_Operator("$Null", mc_Zero)
+                    mbe_Specific_Species_Operator(NULL_SPECIES, mc_Zero)
                 )
                 i += 1
 
     return argument_dict
-
-
-# @TODO this function needs to be deprecated
-def search_for_parameters_in_str(
-    reaction_rate_string: str,
-    parameters_exist: dict[str, mp_Mobspy_Parameter],
-    parameters_in_reaction: set[mp_Mobspy_Parameter],
-) -> set[mp_Mobspy_Parameter]:
-    """Search for MobsPy Parameter names in a string rate.
-
-    Uses the parameters_exit stack. If it finds a parameter
-    it adds it to the set parameters_in_reaction.
-
-    :param reaction_rate_string: reaction rate in str format
-    :param parameters_exist: stack of parameters available
-    :param parameters_in_reaction: set of parameters already
-        in reaction
-    :return: parameters_in_reaction set of parameters already
-        in reaction
-    """
-    split_operation = re_split(r", |-|!|\*|\+|/|\)|\(| ", reaction_rate_string)
-    split_operation = [
-        x.replace(" ", "") for x in split_operation if x.replace(" ", "") != ""
-    ]
-
-    for name in split_operation:
-        if name in parameters_exist:
-            parameters_in_reaction.add(parameters_exist[name])
-
-    return parameters_in_reaction
-
-
-if __name__ == "__main__":
-    pass

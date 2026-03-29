@@ -1,3 +1,5 @@
+"""Profile MobsPy import time using cProfile to identify slow dependencies."""
+
 from __future__ import annotations
 
 import cProfile

@@ -1,3 +1,5 @@
+"""Apply initial counts and parameter values to COPASI simulator objects."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -5,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParametersUsed
 
+from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
 from mobspy.exceptions import SimulationError
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor,
@@ -21,18 +24,29 @@ from mobspy.modules.unit_handler import (
 
 
 def sim_remove_reaction(sim: Any, reaction: Any, Simulation_Constructor: Any) -> Any:
+    """Create a new simulation with the given reaction removed."""
     new_sim = Simulation_Constructor(sim.model)
     new_sim._reactions_set.remove(reaction)
     return new_sim
 
 
 class Simulation_Utils:
+    """Mixin providing post-compilation model update utilities for Simulation."""
+
     _list_of_models: list[CompiledModelDict]
     model_parameters: ParametersUsed
     orthogonal_vector_structure: dict[str, Any]
 
     def update_model(self, *args: Any) -> None:
-        # Check if the model was already compiled
+        """Update species counts or parameters on an already-compiled model.
+
+        Args:
+            *args: Pairs of ``(name, value)`` to update.
+
+        Raises:
+            SimulationError: If the model has not been compiled yet
+                or arguments are malformed.
+        """
         if not self._list_of_models:
             raise SimulationError(
                 "In .update_model method - \n"
@@ -54,6 +68,7 @@ class Simulation_Utils:
             self._update_from_compiler(arg)
 
     def _update_from_compiler(self, arg: Any) -> None:
+        """Dispatch a (name, value) update to either parameters or species."""
         try:
             is_species = arg[0].is_spe_or_reac()
         except Exception:
@@ -74,7 +89,7 @@ class Simulation_Utils:
 
             # Check to see if string is in species
             try:
-                test_model["species_for_sbml"][arg[0].replace("_dot_", ".")]
+                test_model["species_for_sbml"][arg[0].replace(DOT_SEPARATOR, ".")]
                 self._update_species(arg)
                 not_species = False
             except KeyError:
@@ -90,9 +105,13 @@ class Simulation_Utils:
             self._update_species(arg)
 
         else:
-            raise SimulationError("Placeholder error for now")
+            raise SimulationError("Unsupported argument type for model update")
 
     def _update_parameter(self, arg: Any) -> None:
+        """Update a parameter value.
+
+        Applies to all compiled models and the parameter registry.
+        """
         try:
             iterable = iter(arg[1])
         except TypeError:
@@ -135,6 +154,7 @@ class Simulation_Utils:
             ) from e
 
     def _update_species(self, arg: Any) -> None:
+        """Update species counts in the compiled model, expanding queries if needed."""
         # Prepare count
         if "volume" not in self.__dict__:  # noqa: SIM108
             volume = 1
@@ -146,9 +166,9 @@ class Simulation_Utils:
 
         # Get query - construct all combinations - or just one
         query = arg[0].get_query_characteristics()
-        if "all$" in query:
+        if ALL_CHAR in query:
             spe_string_list = sp_construct_all_combinations(
-                arg[0], query, self.orthogonal_vector_structure, symbol="_dot_"
+                arg[0], query, self.orthogonal_vector_structure, symbol=DOT_SEPARATOR
             )
 
             for spe_string in spe_string_list:
@@ -156,7 +176,7 @@ class Simulation_Utils:
 
         else:
             spe_string = sp_construct_species_char_list(
-                arg[0], query, self.orthogonal_vector_structure, symbol="_dot_"
+                arg[0], query, self.orthogonal_vector_structure, symbol=DOT_SEPARATOR
             )
 
             self._list_of_models[0]["species_for_sbml"][spe_string] = spe_count

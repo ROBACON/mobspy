@@ -22,14 +22,14 @@ author = "MobsPy Team"
 extensions = [
     "myst_parser",
     "nbsphinx",
-    "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
 ]
 
-napoleon_google_docstring = False
-napoleon_use_param = False
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_use_param = True
 napoleon_use_ivar = True
 autosummary_generate = True
 
@@ -41,4 +41,4 @@ exclude_patterns = ["_build", "_templates", "Thumbs.db", ".DS_Store"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["../_static"]
+html_static_path = []

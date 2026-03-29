@@ -1,3 +1,5 @@
+"""Convert Pint quantities for rates and counts into dimensionless values."""
+
 from __future__ import annotations
 
 import warnings
@@ -22,17 +24,11 @@ def convert_rate(
     """
     This function converts the rate from the users given unit to MobsPy standard units
 
-    :param quantity: (int, float, Quantity) If it is a
-        quantity object convert, otherwise it remains
-        the same
-    :param reaction_order: (int) number of reactants in
-        the reaction, to check if the rate is in the
-        correct unit
-    :param dimension: (int) model's dimension
-        (1D, 2D, 3D, ... )
-
-    :param quantity: (int, float) converted unit into
-        MobsPy standard units
+    Args:
+        quantity: If it is a quantity object convert, otherwise it remains the same.
+        reaction_order: Number of reactants in the reaction, to check if the rate is in
+            the correct unit.
+        dimension: Model's dimension (1D, 2D, 3D, ... ).
     """
 
     if model_context is not None:
@@ -70,7 +66,11 @@ def convert_rate(
                 return converted_quantity.magnitude * N_A, dimension, True
             elif has_substance:
                 # [length]^n/([substance]^m*[time]) concentration rate with moles
-                assert dimension is not None
+                if dimension is None:
+                    raise UnitError(
+                        "dimension is required for concentration "
+                        "rate conversion with substance units"
+                    )
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}"
                     f"/(moles ** {volume_power} * seconds)"
@@ -82,7 +82,10 @@ def convert_rate(
                 )
             else:
                 # [length]^n/[time] concentration rate
-                assert dimension is not None
+                if dimension is None:
+                    raise UnitError(
+                        "dimension is required for concentration rate conversion"
+                    )
                 converted_quantity = converted_quantity.convert(
                     f"decimeters ** {dimension * volume_power}/seconds"
                 )
@@ -107,14 +110,15 @@ def convert_counts(
     given unit to MobsPy standard units. It also
     converts concentrations into counts.
 
-    :param quantity: (int, float, Quantity) If it is a
-        quantity object convert, otherwise it remains
-        the same
-    :param volume: (int, float) volume in liters (converted beforehand)
-    :param dimension: (int) model's dimension (1D, 2D, 3D, ... )
-    :param model_context: optional ModelUnitContext for user-unit conversion
+    Args:
+        quantity: If it is a quantity object convert, otherwise it remains the same.
+        volume: Volume in liters (converted beforehand).
+        dimension: Model's dimension (1D, 2D, 3D, ... ).
+        model_context: Optional ModelUnitContext for user-unit conversion.
 
-    :return: converted_quantity (int, float) = converted unit into MobsPy standard units
+
+    Returns:
+        Converted unit into MobsPy standard units.
     """
     if model_context is not None:
         return model_context.convert_counts(quantity, volume)
@@ -134,7 +138,8 @@ def convert_counts(
 
         if not has_length and not has_substance and not is_dimensionless:
             raise UnitError(
-                f"The assigned quantity {quantity} is neither a count or concentration"
+                f"The assigned quantity {quantity} is"
+                " neither a count nor a concentration"
             )
         if is_dimensionless:
             return quantity.magnitude
@@ -157,7 +162,7 @@ def convert_counts(
                 converted_quantity = converted_quantity.magnitude
         except Exception as e:
             raise UnitError(
-                str(e) + "\n" + f"Problem converting rate {quantity} \n"
+                str(e) + "\n" + f"Problem converting count {quantity} \n"
                 f"Is it really a count or concentration?"
             ) from e
     return converted_quantity
@@ -172,17 +177,14 @@ def check_dimension(
     Checks for dimension consistency. It "stores" the
     first dimension it was given by returning it.
 
-    :param dimension: (int) model's dimension
-        (1D, 2D, 3D ...)
-    :param value: (int) dimension value being analysed
-    :param error_context: (bool or str) context of the
-        error if dimensions are not consistent
+    Args:
+        dimension: Model's dimension (1D, 2D, 3D ...).
+        value: Dimension value being analysed.
+        error_context: Context of the error if dimensions are not consistent.
 
-    :raise simlog.error: If dimensions are not consistent
-        through the given units
-        (units in 1D with 2D mixed)
 
-    :return: dimension (int) = model's dimension (1D, 2D, 3D ...)
+    Returns:
+        Model's dimension (1D, 2D, 3D ...).
     """
     if dimension is None:
         dimension = int(value)
@@ -209,13 +211,13 @@ def extract_length_dimension(
     Uses Pint's dimensionality dict API instead of string parsing
     for robustness across Pint versions.
 
-    :param unit_string: (str) unit dimensionality in str format,
-        or a Pint UnitsContainer-like object coerced to str
-    :param dimension: (int) model's dimension (1D, 2D, 3D ...)
-    :param reaction_order: (int) number of reactants in
-        a reaction (for dimensional consistency in rates)
-    :param context: (bool or str) context of the error if
-        dimensions are not consistent
+    Args:
+        unit_string: Unit dimensionality in str format, or a Pint UnitsContainer-like
+            object coerced to str.
+        dimension: Model's dimension (1D, 2D, 3D ...).
+        reaction_order: Number of reactants in a reaction (for dimensional consistency
+            in rates).
+        context: Context of the error if dimensions are not consistent.
     """
     # Parse the length exponent from the dimensionality string
     # using Pint's UnitRegistry to get the dict representation
@@ -269,10 +271,13 @@ def convert_volume(
     """
     Converts volume to model volume units (or decimetre**dimension in legacy mode).
 
-    :param volume: (int, float, Quantity) volume used in simulation
-    :param model_context: optional ModelUnitContext for user-unit conversion
+    Args:
+        volume: Volume used in simulation.
+        model_context: Optional ModelUnitContext for user-unit conversion.
 
-    :return: the converted volume in model units
+
+    Returns:
+        The converted volume in model units.
     """
     if model_context is not None:
         return model_context.convert_volume(volume)
@@ -297,8 +302,9 @@ def convert_time(
     """
     Converts time to model time units (or seconds in legacy mode).
 
-    :param time: (int, float, Quantity) any time used
-    :param model_context: optional ModelUnitContext for user-unit conversion
+    Args:
+        time: Any time used.
+        model_context: Optional ModelUnitContext for user-unit conversion.
     """
     if model_context is not None:
         return model_context.convert_time(time)
@@ -323,8 +329,9 @@ def time_convert_to_other_unit(
 ) -> int | float | None:
     """Converts time to a specified unit.
 
-    :param time: (int, float, Quantity) any time used
-    :param other_unit: target unit string
+    Args:
+        time: Any time used.
+        other_unit: Target unit string.
     """
     if isinstance(time, Quantity):
         dim = dict(time.dimensionality)
@@ -355,9 +362,3 @@ def deep_copy_quantities(quantity: Any) -> Any:
         return OverrideQuantity(Q)
     else:
         return quantity
-
-
-if __name__ == "__main__":
-    A = 5 * u.meters
-    B = deep_copy_quantities(A)
-    print(B)

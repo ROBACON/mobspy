@@ -1,6 +1,6 @@
 """Main MobsPy module.
 
-It stocks the Simulation class which is responsible for
+Contains the Simulation class which is responsible for
 simulating a Model.
 """
 
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
+from dataclasses import fields
 from json import dump as json_dump
 from json import load as json_load
 from os.path import splitext as os_path_splitext
@@ -17,6 +18,7 @@ from typing import Any as TypingAny
 import joblib
 from pint import Quantity
 
+from mobspy.constants import DOT_SEPARATOR
 from mobspy.data_handler.process_result_data import (
     convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
 )
@@ -38,14 +40,14 @@ from mobspy.exceptions import (
 )
 from mobspy.mobspy_logging import get_logger
 from mobspy.model_generation import ModelGenerationMixin
+from mobspy.modules.any_species import (
+    Any as Any,
+)
 from mobspy.modules.assignments_implementation import (
     Assign,  # noqa: F401
 )
-from mobspy.modules.class_of_meta_specie_named_any import (
-    Any as Any,
-)
 from mobspy.modules.compiler import Compiler
-from mobspy.modules.logic_operator_objects import (
+from mobspy.modules.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
 from mobspy.modules.meta_class import (
@@ -56,9 +58,6 @@ from mobspy.modules.meta_class import (
     Reacting_Species,
     Species,
     Zero,  # noqa: F401
-)
-from mobspy.modules.meta_class_utils import (
-    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
 from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.mobspy_parameters import (
@@ -75,6 +74,9 @@ from mobspy.modules.order_operators import (
     Set,  # noqa: F401
 )
 from mobspy.modules.set_counts_module import set_counts  # noqa: F401
+from mobspy.modules.species_utils import (
+    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
+)
 from mobspy.modules.unit_handler import (
     extract_length_dimension as uh_extract_length_dimension,
 )
@@ -105,17 +107,16 @@ from mobspy.parameter_scripts.parametric_sweeps import (
 from mobspy.parameter_scripts.parametric_sweeps import (
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries,
 )
-from mobspy.parameters.default_reader import get_default_parameters
-from mobspy.parameters.example_reader import get_example_parameters
 from mobspy.plot_params.default_plot_reader import (
     get_default_plot_parameters,
 )
 from mobspy.plotting import PlottingMixin
 from mobspy.sbml_simulator.run import simulate as sbml_simulate
-from mobspy.simulator_object.simulator_object_functions import (
+from mobspy.simulation_config import SimulationConfig
+from mobspy.simulator_object.utils import (
     Simulation_Utils,
 )
-from mobspy.simulator_object.simulator_object_functions import (
+from mobspy.simulator_object.utils import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
 from mobspy.types import SimulationEventData, TimeSeriesDataDict
@@ -130,7 +131,6 @@ if TYPE_CHECKING:
         ParametersForSbml,
         ParameterSweepList,
         ReactionsForSbml,
-        SimulationParameters,
         SpeciesForSbml,
     )
 
@@ -159,6 +159,24 @@ class Simulation(
     ModelGenerationMixin,
     PlottingMixin,
 ):
+    """Orchestrates compilation, execution, and result handling for a MobsPy model.
+
+    Collects meta-species and reactions, compiles them via the Compiler into
+    SBML, runs the simulation through BasiCO/COPASI, and stores the results.
+
+    Examples:
+        >>> from mobspy import *
+        >>> A, B = BaseSpecies(['A', 'B'])
+        >>> _ = A >> B[1]
+        >>> A(10)  # doctest: +ELLIPSIS
+        <...>
+        >>> S = Simulation(A | B)
+        >>> S.duration = 5
+        >>> _ = S.compile(verbose=False)
+        >>> S._is_compiled
+        True
+    """
+
     def __init__(
         self,
         model: Species | List_Species,
@@ -193,7 +211,7 @@ class Simulation(
         self.number_of_context_comparisons = 0
         self.pre_number_of_context_comparisons = 0
         self._list_of_models: list[CompiledModelDict] = []
-        self._list_of_parameters: list[SimulationParameters] = []
+        self._list_of_parameters: list[TypingAny] = []
         self._context_not_active = True
         self._assigned_species_list: list[str] = []
         self._conditional_event = False
@@ -246,7 +264,11 @@ class Simulation(
                 )
 
         if not parameters:
-            self.parameters: SimulationParameters = get_default_parameters()  # type: ignore[assignment]
+            self.parameters = SimulationConfig()  # type: ignore[assignment]
+        else:
+            config = SimulationConfig()
+            config.update(parameters)
+            self.parameters = config  # type: ignore[assignment]
 
         if not plot_parameters:
             self.plot_parameters = get_default_plot_parameters()
@@ -369,7 +391,7 @@ class Simulation(
 
         self.all_species_not_mapped = {}
         for key in self._species_for_sbml:
-            self.all_species_not_mapped[key.replace("_dot_", ".")] = (
+            self.all_species_not_mapped[key.replace(DOT_SEPARATOR, ".")] = (
                 self._species_for_sbml[key]
             )
 
@@ -461,6 +483,7 @@ class Simulation(
         jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
 
         def simulation_function(x: TypingAny) -> TypingAny:
+            """Run a single SBML simulation batch."""
             return sbml_simulate(jobs, self._list_of_parameters, x)
 
         results: list[TypingAny] = list(  # pyright: ignore[reportArgumentType]
@@ -511,6 +534,7 @@ class Simulation(
             self.parameters["output_concentration"] = False
 
         def convert_one_ts_to_desired_unit(unconverted_data: TypingAny) -> TypingAny:
+            """Convert a single time series to the requested units."""
             return dh_convert_data_to_desired_unit(
                 unconverted_data,
                 time_list,
@@ -526,6 +550,7 @@ class Simulation(
             parameters: TypingAny,
             unit_convert: bool = False,
         ) -> TypingAny:
+            """Wrap a time series into a MobsPyTimeSeries object."""
             data_dict = TimeSeriesDataDict(
                 data=convert_one_ts_to_desired_unit(single_ts)
                 if unit_convert
@@ -732,8 +757,8 @@ class Simulation(
         """
         Packs data from multiple simulations or external data into one simulation object
 
-        :param time_series_data: (data in MobsPy format) data to
-            be packed in the simulation object
+        Args:
+            time_series_data: Data to be packed in the simulation object.
         """
         self.packed_data.append(time_series_data)
 
@@ -742,7 +767,8 @@ class Simulation(
         """
         Set simulation parameters from json file
 
-        :param file_name: (str) name of the json file
+        Args:
+            file_name: Name of the json file.
         """
         with open(file_name) as json_file:
             data = json_load(json_file)
@@ -803,7 +829,9 @@ class Simulation(
         }
     )
 
-    _SIMULATION_PARAMS: frozenset[str] = frozenset(get_example_parameters())
+    _SIMULATION_PARAMS: frozenset[str] = frozenset(
+        f.name for f in fields(SimulationConfig) if not f.name.startswith("_")
+    )
 
     def __setattr__(self, name: str, value: TypingAny) -> None:
         # Internal attributes: store directly on instance
@@ -881,23 +909,26 @@ class Simulation(
         """
         Configure simulation parameters from json file or dictionary
 
-        :param file_name: (str) name of the json file
+        Args:
+            config: Path to a json file or a dictionary of parameters.
         """
-        self.parameters = self.__config_parameters(config)  # type: ignore[assignment]
+        config_dict = self.__config_parameters(config)
+        new_config = SimulationConfig()
+        new_config.update(config_dict)
+        self.parameters = new_config  # type: ignore[assignment]
 
     def configure_plot_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
         Configure plot parameters from json file or dictionary
 
-        :param file_name: (str) name of the json file
+        Args:
+            config: Path to a json file or a dictionary of parameters.
         """
         self.plot_parameters = self.__config_parameters(config)
 
     @staticmethod
     def __config_parameters(config: str | dict[str, TypingAny]) -> dict[str, TypingAny]:
-        """
-        Encapsulation for config_plot and config_parameters
-        """
+        """Shared helper for configure_parameters and configure_plot_parameters."""
         if isinstance(config, str):
             if os_path_splitext(config)[1] != ".json":
                 raise ParameterError("Wrong file extension")
@@ -909,6 +940,7 @@ class Simulation(
         return parameters_to_config
 
     def add_plot_params(self, *args: TypingAny, **kwargs: TypingAny) -> None:
+        """Merge additional plotting parameters into this simulation."""
         for a in args:
             if isinstance(a, dict):
                 for par in a:
@@ -946,12 +978,12 @@ class Simulation(
 
     @classmethod
     def is_simulation(cls) -> bool:
+        """Return True to identify this class as a simulation."""
         return True
 
     @classmethod
     def set_job_number(cls, params: dict[str, TypingAny]) -> int:
-        # Run in parallel or sequentially
-        # If nothing is specified just run it in parallel
+        """Determine the joblib job count from simulation parameters."""
         try:
             if params["jobs"] == 1:  # noqa: SIM108
                 jobs = params["jobs"]
@@ -969,10 +1001,21 @@ class Simulation(
 
 
 class SimulationComposition:
+    """Concatenation of multiple Simulation objects via the ``+`` operator.
+
+    Represents a sequential pipeline where the end state of one simulation
+    becomes the initial state of the next.
+    """
+
     def update_model(self, *args: TypingAny) -> None:
+        """Delegate model updates to the base simulation."""
         self.base_sim.update_model(*args)
 
     def _compile_multi_simulation(self) -> None:
+        """Validate shared species across simulations.
+
+        Ensures consistent characteristics.
+        """
         for sim1 in self.list_of_simulations:
             for sim2 in self.list_of_simulations:
                 if sim1 == sim2:
@@ -1102,6 +1145,7 @@ class SimulationComposition:
         return self.base_sim.plot_config
 
     def compile(self, verbose: bool = True) -> str | None:
+        """Compile all child simulations and merge their models."""
         result_str = ""
         for sim in self.list_of_simulations:
             compiled = sim.compile(verbose)
@@ -1159,34 +1203,27 @@ class SimulationComposition:
         here, duration and volume must receive any iterable
         with the volume for each simulation.
 
-        :param duration: (iterable) duration of a simulation
-        :param volume: (iterable) volume of the simulation,
-            if none given 1 liter is used
-        :param repetitions: (int) number of times to repeat
-        :param level: (int) 0 - only error messages,
-            3 - errors, warnings, compilation info
-        :param simulation_method: (iterable) stochastic,
-            deterministic, direct_method
-        :param start_time: (float) simulation will only
-            display data after the start time
-        :param r_tol: (float) relative tolerance
-        :param a_tol: (float) absolute tolerance
-        :param seeds: (list) seeds for stochastic simulation
-        :param step_size: (float) time step-size
-        :param jobs: (int) number of jobs
-        :param unit_x: (unit) unit of the time x-axis
-        :param unit_y: (unit) unit of the y-axis
-        :param output_concentration: (bool) outputs
-            concentration instead of counts
-        :param output_event: (bool) when an event happens,
-            adds the data point to the results
-        :param output_file: (str) name of the file
-        :param save_data: (bool) save data or not
-        :param plot_data: (bool) plot data or not
-        :param rate_type: (str) stochastic or deterministic
-            rate expression
-        :param plot_type: (str) stochastic or deterministic
-            style of MobsPy plot
+        Args:
+            duration: Duration of a simulation.
+            volume: Volume of the simulation, if none given 1 liter is used.
+            repetitions: Number of times to repeat.
+            level: 0 - only error messages, 3 - errors, warnings, compilation info.
+            simulation_method: Stochastic, deterministic, direct_method.
+            start_time: Simulation will only display data after the start time.
+            r_tol: Relative tolerance.
+            a_tol: Absolute tolerance.
+            seeds: Seeds for stochastic simulation.
+            step_size: Time step-size.
+            jobs: Number of jobs.
+            unit_x: Unit of the time x-axis.
+            unit_y: Unit of the y-axis.
+            output_concentration: Outputs concentration instead of counts.
+            output_event: When an event happens, adds the data point to the results.
+            output_file: Name of the file.
+            save_data: Save data or not.
+            plot_data: Plot data or not.
+            rate_type: Stochastic or deterministic rate expression.
+            plot_type: Stochastic or deterministic style of MobsPy plot.
         """
         if level is not None:
             self.level = level
@@ -1240,18 +1277,23 @@ class SimulationComposition:
         self.fres = self.base_sim.fres
 
     def plot_deterministic(self, *species: str | Species | Reacting_Species) -> None:
+        """Plot deterministic results via the base simulation."""
         self.base_sim.plot_deterministic(*species)
 
     def plot_stochastic(self, *species: str | Species | Reacting_Species) -> None:
+        """Plot stochastic results via the base simulation."""
         self.base_sim.plot_stochastic(*species)
 
     def plot(self, *species: str | Species | Reacting_Species) -> None:
+        """Plot results using the default plot type."""
         self.base_sim.plot(*species)
 
     def plot_raw(self, parameters_or_file: str | dict[str, TypingAny]) -> None:
+        """Plot results with raw user-supplied parameters."""
         self.base_sim.plot_raw(parameters_or_file)
 
     def add_plot_params(self, *args: TypingAny, **kwargs: TypingAny) -> None:
+        """Merge additional plotting parameters into the composition."""
         for a in args:
             if isinstance(a, dict):
                 for par in a:
@@ -1263,7 +1305,9 @@ class SimulationComposition:
     def generate_sbml(self, compose: bool = False) -> list[str]:
         """
         Generates a string with an SBML model from a respective MobsPy model
-        :param compose: (bool) Join composite simulations into a single sbml
+
+        Args:
+            compose: Join composite simulations into a single sbml.
         """
 
         self._check_all_sims_compilation()
@@ -1285,7 +1329,9 @@ class SimulationComposition:
     ) -> list[str]:
         """
         Generates a string with an Antimony model from a respective MobsPy model
-        :param compose: (bool) Join composite simulations into a single sbml
+
+        Args:
+            compose: Join composite simulations into a single sbml.
         """
         self._check_all_sims_compilation()
         self._compile_multi_simulation()
@@ -1300,12 +1346,10 @@ class SimulationComposition:
         return self.base_sim.generate_antimony(compose=compose, model_name=model_name)
 
     def to_dataframe(self) -> TypingAny:
+        """Convert composition results to a pandas DataFrame."""
         self.base_sim.to_dataframe()
 
     @classmethod
     def is_simulation(cls) -> bool:
+        """Return True to identify this class as a simulation."""
         return True
-
-
-if __name__ == "__main__":
-    pass

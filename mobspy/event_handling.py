@@ -35,12 +35,13 @@ class EventHandlingMixin:
 
     @classmethod
     def event_compilation_error(cls) -> None:
+        """Raise an EventError describing the expected condition format."""
         raise EventError(
             "The event condition did not compile.\n"
             "Please make sure it follows the following format:\n"
             "For simple conditions - if C1 \n"
             "For and based condition - if (C1) & (C2)\n"
-            "For or based conditions - if (C1) & (C2)\n"
+            "For or based conditions - if (C1) | (C2)\n"
             "Please include the parentheses"
         )
 
@@ -119,7 +120,8 @@ class EventHandlingMixin:
         finally:
             converted_delay = uh_convert_time(delay)
             self._conditional_event = False
-            assert converted_delay is not None
+            if converted_delay is None:
+                raise EventError(f"Failed to convert event delay: {delay!r}")
             self.event_context_add(converted_delay, trigger)  # type: ignore[arg-type]
 
     @contextmanager
@@ -140,5 +142,6 @@ class EventHandlingMixin:
             yield 0
         finally:
             converted_time = uh_convert_time(time)
-            assert converted_time is not None
+            if converted_time is None:
+                raise EventError(f"Failed to convert event time: {time!r}")
             self.event_context_add(converted_time, "true")

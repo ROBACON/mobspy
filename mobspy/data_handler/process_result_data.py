@@ -32,7 +32,8 @@ def extract_time_and_volume_list(
 
     Conditional simulations have a parameter called '_end_condition' in their dictionary
 
-    :param list_of_params: list of parameters of all concatenated simulations
+    Args:
+        list_of_params: List of parameters of all concatenated simulations.
     """
     no_fixed_volume = False
     no_fixed_dur = False
@@ -85,20 +86,19 @@ def convert_data_to_desired_unit(
     """Converts the simulation output data from the MobsPy standard units
     to the desired units specified by the user
 
-    :param data: (dict) resulting data from a MobsPy
-        simulation execution
-    :param time_list: (list) list of times where the
-        volume changes (single simulation: only one)
-    :param volume_list: (list) list of volumes changes
-        (single simulation: only one)
-    :param unit_x: (str) unit that the user desires the
-        time in, defaults to dimensionless (None)
-    :param unit_y: (str) unit that the user desires the
-        y axis to be in (Concentration or counts)
-    :param output_concentration: (bool) decide if output
-        should be a concentration or count
-    :return: converted_data - input data converted to the desired units
-    :rtype: (dict) Dictionary meta-species as key and run as value
+    Args:
+        data: Resulting data from a MobsPy simulation execution.
+        time_list: List of times where the volume changes (single simulation: only one).
+        volume_list: List of volumes changes (single simulation: only one).
+        unit_x: Unit that the user desires the time in, defaults to dimensionless
+            (None).
+        unit_y: Unit that the user desires the y axis to be in (Concentration or
+            counts).
+        output_concentration: Decide if output should be a concentration or count.
+
+
+    Returns:
+        Input data converted to the desired units.
     """
     ur = u.unit_registry_object
     converted_data = deepcopy(data)
@@ -113,6 +113,7 @@ def convert_data_to_desired_unit(
         converted_data["Time"] = new_time
 
     def multiply_data_by_factor(data: dict[str, list[float]], factor: float) -> None:
+        """Scale all non-Time species data by a constant factor."""
         for key in data:
             if key == "Time":
                 continue
@@ -169,12 +170,12 @@ def convert_to_concentration(
     """
     Converts output data from counts to concentration according to simulation volume
 
-    :param data: simulation data
-    :param converted_data: data converted to requested units
-    :param volume_list: list of volumes of all simulations
-        (more than one if concatenated)
-    :param time_list: list of durations of each simulation
-        (to check for respective volume in results)
+    Args:
+        data: Simulation data.
+        converted_data: Data converted to requested units.
+        volume_list: List of volumes of all simulations (more than one if concatenated).
+        time_list: List of durations of each simulation (to check for respective volume
+            in results).
     """
     new_data: dict[str, Any] = {}
     for key in data:

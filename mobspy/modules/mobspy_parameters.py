@@ -1,3 +1,5 @@
+"""Define and manage symbolic parameters for use in reaction rates and sweeps."""
+
 from __future__ import annotations
 
 import linecache
@@ -8,13 +10,13 @@ from mobspy.exceptions import ParameterError
 from mobspy.mobspy_logging import get_logger
 
 simlog = get_logger(__name__)
-from pint import Quantity, UnitRegistry  # noqa: E402
+from pint import Quantity  # noqa: E402
 
-from mobspy.modules.mobspy_expressions import (  # noqa: E402
-    ExpressionDefiner as me_ExpressionDefiner,
+from mobspy.modules.expression_nodes import (  # noqa: E402
+    ParamRefNode,
 )
 from mobspy.modules.mobspy_expressions import (  # noqa: E402
-    ParamRefNode,
+    ExpressionDefiner as me_ExpressionDefiner,
 )
 from mobspy.modules.mobspy_expressions import (  # noqa: E402
     QuantityConverter as me_QuantityConverter,
@@ -48,7 +50,11 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         self.process_value(value)
 
     def unit_process(self, value: Quantity) -> tuple[Any, Any]:  # type: ignore[type-arg]
-        # We convert into MobsPy units already during the definition of a parameter
+        """Convert a Pint quantity to MobsPy standard units.
+
+        Returns:
+            Tuple of (converted magnitude, original unit).
+        """
         converted = self.convert_received_unit(value)
         self.value = converted.magnitude
 
@@ -67,6 +73,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         return self.value, self.original_unit
 
     def process_value(self, value: Any) -> None:
+        """Store the parameter value, converting units if present."""
         if isinstance(value, Quantity):
             self.unit_process(value)
         elif isinstance(value, (list, tuple)):
@@ -131,6 +138,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         return self._has_units
 
     def update_value(self, new_value: Any) -> None:
+        """Replace the parameter value and reprocess units."""
         temp_set = set()
         temp_set.add(self)
         self.original_value = new_value
@@ -142,6 +150,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         self.process_value(new_value)
 
     def get_name(self) -> str:
+        """Return the parameter name."""
         return self.name
 
     def __str__(self) -> str:
@@ -178,12 +187,3 @@ def ModelParameters(
         )
 
     return parameters_to_return
-
-
-if __name__ == "__main__":
-    u = UnitRegistry()
-    a, b, c = ModelParameters(1, [3, 4, 5], 2)  # type: ignore[misc]
-    r1 = (a + b + c) / 5
-    print(r1._operation)
-    # print(type(r1._parameter_set))
-    # print(Internal_Parameter_Constructor.parameter_stack)

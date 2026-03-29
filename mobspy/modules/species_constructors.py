@@ -5,6 +5,12 @@ from __future__ import annotations
 import linecache
 import sys
 
+from mobspy.constants import (
+    END_FLAG_SPECIES_NAME,
+    ONE_SPECIES_NAME,
+    RATE_NAME_PREFIX,
+    ZERO_SPECIES_NAME,
+)
 from mobspy.exceptions import ReactionError, ValidationError
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
@@ -14,13 +20,43 @@ from mobspy.modules.reactions import _Last_rate_storage
 from mobspy.modules.species import Species, clean_species_name
 
 
-def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
-    """Compile code line for BaseSpecies and New.
+def _read_caller_source_line(stack_depth: int = 2) -> str:
+    """Read the source line of the caller for name inference.
 
-    :param code_line: Line of code where BaseSpecies or New was called
-    :return: (number of variables, list of name strings)
+    Returns:
+        The source line, or an empty string if unavailable.
     """
-    before_eq, after_eq = code_line.split("=", maxsplit=1)[0], code_line.split("=")[1]
+    try:
+        frame = sys._getframe(stack_depth)
+        line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
+    except (ValueError, OSError):
+        return ""
+    return line
+
+
+def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
+    """Parse variable names from an assignment source line.
+
+    Args:
+        code_line: Line of code where BaseSpecies or New was called.
+
+    Returns:
+        Tuple of (count, names) extracted from the assignment.
+
+    Raises:
+        ValidationError: If names cannot be inferred from the source.
+    """
+    if "=" not in code_line:
+        raise ValidationError(
+            "Could not infer species names from source.\n"
+            "Pass names explicitly: "
+            "A, B = BaseSpecies(['A', 'B'])"
+        )
+
+    before_eq, after_eq = (
+        code_line.split("=", maxsplit=1)[0],
+        code_line.split("=")[1],
+    )
     if after_eq.count("BaseSpecies") > 1:
         raise ReactionError(
             f"At {after_eq}: \n" + "BaseSpecies can only be called once at a time"
@@ -43,6 +79,10 @@ def _Create_Species(
     code_line: str,
     number_or_names: int | list[str] | None = None,
 ) -> Species | tuple[Species, ...]:
+    """Instantiate one or more Species from the caller's line.
+
+    Infers names from the assignment source.
+    """
     if number_or_names is not None:
         if isinstance(number_or_names, int):
             if number_or_names < 1:
@@ -70,7 +110,7 @@ def _Create_Species(
     for i in range(number_of_properties):
         _Last_rate_storage.entity_counter += 1
         if names is None:
-            name = "N$" + str(_Last_rate_storage.entity_counter)
+            name = RATE_NAME_PREFIX + str(_Last_rate_storage.entity_counter)
         else:
             name = names[i]
         if species is None:
@@ -91,14 +131,23 @@ def BaseSpecies(
 ) -> Species | tuple[Species, ...]:
     """Return base species with no inheritance.
 
-    :param number_or_names: (int) number of base species
-        or (list) list of names
-    :return: Species objects
+    Args:
+        number_or_names: Number of base species or (list) list of names.
+
+
+    Returns:
+        Species objects.
+
+    Examples:
+        >>> from mobspy import *
+        >>> A, B = BaseSpecies(['A', 'B'])
+        >>> A.get_name()
+        'A'
+        >>> A.is_species()
+        True
     """
     asgi_Assign.reset_context()
-
-    frame = sys._getframe(1)
-    code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
+    code_line = _read_caller_source_line(stack_depth=2)
     return _Create_Species(None, code_line, number_or_names)
 
 
@@ -108,13 +157,24 @@ def New(
 ) -> Species | tuple[Species, ...]:
     """Return meta-species that inherit from the supplied species.
 
-    :param species: Species to inherit from
-    :param number_or_names: (int) number of meta-species
-        or (list) list of names
-    :return: Species objects
+    Args:
+        species: Species to inherit from.
+        number_or_names: Number of meta-species or (list) list of names.
+
+
+    Returns:
+        Species objects.
+
+    Examples:
+        >>> from mobspy import *
+        >>> A = BaseSpecies(['A'])
+        >>> B = New(A, ['B'])
+        >>> B.get_name()
+        'B'
+        >>> B.is_species()
+        True
     """
-    frame = sys._getframe(1)
-    code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
+    code_line = _read_caller_source_line(stack_depth=2)
     return _Create_Species(species, code_line, number_or_names)
 
 
@@ -122,14 +182,19 @@ def ListSpecies(
     number_of_elements: int,
     inherits_from: Species | None = None,
 ) -> List_Species:
-    frame = sys._getframe(1)
-    code = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip("\n")
+    """Create a numbered list of species, optionally inheriting from a parent."""
+    code = _read_caller_source_line(stack_depth=2)
+    if "=" not in code:
+        raise ValidationError(
+            "Could not infer ListSpecies name from source.\n"
+            "Assign to a variable: my_list = ListSpecies(3)"
+        )
     before_eq, _after_eq = code.split("=")
     before_eq = before_eq.replace(" ", "")
     if "," in before_eq:
         raise ReactionError(
             f"At: {code} \n"
-            "No comas are allowed in the right-side of "
+            "No commas are allowed in the left-side of "
             "the equality during the creation of "
             "a ListSpecies"
         )
@@ -149,6 +214,6 @@ def ListSpecies(
 
 # Module-level singletons created at import time
 Zero, One, EndFlagSpecies = BaseSpecies(3)
-Zero._bypass_name("_S0")
-One._bypass_name("_S1")
-EndFlagSpecies._bypass_name("_End_Flag_MetaSpecies")
+Zero._bypass_name(ZERO_SPECIES_NAME)
+One._bypass_name(ONE_SPECIES_NAME)
+EndFlagSpecies._bypass_name(END_FLAG_SPECIES_NAME)

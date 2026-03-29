@@ -1,5 +1,5 @@
 """
-The class_of_meta_specie_named_any.py model is responsible
+The any_species.py model is responsible
 for defining the Context_specie_named_any class.
 """
 
@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any as TypingAny
 from typing import NoReturn
 
+from mobspy.constants import CONTEXT_ANY_SPECIES_NAME
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Species
 
@@ -31,19 +32,14 @@ class Context_specie_named_any(Species):
 
     _building_with_context: bool = False
 
-    def __getattr__(self, item: str) -> Context_specie_named_any:
+    def __getattr__(self, item: str) -> TypingAny:  # type: ignore[override]
         """
         This method is called when an attribute is called
         on the Any specie. It is used to add the
         characteristic to the currently active Any context.
 
-        :param item: (str) characteristic to be added to
-            the currently active Any context.
-        :raise simlog.error: if the Any specie is given a
-            characteristic outside of a context.
-        :return self: to allow for assigning multiple
-            characteristics to the Any specie in the
-            same line.
+        Args:
+            item: Characteristic to be added to the currently active Any context.
         """
         if item.startswith("_"):
             raise AttributeError(item)
@@ -113,37 +109,37 @@ class Context_specie_named_any(Species):
         cannot be called, as it is not supposed to be used
         this way. Thus, it raises an error when called.
         """
-        raise ValidationError("The Any specie cannot be called")
+        raise ValidationError("The Any species cannot be called")
 
     def __add__(self, other: TypingAny) -> None:
         """
-        The add operator is overloaded as the Any specie
+        The add operator is overloaded as the Any species
         cannot be added. Raises an error when added.
         """
-        raise ValidationError("The Any specie cannot be added")
+        raise ValidationError("The Any species cannot be added")
 
     def __radd__(self, other: TypingAny) -> None:
         """
-        The add operator is overloaded as the Any specie
+        The add operator is overloaded as the Any species
         cannot be added. Raises an error when added.
         """
-        raise ValidationError("The Any specie cannot be added")
+        raise ValidationError("The Any species cannot be added")
 
     def __rmul__(self, other: TypingAny) -> None:
         """
         The multiplication operator is overloaded as the
-        Any specie cannot be multiplied. Raises an error
+        Any species cannot be multiplied. Raises an error
         when multiplied.
         """
-        raise ValidationError("The Any specie cannot be multiplied")
+        raise ValidationError("The Any species cannot be multiplied")
 
     def __rshift__(self, other: TypingAny) -> NoReturn:
         """
         The >> operator is overloaded so that  it raises an error when used.
         """
-        raise ValidationError("The >> operator cannot be used on the Any specie")
+        raise ValidationError("The >> operator cannot be used on the Any species")
 
 
 # Any is the only object of the Any_specie class that will be used. It is defined here.
-__SAny = Context_specie_named_any("Context_Any_MetaSpecies")
+__SAny = Context_specie_named_any(CONTEXT_ANY_SPECIES_NAME)
 Any = __SAny

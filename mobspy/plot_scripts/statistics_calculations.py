@@ -1,3 +1,5 @@
+"""Compute averages and standard deviations across stochastic simulation runs."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,9 +15,13 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
     """
     Badly named function - Average between all RUNS inside a single time-series
 
-    :param species_string: (str) species string to perform the average upon
-    :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
-    :return: average_series (list) a list with the average values from all runs
+    Args:
+        species_string: Species string to perform the average upon.
+        mobspy_ts: MobsPy time series object.
+
+
+    Returns:
+        A list with the average values from all runs.
     """
 
     list_series: list[Any] = []
@@ -70,11 +76,14 @@ def standard_deviation(
     """
     Standard deviation between all RUNS inside a single time-series
 
-    :param species_string: (str) Species string
-    :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
-    :param average_series: (list) if the average series is given it is not recalculated
-    :return: deviation_series (list) a list with the standard
-        deviation values from all runs
+    Args:
+        species_string: Species string.
+        mobspy_ts: MobsPy time series object.
+        average_series: If the average series is given it is not recalculated.
+
+
+    Returns:
+        A list with the standard deviation values from all runs.
     """
     if average_series is None:
         average_series = time_series_average(species_string, mobspy_ts)
@@ -106,14 +115,16 @@ def average_plus_standard_deviation(
     """
     Standard deviation between all RUNS inside a single time-series
 
-    :param species_string: (str) Species string
-    :param mobspy_ts: (MobsPy TimeSeries) MobsPy time series object
-    :param average_series: (list) if the average series is given it is not recalculated
-    :param deviation_series: (list) if the deviation is given it is not recalculated
+    Args:
+        species_string: Species string.
+        mobspy_ts: MobsPy time series object.
+        average_series: If the average series is given it is not recalculated.
+        deviation_series: If the deviation is given it is not recalculated.
 
-    :return: series_average (list) = average value of the run,
-        plus (list) = average + deviation,
-        minus (list) = average - deviation
+
+    Returns:
+        Average value of the run, plus (list) = average + deviation, minus (list) =
+        average - deviation.
     """
     if average_series is None:
         series_average = time_series_average(species_string, mobspy_ts)

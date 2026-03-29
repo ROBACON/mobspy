@@ -43,9 +43,11 @@ class ModelGenerationMixin:
         ...
 
     def compose_sbml(self) -> list[list[SBMLModelDict]]:
+        """Merge concatenated simulations into single SBML models using flag species."""
         list_of_composite_dicts_for_sbml = []
 
         def check_convertible() -> None:
+            """Raise if the simulation chain cannot be composed into a single SBML."""
             if len(self._list_of_parameters) == 1:
                 raise SBMLError(
                     "Single simulations cannot generate a composed "
@@ -67,6 +69,7 @@ class ModelGenerationMixin:
             flag_species_name: str,
             current_sbml_reaction: dict[str, ReactionData],
         ) -> None:
+            """Gate each reaction's kinetics by the flag species for simulation *i*."""
             for reaction_key, reaction in current_sbml_reaction.items():
                 if "phantom" in reaction_key:
                     continue
@@ -90,6 +93,10 @@ class ModelGenerationMixin:
             cul_duration: float | int,
             sim_sbml: CompiledModelDict,
         ) -> None:
+            """Create a time- or condition-triggered event.
+
+            Activates the next simulation phase.
+            """
             if self._list_of_parameters[simulation_index]["_end_condition"] is None:
                 event_name = "e" + str(len(new_sbml_file["events_for_sbml"]))
                 event = EventData(
@@ -109,6 +116,10 @@ class ModelGenerationMixin:
                 new_sbml_file["events_for_sbml"][event_name] = event
 
         def parameter_process(sim_index: int, sim_sbml: CompiledModelDict) -> None:
+            """Copy parameters into the composite model.
+
+            Renames volume per simulation index.
+            """
             for par in sim_sbml["parameters_for_sbml"]:
                 if par == "volume":
                     new_sbml_file["parameters_for_sbml"]["_vol" + str(sim_index)] = (
@@ -127,6 +138,10 @@ class ModelGenerationMixin:
             cul_duration: float | int,
             skip_end_event: bool,
         ) -> None:
+            """Integrate one simulation's components into the composite.
+
+            Merges parameters, reactions, and events.
+            """
             parameter_process(i, sim_sbml)
             reaction_process(i, pre_spe, sim_sbml["reactions_for_sbml"])
             if not skip_end_event:
@@ -148,6 +163,10 @@ class ModelGenerationMixin:
         def process_simulations(
             multi_sims: list[CompiledModelDict],
         ) -> None:
+            """Iterate over all simulations after the first.
+
+            Composes them into the merged model.
+            """
             cul_duration: float | int = 0
             skip_end_event = False
             for i, sim_sbml in enumerate(multi_sims):
@@ -196,6 +215,7 @@ class ModelGenerationMixin:
         return list_of_composite_dicts_for_sbml
 
     def parse_volume_name_for_antimony(self) -> list[list[SBMLModelDict]]:
+        """Rename 'volume' to '_vol' in reaction kinetics for Antimony compatibility."""
         new_sims = []
         for multi_sims in self.sbml_data_list:
             sim_sbml = multi_sims[0]
@@ -225,8 +245,12 @@ class ModelGenerationMixin:
         """
         Generates sbml strings from the current stored models in the simulation.
 
-        :param compose: (bool) Join composite simulations into a single sbml
-        :return: list of sbml strings from all stored simulations
+        Args:
+            compose: Join composite simulations into a single sbml.
+
+
+        Returns:
+            List of sbml strings from all stored simulations.
         """
         to_return = []
         if self._species_for_sbml is None:
@@ -256,8 +280,9 @@ class ModelGenerationMixin:
         """
         Generates a string with an Antimony model from a respective MobsPy model.
 
-        :param compose: (bool) Join composite simulations into a single sbml
-        :param model_name: (str) desired name of the model
+        Args:
+            compose: Join composite simulations into a single sbml.
+            model_name: Desired name of the model.
         """
         if self._species_for_sbml is None:
             self.compile(verbose=False)

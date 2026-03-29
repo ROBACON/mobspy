@@ -1,3 +1,5 @@
+"""Manage the global expression-compilation context for unit-aware rate building."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,6 +18,11 @@ def expression_compilation_finish() -> None:
 
 
 class Unit_Context_Setter:
+    """Context manager for unit-aware compilation.
+
+    Activates expression-building mode.
+    """
+
     def __enter__(self) -> None:
         expression_compilation_initiation()
 

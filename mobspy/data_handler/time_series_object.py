@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class MobsPyTimeSeries:
+    """Single time-series result from one simulation run."""
+
     def __init__(
         self,
         data_dict: TimeSeriesDataDict,
@@ -28,7 +30,9 @@ class MobsPyTimeSeries:
     ) -> None:
         """Creates the MobsPy timeseries object
 
-        :param data_dict: (dict) resulting dictionary from simulation
+        Args:
+            data_dict: Resulting dictionary from simulation.
+
         {'data': ...., 'params':....., 'models':.......}
         """
         self.ts_data: dict[str, list[float]] = data_dict["data"]
@@ -41,7 +45,13 @@ class MobsPyTimeSeries:
 
 
 class MobsPyList_of_TS:
+    """Collection of time-series results across multiple simulation runs.
+
+    Supports indexing by run number, species name, or meta-species object.
+    """
+
     def check_parameters_for_deepcopy(self) -> None:
+        """Cast non-primitive parameter values to strings for safe deepcopy."""
         for i, d in enumerate(self.ts_parameters):
             for par, val in d.items():
                 if not isinstance(
@@ -66,7 +76,9 @@ class MobsPyList_of_TS:
     ) -> None:
         """Creates the MobsPy timeseries object
 
-        :param data_dict: (dict) resulting dictionary from simulation
+        Args:
+            data_dict: Resulting dictionary from simulation.
+
         {'data': ...., 'params':....., 'models':.......}
         """
 
@@ -109,7 +121,9 @@ class MobsPyList_of_TS:
 
     def to_dict(self) -> dict[str, Any]:
         """
-        :return: data in dict format {'data': ...., 'params':....., 'models':.......}
+
+        Returns:
+            Data in dict format {'data': ...., 'params':....., 'models':.......}.
         """
         return {
             "data": self.ts_data,
@@ -139,8 +153,8 @@ class MobsPyList_of_TS:
         Add a new time series to the TS data. Used for stochastic plotting
         the average and standard deviation
 
-        :param time_series: (dict) dictionary with species strings
-            as keys and run as value
+        Args:
+            time_series: Dictionary with species strings as keys and run as value.
         """
         if isinstance(time_series, dict):
             self.ts_data += [time_series]
@@ -217,7 +231,9 @@ class MobsPyList_of_TS:
         Maps meta-species according to characteristics.
         Ex: A.a1 = A.a1.b1 + A.a1.b2 + A.a1.b3
 
-        :param item: Meta-species object or string to be retrieved
+        Args:
+            item: Meta-species object or string to be retrieved.
+
         :ts_index: Index of the time series to perform the sum
         """
 
@@ -276,6 +292,7 @@ class MobsPyList_of_TS:
         return max_ts["Time"]  # type: ignore[no-any-return]
 
     def return_pandas(self) -> list[pd.DataFrame]:
+        """Convert each run's time-series data to a pandas DataFrame."""
         to_return: list[pd.DataFrame] = []
 
         for ts in self.ts_data:

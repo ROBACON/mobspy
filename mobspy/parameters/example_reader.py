@@ -12,6 +12,7 @@ from typing import Any
 
 
 def get_example_parameters() -> dict[str, Any]:
+    """Return an example parameter dictionary for validation."""
     example_parameters = {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
         "volume": 1,

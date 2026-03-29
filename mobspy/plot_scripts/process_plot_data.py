@@ -1,3 +1,5 @@
+"""Filter and aggregate simulation data for species queries before plotting."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -17,8 +19,9 @@ def query_plot_data(species: set[str] | list[str], data: Any) -> tuple[list[str]
     with the results from the query added to it for the plotting
     structure
 
-    :param species: (str) Species name in string format
-    :param data: (dict) Data in MobsPy dictionary format
+    Args:
+        species: Species name in string format.
+        data: Data in MobsPy dictionary format.
     """
     new_data = deepcopy(data)
 
@@ -46,8 +49,9 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
     Performs a check of the plot_parameters given. To see if the
     parameters are correctly named
 
-    :param species: (str) Species in str format
-    :param plot_params: (dict) Plot parameter dictionary
+    Args:
+        species: Species in str format.
+        plot_params: Plot parameter dictionary.
     """
     dictionary = epr.get_example_plot_parameters()
 
@@ -80,6 +84,7 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
 def time_filter_operation(
     low: float, high: float, time_data: list[float], data: list[float]
 ) -> tuple[list[float], list[float]]:
+    """Filter time series to keep only points within [low, high]."""
     new_time_data: list[float] = []
     new_data: list[float] = []
 
@@ -98,6 +103,7 @@ def time_filter_operation(
 def y_filter_operation(
     low_y: float, high_y: float, time_data: list[float], data: list[float]
 ) -> tuple[list[float], list[float]]:
+    """Filter time series to keep only points with y in [low_y, high_y]."""
     new_time_data: list[float] = []
     new_data: list[float] = []
 
