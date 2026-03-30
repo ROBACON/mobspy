@@ -9,6 +9,7 @@ from __future__ import annotations
 import linecache
 import re
 import sys
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -59,6 +60,11 @@ if TYPE_CHECKING:
     from mobspy.modules.list_species import List_Species
 
 _logger = get_logger(__name__)
+
+_simulation_context_cv: ContextVar[Any] = ContextVar(
+    "_simulation_context_cv", default=None
+)
+_meta_any_ctx_cv: ContextVar[set[str]] = ContextVar("_meta_any_ctx_cv")
 
 
 def _get_multiline_code_context(filename: str, lineno: int) -> str:
@@ -421,7 +427,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return 0
 
         if characteristic == "assign":
-            asgi_Assign._asg_context = True
+            asgi_Assign.set_context()
             return asgi_Asg(self, species_or_reacting=True)
 
         Species.check_if_valid_characteristic(self, characteristic)
@@ -454,12 +460,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             quantity = float(quantity)
 
         quantity_dict: dict[str, Any] | None = None
-        if len(Species.meta_specie_named_any_context) != 0:
-            for i in Species.meta_specie_named_any_context:
+        _any_ctx = Species.get_meta_specie_named_any_context()
+        if len(_any_ctx) != 0:
+            for i in _any_ctx:
                 self.c(i)
-            quantity_dict = self.add_quantities(
-                Species.meta_specie_named_any_context.copy(), quantity
-            )
+            quantity_dict = self.add_quantities(_any_ctx.copy(), quantity)
 
         elif (
             isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
@@ -572,7 +577,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
         name = code_line.replace(" ", "").split("=")[0]
 
-        _Last_rate_storage.entity_counter += 1
+        _Last_rate_storage.increment_entity_counter()
         new_entity = Species(name)
         new_entity.set_references(mcu_combine_references(self, other))
         new_entity.add_reference(new_entity)
@@ -684,9 +689,6 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """Clear all initial count assignments."""
         self._species_counts = []
 
-    _simulation_context: Any = None
-    meta_specie_named_any_context: set[str] = set()
-
     @classmethod
     def set_simulation_context(cls, sim: Any) -> None:
         """Set the active simulation context for all species.
@@ -694,8 +696,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Raises:
             ValidationError: If a context is already set.
         """
-        if cls._simulation_context is None:
-            cls._simulation_context = sim
+        if _simulation_context_cv.get() is None:
+            _simulation_context_cv.set(sim)
         else:
             raise ValidationError(
                 "A different Simulation Object was assigned "
@@ -709,23 +711,33 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         cls,
         meta_specie_named_any_characteristics: set[str],
     ) -> None:
-        """Update the class variable meta_specie_named_any_context.
+        """Update the meta-species Any context for the current thread.
 
         Args:
             meta_specie_named_any_characteristics: Set of characteristics of the
                 currently active any context.
         """
-        cls.meta_specie_named_any_context = meta_specie_named_any_characteristics
+        _meta_any_ctx_cv.set(meta_specie_named_any_characteristics)
 
     @classmethod
     def reset_simulation_context(cls) -> None:
         """Clear the active simulation context."""
-        cls._simulation_context = None
+        _simulation_context_cv.set(None)
 
     @classmethod
     def get_simulation_context(cls) -> Any:
         """Return the active simulation context, or None."""
-        return cls._simulation_context
+        return _simulation_context_cv.get()
+
+    @classmethod
+    def get_meta_specie_named_any_context(cls) -> set[str]:
+        """Return the current Any context characteristics for this thread."""
+        try:
+            return _meta_any_ctx_cv.get()
+        except LookupError:
+            s: set[str] = set()
+            _meta_any_ctx_cv.set(s)
+            return s
 
     def order_references(self) -> None:
         """Sort references by characteristics and build an index map."""

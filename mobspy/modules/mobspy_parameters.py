@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import linecache
 import sys
+import threading
 from typing import Any
 
 from mobspy.exceptions import ParameterError
@@ -32,6 +33,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
     # convert_received_unit
     parameter_stack: dict[str, Internal_Parameter_Constructor] = {}
+    _parameter_stack_lock: threading.Lock = threading.Lock()
 
     def __init__(self, name: str, value: Any) -> None:
         self._generate_necessary_attributes()
@@ -40,7 +42,8 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         temp_set.add(self)
         self.name = name
         self.original_value = value
-        self.parameter_stack[name] = self
+        with self._parameter_stack_lock:
+            self.parameter_stack[name] = self
 
         self._ms_active = True
 
@@ -120,8 +123,9 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 " the old will be deleted and replaced by this one."
             )
 
-        del self.parameter_stack[self.name]
-        self.parameter_stack[new_name] = self
+        with self._parameter_stack_lock:
+            del self.parameter_stack[self.name]
+            self.parameter_stack[new_name] = self
         self.name = new_name
 
     def set_value(self, new_value: Any) -> Internal_Parameter_Constructor:

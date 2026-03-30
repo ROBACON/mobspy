@@ -7,6 +7,7 @@ here for organizational clarity.
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -41,9 +42,30 @@ if TYPE_CHECKING:
     from mobspy.modules.species import Species
 
 
+_last_rate_cv: ContextVar[Any] = ContextVar("_last_rate_cv", default=None)
+_entity_counter_cv: ContextVar[int] = ContextVar("_entity_counter_cv", default=0)
+
+
 class _Last_rate_storage:
-    last_rate: Any = None
-    entity_counter: int = 0
+    @staticmethod
+    def get_last_rate() -> Any:
+        """Return the stored rate for the current thread."""
+        return _last_rate_cv.get()
+
+    @staticmethod
+    def set_last_rate(value: Any) -> None:
+        """Store a rate value for the current thread."""
+        _last_rate_cv.set(value)
+
+    @staticmethod
+    def get_entity_counter() -> int:
+        """Return the entity counter for the current thread."""
+        return _entity_counter_cv.get()
+
+    @staticmethod
+    def increment_entity_counter() -> None:
+        """Increment the entity counter for the current thread."""
+        _entity_counter_cv.set(_entity_counter_cv.get() + 1)
 
     @classmethod
     def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
@@ -57,7 +79,7 @@ class _Last_rate_storage:
             object_to_return: Returns the object that __getitem__ was performed on.
             item: Stored reaction rate.
         """
-        cls.last_rate = item
+        _last_rate_cv.set(item)
         return object_to_return
 
     @classmethod
@@ -70,7 +92,7 @@ class _Last_rate_storage:
 
         if isinstance(rate, (Species, Reacting_Species, Reactions)):
             raise ReactionError(
-                f"Reaction rate of type {type(_Last_rate_storage.last_rate)} not valid"
+                f"Reaction rate of type {type(_last_rate_cv.get())} not valid"
             )
 
         if not (
@@ -137,17 +159,18 @@ class Reactions:
             )
 
         # Setup rate - consider reversible reactions
+        stored_rate = _Last_rate_storage.get_last_rate()
         try:
-            flag_len = len(_Last_rate_storage.last_rate) == 2
+            flag_len = len(stored_rate) == 2
         except (TypeError, AttributeError):
             flag_len = False
 
         if flag_len and rate is None:
-            store_last_rate = _Last_rate_storage.last_rate[0]
+            store_last_rate = stored_rate[0]
             Reactions(
                 reactants=products,
                 products=reactants,
-                rate=_Last_rate_storage.last_rate[1],
+                rate=stored_rate[1],
             )
             rate = _Last_rate_storage.process_rate(store_last_rate)
 
@@ -155,7 +178,7 @@ class Reactions:
             rate = _Last_rate_storage.process_rate(rate)
 
         elif rate is None and not flag_len:
-            rate = _Last_rate_storage.process_rate(_Last_rate_storage.last_rate)
+            rate = _Last_rate_storage.process_rate(stored_rate)
 
         elif rate is not None and flag_len:
             rate = _Last_rate_storage.process_rate(rate)
@@ -163,11 +186,12 @@ class Reactions:
         else:
             raise ReactionError("Too many rates provided")
         self.rate = rate
-        if _Last_rate_storage.last_rate is not None:
-            _Last_rate_storage.last_rate = None
+        if stored_rate is not None:
+            _Last_rate_storage.set_last_rate(None)
 
-        if len(Species.meta_specie_named_any_context) != 0:
-            for j in Species.meta_specie_named_any_context:
+        _any_ctx = Species.get_meta_specie_named_any_context()
+        if len(_any_ctx) != 0:
+            for j in _any_ctx:
                 for r in reactants:
                     r["object"].c(j)
                     r["characteristics"].add(j)
@@ -529,8 +553,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         if isinstance(quantity, (np_int_, np_float_)):
             quantity = float(quantity)
 
-        if len(Species.meta_specie_named_any_context) > 0:
-            for i in Species.meta_specie_named_any_context:
+        _any_ctx = Species.get_meta_specie_named_any_context()
+        if len(_any_ctx) > 0:
+            for i in _any_ctx:
                 self = self.c(i)  # type: ignore[assignment]
 
         species_object = self.list_of_reactants[0]["object"]
@@ -634,8 +659,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         from mobspy.modules.species import Species
 
         if len(self.list_of_reactants) == 1:
-            self.old_context = Species.meta_specie_named_any_context
-            new_context = Species.meta_specie_named_any_context.union(
+            self.old_context = Species.get_meta_specie_named_any_context()
+            new_context = Species.get_meta_specie_named_any_context().union(
                 self.list_of_reactants[0]["characteristics"]
             )
             Species.update_meta_specie_named_any_context(new_context)

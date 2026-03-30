@@ -108,9 +108,9 @@ def _Create_Species(
 
     to_return = []
     for i in range(number_of_properties):
-        _Last_rate_storage.entity_counter += 1
+        _Last_rate_storage.increment_entity_counter()
         if names is None:
-            name = RATE_NAME_PREFIX + str(_Last_rate_storage.entity_counter)
+            name = RATE_NAME_PREFIX + str(_Last_rate_storage.get_entity_counter())
         else:
             name = names[i]
         if species is None:

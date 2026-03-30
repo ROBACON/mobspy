@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from re import compile as re_compile
 from re import escape as re_escape
 from typing import TYPE_CHECKING, Any
@@ -21,6 +22,8 @@ from mobspy.modules.species_string_generator import (
 )
 from mobspy.types import AssignmentData
 
+_asg_context_cv: ContextVar[bool] = ContextVar("_asg_context_cv", default=False)
+
 
 class Assignment_Operator:
     """Manages assignment context and compiles assignment expressions for SBML.
@@ -29,7 +32,6 @@ class Assignment_Operator:
     and provides static methods for arithmetic on assignment expressions.
     """
 
-    _asg_context: bool = False
     regex_pattern: str = r"\(\$arg(?:\.[^\s().]+)?\)(?=[^\s()]|$)"
 
     @staticmethod
@@ -54,23 +56,23 @@ class Assignment_Operator:
         return arg_strings
 
     def __enter__(self) -> Assignment_Operator:
-        self._asg_context = True
+        _asg_context_cv.set(True)
         return self
 
     def set_context(self) -> None:
         """Activate the assignment context."""
-        self._asg_context = True
+        _asg_context_cv.set(True)
 
     def __exit__(self, *args: Any) -> None:
-        self._asg_context = False
+        _asg_context_cv.set(False)
 
     def reset_context(self) -> None:
         """Deactivate the assignment context."""
-        self._asg_context = False
+        _asg_context_cv.set(False)
 
     def check_context(self) -> bool:
         """Return whether the assignment context is currently active."""
-        return self._asg_context
+        return _asg_context_cv.get()
 
     @staticmethod
     def check_arguments(

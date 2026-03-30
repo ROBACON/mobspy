@@ -5,12 +5,37 @@ for defining the Context_specie_named_any class.
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import Any as TypingAny
 from typing import NoReturn
 
 from mobspy.constants import CONTEXT_ANY_SPECIES_NAME
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Species
+
+_any_chars_cv: ContextVar[set[str]] = ContextVar("_any_chars_cv")
+_any_stack_cv: ContextVar[list[set[str]]] = ContextVar("_any_stack_cv")
+_any_building_cv: ContextVar[bool] = ContextVar("_any_building_cv", default=False)
+
+
+def _get_any_chars() -> set[str]:
+    """Return the current Any characteristics set, lazily initialized per-thread."""
+    try:
+        return _any_chars_cv.get()
+    except LookupError:
+        s: set[str] = set()
+        _any_chars_cv.set(s)
+        return s
+
+
+def _get_any_stack() -> list[set[str]]:
+    """Return the nested Any context stack, lazily initialized per-thread."""
+    try:
+        return _any_stack_cv.get()
+    except LookupError:
+        lst: list[set[str]] = []
+        _any_stack_cv.set(lst)
+        return lst
 
 
 class Context_specie_named_any(Species):
@@ -26,12 +51,6 @@ class Context_specie_named_any(Species):
     with statement.
     """
 
-    _set_of_characteristics_currently_under_the_any_context: set[str] = set()
-
-    _list_of_nested_any_contexts: list[set[str]] = []
-
-    _building_with_context: bool = False
-
     def __getattr__(self, item: str) -> TypingAny:  # type: ignore[override]
         """
         This method is called when an attribute is called
@@ -44,8 +63,8 @@ class Context_specie_named_any(Species):
         if item.startswith("_"):
             raise AttributeError(item)
 
-        self._building_with_context = True
-        self._set_of_characteristics_currently_under_the_any_context.add(item)
+        _any_building_cv.set(True)
+        _get_any_chars().add(item)
         return self
 
     def __enter__(self) -> int:
@@ -53,11 +72,11 @@ class Context_specie_named_any(Species):
         Context manager for Any's characteristics.
         Called in "with Any.example_characteristic :" format, when entering.
         """
-        if not self._building_with_context:
+        if not _any_building_cv.get(False):
             raise ValidationError(
                 "Characteristics cannot be added to the Any specie outside of a context"
             )
-        self._building_with_context = False
+        _any_building_cv.set(False)
         self.context_initiator_for_meta_specie_named_any()
         return 0
 
@@ -70,37 +89,29 @@ class Context_specie_named_any(Species):
 
     def context_initiator_for_meta_specie_named_any(self) -> None:
         """
-        This adds the current context in _list_of_nested_any_contexts,
+        This adds the current context in the nested stack,
         and then updates the Any context in all meta-species.
         """
-        self._list_of_nested_any_contexts.append(
-            set(self._set_of_characteristics_currently_under_the_any_context)
-        )
+        chars = _get_any_chars()
+        _get_any_stack().append(set(chars))
         Species.update_meta_specie_named_any_context(
-            Species.meta_specie_named_any_context.union(
-                self._set_of_characteristics_currently_under_the_any_context
-            )
+            Species.get_meta_specie_named_any_context().union(chars)
         )
 
     def context_finish_for_meta_specie_named_any(self) -> None:
         """
         This removes the context which is ending from
-        _list_of_nested_any_contexts and updates the
-        current Any context. Then, it updates the Any
-        context in all meta-species.
+        the nested stack and updates the current Any context.
+        Then, it updates the Any context in all meta-species.
         """
-        self._previous_set_of_characteristics_under_the_any_context = (
-            self._list_of_nested_any_contexts.pop()
-        )
-        if len(self._list_of_nested_any_contexts) > 0:
-            self._set_of_characteristics_currently_under_the_any_context = (
-                self._list_of_nested_any_contexts[-1]
-            )
+        stack = _get_any_stack()
+        previous_chars = stack.pop()
+        if len(stack) > 0:
+            _any_chars_cv.set(stack[-1])
         else:
-            self._set_of_characteristics_currently_under_the_any_context = set()
+            _any_chars_cv.set(set())
         Species.update_meta_specie_named_any_context(
-            Species.meta_specie_named_any_context
-            - self._previous_set_of_characteristics_under_the_any_context
+            Species.get_meta_specie_named_any_context() - previous_chars
         )
 
     def __call__(self, quantity: TypingAny) -> None:

@@ -112,7 +112,7 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 
 # Compatibility
 
-MobsPy is not thread-safe. Concurrent access to shared `Simulation` objects from multiple threads is not supported.
+MobsPy supports defining and compiling models from multiple threads concurrently. Each thread gets isolated DSL state via `ContextVar`. However, do not share a single `Simulation` instance across threads.
 
 # Release info
 Version 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features
