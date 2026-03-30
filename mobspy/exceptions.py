@@ -8,6 +8,20 @@ Examples:
 
 from __future__ import annotations
 
+__all__ = [
+    "AntimonyError",
+    "CompilationError",
+    "EventError",
+    "ImportError",
+    "MobsPyError",
+    "ParameterError",
+    "ReactionError",
+    "SBMLError",
+    "SimulationError",
+    "UnitError",
+    "ValidationError",
+]
+
 
 class MobsPyError(Exception):
     """Base exception for all MobsPy-related errors."""

@@ -15,9 +15,6 @@ from mobspy.mobspy_logging import get_logger
 _logger = get_logger(__name__)
 
 basico = ipm_LazyImporter("basico")
-mobspy_basico_patch = ipm_LazyImporter(
-    "mobspy.patch_scripts.basico_task_parametrization"
-)
 
 
 def basiCO_parameter_estimation(
@@ -53,11 +50,7 @@ def basiCO_parameter_estimation(
 
     # Check inputs in order ############################
     # Parameters ok?
-    if (
-        type(parameters_to_estimate) != list  # noqa: E721
-        and type(parameters_to_estimate) != set  # noqa: E721
-        and type(parameters_to_estimate) != tuple  # noqa: E721
-    ):
+    if not isinstance(parameters_to_estimate, (list, set, tuple)):
         raise ParameterError(
             "The parameter that will be estimated must be inside a list, set or tuple"
         )
@@ -93,12 +86,7 @@ def basiCO_parameter_estimation(
         )
 
     # Experimental data ok?
-    if (
-        type(experimental_data) != list  # noqa: E721
-        and type(experimental_data) != set  # noqa: E721
-        and type(experimental_data) != tuple  # noqa: E721
-        and not isinstance(experimental_data, DataFrame)
-    ):
+    if not isinstance(experimental_data, (list, set, tuple, DataFrame)):
         raise ParameterError(
             "Experimental for basiCO estimation must be a "
             "list of pandas dataframes or a pandas dataframe"
@@ -106,7 +94,7 @@ def basiCO_parameter_estimation(
 
     # Bound ok?
     new_bound: dict[str, Any] = {}
-    if type(bound) == dict:  # noqa: E721
+    if isinstance(bound, dict):
         for key in bound:
             new_bound[str(key)] = bound[key]
         bound = new_bound
@@ -130,7 +118,7 @@ def basiCO_parameter_estimation(
                     "the lower and upper bound of all "
                     "parameters"
                 )
-        except Exception as e:
+        except TypeError as e:
             raise ParameterError(
                 "The bound argument must be a list with "
                 "the lower and upper bound of all "
@@ -157,17 +145,17 @@ def basiCO_parameter_estimation(
         except IndexError as e:
             raise ParameterError(
                 f"Parameter {par} was not found in the "
-                f"Simulation model. \n "
-                f"Please make sure that any of the "
-                f"meta-species used to construct the "
-                f"simulator use the parameter in one "
-                f"of their reactions."
+                "Simulation model. \n "
+                "Please make sure that any of the "
+                "meta-species used to construct the "
+                "simulator use the parameter in one "
+                "of their reactions."
             ) from e
 
         if bound is None:
             pass
 
-        if type(bound) == dict:  # noqa: E721
+        if isinstance(bound, dict):
             fit_dictionary = {
                 "name": basico_parameter_name,
                 "lower": bound[par][0],
@@ -185,15 +173,11 @@ def basiCO_parameter_estimation(
             }
         fit_list.append(fit_dictionary)
 
-    if (
-        type(experimental_data) == list  # noqa: E721
-        or type(experimental_data) == set  # noqa: E721
-        or type(experimental_data) == tuple  # noqa: E721
-    ):
+    if isinstance(experimental_data, (list, set, tuple)):
         for i, exp in enumerate(experimental_data):
-            mobspy_basico_patch.add_experiment("exp" + str(i), exp, model=model)
+            basico.add_experiment("exp" + str(i), exp, model=model)
     else:
-        mobspy_basico_patch.add_experiment("exp1", experimental_data, model=model)
+        basico.add_experiment("exp1", experimental_data, model=model)
 
     basico.set_fit_parameters(fit_list, model=model)
     basico_results = basico.run_parameter_estimation(model=model, method=method)

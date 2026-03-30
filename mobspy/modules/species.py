@@ -237,7 +237,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         for i, reference in enumerate(self.get_references()):  # noqa: B007
             if reference.get_characteristics():
                 _logger.debug(str(reference) + ": ")
-                reference.simlog.debug_characteristics()
+                reference.show_characteristics()
 
     def show_references(self) -> None:
         """Print the objects this object has inherited from."""
@@ -453,6 +453,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if isinstance(quantity, (np_int_, np_float_)):
             quantity = float(quantity)
 
+        quantity_dict: dict[str, Any] | None = None
         if len(Species.meta_specie_named_any_context) != 0:
             for i in Species.meta_specie_named_any_context:
                 self.c(i)
@@ -474,7 +475,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             raise ReactionError(
                 f"{quantity} contains no characteristics from {self._name}"
             )
-        elif type(quantity) == Reacting_Species:  # noqa: E721
+        elif isinstance(quantity, Reacting_Species):
             raise ReactionError(
                 "Assignments of counts using meta-species "
                 "are only allowed under events in "
@@ -483,7 +484,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         elif Species.get_simulation_context() is None:
             raise ReactionError(
                 f"Species count assignment does not support the type {type(quantity)}"
-                f" if not under a simulation context"
+                " if not under a simulation context"
             )
 
         if self.get_simulation_context() is not None:
@@ -503,7 +504,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                         "quantity": quantity_dict["quantity"],
                     }
                 )
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 raise ReactionError(
                     str(e)
                     + "\n Only species count assignments are allowed in a model context"

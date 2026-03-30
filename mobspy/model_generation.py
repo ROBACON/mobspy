@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         SimulationParameters,
     )
 
-logger = get_logger(__name__)
+_logger = get_logger(__name__)
 
 
 class ModelGenerationMixin:
@@ -181,7 +181,7 @@ class ModelGenerationMixin:
                     )
 
                 if sim_sbml["assignments_for_sbml"] != {}:
-                    logger.warning(
+                    _logger.warning(
                         "Assignments beyond the initial simulation are ignored"
                     )
 
@@ -319,7 +319,7 @@ class ModelGenerationMixin:
                         antimony_model = (
                             antimony_model
                             + f"    {parameter_name} = {parameter_value[0]} "
-                            f"dimensionless\n"
+                            "dimensionless\n"
                         )
 
                 if sbml_data["assignments_for_sbml"]:

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from mobspy.exceptions import ValidationError
 from mobspy.mobspy_logging import get_logger
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from pint import Quantity  # noqa: E402
@@ -244,7 +244,7 @@ def annotation_handling(
         )
 
         if not isinstance(annotations, list):
-            simlog.warning(
+            _logger.warning(
                 "On plotting annotations: Annotations must "
                 "be a list with dictionaries as elements"
             )

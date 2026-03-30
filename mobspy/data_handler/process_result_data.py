@@ -17,7 +17,7 @@ from mobspy.modules.mobspy_expressions import u
 if TYPE_CHECKING:
     from mobspy.types import SimulationParameters
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 
 
 def extract_time_and_volume_list(
@@ -48,7 +48,7 @@ def extract_time_and_volume_list(
     flag_concentration = True
     if no_fixed_dur and len(list_of_params) > 1 and no_fixed_volume:
         flag_concentration = False
-        simlog.warning(
+        _logger.warning(
             "Could not resolve simulation volume due to "
             "multiple simulations with at least one "
             "with a conditional duration. The output "

@@ -74,12 +74,12 @@ def set_counts(count_dic: dict[Any, Any]) -> List_Species:
 
     all_found_species: set[Species] = set()
     for key in count_dic:
-        if type(key) == str:  # noqa: E721
+        if isinstance(key, str):
             all_found_species = find_species()
 
     model: set[Any] = set()
     for key, item in count_dic.items():
-        if type(key) == str:  # noqa: E721
+        if isinstance(key, str):
             already_found = False
             str_name = key.split(".")[0]
             str_characteristics = set(key.split(".")[1:])

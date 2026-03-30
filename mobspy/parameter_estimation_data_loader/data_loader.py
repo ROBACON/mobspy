@@ -23,9 +23,9 @@ class Experimental_Data_Holder:
         Raises:
             ValidationError: If the data format is invalid.
         """
-        flag_jump_checks = True if isinstance(data, tso.MobsPyList_of_TS) else False  # noqa: SIM210
+        flag_jump_checks = isinstance(data, tso.MobsPyList_of_TS)
 
-        if type(data) != list and not flag_jump_checks:  # noqa: E721
+        if not isinstance(data, list) and not flag_jump_checks:
             raise ValidationError(
                 "Data added must be in the format of list with"
                 " each element being a dictionary "
@@ -33,7 +33,7 @@ class Experimental_Data_Holder:
                 " or a MobsPy results object"
             )
         for e in data:
-            if type(e) != dict and not flag_jump_checks:  # noqa: E721
+            if not isinstance(e, dict) and not flag_jump_checks:
                 raise ValidationError(
                     "Data added must be in the format of list"
                     " with each element being a dictionary "

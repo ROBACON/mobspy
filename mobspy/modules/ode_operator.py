@@ -72,11 +72,11 @@ class ODEBinding:
         if isinstance(expression, Reacting_Species):  # noqa: SIM102
             if len(expression.list_of_reactants) > 1:
                 raise ValidationError(
-                    f"ODE expressions must be built within"
+                    "ODE expressions must be built within"
                     f" the dt[...] {operator} context.\n"
-                    f"Expressions like 'C = A + B' followed"
+                    "Expressions like 'C = A + B' followed"
                     f" by 'dt[X] {operator} C' are not"
-                    f" valid.\n"
+                    " valid.\n"
                     f"Use: dt[X] {operator} A + B"
                 )
 

@@ -8,7 +8,7 @@ from typing import Any
 from mobspy.exceptions import ValidationError
 from mobspy.mobspy_logging import get_logger
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 import mobspy.plot_params.example_plot_reader as epr  # noqa: E402
 
 
@@ -77,7 +77,7 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
             continue
         spe_name = key.split(".")[0]
         if spe_name not in species:
-            simlog.warning(f"Parameter {key} not supported")
+            _logger.warning(f"Parameter {key} not supported")
         validated_keys.add(key)
 
 

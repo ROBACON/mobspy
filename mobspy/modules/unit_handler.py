@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from pint import Quantity
+from pint import DimensionalityError, Quantity
 from scipy.constants import N_A
 
 from mobspy.exceptions import UnitError
@@ -90,7 +90,7 @@ def convert_rate(
                     f"decimeters ** {dimension * volume_power}/seconds"
                 )
                 return converted_quantity.magnitude, dimension, False
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
                 f"Is the rate in the form [volume]**{volume_power}/[time]?"
@@ -160,10 +160,10 @@ def convert_counts(
                     )
                     converted_quantity = converted_quantity * volume
                 converted_quantity = converted_quantity.magnitude
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
                 str(e) + "\n" + f"Problem converting count {quantity} \n"
-                f"Is it really a count or concentration?"
+                "Is it really a count or concentration?"
             ) from e
     return converted_quantity
 
@@ -228,6 +228,13 @@ def extract_length_dimension(
 
     if reaction_order is None:
         dimension = check_dimension(dimension, length_power, context)
+    elif reaction_order == 1:
+        if length_power != 0:
+            raise UnitError(
+                "Unimolecular reaction (order 1) should not have "
+                f"[length] in rate units, but got exponent {length_power}"
+            )
+        dimension = check_dimension(dimension, 0, context)
     else:
         volume_dim = int(length_power / (reaction_order - 1))
         dimension = check_dimension(dimension, volume_dim, context)
@@ -249,7 +256,7 @@ def _extract_length_power(unit_string: str) -> int | None:
         if length_exp == 0:
             return None
         return int(length_exp)
-    except Exception:
+    except (DimensionalityError, TypeError, ValueError, AttributeError):
         # Fallback: parse from string representation
         if "[length]" not in unit_string:
             return None

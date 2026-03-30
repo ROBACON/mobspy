@@ -8,7 +8,7 @@ import numpy as np
 
 from mobspy.mobspy_logging import get_logger
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 
 
 def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
@@ -36,7 +36,7 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
                 continue
 
             if len(s1) != len(s2) and war_1:
-                simlog.warning(
+                _logger.warning(
                     "Time Series length is different. \n"
                     "MobsPy disregards time-series that have"
                     " already finished during calculations"
@@ -45,7 +45,7 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
 
             for t1, t2 in zip(s1["Time"], s2["Time"]):
                 if t1 != t2 and war_2:
-                    simlog.warning(
+                    _logger.warning(
                         "Times in Time Series Objects are different. \n"
                         "MobsPy calculates the average by index"
                         " position. Please be careful."
@@ -126,10 +126,16 @@ def average_plus_standard_deviation(
         Average value of the run, plus (list) = average + deviation, minus (list) =
         average - deviation.
     """
-    if average_series is None:
-        series_average = time_series_average(species_string, mobspy_ts)
-    if deviation_series is None:
-        series_deviation = standard_deviation(species_string, mobspy_ts)
+    series_average = (
+        time_series_average(species_string, mobspy_ts)
+        if average_series is None
+        else average_series
+    )
+    series_deviation = (
+        standard_deviation(species_string, mobspy_ts)
+        if deviation_series is None
+        else deviation_series
+    )
 
     plus: list[float] = []
     minus: list[float] = []

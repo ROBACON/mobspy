@@ -312,7 +312,7 @@ def get_involved_species(
                     " inheritors were not found"
                     " in model \n"
                     f"For reaction {reaction} \n"
-                    f"Please add the species or remove the reaction"
+                    "Please add the species or remove the reaction"
                 )
 
             reactant_species_combination_list.append(species_for_reactant)
@@ -330,7 +330,7 @@ def construct_rate_function_arguments(
     black_list = ["*", "="]
     if any(i in rate_function_arguments for i in black_list):
         raise CompilationError(
-            f"Rate arguments must not contain = or *. \n"
+            "Rate arguments must not contain = or *. \n"
             f"Error in reaction {reaction}. \n"
             "Error in rate function"
             f" {rate_function} in signature"

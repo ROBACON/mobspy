@@ -9,7 +9,7 @@ from typing import Any
 from mobspy.exceptions import ParameterError
 from mobspy.mobspy_logging import get_logger
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 from pint import Quantity  # noqa: E402
 
 from mobspy.modules.expression_nodes import (  # noqa: E402
@@ -112,7 +112,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
     def rename(self, new_name: str) -> None:
         """Renames a parameter, checking name availability via the parameter stack."""
         if new_name in self.parameter_stack:
-            simlog.warning(
+            _logger.warning(
                 " MobsPy uses a parameter dictionary with parameter"
                 " names as keys and the respective object as value"
                 " to keep track of created parameters. As there is"

@@ -63,11 +63,11 @@ def check_orthogonality_between_references(references: set[Any]) -> None:
                     "shared through inheritance. " + "There are two characteristics "
                     "directly added to two "
                     "meta-species \n"
-                    f"Repetition in: "
+                    "Repetition in: "
                     f"{reference1}, {reference2}"
-                    f"Characteristics: "
+                    "Characteristics: "
                     f"{reference1.get_characteristics()}"
-                    f", "
+                    ", "
                     f"{reference2.get_characteristics()}"
                 )
 

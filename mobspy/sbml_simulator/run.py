@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from mobspy.types import CompiledModelDict, SimParams
 
-simlog = get_logger(__name__)
+_logger = get_logger(__name__)
 basico = ipm_LazyImporter("basico")
 
 
@@ -149,6 +149,7 @@ def __filter_condition_event_time_data(
 ) -> dict[str, list[float]]:
     new_data: dict[str, list[float]] = {}
 
+    stop_index = len(data[END_FLAG_SPECIES_NAME]) - 1
     for i, e in enumerate(data[END_FLAG_SPECIES_NAME]):
         if e == 1:
             stop_index = i
@@ -281,7 +282,7 @@ def __remap_species(
 
         try:
             # check if is a list -> sum
-            if type(the_mapping) is list:
+            if isinstance(the_mapping, list):
                 this_run: list[float] = []
                 runs_not_returned_by_basico: dict[str, list[float]] = {}
                 for t in T:
@@ -313,16 +314,18 @@ def __remap_species(
                 + "Possible fix: All runs must have the same time"
             ) from e
 
-        except TypeError:
-            simlog.warning(
+        except TypeError as e:
+            _logger.warning(
                 "Copasi removes A >> A species from"
                 " reaction calculations and does"
                 " not provide an output"
             )
-            simlog.warning("Please check the output data to see if this is the problem")
+            _logger.warning(
+                "Please check the output data to see if this is the problem"
+            )
             raise SimulationError(
                 "TypeError while mapping simulation results. "
                 "This may be caused by A >> A identity reactions."
-            ) from None
+            ) from e
 
     return mapped_data

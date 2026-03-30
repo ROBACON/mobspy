@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import libsbml as sbml
-from pint import Quantity, Unit
+from pint import DimensionalityError, Quantity, Unit
 from scipy.constants import N_A
 
 from mobspy.exceptions import UnitError
@@ -297,7 +297,7 @@ class ModelUnitContext:
                 converted = quantity.to(target)
                 return converted.magnitude, dimension, False
 
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
                 str(e) + "\n"
                 f"Problem converting rate {quantity}\n"
@@ -366,7 +366,7 @@ class ModelUnitContext:
                     return converted.magnitude * volume
                 return quantity.magnitude
 
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
                 str(e) + "\n"
                 f"Problem converting count {quantity}\n"
@@ -479,7 +479,7 @@ def _extract_substance_unit(quantity: Quantity) -> Unit:  # type: ignore[type-ar
             converted = isolated.to(target)
             if 0.99 < abs(converted.magnitude) < 1.01:
                 return target  # type: ignore[no-any-return]
-        except Exception:
+        except (DimensionalityError, TypeError, ValueError):
             continue
 
     return _ur.mole  # type: ignore[no-any-return]
@@ -511,7 +511,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
                 converted = q_norm.to(target)
                 if 0.99 < abs(converted.magnitude) < 1.01:
                     return target  # type: ignore[no-any-return]
-            except Exception:
+            except (DimensionalityError, TypeError, ValueError):
                 continue
 
     # For compound units (e.g. millimolar = mmol/L), convert to base units
@@ -540,7 +540,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
                 test = q.to(target)
                 if 0.99 < abs(test.magnitude) < 1.01:
                     return target  # type: ignore[no-any-return]
-            except Exception:
+            except (DimensionalityError, TypeError, ValueError):
                 continue
 
     return _ur.decimeter**dimension  # type: ignore[no-any-return, return-value]
@@ -611,7 +611,7 @@ def _decompose_pint_unit(pint_unit: Unit) -> list[_SbmlUnitComponent] | None:
         q = (1 * pint_unit).to_base_units()  # pyright: ignore[reportAttributeAccessIssue]
         magnitude = q.magnitude
         dim = dict(q.dimensionality)
-    except Exception:
+    except (DimensionalityError, TypeError, ValueError, AttributeError):
         return None
 
     components: list[_SbmlUnitComponent] = []

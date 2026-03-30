@@ -38,7 +38,9 @@ def compare_model_ignore_order(comp_results: str, file_name: str) -> bool:
         TEST_TOOLS / file_name if not Path(file_name).is_absolute() else Path(file_name)
     )
     expected_lines = {
-        line.strip() for line in path.read_text().splitlines() if line.strip()
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
     }
     result_lines = {line.strip() for line in comp_results.splitlines() if line.strip()}
     return expected_lines == result_lines

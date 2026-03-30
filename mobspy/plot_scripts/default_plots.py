@@ -26,13 +26,13 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
     Returns:
         Converted JSON as dictionary.
     """
-    with open(plot_json_filename) as file:
+    with open(plot_json_filename, encoding="utf-8") as file:
         try:
             json_data = json.load(file)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             raise ValidationError(
                 "The following error happened while "
-                f"decoding json file "
+                "decoding json file "
                 f'"{plot_json_filename}":\n' + str(e)
             ) from e
 
@@ -99,7 +99,7 @@ def stochastic_plot(
 
     try:
         new_plot_params = deepcopy(plot_params)
-    except Exception:
+    except (TypeError, AttributeError):
         new_plot_params = plot_params
     set_plot_units(new_plot_params)
 
@@ -210,7 +210,7 @@ def deterministic_plot(
 
     try:
         new_plot_params = deepcopy(plot_params)
-    except Exception:
+    except (TypeError, AttributeError):
         new_plot_params = plot_params
     set_plot_units(new_plot_params)
 
@@ -241,7 +241,7 @@ def parametric_plot(
 
     try:
         new_plot_params = deepcopy(plot_params)
-    except Exception:
+    except (TypeError, AttributeError):
         new_plot_params = plot_params
     set_plot_units(new_plot_params)
 

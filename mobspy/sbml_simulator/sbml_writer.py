@@ -226,8 +226,6 @@ def create_model(
             e.getTrigger().getMath(),
             "Problem when creating the trigger condition. The trigger will not work.",
         )
-        # print( '> ' + sbml.formulaToString(e.getTrigger().getMath()) )
-
         d = model.createDelay()
         check(d, "create delay")
         check(d.setMath(sbml.parseFormula(str(events[e_str].delay))), "set math")

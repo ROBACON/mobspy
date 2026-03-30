@@ -94,6 +94,18 @@ class SimulationConfig:
         if not (0 <= self.level <= 3):
             msg = f"level must be 0-3, got {self.level}"
             raise ValueError(msg)
+        if self.volume <= 0:
+            msg = f"volume must be > 0, got {self.volume}"
+            raise ValueError(msg)
+        if self.duration < 0:
+            msg = f"duration must be >= 0, got {self.duration}"
+            raise ValueError(msg)
+        if self.r_tol <= 0:
+            msg = f"r_tol must be > 0, got {self.r_tol}"
+            raise ValueError(msg)
+        if self.a_tol <= 0:
+            msg = f"a_tol must be > 0, got {self.a_tol}"
+            raise ValueError(msg)
 
     # --- Dict-style access for backward compatibility ---
 

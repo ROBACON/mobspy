@@ -25,7 +25,7 @@ from numpy import (
 from numpy import (
     subtract as np_subtract,
 )
-from pint import Quantity, UnitRegistry
+from pint import DimensionalityError, Quantity, UnitRegistry
 from scipy.constants import N_A
 
 from mobspy.constants import (
@@ -212,7 +212,7 @@ class ExpressionDefiner:
                         if isinstance(result, OverrideQuantity)
                         else result
                     )
-                except Exception:
+                except (DimensionalityError, TypeError, ValueError):
                     pass
         return value
 
@@ -237,9 +237,10 @@ class ExpressionDefiner:
             other_count = other
             other_conc = other
 
+        _unit_errors = (DimensionalityError, TypeError, ValueError)
         try:
             count_op = self.execute_op(self_count, other_count, operation)
-        except Exception:
+        except _unit_errors:
             # Retry after normalizing [substance] -> counts
             try:
                 count_op = self.execute_op(
@@ -247,12 +248,12 @@ class ExpressionDefiner:
                     self._normalize_substance(other_count),
                     operation,
                 )
-            except Exception as e:
+            except _unit_errors as e:
                 count_op = e
 
         try:
             conc_op = self.execute_op(self_conc, other_conc, operation)
-        except Exception:
+        except _unit_errors:
             # Retry after normalizing [substance] -> counts
             try:
                 conc_op = self.execute_op(
@@ -260,7 +261,7 @@ class ExpressionDefiner:
                     self._normalize_substance(other_conc),
                     operation,
                 )
-            except Exception as e:
+            except _unit_errors as e:
                 conc_op = e
 
         return count_op, conc_op
@@ -521,13 +522,13 @@ class ExpressionDefiner:
         try:
             if isinstance(count_op, Quantity):
                 count_op = QuantityConverter.convert_received_unit(count_op)
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             count_op = e
 
         try:
             if isinstance(conc_op, Quantity):
                 conc_op = QuantityConverter.convert_received_unit(conc_op)
-        except Exception as e:
+        except (DimensionalityError, TypeError, ValueError) as e:
             conc_op = e
 
         # Check if either operand has a symbolic (non-numeric) operation
@@ -1184,7 +1185,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                     )
 
                     if self._count_in_expression:
-                        pass
+                        pass  # count model + count expression: no conversion needed
                     elif self._concentration_in_expression:
                         convert_operation = replace_spe_in_expr(
                             convert_operation,
@@ -1222,7 +1223,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                         )
                         convert_operation = "(" + convert_operation + ")" + "/volume"
                     elif self._concentration_in_expression:
-                        pass
+                        pass  # conc model + conc expression: no conversion needed
                     else:
                         raise ValueError(
                             "The expression did not resolve for "

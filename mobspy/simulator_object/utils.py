@@ -71,7 +71,7 @@ class Simulation_Utils:
         """Dispatch a (name, value) update to either parameters or species."""
         try:
             is_species = arg[0].is_spe_or_reac()
-        except Exception:
+        except AttributeError:
             is_species = False
 
         if isinstance(arg[0], Internal_Parameter_Constructor):

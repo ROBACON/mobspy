@@ -11,16 +11,16 @@ requires-python = ">=3.11"
 license = "MIT"
 keywords = ["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "specification language"]
 dependencies = [
-    "matplotlib",
-    "numpy",
+    "matplotlib>=3,<4",
+    "numpy>=1.20,<3",
     "python-copasi<=4.44.295",
     "python-libsbml",
-    "scipy",
-    "pandas",
-    "joblib",
-    "tqdm",
+    "scipy>=1,<2",
+    "pandas>=1,<3",
+    "joblib>=1,<2",
+    "tqdm>=4,<5",
     "copasi-basico",
-    "pint",
+    "pint>=0.20,<1",
 ]
 
 [project.optional-dependencies]
@@ -102,23 +102,23 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["F403", "F405", "F841", "B018", "B011", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "RUF059"]
 "docs/**" = ["F403", "F405", "E501", "B018", "S", "ARG", "ERA", "T20", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "RUF005"]
-"mobspy/patch_scripts/**" = ["ALL"]
 
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+disallow_incomplete_defs = true
 check_untyped_defs = true
 ignore_missing_imports = true
 
 [tool.pyright]
 pythonVersion = "3.11"
-typeCheckingMode = "basic"
+typeCheckingMode = "standard"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra -q --strict-markers --strict-config --cov=mobspy --cov-report=term-missing --cov-fail-under=50"
+addopts = "-ra -q --strict-markers --strict-config --cov=mobspy --cov-report=term-missing --cov-fail-under=60"
 doctest_optionflags = ["ELLIPSIS", "NORMALIZE_WHITESPACE"]
 markers = [
     "slow: tests that run simulations (may take a while)",

@@ -112,7 +112,7 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 
 # Compatibility
 
-For now MobsPy is not thread-safe and it's not compatible with numpy and deepcopy
+MobsPy is not thread-safe. Concurrent access to shared `Simulation` objects from multiple threads is not supported.
 
 # Release info
 Version 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features

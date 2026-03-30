@@ -71,7 +71,7 @@ for t in range(len(data["Time"])):
     for key in data:
         if key == "Time" or key == "Bacteria" or key == "Phage":
             continue
-        species_string = deepcopy(key)
+        species_string = key
 
         if data[key][t] == 1:
             split_key = species_string.split(".")

@@ -28,7 +28,7 @@ def read_json(json_file_name: str) -> Any:
     Returns:
         Plot parameter dictionary.
     """
-    with open(json_file_name) as file:
+    with open(json_file_name, encoding="utf-8") as file:
         try:
             json_data = json.load(file)
         except json.decoder.JSONDecodeError as e:
@@ -60,7 +60,7 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
         try:
             if params["repetitions"] != len(params["seeds"]):
                 raise ParameterError("Seeds must be equal to the number of repetitions")
-        except Exception as e:
+        except TypeError as e:
             raise ParameterError("Parameter seeds must be a list") from e
 
 
@@ -102,7 +102,7 @@ def convert_unit_parameters(params: dict[str, Any]) -> None:
             else:
                 try:
                     params[un] = u.unit_registry_object(params[un])
-                except Exception as e:
+                except (ValueError, AttributeError) as e:
                     raise ParameterError(
                         f"The unit in parameter {un} did not parse"
                     ) from e

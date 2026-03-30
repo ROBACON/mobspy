@@ -32,7 +32,7 @@ from mobspy.data_handler.time_series_object import (
 from mobspy.event_handling import EventHandlingMixin
 from mobspy.exceptions import (
     CompilationError,
-    MobsPyError,  # noqa: F401
+    MobsPyError,
     ParameterError,
     ReactionError,  # noqa: F401
     SimulationError,
@@ -44,36 +44,36 @@ from mobspy.modules.any_species import (
     Any as Any,
 )
 from mobspy.modules.assignments_implementation import (
-    Assign,  # noqa: F401
+    Assign,
 )
 from mobspy.modules.compiler import Compiler
 from mobspy.modules.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
 from mobspy.modules.meta_class import (
-    BaseSpecies,  # noqa: F401
+    BaseSpecies,
     List_Species,
-    ListSpecies,  # noqa: F401
-    New,  # noqa: F401
+    ListSpecies,
+    New,
     Reacting_Species,
     Species,
-    Zero,  # noqa: F401
+    Zero,
 )
 from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as _ParameterConstructor,
 )
 from mobspy.modules.mobspy_parameters import (
-    ModelParameters,  # noqa: F401
+    ModelParameters,
 )
 from mobspy.modules.model_unit_context import ModelUnitContext
 from mobspy.modules.order_operators import (
-    All,  # noqa: F401
+    All,
     Default,
-    Rev,  # noqa: F401
-    Set,  # noqa: F401
+    Rev,
+    Set,
 )
-from mobspy.modules.set_counts_module import set_counts  # noqa: F401
+from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.species_utils import (
     create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
@@ -84,7 +84,7 @@ from mobspy.parameter_estimation_data_loader.data_loader import (
     Experimental_Data_Holder as pdl_Experimental_Data_Holder,
 )
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
-    basiCO_parameter_estimation,  # noqa: F401
+    basiCO_parameter_estimation,
 )
 from mobspy.parameter_scripts.parameter_reader import (
     convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,  # noqa: E501
@@ -134,9 +134,28 @@ if TYPE_CHECKING:
         SpeciesForSbml,
     )
 
-# Initialize logger
-logger = get_logger(__name__)
-simlog = logger
+__all__ = [
+    "All",
+    "Any",
+    "Assign",
+    "BaseSpecies",
+    "Default",
+    "ListSpecies",
+    "ModelParameters",
+    "New",
+    "Rev",
+    "Set",
+    "Simulation",
+    "SimulationComposition",
+    "Zero",
+    "basiCO_parameter_estimation",
+    "set_counts",
+    "simlog",
+    "u",
+]
+
+_logger = get_logger(__name__)
+simlog = _logger
 
 
 class PlotConfigProxy:
@@ -321,7 +340,7 @@ class Simulation(
 
             # Set log level based on parameters
             log_level = self.parameters.get("level", logging.INFO)
-            logger.set_log_level(log_level)
+            _logger.set_log_level(log_level)
 
             pr_parameter_process(self.parameters)  # type: ignore[arg-type]
             if self.parameters["method"] is not None:
@@ -368,8 +387,9 @@ class Simulation(
                 parameter_context=dict(_ParameterConstructor.parameter_stack),
                 model_context=_model_context,
             )
-        except Exception as e:
-            logger.exception("Model compilation failed")
+        except MobsPyError:
+            raise
+        except (TypeError, ValueError, KeyError, AttributeError) as e:
             raise CompilationError(f"Model compilation failed: {e!s}") from e
 
         self._species_for_sbml = _result.species_for_sbml
@@ -736,22 +756,20 @@ class Simulation(
                     raise ParameterError(
                         "No default output file specified in parameters"
                     )
-                with open(self.parameters["absolute_output_file"], "w") as f:
+                out_path = self.parameters["absolute_output_file"]
+                with open(out_path, "w", encoding="utf-8") as f:
                     json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]
             else:
                 # Add .json extension if not present
                 if not file.endswith(".json"):
                     file += ".json"
-                with open(file, "w") as jf:
+                with open(file, "w", encoding="utf-8") as jf:
                     json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]
-                    logger.info(f"Successfully saved simulation results to {file}")
+                    _logger.info(f"Successfully saved simulation results to {file}")
         except OSError as e:
             raise SimulationError(f"Error saving data to file: {e!s}") from e
-        except Exception as e:
-            logger.exception("Unexpected error during data saving")
-            raise SimulationError(
-                f"Unexpected error saving simulation data: {e!s}"
-            ) from e
+        except (TypeError, ValueError) as e:
+            raise SimulationError(f"Error serializing simulation data: {e!s}") from e
 
     def _pack_data(self, time_series_data: TypingAny) -> None:
         """
@@ -764,15 +782,22 @@ class Simulation(
 
     # Dealing with parameters
     def set_from_json(self, file_name: str) -> None:
-        """
-        Set simulation parameters from json file
+        """Set simulation parameters from a JSON file.
+
+        Only keys matching public simulation parameters are accepted.
+        Unknown or internal keys are rejected.
 
         Args:
-            file_name: Name of the json file.
+            file_name: Path to the JSON file.
+
+        Raises:
+            ParameterError: If the file contains unknown parameter keys.
         """
-        with open(file_name) as json_file:
+        with open(file_name, encoding="utf-8") as json_file:
             data = json_load(json_file)
             for key in data:
+                if key not in self._SIMULATION_PARAMS:
+                    raise ParameterError(f"Unknown parameter in JSON config: {key!r}")
                 self.__setattr__(key, data[key])
 
     _INTERNAL_ATTRS: frozenset[str] = frozenset(
@@ -973,7 +998,7 @@ class Simulation(
 
         try:
             return self.results.return_pandas()  # type: ignore[union-attr]
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError) as e:
             raise ImportError(f"Failed to convert results to DataFrame: {e!s}") from e
 
     @classmethod

@@ -538,6 +538,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
         simulation_under_context = self.list_of_reactants[0][
             "object"
         ].get_simulation_context()
+        quantity_dict: dict[str, Any] | None = None
         if (
             isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
         ) and not asgi_Assign.check_context():
@@ -562,6 +563,10 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                     quantity_dict = species_object.add_quantities(
                         characteristics, quantity
                     )
+                if quantity_dict is None:
+                    raise ReactionError(
+                        "Could not resolve quantity for event assignment"
+                    )
                 simulation_under_context.current_event_count_data.append(
                     {
                         "species": species_object,
@@ -569,7 +574,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):
                         "quantity": quantity_dict["quantity"],
                     }
                 )
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 raise ReactionError(
                     str(e)
                     + "\n Only species count assignments are allowed in a model context"
