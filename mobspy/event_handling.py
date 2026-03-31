@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import EventError, ValidationError
 from mobspy.modules.meta_class import Species
-from mobspy.modules.unit_handler import convert_time as uh_convert_time
 from mobspy.types import SimulationEventData
 
 if TYPE_CHECKING:
@@ -51,7 +50,7 @@ class EventHandlingMixin:
         Species.reset_simulation_context()
         self._context_not_active = True
 
-    def event_context_add(self, time: float | int, trigger: str) -> None:
+    def event_context_add(self, time: float | int | Any, trigger: str) -> None:
         """Add an event to the event context.
 
         Args:
@@ -118,11 +117,8 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            converted_delay = uh_convert_time(delay)
             self._conditional_event = False
-            if converted_delay is None:
-                raise EventError(f"Failed to convert event delay: {delay!r}")
-            self.event_context_add(converted_delay, trigger)  # type: ignore[arg-type]
+            self.event_context_add(delay, trigger)  # type: ignore[arg-type]
 
     @contextmanager
     def event_time(self, time: float | int | Quantity) -> Generator[int, None, None]:
@@ -141,7 +137,4 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            converted_time = uh_convert_time(time)
-            if converted_time is None:
-                raise EventError(f"Failed to convert event time: {time!r}")
-            self.event_context_add(converted_time, "true")
+            self.event_context_add(time, "true")

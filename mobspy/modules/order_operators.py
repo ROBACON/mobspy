@@ -422,6 +422,7 @@ class __Reversible_Base:  # noqa: N801
 
 
 Rev = __Reversible_Base(__Set_Reversible_Rate())
+"""Create reversible reactions: ``Rev[A >> B][k_fwd, k_rev]``."""
 
 
 class _Set_Reaction_User_Base:  # noqa: N801
@@ -435,6 +436,7 @@ class _Set_Reaction_User_Base:  # noqa: N801
 
 
 Set = _Set_Reaction_User_Base()
+"""Define ordered reaction sets: ``Set[A >> B][rate1, rate2, ...]``."""
 
 
 class _Set_Reaction_Method:  # noqa: N801

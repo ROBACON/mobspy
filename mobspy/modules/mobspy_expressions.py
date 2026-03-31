@@ -35,18 +35,15 @@ from mobspy.constants import (
     NULL_SPECIES,
 )
 from mobspy.exceptions import CompilationError, UnitError
-from mobspy.modules.expression_nodes import (  # noqa: F401
+from mobspy.modules.expression_nodes import (
     BinaryOpNode,
     ExprNode,
     FunctionCallNode,
-    LiteralNode,
-    ParamRefNode,
     SpeciesRefNode,
     _render_resolved,
     _to_expr_node,
 )
-from mobspy.modules.species_operators import (  # noqa: F401
-    Bool_Override,
+from mobspy.modules.species_operators import (
     Specific_Species_Operator,
     _ms_active_ctx,
 )

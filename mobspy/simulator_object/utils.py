@@ -154,8 +154,11 @@ class Simulation_Utils:  # noqa: N801
         # Prepare count
         volume = self.__dict__.get("volume", 1)
         dimension = self.__dict__["dimension"]
+        model_context = getattr(self, "_model_context", None)
 
-        spe_count = uh_convert_counts(arg[1], volume, dimension)
+        spe_count = uh_convert_counts(
+            arg[1], volume, dimension, model_context=model_context
+        )
 
         # Get query - construct all combinations - or just one
         query = arg[0].get_query_characteristics()

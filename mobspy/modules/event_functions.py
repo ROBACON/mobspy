@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
 from mobspy.exceptions import EventError
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
+from mobspy.modules.unit_handler import convert_time as uh_convert_time
 from mobspy.types import CompilationContext, EventData, SimulationEventData
 
 if TYPE_CHECKING:
@@ -107,6 +108,13 @@ def _build_reformed_event_list(
     for ev in event_list:
         if not ev.event_counts:
             continue
+
+        converted_time: Any = ev.event_time
+        if not isinstance(ev.event_time, mp_Mobspy_Parameter):
+            result = uh_convert_time(ev.event_time, model_context=ctx.model_context)
+            if result is not None:
+                converted_time = result
+
         event_dictionary: dict[str, int | float | str] = {}
 
         _process_all_char_assignments(
@@ -126,7 +134,7 @@ def _build_reformed_event_list(
         if isinstance(ev.trigger, str):
             reformed_event_list.append(
                 SimulationEventData(
-                    event_time=ev.event_time,
+                    event_time=converted_time,
                     event_counts=event_dictionary,  # type: ignore[arg-type]
                     trigger=ev.trigger,
                 )
@@ -140,7 +148,7 @@ def _build_reformed_event_list(
                     )
             reformed_event_list.append(
                 SimulationEventData(
-                    event_time=ev.event_time,
+                    event_time=converted_time,
                     event_counts=event_dictionary,  # type: ignore[arg-type]
                     trigger=ev.trigger.generate_string(
                         characteristics_to_object, to_sort=True

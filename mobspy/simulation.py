@@ -35,7 +35,6 @@ from mobspy.exceptions import (
     CompilationError,
     MobsPyError,
     ParameterError,
-    ReactionError,  # noqa: F401
     SimulationError,
     ValidationError,
 )
@@ -125,6 +124,7 @@ from mobspy.types import SimulationEventData, TimeSeriesDataDict
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from mobspy.modules.reactions import Reactions
     from mobspy.types import (
         CompiledModelDict,
         EventsForSbml,
@@ -200,10 +200,10 @@ class Simulation(
     def __init__(
         self,
         model: Species | List_Species,
-        reactions: set | None = None,
-        names: dict | None = None,
-        parameters: dict | None = None,
-        plot_parameters: dict | None = None,
+        reactions: set[Reactions] | None = None,
+        names: dict[str, TypingAny] | None = None,
+        parameters: dict[str, TypingAny] | None = None,
+        plot_parameters: dict[str, TypingAny] | None = None,
     ) -> None:
         """
         Constructor of the simulation object.
@@ -253,7 +253,7 @@ class Simulation(
     def _init_model(
         self,
         model: Species | List_Species,
-        names: dict | None,
+        names: dict[str, TypingAny] | None,
     ) -> None:
         """Validate and expand the model with linked species."""
         if not isinstance(model, (Species, List_Species)):
@@ -272,7 +272,7 @@ class Simulation(
         self.names = names
         self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]
 
-    def _init_reactions(self, reactions: set | None) -> None:
+    def _init_reactions(self, reactions: set[Reactions] | None) -> None:
         """Collect reactions from explicit set or from model species."""
         if reactions is not None:
             self._reactions_set = set(reactions)
@@ -299,8 +299,8 @@ class Simulation(
 
     def _init_config(
         self,
-        parameters: dict | None,
-        plot_parameters: dict | None,
+        parameters: dict[str, TypingAny] | None,
+        plot_parameters: dict[str, TypingAny] | None,
     ) -> None:
         """Set simulation and plot configuration."""
         if not parameters:

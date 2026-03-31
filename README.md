@@ -56,7 +56,7 @@ The reaction above is a death reaction where the meta-species Mortal is dying. `
 
 In the code above, one can visualize the inheritance mechanism. Here both Replicator and Triplicator inherit from Mortal. Therefore, they also receive a death reaction. Multiplicator inherits from Replicator and Triplicator, and therefore from Mortal too. So Multiplicator now has three reactions, the death reaction, the duplication reaction, and the triplication reaction. 
 
-## Indepedent State Spaces
+## Independent State Spaces
 
 Each meta-species has a set of states. One can add states to species by using the dot command (`.state`) or by inheritance. A meta-species that inherits from another gains access to its states. 
 For instance:
@@ -80,7 +80,7 @@ Just use the Simulation constructor and the run command to execute a simulation.
 
 # Parameter definition
 
-The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the `.plot.parameter` model.
+The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the `.plot_config.parameter` notation.
 See [here for a list of parameters](https://github.com/ROBACON/mobspy/blob/main/mobspy/parameters/README.md).
 Standard parameters can also be configured using a JSON file with the `.set_from_json` method. As an example, we have the code below:
 
@@ -91,7 +91,7 @@ Standard parameters can also be configured using a JSON file with the `.set_from
 	MySim.plot_config.xlim = [0,1]
 	MySim.plot_config.ylim = [0, 1e3]
 
-For a list of parameters, check the read_me in the parameter directory. The standard parameters can be found in the `get_default_parameters()` script in the `default_reader()` script.
+For a full list of parameters, see the [parameters README](https://github.com/ROBACON/mobspy/blob/main/mobspy/parameters/README.md).
 
 # Units
 	
@@ -114,25 +114,21 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 
 MobsPy supports defining and compiling models from multiple threads concurrently. Each thread gets isolated DSL state via `ContextVar`. However, do not share a single `Simulation` instance across threads.
 
-# Release info
-Version 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features
+# API Stability
 
-Version 2.5.0 -  Added generate antimony function that translates a MobsPy model to antimony. Thank you Hebert Sauro and Lucian Smith for the discussions and help.
+MobsPy follows [Semantic Versioning](https://semver.org/). The public API is
+everything exported from `mobspy.__init__` (listed in `__all__`):
 
-Version 2.4.4 - Assignments completely added (both notations)
+- **Patch** releases (2.8.x) contain bug fixes only.
+- **Minor** releases (2.x.0) may add new features but will not break existing
+  code.
+- **Major** releases (x.0.0) may contain breaking changes. These will be
+  documented in the changelog with migration instructions.
 
-Version 2.3 - MobsPy standard output is now always concentration.
+Experimental features (such as ODE syntax) are explicitly marked and may change
+in any release.
 
-Version 2.2 - Added MobsPy expressions
-
-Version 2.1 - Added model parameters. Now MySim.results returns a list of all resulting time series no matter the number of repetitions. However, now a `MySim.fres` attribute was released that returns only the first time series in each simulation (thus, it is equal to MySim results with only one repetition in the previous version).
-
-Version 2.0.1 added events, ability to concatenate simulations, and changed the structure of output data to be more 
-user-friendly. Now MySim.results["data"]["runs"]["MetaSpeciesName"] has been deprecated. It has been replaced by 
-MySim.results["MetaSpeciesName"] or MySim.results[MetaSpeciesObject]. It will return only one run if there are no 
-repetitions and multiple runs with several repetitions.
-
-Version 1.1 added automated testing to git pushes with test_script.py
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 
 

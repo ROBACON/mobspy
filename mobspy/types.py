@@ -142,7 +142,7 @@ class CompiledModel:
 class SimulationEventData:
     """Internal event data collected during event context."""
 
-    event_time: float = 0.0
+    event_time: Any = 0.0
     event_counts: list[Any] = field(default_factory=list)
     trigger: str = ""
 
