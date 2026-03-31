@@ -24,7 +24,7 @@ from mobspy.modules.mobspy_expressions import (  # noqa: E402
 )
 
 
-class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):
+class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter):  # noqa: N801
     """Constructor called by ModelParameters to create a model parameter.
 
     Not a simulation parameter. The user is not supposed to create
@@ -32,7 +32,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
     """
 
     # convert_received_unit
-    parameter_stack: dict[str, Internal_Parameter_Constructor] = {}
+    parameter_stack: dict[str, Internal_Parameter_Constructor] = {}  # noqa: RUF012
     _parameter_stack_lock: threading.Lock = threading.Lock()
 
     def __init__(self, name: str, value: Any) -> None:
@@ -161,7 +161,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         return str(self._operation)
 
 
-def ModelParameters(
+def ModelParameters(  # noqa: N802
     *args: Any,
 ) -> Internal_Parameter_Constructor | list[Internal_Parameter_Constructor]:
     """
@@ -183,7 +183,7 @@ def ModelParameters(
             Internal_Parameter_Constructor | list[Internal_Parameter_Constructor]
         ) = [
             Internal_Parameter_Constructor(p, v)
-            for p, v in zip(parameter_variable_names, args)
+            for p, v in zip(parameter_variable_names, args, strict=False)
         ]
     else:
         parameters_to_return = Internal_Parameter_Constructor(

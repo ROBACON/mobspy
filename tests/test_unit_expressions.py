@@ -192,7 +192,7 @@ class TestSubstanceNormalization:
 
         token = _ms_active_ctx.set(True)
         try:
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 _ = q_meters + q_seconds
         finally:
             _ms_active_ctx.reset(token)

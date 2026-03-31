@@ -66,7 +66,7 @@ S.plot_config.figsize = (6.5, 4)
 S.plot_config.vertical_lines = [25, 60, 90, 130]
 S.plot_config.ylabel = r"Conc. (mL$^{-1}$)"
 S.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Toggle_Switch/Toggle_Switch.pdf"
 )
 S.run()

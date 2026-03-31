@@ -20,7 +20,6 @@ JOURNAL_DIR = EXAMPLES_DIR / "journal_models"
 SKIP_MODELS = {
     "AND_gate.py",  # requires plotly
     "NOR_gate.py",  # requires plotly
-    "hello_pysb.py",  # requires pysb
     "PySB_Comparison.py",  # requires pysb
     "Logical_XOR_Gate.py",  # requires seaborn + very slow parametric sweep
     "Phage_Transmission_System.py",  # requires local plot_config_donor.json
@@ -33,7 +32,6 @@ COMPILE_ONLY = {
     "BioCRNpyler_1.py",
     "BioCRNpyler_2.py",
     "BioNetGen_Comparison.py",
-    "comparision_bioCRNpyler.py",
     "For_The_Trees.py",
     "Kappa_comp_v1.py",
 }
@@ -62,6 +60,14 @@ def _patched_init(self, *args, **kwargs):
     _orig_init(self, *args, **kwargs)
     self.plot_data = False
     self.save_data = False
+
+# Patch run() to inject deterministic seeds for reproducibility
+_orig_run = _sim_mod.Simulation.run
+def _patched_run(self, *args, **kwargs):
+    if self.parameters.get('seeds') is None:
+        self.seeds = list(range(self.parameters['repetitions']))
+    return _orig_run(self, *args, **kwargs)
+_sim_mod.Simulation.run = _patched_run
 _sim_mod.Simulation.__init__ = _patched_init
 
 # Suppress plt.show()

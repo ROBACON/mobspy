@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, fields
 from typing import Any
 
+_MAX_LEVEL = 3
+
 
 @dataclass
 class SimulationConfig:
@@ -91,7 +93,7 @@ class SimulationConfig:
         if self.repetitions < 1:
             msg = f"repetitions must be >= 1, got {self.repetitions}"
             raise ValueError(msg)
-        if not (0 <= self.level <= 3):
+        if not (0 <= self.level <= _MAX_LEVEL):
             msg = f"level must be 0-3, got {self.level}"
             raise ValueError(msg)
         if self.volume <= 0:

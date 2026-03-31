@@ -100,7 +100,7 @@ MySim.plot_config.title, MySim.plot_config.title_fontsize = (
 MySim.plot_config.xlabel_fontsize, MySim.plot_config.ylabel_fontsize = 14, 14
 MySim.plot_config.ylabel = r"Conc. (mL$^{-1}$)"
 MySim.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Lysis_Clock/Lysis_Clock.pdf"
 )
 MySim.run()

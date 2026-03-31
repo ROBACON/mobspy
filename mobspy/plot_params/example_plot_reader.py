@@ -10,7 +10,7 @@ from typing import Any
 
 def get_example_plot_parameters() -> dict[str, Any]:
     """Return an example plot parameter dictionary for validation."""
-    example_parameters = {
+    return {
         "output_dir": "",
         "logscale": ["X", "Y"],
         "xlim": [0, 1],
@@ -58,4 +58,3 @@ def get_example_plot_parameters() -> dict[str, Any]:
         "output_concentration": False,
         "simulation_method": "stochastic",
     }
-    return example_parameters

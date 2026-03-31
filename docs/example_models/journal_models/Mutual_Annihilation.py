@@ -36,7 +36,7 @@ S.add_plot_params(
     suptitle_fontsize=18,
 )
 S.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Mutual_Annihilation/Mutual_Annihilation.pdf"
 )
 S.repetitions = 10

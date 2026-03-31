@@ -1,3 +1,5 @@
+"""Phage feedback loop with quorum sensing, age-dependent behavior, and parametric sweeps."""
+
 import numpy as np
 
 from mobspy import *

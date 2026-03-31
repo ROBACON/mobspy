@@ -11,7 +11,7 @@ def test_def_by_str():
     import yaml
 
     config_path = Path(__file__).resolve().parent / "testconfig_units.yaml"
-    with open(config_path, encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:  # noqa: PTH123
         config = yaml.safe_load(f)
 
     A0 = u(config["A0"])

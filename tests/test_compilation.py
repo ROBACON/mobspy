@@ -130,8 +130,7 @@ class TestInheritanceAndQueries:
         A.a1, A.a2, B.b1, B.b2
 
         def rate(r1):
-            factor1 = 0.5 if r1.a1 else 1
-            return factor1
+            return 0.5 if r1.a1 else 1
 
         A + B >> mobspy.Zero[rate]
         S = Simulation(A | B)

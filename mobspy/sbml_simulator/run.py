@@ -12,6 +12,7 @@ from mobspy.constants import DOT_SEPARATOR, END_FLAG_SPECIES_NAME
 from mobspy.exceptions import SimulationError
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
+from mobspy.types import SBMLModelData
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -28,9 +29,7 @@ def simulate(
     models: list[CompiledModelDict],
 ) -> list[dict[str, list[float]]] | None:
     """Run SBML models via BasiCO and return time-series data."""
-    data = job_execution(list_of_params, models, jobs)
-
-    return data
+    return job_execution(list_of_params, models, jobs)
 
 
 def job_execution(
@@ -198,11 +197,13 @@ def __sbml_new_initial_values(
     )
 
     return sbml_builder.build(
-        species_for_sbml,
-        model["parameters_for_sbml"],
-        model["reactions_for_sbml"],
-        model["events_for_sbml"],
-        model["assignments_for_sbml"],
+        SBMLModelData(
+            species_for_sbml=species_for_sbml,
+            parameters_for_sbml=model["parameters_for_sbml"],
+            reactions_for_sbml=model["reactions_for_sbml"],
+            events_for_sbml=model["events_for_sbml"],
+            assignments_for_sbml=model["assignments_for_sbml"],
+        ),
         model_context=model_context,
     )
 
@@ -213,42 +214,15 @@ def __add_simulations_data(
 ) -> dict[str, list[float]]:
     time_to_add = added_data["Time"][-1] if added_data != {} else 0
     new_data: dict[str, list[float]] = {}
-    already_added_keys: set[str] = set()
 
-    for key in added_data:
+    for key in added_data:  # noqa: PLC0206
         new_data[key] = added_data[key]
 
-    for i, time in enumerate(reformatted_data["Time"]):
-        # Remove the repeated initial value from following simulations.
-        # The final value of summed simulations is repeated
-        if time == 0 and added_data != {}:
-            for key in reformatted_data:
-                reformatted_data[key].pop(0)
-
-        with contextlib.suppress(IndexError):
-            reformatted_data["Time"][i] = reformatted_data["Time"][i] + time_to_add
-
-    for key in added_data:
-        if key == "Time":
-            continue
-        try:
-            new_data[key] = added_data[key] + reformatted_data[key]
-            already_added_keys.add(key)
-        except KeyError:
-            dummy = added_data[key][-1]
-            new_data[key] += [dummy for _ in reformatted_data["Time"]]
-
-    for key in reformatted_data:
-        if key == "Time":
-            continue
-
-        if key in already_added_keys:
-            continue
-        if time_to_add != 0:
-            new_data[key] = [0 for _ in added_data["Time"]]
-            new_data[key] = new_data[key] + reformatted_data[key]
-        else:
-            new_data[key] = reformatted_data[key]
+    __adjust_time_offsets(added_data, reformatted_data, time_to_add)
+    already_added_keys = __merge_existing_keys(new_data, added_data, reformatted_data)
+    __merge_new_keys(
+        new_data, added_data, reformatted_data, already_added_keys, time_to_add
+    )
 
     if time_to_add != 0:
         new_data["Time"] = added_data["Time"] + reformatted_data["Time"]
@@ -258,25 +232,76 @@ def __add_simulations_data(
     return new_data
 
 
+def __adjust_time_offsets(
+    added_data: dict[str, list[float]],
+    reformatted_data: dict[str, list[float]],
+    time_to_add: float,
+) -> None:
+    """Remove repeated initial values and offset time in reformatted data."""
+    for i, time in enumerate(reformatted_data["Time"]):
+        if time == 0 and added_data != {}:
+            for key in reformatted_data:  # noqa: PLC0206
+                reformatted_data[key].pop(0)
+        with contextlib.suppress(IndexError):
+            reformatted_data["Time"][i] = reformatted_data["Time"][i] + time_to_add
+
+
+def __merge_existing_keys(
+    new_data: dict[str, list[float]],
+    added_data: dict[str, list[float]],
+    reformatted_data: dict[str, list[float]],
+) -> set[str]:
+    """Merge species keys that exist in both added_data and reformatted_data."""
+    already_added_keys: set[str] = set()
+    for key in added_data:  # noqa: PLC0206
+        if key == "Time":
+            continue
+        try:
+            new_data[key] = added_data[key] + reformatted_data[key]
+            already_added_keys.add(key)
+        except KeyError:
+            dummy = added_data[key][-1]
+            new_data[key] += [dummy for _ in reformatted_data["Time"]]
+    return already_added_keys
+
+
+def __merge_new_keys(
+    new_data: dict[str, list[float]],
+    added_data: dict[str, list[float]],
+    reformatted_data: dict[str, list[float]],
+    already_added_keys: set[str],
+    time_to_add: float,
+) -> None:
+    """Merge species keys that only exist in reformatted_data."""
+    for key in reformatted_data:  # noqa: PLC0206
+        if key == "Time" or key in already_added_keys:
+            continue
+        if time_to_add != 0:
+            new_data[key] = [0 for _ in added_data["Time"]]
+            new_data[key] = new_data[key] + reformatted_data[key]
+        else:
+            new_data[key] = reformatted_data[key]
+
+
 def __remap_species(
     data: dict[str, Any],
     mapping: dict[str, list[str]],
     species_not_mapped: dict[str, float],
 ) -> dict[str, Any]:
     mapped_data: dict[str, Any] = {"Time": data["Time"]}
-    T = range(len(data["Time"]))
+    T = range(len(data["Time"]))  # noqa: N806
 
     # copy over all unmapped ones
-    for k in data:
+    for k in data:  # noqa: PLC0206
         mapped_data[k] = data[k]
 
     dot_species_not_mapped: dict[str, float] = {}
-    for key in species_not_mapped:
+    for key in species_not_mapped:  # noqa: PLC0206
         dot_key = key.replace(DOT_SEPARATOR, ".")
         dot_species_not_mapped[dot_key] = species_not_mapped[key]
 
     # 1st pass with sum mappings
-    for group in mapping:
+    for group in mapping:  # noqa: PLC0206
         the_mapping = mapping[group]
         mapped_data[group] = {"runs": []}
 
@@ -301,7 +326,7 @@ def __remap_species(
                                     dot_species_not_mapped[spe]
                                 ]
                     this_run.append(mapping_sum)
-                for spe in runs_not_returned_by_basico:
+                for spe in runs_not_returned_by_basico:  # noqa: PLC0206
                     try:
                         mapped_data[spe] = runs_not_returned_by_basico[spe]
                     except KeyError:

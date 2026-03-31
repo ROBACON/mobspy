@@ -60,11 +60,11 @@ def convert_rate(
                 # Pure 1/[time] rate (count-based, order 0 or 1)
                 converted_quantity = converted_quantity.convert("1/seconds")
                 return converted_quantity.magnitude, dimension, True
-            elif has_substance and not has_length:
+            if has_substance and not has_length:
                 # [substance]/[time] rate (e.g. mol/s)
                 converted_quantity = converted_quantity.convert("moles/seconds")
                 return converted_quantity.magnitude * N_A, dimension, True
-            elif has_substance:
+            if has_substance:
                 # [length]^n/([substance]^m*[time]) concentration rate with moles
                 if dimension is None:
                     raise UnitError(
@@ -80,16 +80,15 @@ def convert_rate(
                     dimension,
                     False,
                 )
-            else:
-                # [length]^n/[time] concentration rate
-                if dimension is None:
-                    raise UnitError(
-                        "dimension is required for concentration rate conversion"
-                    )
-                converted_quantity = converted_quantity.convert(
-                    f"decimeters ** {dimension * volume_power}/seconds"
+            # [length]^n/[time] concentration rate
+            if dimension is None:
+                raise UnitError(
+                    "dimension is required for concentration rate conversion"
                 )
-                return converted_quantity.magnitude, dimension, False
+            converted_quantity = converted_quantity.convert(
+                f"decimeters ** {dimension * volume_power}/seconds"
+            )
+            return converted_quantity.magnitude, dimension, False
         except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
                 str(e) + "\n" + f"Problem converting rate {quantity} \n"
@@ -102,7 +101,7 @@ def convert_rate(
 def convert_counts(
     quantity: int | float | Quantity | Any,  # type: ignore[type-arg]
     volume: int | float,
-    dimension: int,
+    dimension: int | None,
     model_context: ModelUnitContext | None = None,
 ) -> Any:
     """
@@ -298,8 +297,7 @@ def convert_volume(
         dimension = extract_length_dimension(str(volume.dimensionality), dimension)
         converted: int | float = volume.convert(f"decimeter ** {dimension}").magnitude  # type: ignore[assignment]
         return converted
-    else:
-        return volume  # pyright: ignore[reportReturnType]
+    return volume  # pyright: ignore[reportReturnType]
 
 
 def convert_time(
@@ -365,7 +363,6 @@ def deep_copy_quantities(quantity: Any) -> Any:
         unit = str(quantity.units)  # Convert to string to ensure unit compatibility
 
         # Create a new Quantity using the OverrideUnitRegistry object (u)
-        Q = value * u.unit_registry_object.__getattr__(unit)
+        Q = value * u.unit_registry_object.__getattr__(unit)  # noqa: N806
         return OverrideQuantity(Q)
-    else:
-        return quantity
+    return quantity

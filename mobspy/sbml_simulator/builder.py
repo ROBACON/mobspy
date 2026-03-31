@@ -13,44 +13,34 @@ from libsbml import writeSBMLToString as sbml_writeSBMLToString
 
 if TYPE_CHECKING:
     from mobspy.modules.model_unit_context import ModelUnitContext
-    from mobspy.types import (
-        AssignmentsForSbml,
-        EventsForSbml,
-        ParametersForSbml,
-        ReactionsForSbml,
-        SpeciesForSbml,
-    )
 
 from mobspy.sbml_simulator.sbml_writer import create_model
+from mobspy.types import SBMLModelData
 
 
 def build(
-    species: SpeciesForSbml | None,
-    parameters: ParametersForSbml | None,
-    reactions: ReactionsForSbml | None,
-    events: EventsForSbml | None,
-    assignments: AssignmentsForSbml | None,
+    model_data: SBMLModelData,
+    *,
     model_context: ModelUnitContext | None = None,
 ) -> str:
-    """
-    Constructs the sbml file for a model from the dictionary syntax for python sbml lib
+    """Construct an SBML string from model data.
 
     Args:
-        species: Species as keys and counts as values.
-        parameters: Parameter name and value.
-        reactions: Reaction name and reaction in python sbml writer format.
-        events: Event name and event in python sbml writer format.
-        assignments: Assignments numbers and expressions.
+        model_data: Species, parameters, reactions, events, and assignments.
         model_context: Optional unit context for proper SBML unit declarations.
-
 
     Returns:
         String describing the model in sbml format.
     """
     doc = create_model(
-        species, parameters, reactions, events, assignments, model_context
+        model_data.species_for_sbml or None,
+        model_data.parameters_for_sbml or None,
+        model_data.reactions_for_sbml or None,
+        model_data.events_for_sbml or None,
+        model_data.assignments_for_sbml or None,
+        model_context=model_context,
     )
 
     # Convert sbml document into a string for basico
-    sbml_str = sbml_writeSBMLToString(doc)
-    return sbml_str  # type: ignore[no-any-return]
+    result: str = sbml_writeSBMLToString(doc)
+    return result

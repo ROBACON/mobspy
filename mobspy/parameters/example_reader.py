@@ -13,7 +13,7 @@ from typing import Any
 
 def get_example_parameters() -> dict[str, Any]:
     """Return an example parameter dictionary for validation."""
-    example_parameters = {
+    return {
         "__comment_1": "Model parameters - Repetitions only for stochastic",
         "volume": 1,
         "repetitions": 3,
@@ -42,4 +42,3 @@ def get_example_parameters() -> dict[str, Any]:
         "plot_data": True,
         "plot_type": "stochastic",
     }
-    return example_parameters

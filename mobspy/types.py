@@ -276,3 +276,43 @@ class CompilerResult:
     ) -> CompiledModel:
         """Backward compat alias for to_compiled_model."""
         return self.to_compiled_model(species_not_mapped, mappings)
+
+
+@dataclass
+class CompilationContext:
+    """Shared context threaded through compiler helper methods.
+
+    Groups parameters that are always passed together during
+    compilation: volume, dimension, model type, unit context,
+    and the parameter registry.
+    """
+
+    volume: int | float = 1
+    dimension: int | None = 3
+    type_of_model: str = "deterministic"
+    model_context: Any = None  # ModelUnitContext | None
+    parameter_exist: dict[str, Any] = field(default_factory=dict)
+    skip_expression_check: bool = False
+    continuous_sim: bool = False
+    ending_condition: Any = None
+    event_dictionary: list[Any] | None = None
+
+
+@dataclass
+class CountAccumulator:
+    """Mutable state accumulated while assigning initial species counts."""
+
+    species_for_sbml: dict[str, int | float] = field(default_factory=dict)
+    assigned_species: list[str] = field(default_factory=list)
+    parameters_in_counts: set[Any] = field(default_factory=set)
+    parameters_used: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class RenderContext:
+    """Flags controlling how species references are resolved to SBML strings."""
+
+    count_in_model: bool = True
+    concentration_in_model: bool = False
+    count_in_expression: bool = True
+    concentration_in_expression: bool = False

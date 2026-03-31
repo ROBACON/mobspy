@@ -329,15 +329,15 @@ class TestPlotting:
         S.step_size = 0.25
         S.duration = 1
         S.run(plot_data=False)
-        S.plot_config.save_to = "test_plot_images/stochastic_tree.png"
+        S.plot_config.save_to = "tests/plot_output/stochastic_tree.png"
         S.plot_stochastic(Tree.not_sick, Tree.sick)
-        S.plot_config.save_to = "test_plot_images/deterministic_tree.png"
+        S.plot_config.save_to = "tests/plot_output/deterministic_tree.png"
         S.plot(Tree.not_sick, Tree.sick)
-        S.plot_config.save_to = "test_plot_images/constant_tree.png"
+        S.plot_config.save_to = "tests/plot_output/constant_tree.png"
         S.plot()
-        assert os.path.exists("test_plot_images/stochastic_tree.png")
-        assert os.path.exists("test_plot_images/deterministic_tree.png")
-        assert os.path.exists("test_plot_images/constant_tree.png")
+        assert os.path.exists("tests/plot_output/stochastic_tree.png")  # noqa: PTH110
+        assert os.path.exists("tests/plot_output/deterministic_tree.png")  # noqa: PTH110
+        assert os.path.exists("tests/plot_output/constant_tree.png")  # noqa: PTH110
 
 
 class TestErrorHandling:

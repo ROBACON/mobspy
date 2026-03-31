@@ -15,7 +15,7 @@ Chemical.TetR(1)
 # Here we define the activation reactions for the list of chemicals and promoters
 list_of_chemicals = ["TetR", "Lcl", "Lacl"]
 list_of_promoters = ["PLcl", "PLacl", "PTetR"]
-for che, pro in zip(list_of_chemicals, list_of_promoters):
+for che, pro in zip(list_of_chemicals, list_of_promoters, strict=False):
     Rev[DNAPromoter.inactive.c(pro) + Chemical.c(che) >> DNAPromoter.active.c(pro)][
         1, 1
     ]
@@ -26,7 +26,7 @@ Chemical >> Zero[1]
 repressed = ["TetR", "Lcl", "Lacl"]
 repressors = ["Lacl", "TetR", "Lcl"]
 hill = lambda che: f"10/(1 + ({che})^3)"
-for rpsor, rpsed in zip(repressed, repressors):
+for rpsor, rpsed in zip(repressed, repressors, strict=False):
     Chemical.c(rpsor) >> Chemical.c(rpsed) + Chemical.c(rpsor)[hill]
 
 MySim = Simulation(DNAPromoter | Chemical)

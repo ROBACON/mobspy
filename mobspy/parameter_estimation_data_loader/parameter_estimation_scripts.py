@@ -14,10 +14,12 @@ from mobspy.mobspy_logging import get_logger
 
 _logger = get_logger(__name__)
 
+_BOUND_PAIR_LEN = 2
+
 basico = ipm_LazyImporter("basico")
 
 
-def basiCO_parameter_estimation(
+def basiCO_parameter_estimation(  # noqa: N802, PLR0913
     simulation_object: Any,
     parameters_to_estimate: list[Any] | set[Any] | tuple[Any, ...],
     experimental_data: Any = None,
@@ -47,23 +49,67 @@ def basiCO_parameter_estimation(
         verbose: Print the results after finishing or not.
         change_parameter_values: Change/convert parameter values when possible.
     """
+    original_parameters, converted_parameters, bound = _validate_estimation_inputs(
+        parameters_to_estimate,
+        bound,
+    )
+    experimental_data = _resolve_experimental_data(simulation_object, experimental_data)
+    bound = _validate_bound(bound, converted_parameters)
 
-    # Check inputs in order ############################
-    # Parameters ok?
+    sbml_list = simulation_object.generate_sbml()
+    if len(sbml_list) > 1:
+        raise ParameterError(
+            "BasiCO optimization does not support composite simulation optimization"
+        )
+
+    model = basico.model_io.load_model_from_string(sbml_list[0])
+
+    fit_list = _build_fit_list(converted_parameters, bound)
+
+    if isinstance(experimental_data, (list, set, tuple)):
+        for i, exp in enumerate(experimental_data):
+            basico.add_experiment("exp" + str(i), exp, model=model)
+    else:
+        basico.add_experiment("exp1", experimental_data, model=model)
+
+    basico.set_fit_parameters(fit_list, model=model)
+    basico_results = basico.run_parameter_estimation(model=model, method=method)
+
+    results = _extract_results(basico_results)
+
+    if change_parameter_values:
+        for p in original_parameters:
+            if p.has_units():
+                p.set_value(results[str(p)]).convert_to_original_unit()
+                results[str(p)] = p.value
+            else:
+                p.set_value(results[str(p)])
+
+    if verbose:
+        _logger.info("Parameter estimation complete. The results follow: ")
+        for key in results:
+            _logger.info(f"{key} {results[key]}")
+
+    return results
+
+
+def _validate_estimation_inputs(
+    parameters_to_estimate: list[Any] | set[Any] | tuple[Any, ...],
+    bound: dict[str, list[float]] | list[float] | tuple[float, ...] | None,
+) -> tuple[list[Any] | set[Any] | tuple[Any, ...], list[str], Any]:
+    """Validate parameters and auto-set bounds if needed."""
     if not isinstance(parameters_to_estimate, (list, set, tuple)):
         raise ParameterError(
             "The parameter that will be estimated must be inside a list, set or tuple"
         )
 
     converted_parameters: list[str] = []
-    # If bound is None, we set the auto-bound when checking the parameters
     if bound is None:
         bound = {}
         flag_auto_set = True
     else:
         flag_auto_set = False
 
-    # Conversion of MobsPy parameters to str, construction of bound
     original_parameters = parameters_to_estimate
     for par in parameters_to_estimate:
         if flag_auto_set:
@@ -72,11 +118,16 @@ def basiCO_parameter_estimation(
                     "bound must be a dict when auto-setting parameter bounds"
                 )
             bound[str(par)] = [par.value / 1000, par.value * 1000]
-
         converted_parameters.append(str(par))
-    parameters_to_estimate = converted_parameters
 
-    # Simulation Object ok?
+    return original_parameters, converted_parameters, bound
+
+
+def _resolve_experimental_data(
+    simulation_object: Any,
+    experimental_data: Any,
+) -> Any:
+    """Resolve experimental data from simulation object or argument."""
     if simulation_object.experimental_data is not None:
         experimental_data = simulation_object.experimental_data.return_pandas()[0]
     if experimental_data is None:
@@ -84,17 +135,21 @@ def basiCO_parameter_estimation(
             "No experimental data found in the simulation object or as argument of the "
             "basiCO_parameter_estimation function"
         )
-
-    # Experimental data ok?
     if not isinstance(experimental_data, (list, set, tuple, DataFrame)):
         raise ParameterError(
             "Experimental for basiCO estimation must be a "
             "list of pandas dataframes or a pandas dataframe"
         )
+    return experimental_data
 
-    # Bound ok?
-    new_bound: dict[str, Any] = {}
+
+def _validate_bound(
+    bound: Any,
+    parameters_to_estimate: list[str],
+) -> Any:
+    """Validate and normalize bound argument."""
     if isinstance(bound, dict):
+        new_bound: dict[str, Any] = {}
         for key in bound:
             new_bound[str(key)] = bound[key]
         bound = new_bound
@@ -112,7 +167,7 @@ def basiCO_parameter_estimation(
                 )
     else:
         try:
-            if len(bound) != 2:
+            if len(bound) != _BOUND_PAIR_LEN:
                 raise ParameterError(
                     "The bound argument must be a list with "
                     "the lower and upper bound of all "
@@ -124,17 +179,14 @@ def basiCO_parameter_estimation(
                 "the lower and upper bound of all "
                 "parameters"
             ) from e
-    ########################################################################################################
+    return bound
 
-    sbml_list = simulation_object.generate_sbml()
-    if len(sbml_list) > 1:
-        raise ParameterError(
-            "BasiCO optimization does not support composite simulation optimization"
-        )
 
-    sbml_str = sbml_list[0]
-    model = basico.model_io.load_model_from_string(sbml_str)
-
+def _build_fit_list(
+    parameters_to_estimate: list[str],
+    bound: Any,
+) -> list[dict[str, Any]]:
+    """Build the fit parameter list for BasiCO."""
     fit_list: list[dict[str, Any]] = []
     for par in parameters_to_estimate:
         basico_reaction_dict = find_parameters_in_basico_dataframe(
@@ -151,9 +203,6 @@ def basiCO_parameter_estimation(
                 "simulator use the parameter in one "
                 "of their reactions."
             ) from e
-
-        if bound is None:
-            pass
 
         if isinstance(bound, dict):
             fit_dictionary = {
@@ -172,36 +221,15 @@ def basiCO_parameter_estimation(
                 "upper": bound[1],
             }
         fit_list.append(fit_dictionary)
+    return fit_list
 
-    if isinstance(experimental_data, (list, set, tuple)):
-        for i, exp in enumerate(experimental_data):
-            basico.add_experiment("exp" + str(i), exp, model=model)
-    else:
-        basico.add_experiment("exp1", experimental_data, model=model)
 
-    basico.set_fit_parameters(fit_list, model=model)
-    basico_results = basico.run_parameter_estimation(model=model, method=method)
-
-    # WHY IS EVERYTHING PANDAS IN BASICO??????????? - I don't get paid enough for this
+def _extract_results(basico_results: Any) -> dict[str, Any]:
+    """Extract parameter values from BasiCO results dataframe."""
     results: dict[str, Any] = {}
     for key, sol in basico_results.to_dict()["sol"].items():
-        parameter_name = str(key).replace("Values[", "")
-        parameter_name = str(parameter_name).replace("]", "")
+        parameter_name = str(key).replace("Values[", "").replace("]", "")
         results[parameter_name] = sol
-
-    if change_parameter_values:
-        for p in original_parameters:
-            if p.has_units():
-                p.set_value(results[str(p)]).convert_to_original_unit()
-                results[str(p)] = p.value
-            else:
-                p.set_value(results[str(p)])
-
-    if verbose:
-        _logger.info("Parameter estimation complete. The results follow: ")
-        for key in results:
-            _logger.info(f"{key} {results[key]}")
-
     return results
 
 
@@ -222,7 +250,7 @@ def find_parameters_in_basico_dataframe(
     ) -> bool:
         """Check if a BasiCO reaction name contains the parameter."""
         parameter_name = basico_reaction_name.split(".")[1]
-        return True if parameter_name == mobspy_parameter_name else False  # noqa: SIM210
+        return parameter_name == mobspy_parameter_name
 
     def find_common_substrings(df: str) -> bool:
         """Filter predicate for matching the parameter name."""

@@ -11,6 +11,8 @@ import pandas as pd
 from mobspy.exceptions import ValidationError
 from mobspy.modules.meta_class import Reacting_Species, Species
 
+_TUPLE_PAIR_LEN = 2
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -44,7 +46,7 @@ class MobsPyTimeSeries:
             self.ts_model_parameters = model_parameters
 
 
-class MobsPyList_of_TS:
+class MobsPyList_of_TS:  # noqa: N801
     """Collection of time-series results across multiple simulation runs.
 
     Supports indexing by run number, species name, or meta-species object.
@@ -168,10 +170,10 @@ class MobsPyList_of_TS:
     )
 
     def __getitem__(self, item: _GetItemKey) -> Any:
-        """
-        Implements run retrieval using a meta-species object.
+        """Implement run retrieval using a meta-species object.
+
         Returns one run if there is only one time-series and
-        returns multiple runs if there are multiple time series
+        returns multiple runs if there are multiple time series.
         """
         if isinstance(item, str) and item == "runs":
             raise ValidationError(
@@ -184,45 +186,67 @@ class MobsPyList_of_TS:
 
         series_index = None
         if isinstance(item, tuple):
-            if len(item) != 2 or not isinstance(item[1], int):
-                raise ValidationError(
-                    "Only len 2 and ints allowed in tuple-based assignments"
-                )
-            series_index = item[1]
-            item = item[0]
+            item, series_index = self._unpack_tuple_key(item)
 
-        to_return = []
         if isinstance(item, int):
             return self.ts_data[item]
-        elif isinstance(item, str):
-            try:
-                for ts in self.ts_data:
-                    to_return.append(ts[item])
-            except KeyError:
-                if series_index is None:
-                    for i in range(len(self)):
-                        to_return.append(self._sum_reacting_species_data(item, i))
-                else:
-                    to_return.append(
-                        self._sum_reacting_species_data(item, series_index)
-                    )
-        elif isinstance(item, Species):
-            if series_index is None:
-                for ts in self.ts_data:
-                    to_return.append(ts[item.get_name()])
-            else:
-                to_return.append(self._sum_reacting_species_data(item, series_index))
-        elif isinstance(item, Reacting_Species):
-            if series_index is None:
-                for i in range(len(self)):
-                    to_return.append(self._sum_reacting_species_data(item, i))
-            else:
-                to_return.append(self._sum_reacting_species_data(item, series_index))
+
+        to_return = self._resolve_item(item, series_index)
 
         if not self.fres:
             return to_return
-        else:
-            return to_return[0]
+        return to_return[0]
+
+    def _unpack_tuple_key(
+        self, item: tuple[str | Species | Reacting_Species, int]
+    ) -> tuple[str | Species | Reacting_Species, int]:
+        """Validate and unpack a tuple-based key into (item, series_index)."""
+        if len(item) != _TUPLE_PAIR_LEN or not isinstance(item[1], int):
+            raise ValidationError(
+                "Only len 2 and ints allowed in tuple-based assignments"
+            )
+        return item[0], item[1]
+
+    def _resolve_item(
+        self,
+        item: str | Species | Reacting_Species,
+        series_index: int | None,
+    ) -> list[Any]:
+        """Dispatch retrieval by item type."""
+        if isinstance(item, str):
+            return self._resolve_str_item(item, series_index)
+        if isinstance(item, Species):
+            return self._resolve_species_item(item, series_index)
+        if isinstance(item, Reacting_Species):
+            return self._resolve_reacting_species_item(item, series_index)
+        return []
+
+    def _resolve_str_item(self, item: str, series_index: int | None) -> list[Any]:
+        """Retrieve data for a string key."""
+        try:
+            return [ts[item] for ts in self.ts_data]
+        except KeyError:
+            if series_index is None:
+                return [
+                    self._sum_reacting_species_data(item, i) for i in range(len(self))
+                ]
+            return [self._sum_reacting_species_data(item, series_index)]
+
+    def _resolve_species_item(
+        self, item: Species, series_index: int | None
+    ) -> list[Any]:
+        """Retrieve data for a Species key."""
+        if series_index is None:
+            return [ts[item.get_name()] for ts in self.ts_data]
+        return [self._sum_reacting_species_data(item, series_index)]
+
+    def _resolve_reacting_species_item(
+        self, item: Reacting_Species, series_index: int | None
+    ) -> list[Any]:
+        """Retrieve data for a Reacting_Species key."""
+        if series_index is None:
+            return [self._sum_reacting_species_data(item, i) for i in range(len(self))]
+        return [self._sum_reacting_species_data(item, series_index)]
 
     def _sum_reacting_species_data(
         self, item: str | Species | Reacting_Species, ts_index: int
@@ -293,9 +317,4 @@ class MobsPyList_of_TS:
 
     def return_pandas(self) -> list[pd.DataFrame]:
         """Convert each run's time-series data to a pandas DataFrame."""
-        to_return: list[pd.DataFrame] = []
-
-        for ts in self.ts_data:
-            to_return.append(pd.DataFrame.from_dict(ts))
-
-        return to_return
+        return [pd.DataFrame.from_dict(ts) for ts in self.ts_data]

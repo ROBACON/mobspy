@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 from pint import Quantity
@@ -13,6 +14,10 @@ import mobspy.plot_scripts.process_plot_data as ppd
 import mobspy.plot_scripts.statistics_calculations as sc
 from mobspy.constants import AVERAGE_SUFFIX, DEVIATION_SUFFIX
 from mobspy.exceptions import ValidationError
+
+# Thresholds for legend label font size selection
+_SMALL_LABEL_THRESHOLD = 5
+_MEDIUM_LABEL_THRESHOLD = 10
 
 
 def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
@@ -26,7 +31,7 @@ def read_plot_json(plot_json_filename: str) -> dict[str, Any]:
     Returns:
         Converted JSON as dictionary.
     """
-    with open(plot_json_filename, encoding="utf-8") as file:
+    with Path(plot_json_filename).open(encoding="utf-8") as file:
         try:
             json_data = json.load(file)
         except (json.JSONDecodeError, ValueError) as e:
@@ -249,11 +254,10 @@ def parametric_plot(
     new_plot_params["figures"] = []
     new_plot_params["pad"] = 1.5
 
-    # color_cycler = hp.Color_cycle()
     previous_parameter = data.ts_model_parameters[0]
 
     # Update plot to add new curve
-    def update_plot(
+    def update_plot(  # noqa: PLR0913
         spe: str,
         temp_ts: list[int],
         i: int,
@@ -317,9 +321,9 @@ def parametric_plot(
         new_plot_params["figures"].append({"plots": plots})
 
     # Adjusting for label size
-    if len(data.ts_model_parameters) < 5:
+    if len(data.ts_model_parameters) < _SMALL_LABEL_THRESHOLD:
         prop = {"size": 10}
-    elif len(data.ts_model_parameters) < 10:
+    elif len(data.ts_model_parameters) < _MEDIUM_LABEL_THRESHOLD:
         prop = {"size": 8}
     else:
         prop = {"size": 6}

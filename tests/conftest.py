@@ -9,7 +9,7 @@ import pytest
 
 # Root of the repository
 ROOT = Path(__file__).resolve().parent.parent
-TEST_TOOLS = ROOT / "test_tools"
+TEST_TOOLS = ROOT / "tests" / "expected_output"
 
 
 def compare_model(comp_results: str, file_name: str) -> bool:

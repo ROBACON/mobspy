@@ -39,8 +39,7 @@ ENV/
 htmlcov/
 .tox/
 .nox/
-test_plot_images/*
-!test_plot_images/read_me.txt
+tests/plot_output/*.png
 
 # Type checkers
 .mypy_cache/

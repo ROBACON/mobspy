@@ -198,15 +198,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             if i == 0:
                 continue
             to_str = to_str + " + " + e
-        to_str = "(" + to_str + ")"
-        return to_str  # type: ignore[no-any-return]
+        result: str = "(" + to_str + ")"
+        return result
 
     def __str__(self) -> str:
         """String representation, returns the species name."""
         if Species.get_simulation_context() is None:
             return self._name
-        else:
-            return Species.str_under_context(self, STD_CHAR)
+        return Species.str_under_context(self, STD_CHAR)
 
     def c(self, item: Any) -> Reacting_Species:
         """c query implementation, queries by value.
@@ -240,7 +239,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def show_characteristics(self) -> None:
         """Print the characteristics directly added to this object."""
         _logger.debug(str(self) + " has the following characteristics referenced:")
-        for i, reference in enumerate(self.get_references()):  # noqa: B007
+        for _i, reference in enumerate(self.get_references()):
             if reference.get_characteristics():
                 _logger.debug(str(reference) + ": ")
                 reference.show_characteristics()
@@ -249,7 +248,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """Print the objects this object has inherited from."""
         _logger.debug(str(self) + DOT_SEPARATOR)
         _logger.debug("{")
-        for i, reference in enumerate(self.get_references()):  # noqa: B007
+        for _i, reference in enumerate(self.get_references()):
             if reference.get_characteristics():
                 _logger.debug(" " + str(reference) + " ")
         _logger.debug("}")
@@ -264,15 +263,14 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Args:
             other: To combine.
         """
-        from mobspy.modules.list_species import List_Species
+        from mobspy.modules.list_species import List_Species  # noqa: PLC0415
 
         if isinstance(other, List_Species):
             other.append(self)
             return other
-        elif isinstance(other, Species):
+        if isinstance(other, Species):
             return List_Species([self, other])
-        else:
-            raise ValidationError("Only Species and List_Species can be concatenated")
+        raise ValidationError("Only Species and List_Species can be concatenated")
 
     def __iter__(self) -> Generator[Self, None, None]:
         """Iter defined to be consistent with List_Species behavior."""
@@ -309,8 +307,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                     f"float - Received {stoichiometry}"
                 )
             return r
-        else:
-            return asgi_Assign.mul(stoichiometry, self)
+        return asgi_Assign.mul(stoichiometry, self)
 
     def __add__(
         self,
@@ -332,15 +329,13 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             else:
                 r2 = Reacting_Species(other, set())
             return r1 + r2
-        else:
-            return asgi_Assign.add(self, other)
+        return asgi_Assign.add(self, other)
 
     def __radd__(self, other: Any) -> Reacting_Species | Any:
         """Making addition symmetric, see __add__."""
         if not asgi_Assign.check_context():
             return Species.__add__(self, other)
-        else:
-            return asgi_Assign.add(other, self)
+        return asgi_Assign.add(other, self)
 
     def __invert__(self) -> Reacting_Species:
         return self.c(NOT_CHAR)
@@ -348,10 +343,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def __neg__(self) -> Any:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
-        else:
-            raise ValidationError(
-                "The negative operator was applied to a Species in the wrong context"
-            )
+        raise ValidationError(
+            "The negative operator was applied to a Species in the wrong context"
+        )
 
     @classmethod
     def _compile_defined_reaction(cls, code_line: str, line_number: int) -> bool | None:
@@ -410,8 +404,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             p = other
 
-        reaction = Reactions(myself.list_of_reactants, p.list_of_reactants)
-        return reaction
+        return Reactions(myself.list_of_reactants, p.list_of_reactants)
 
     def __getattr__(self, characteristic: str) -> Any:
         """Add characteristics via Species.characteristic.
@@ -459,63 +452,79 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if isinstance(quantity, (np_int_, np_float_)):
             quantity = float(quantity)
 
-        quantity_dict: dict[str, Any] | None = None
+        if isinstance(quantity, me_Specific_Species_Operator):
+            return self._extract_characteristic(quantity)
+
+        quantity_dict = self._resolve_quantity(quantity)
+
+        if self.get_simulation_context() is not None:
+            self._apply_event_context(quantity, quantity_dict)
+            return None
+        return self
+
+    def _extract_characteristic(self, quantity: me_Specific_Species_Operator) -> str:
+        """Find and return matching characteristic, or raise."""
+        for cha in str(quantity).split(DOT_SEPARATOR)[1:]:
+            if cha in self._characteristics:
+                return cha
+        raise ReactionError(f"{quantity} contains no characteristics from {self._name}")
+
+    def _resolve_quantity(self, quantity: Any) -> dict[str, Any] | None:
+        """Resolve the quantity into a quantity_dict based on context and type."""
         _any_ctx = Species.get_meta_specie_named_any_context()
         if len(_any_ctx) != 0:
             for i in _any_ctx:
                 self.c(i)
-            quantity_dict = self.add_quantities(_any_ctx.copy(), quantity)
+            return self.add_quantities(_any_ctx.copy(), quantity)
 
-        elif (
+        if (
             isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
         ) and not asgi_Assign.check_context():
-            quantity_dict = self.add_quantities(STD_CHAR, quantity)
+            return self.add_quantities(STD_CHAR, quantity)
 
-        elif asgi_Assign.check_context():
+        if asgi_Assign.check_context():
             self.assign(quantity)
-        elif isinstance(quantity, me_Specific_Species_Operator):
-            for cha in str(quantity).split(DOT_SEPARATOR)[1:]:
-                if cha in self._characteristics:
-                    return cha
-            raise ReactionError(
-                f"{quantity} contains no characteristics from {self._name}"
-            )
-        elif isinstance(quantity, Reacting_Species):
+            return None
+        if isinstance(quantity, Reacting_Species):
             raise ReactionError(
                 "Assignments of counts using meta-species "
                 "are only allowed under events in "
                 "simulation context"
             )
-        elif Species.get_simulation_context() is None:
+        if Species.get_simulation_context() is None:
             raise ReactionError(
                 f"Species count assignment does not support the type {type(quantity)}"
                 " if not under a simulation context"
             )
+        return None
 
-        if self.get_simulation_context() is not None:
-            sim_under_context = self.get_simulation_context()
+    def _apply_event_context(
+        self,
+        quantity: Any,
+        quantity_dict: dict[str, Any] | None,
+    ) -> None:
+        """Apply quantity assignment within a simulation event context."""
+        sim_under_context = self.get_simulation_context()
 
-            if isinstance(quantity, str):
-                quantity_dict = self.add_quantities(STD_CHAR, quantity)
-            try:
-                if quantity_dict is None:
-                    raise ValidationError(
-                        "quantity_dict is None during event context assignment"
-                    )
-                sim_under_context.current_event_count_data.append(
-                    {
-                        "species": self,
-                        "characteristics": quantity_dict["characteristics"],
-                        "quantity": quantity_dict["quantity"],
-                    }
+        if isinstance(quantity, str):
+            quantity_dict = self.add_quantities(STD_CHAR, quantity)
+        try:
+            if quantity_dict is None:
+                raise ValidationError(
+                    "quantity_dict is None during event context assignment"
                 )
-            except (AttributeError, KeyError, TypeError, ValueError) as e:
-                raise ReactionError(
-                    str(e)
-                    + "\n Only species count assignments are allowed in a model context"
-                ) from e
-        else:
-            return self
+            sim_under_context.current_event_count_data.append(
+                {
+                    "species": self,
+                    "characteristics": quantity_dict["characteristics"],
+                    "quantity": quantity_dict["quantity"],
+                }
+            )
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
+            raise ReactionError(
+                str(e)
+                + "\n Only species count assignments are allowed in a model context"
+            ) from e
 
     def add_quantities(
         self,
@@ -774,8 +783,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 def clean_species_name(species_name: str) -> str:
     """Strip tabs and spaces from a species name."""
     species_name = species_name.replace("\t", "")
-    species_name = species_name.replace(" ", "")
-    return species_name
+    return species_name.replace(" ", "")
 
 
-_methods_Species = set(dir(Species))
+_methods_Species = set(dir(Species))  # noqa: N816

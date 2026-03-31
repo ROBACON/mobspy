@@ -13,14 +13,14 @@ keywords = ["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "s
 dependencies = [
     "matplotlib>=3,<4",
     "numpy>=1.20,<3",
-    "python-copasi<=4.44.295",
-    "python-libsbml",
+    "python-copasi~=4.44",
+    "python-libsbml>=5,<6",
     "scipy>=1,<2",
     "pandas>=1,<3",
     "joblib>=1,<2",
     "tqdm>=4,<5",
-    "copasi-basico",
-    "pint>=0.20,<1",
+    "copasi-basico~=0.75",
+    "pint>=0.23,<1",
 ]
 
 [project.optional-dependencies]
@@ -61,47 +61,11 @@ select = [
     "PL",            # pylint subset
     "PERF",          # perflint
 ]
-ignore = [
-    "S101",    # allow assert in tests
-    "PLR0913", # too many arguments - common in this DSL codebase
-    "PLR0912", # too many branches - common in compiler/expression code
-    "PLR0911", # too many return statements
-    "PLR0915", # too many statements
-    "PLR2004", # magic value comparison - common in scientific code
-    "RET505",  # unnecessary else after return - sometimes clearer
-    "RET504",  # unnecessary assignment before return
-    "ARG002",  # unused method argument - common in operator overloading
-    "N802",    # function name should be lowercase - existing API uses mixed case
-    "N803",    # argument name should be lowercase - existing API
-    "N806",    # variable in function should be lowercase - scientific naming (A, B, N_A)
-    "N815",    # mixed case variable in class scope
-    "N816",    # mixed case variable in global scope
-    "N801",    # class name should use CapWords - DSL uses List_Species, etc.
-    "PLC0414", # import X as X - intentional re-export pattern
-    "E731",    # lambda assignment - common in DSL rate definitions
-    "E741",    # ambiguous variable name - scientific code uses l, I, O
-    "B905",    # zip without strict= - not needed for this codebase
-    "RUF012",  # mutable class variable without ClassVar - DSL pattern
-    "PERF401", # use list comprehension - existing style
-    "PTH",     # pathlib suggestions - existing codebase uses os.path
-    "A001",    # shadowing builtin - DSL names overlap (e.g. All, Any)
-    "A004",    # shadowing builtin import
-    "ERA001",  # commented-out code - prevalent in existing codebase
-    "PLC0415", # import not at top level - used for lazy/conditional imports
-    "PLC0206", # string contains unescaped Unicode - SBML string constants
-    "PLW2901", # redefined loop variable - common pattern in this codebase
-    "PLW0642", # self/cls reassignment - used in DSL metaclass patterns
-    "PLW0127", # self-assignment - used intentionally in some patterns
-    "S112",    # try-except-pass - used in fallback patterns
-    "S110",    # try-except-pass - same as above
-    "S311",    # pseudo-random generator - used for non-security purposes
-    "N999",    # invalid module name - existing file naming
-    "B017",    # assertRaises(Exception) too broad - existing test patterns
-]
+ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["F403", "F405", "F841", "B018", "B011", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "RUF059"]
-"docs/**" = ["F403", "F405", "E501", "B018", "S", "ARG", "ERA", "T20", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "RUF005"]
+"tests/**" = ["F403", "F405", "F841", "B018", "B011", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "E731", "N", "A001", "RUF059"]
+"docs/**" = ["F403", "F405", "F401", "E501", "E731", "E741", "I001", "B018", "S", "ARG", "ERA", "T20", "N", "A001", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "SIM117", "RUF005"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -118,9 +82,16 @@ typeCheckingMode = "standard"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra -q --strict-markers --strict-config --cov=mobspy --cov-report=term-missing --cov-fail-under=60"
+addopts = "-ra -q --strict-markers --strict-config"
 doctest_optionflags = ["ELLIPSIS", "NORMALIZE_WHITESPACE"]
 markers = [
     "slow: tests that run simulations (may take a while)",
     "compilation: tests that only compile models (fast)",
 ]
+
+[tool.coverage.run]
+source = ["mobspy"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 60

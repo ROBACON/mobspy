@@ -12,6 +12,7 @@ from dataclasses import fields
 from json import dump as json_dump
 from json import load as json_load
 from os.path import splitext as os_path_splitext
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any as TypingAny
 
@@ -41,7 +42,7 @@ from mobspy.exceptions import (
 from mobspy.mobspy_logging import get_logger
 from mobspy.model_generation import ModelGenerationMixin
 from mobspy.modules.any_species import (
-    Any as Any,
+    Any,
 )
 from mobspy.modules.assignments_implementation import (
     Assign,
@@ -221,8 +222,15 @@ class Simulation(
             ParameterError: If required parameters are missing
         """
         super().__init__()
+        self._init_event_state()
+        self._init_model(model, names)
+        self._init_reactions(reactions)
+        self._init_counts()
+        self._init_config(parameters, plot_parameters)
+        self._init_sbml_state()
 
-        # Event Variable Definitions
+    def _init_event_state(self) -> None:
+        """Initialize event tracking and compilation state."""
         self._event_time = 0
         self.previous_trigger = None
         self.current_event_count_data = []
@@ -242,25 +250,30 @@ class Simulation(
         self.dimension: int | None = None
         self.model_parameter_objects_dict: dict[str, TypingAny] | None = None
 
-        # Must copy to avoid reference assignment
-        # Change model to include linked species
-        model_pre_link = List_Species(model)  # type: ignore[arg-type]
-        model_pos_link: set[Species] = set()
-        for spe in model_pre_link:
-            model_pos_link.add(spe)
-            model_pos_link = model_pos_link.union(spe._linked_species)
-        self.model = List_Species(model_pos_link)
-
-        self.names = names
-
-        if not isinstance(model, Species) and not isinstance(model, List_Species):
+    def _init_model(
+        self,
+        model: Species | List_Species,
+        names: dict | None,
+    ) -> None:
+        """Validate and expand the model with linked species."""
+        if not isinstance(model, (Species, List_Species)):
             raise ValidationError(
                 "Model must be formed only by Species objects "
                 "or List_Species objects. "
                 f"Received type {type(model)} with value {model}"
             )
 
+        model_pre_link = List_Species(model)  # type: ignore[arg-type]
+        model_pos_link: set[Species] = set()
+        for spe in model_pre_link:
+            model_pos_link.add(spe)
+            model_pos_link = model_pos_link.union(spe._linked_species)
+        self.model = List_Species(model_pos_link)
+        self.names = names
         self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]
+
+    def _init_reactions(self, reactions: set | None) -> None:
+        """Collect reactions from explicit set or from model species."""
         if reactions is not None:
             self._reactions_set = set(reactions)
         else:
@@ -271,6 +284,8 @@ class Simulation(
                         reference.get_reactions()
                     )
 
+    def _init_counts(self) -> None:
+        """Gather species counts from the model."""
         self._species_counts = []
         for spe_object in self.model:
             for count in spe_object.get_quantities():
@@ -282,6 +297,12 @@ class Simulation(
                     }
                 )
 
+    def _init_config(
+        self,
+        parameters: dict | None,
+        plot_parameters: dict | None,
+    ) -> None:
+        """Set simulation and plot configuration."""
         if not parameters:
             self.parameters = SimulationConfig()  # type: ignore[assignment]
         else:
@@ -292,11 +313,12 @@ class Simulation(
         if not plot_parameters:
             self.plot_parameters = get_default_plot_parameters()
 
-        # Other needed things for simulating
         self.results: MobsPyList_of_TS | dict[str, TypingAny] = {}
         self.fres: MobsPyList_of_TS | dict[str, TypingAny] = {}
         self.default_order = Default
 
+    def _init_sbml_state(self) -> None:
+        """Initialize SBML compilation output slots."""
         self._species_for_sbml: SpeciesForSbml | None = None
         self._reactions_for_sbml: ReactionsForSbml | None = None
         self._parameters_for_sbml: ParametersForSbml | None = None
@@ -438,57 +460,11 @@ class Simulation(
         self.sbml_data_list = data_for_sbml_construction
         self._parameter_list_of_dic = parameter_list_of_dic
 
-    def _process_run_parameters(
-        self,
-        *,
-        duration: float | Quantity | None = None,
-        volume: float | Quantity | None = None,
-        dimension: int | None = None,
-        repetitions: int | None = None,
-        level: int | None = None,
-        simulation_method: str | None = None,
-        rate_type: str | None = None,
-        plot_type: str | None = None,
-        start_time: float | None = None,
-        r_tol: float | None = None,
-        a_tol: float | None = None,
-        seeds: list[int] | None = None,
-        step_size: float | None = None,
-        jobs: int | None = None,
-        unit_x: Quantity | None = None,
-        unit_y: Quantity | None = None,
-        output_concentration: bool | None = None,
-        output_event: bool | None = None,
-        output_file: str | None = None,
-        save_data: bool | None = None,
-        plot_data: bool | None = None,
-    ) -> None:
+    def _process_run_parameters(self, **kwargs: TypingAny) -> None:
         """Process and apply run-time parameter overrides, then ensure compilation."""
-        pr_manually_process_each_parameter(
-            self,
-            duration=duration,
-            volume=volume,
-            dimension=dimension,
-            repetitions=repetitions,
-            level=level,
-            simulation_method=simulation_method,
-            start_time=start_time,
-            r_tol=r_tol,
-            a_tol=a_tol,
-            seeds=seeds,
-            step_size=step_size,
-            jobs=jobs,
-            unit_x=unit_x,
-            unit_y=unit_y,
-            output_concentration=output_concentration,
-            output_event=output_event,
-            output_file=output_file,
-            save_data=save_data,
-            plot_data=plot_data,
-            rate_type=rate_type,
-            plot_type=plot_type,
-        )
+        pr_manually_process_each_parameter(self, **kwargs)
 
+        level = kwargs.get("level")
         if level is not None:
             self.level = level
 
@@ -582,13 +558,19 @@ class Simulation(
 
         flatt_ts: list[tuple[TypingAny, TypingAny]] = []
         if self._parameter_list_of_dic:
-            for r, params in zip(raw_results, self._parameter_list_of_dic):
-                for ts in r:  # pyright: ignore[reportOptionalIterable]
-                    flatt_ts.append((ts, params))
+            flatt_ts = [
+                (ts, params)
+                for r, params in zip(
+                    raw_results, self._parameter_list_of_dic, strict=False
+                )
+                for ts in r  # pyright: ignore[reportOptionalIterable]
+            ]
         else:
-            for r in raw_results:
-                for ts in r:  # pyright: ignore[reportOptionalIterable]
-                    flatt_ts.append((ts, {}))
+            flatt_ts = [
+                (ts, {})
+                for r in raw_results
+                for ts in r  # pyright: ignore[reportOptionalIterable]
+            ]
 
         ta = self.parameters["unit_x"] is not None
         tb = self.parameters["unit_y"] is not None
@@ -611,7 +593,7 @@ class Simulation(
         )
         self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
 
-    def run(
+    def run(  # noqa: PLR0913
         self,
         duration: float | Quantity | None = None,
         volume: float | Quantity | None = None,
@@ -757,13 +739,13 @@ class Simulation(
                         "No default output file specified in parameters"
                     )
                 out_path = self.parameters["absolute_output_file"]
-                with open(out_path, "w", encoding="utf-8") as f:
+                with Path(out_path).open("w", encoding="utf-8") as f:
                     json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]
             else:
                 # Add .json extension if not present
                 if not file.endswith(".json"):
                     file += ".json"
-                with open(file, "w", encoding="utf-8") as jf:
+                with Path(file).open("w", encoding="utf-8") as jf:
                     json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]
                     _logger.info(f"Successfully saved simulation results to {file}")
         except OSError as e:
@@ -793,7 +775,7 @@ class Simulation(
         Raises:
             ParameterError: If the file contains unknown parameter keys.
         """
-        with open(file_name, encoding="utf-8") as json_file:
+        with Path(file_name).open(encoding="utf-8") as json_file:
             data = json_load(json_file)
             for key in data:
                 if key not in self._SIMULATION_PARAMS:
@@ -955,7 +937,7 @@ class Simulation(
     def __config_parameters(config: str | dict[str, TypingAny]) -> dict[str, TypingAny]:
         """Shared helper for configure_parameters and configure_plot_parameters."""
         if isinstance(config, str):
-            if os_path_splitext(config)[1] != ".json":
+            if os_path_splitext(config)[1] != ".json":  # noqa: PTH122
                 raise ParameterError("Wrong file extension")
             parameters_to_config: dict[str, TypingAny] = pr_read_json(config)
         elif isinstance(config, dict):
@@ -971,7 +953,7 @@ class Simulation(
                 for par in a:
                     self.base_sim.plot_parameters[par] = a[par]
 
-        for key in kwargs:
+        for key in kwargs:  # noqa: PLC0206
             self.plot_parameters[key] = deepcopy(kwargs[key])
 
     def __add__(self, other: Simulation) -> SimulationComposition:
@@ -1010,10 +992,7 @@ class Simulation(
     def set_job_number(cls, params: dict[str, TypingAny]) -> int:
         """Determine the joblib job count from simulation parameters."""
         try:
-            if params["jobs"] == 1:  # noqa: SIM108
-                jobs = params["jobs"]
-            else:
-                jobs = params["jobs"]
+            jobs = params["jobs"]
         except KeyError:
             jobs = -1
         return int(jobs)
@@ -1069,8 +1048,8 @@ class SimulationComposition:
 
     def __init__(
         self,
-        S1: Simulation | SimulationComposition,
-        S2: Simulation | SimulationComposition,
+        S1: Simulation | SimulationComposition,  # noqa: N803
+        S2: Simulation | SimulationComposition,  # noqa: N803
     ) -> None:
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
             self.list_of_simulations = [S1, S2]
@@ -1096,73 +1075,62 @@ class SimulationComposition:
     ) -> SimulationComposition:
         return SimulationComposition(self, other)
 
-    def __setattr__(self, name: str, value: TypingAny) -> None:
-        white_list = ["list_of_simulations", "results", "base_sim", "fres"]
-        multi_cast_parameters = ["duration"]
-        broad_cast_parameters = ["level", "rate_type", "plot_type", "repetitions"]
-        double_cast_parameters = ["simulation_method", "volume", "method"]
+    _WHITE_LIST = frozenset(["list_of_simulations", "results", "base_sim", "fres"])
+    _MULTI_CAST_PARAMETERS = frozenset(["duration"])
+    _BROAD_CAST_PARAMETERS = frozenset(
+        ["level", "rate_type", "plot_type", "repetitions"]
+    )
+    _DOUBLE_CAST_PARAMETERS = frozenset(["simulation_method", "volume", "method"])
 
-        if name in double_cast_parameters:
-            # Broadcast if single value
+    def __setattr__(self, name: str, value: TypingAny) -> None:
+        if name in self._DOUBLE_CAST_PARAMETERS:
             if isinstance(value, (str, int, float, Quantity)):
                 for sim in self:
                     sim._set_parameter(name, value)
             else:
-                # Multicast if list
-                try:
-                    value_len = len(value)
-                except TypeError as e:
-                    raise SimulationError(
-                        f"The parameter {name} was assigned non-accepted type."
-                    ) from e
-                if value_len != len(self):
-                    raise SimulationError(
-                        f"The parameter {name} list length must match "
-                        f"the number of simulations ({len(self)})."
-                    )
-
-                for par, sim in zip(value, self, strict=False):
-                    # volume/duration changes after compilation
-                    # are checked in setattr
-                    if name == "volume":
-                        sim.volume = par
-                    elif name == "duration":
-                        sim.duration = par
-                    else:
-                        sim._set_parameter(name, par)
-
-        elif name in multi_cast_parameters:
-            try:
-                value_len = len(value)
-            except TypeError as e:
-                raise SimulationError(
-                    "From 2.4.4 duration must be assigned to "
-                    "each simulation individually or a list "
-                    "with all durations must be assigned to "
-                    "the concatenated simulation"
-                ) from e
-            if value_len != len(self):
-                raise SimulationError(
-                    f"The parameter {name} list length must match "
-                    f"the number of simulations ({len(self)})."
-                )
-
-            for par, sim in zip(value, self, strict=False):
-                # volume/duration changes after compilation
-                # are checked in setattr
-                if name == "volume":
-                    sim.volume = par
-                elif name == "duration":
-                    sim.duration = par
-                else:
-                    sim._set_parameter(name, par)
-        elif name in broad_cast_parameters:
+                self._multicast_parameter(name, value)
+        elif name in self._MULTI_CAST_PARAMETERS:
+            self._multicast_parameter(name, value, require_list=True)
+        elif name in self._BROAD_CAST_PARAMETERS:
             for sim in self:
                 sim._set_parameter(name, value)
-        elif name in white_list:
+        elif name in self._WHITE_LIST:
             self.__dict__[name] = value
         else:
             self.base_sim.__setattr__(name, value)
+
+    def _multicast_parameter(
+        self,
+        name: str,
+        value: TypingAny,
+        *,
+        require_list: bool = False,
+    ) -> None:
+        """Distribute a list of values across child simulations."""
+        try:
+            value_len = len(value)
+        except TypeError as e:
+            msg = (
+                f"From 2.4.4 {name} must be assigned to each simulation "
+                "individually or as a list"
+                if require_list
+                else f"The parameter {name} was assigned non-accepted type."
+            )
+            raise SimulationError(msg) from e
+
+        if value_len != len(self):
+            raise SimulationError(
+                f"The parameter {name} list length must match "
+                f"the number of simulations ({len(self)})."
+            )
+
+        for par, sim in zip(value, self, strict=False):
+            if name == "volume":
+                sim.volume = par
+            elif name == "duration":
+                sim.duration = par
+            else:
+                sim._set_parameter(name, par)
 
     @property
     def plot_config(self) -> PlotConfigProxy:
@@ -1198,7 +1166,7 @@ class SimulationComposition:
                 sim.compile(verbose=False)
 
     # This run is for the multiple simulations
-    def run(
+    def run(  # noqa: PLR0913
         self,
         duration: TypingAny = None,
         volume: TypingAny = None,
@@ -1258,27 +1226,27 @@ class SimulationComposition:
 
         pr_manually_process_each_parameter(
             self,
-            duration,
-            volume,
-            dimension,
-            repetitions,
-            level,
-            simulation_method,
-            start_time,
-            r_tol,
-            a_tol,
-            seeds,
-            step_size,
-            jobs,
-            unit_x,
-            unit_y,
-            output_concentration,
-            output_event,
-            output_file,
-            save_data,
-            plot_data,
-            rate_type,
-            plot_type,
+            duration=duration,
+            volume=volume,
+            dimension=dimension,
+            repetitions=repetitions,
+            level=level,
+            simulation_method=simulation_method,
+            start_time=start_time,
+            r_tol=r_tol,
+            a_tol=a_tol,
+            seeds=seeds,
+            step_size=step_size,
+            jobs=jobs,
+            unit_x=unit_x,
+            unit_y=unit_y,
+            output_concentration=output_concentration,
+            output_event=output_event,
+            output_file=output_file,
+            save_data=save_data,
+            plot_data=plot_data,
+            rate_type=rate_type,
+            plot_type=plot_type,
         )
 
         multi_parameter_dictionary: dict[str, TypingAny] = {}
@@ -1324,7 +1292,7 @@ class SimulationComposition:
                 for par in a:
                     self.base_sim.plot_parameters[par] = a[par]
 
-        for key in kwargs:
+        for key in kwargs:  # noqa: PLC0206
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
 
     def generate_sbml(self, compose: bool = False) -> list[str]:

@@ -8,16 +8,14 @@ from typing import TYPE_CHECKING, Any
 
 from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
 from mobspy.exceptions import CompilationError
-from mobspy.types import ReactionData
+from mobspy.types import CompilationContext, ReactionData
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
     from mobspy.modules.meta_class import Reactions
-    from mobspy.modules.model_unit_context import ModelUnitContext
     from mobspy.types import ReactionsForSbml
 
-# from mobspy.modules.mobspy_parameters import *
 from mobspy.modules.expression_context import (
     Unit_Context_Setter as crs_Unit_Context_Setter,
 )
@@ -43,8 +41,7 @@ def iterator_for_combinations(
     Args:
         list_of_lists: List of all lists to iterate through all combinations.
     """
-    for i in itertools_product(*list_of_lists):  # noqa: UP028
-        yield i
+    yield from itertools_product(*list_of_lists)
 
 
 def check_for_invalid_reactions(
@@ -149,18 +146,14 @@ def construct_reactant_structures(
         ref_characteristics_to_object: Dictionary with characteristics as keys and
             species objects as values.
     """
-    species_string_combinations: list[list[Any]] = []
-
-    for reactant in reactant_species:
-        species_string_combinations.append(
-            ssg_construct_all_combinations(
-                reactant["object"],
-                reactant["characteristics"],
-                ref_characteristics_to_object,
-            )
+    return [
+        ssg_construct_all_combinations(
+            reactant["object"],
+            reactant["characteristics"],
+            ref_characteristics_to_object,
         )
-
-    return species_string_combinations
+        for reactant in reactant_species
+    ]
 
 
 def construct_order_structure(
@@ -188,7 +181,7 @@ def construct_order_structure(
     """
     cyclic_dict: dict[Any, list[Any]] = {}
     for species_object, species_string in zip(
-        species_order_list, current_species_string_list
+        species_order_list, current_species_string_list, strict=False
     ):
         try:
             cyclic_dict[species_object].append(species_string)
@@ -220,15 +213,15 @@ def construct_product_structure(reaction: Reactions) -> list[dict[str, Any]]:
                 }
             )
         else:
-            for _ in range(product["stoichiometry"]):
-                product_list.append(
-                    {
-                        "species": product["object"],
-                        "label": product["label"],
-                        "characteristics": product["characteristics"],
-                        "stoichiometry": 1,
-                    }
-                )
+            product_list.extend(
+                {
+                    "species": product["object"],
+                    "label": product["label"],
+                    "characteristics": product["characteristics"],
+                    "stoichiometry": 1,
+                }
+                for _ in range(product["stoichiometry"])
+            )
 
     return product_list
 
@@ -347,12 +340,8 @@ def create_all_reactions(
     reactions: set[Any],
     meta_species_in_model: Any,
     ref_characteristics_to_object: dict[str, Any],
-    type_of_model: str,
-    dimension: int,
-    parameter_exist: dict[str, Any],
     parameters_in_reaction: Any,
-    skip_check: bool,
-    model_context: ModelUnitContext | None = None,
+    ctx: CompilationContext,
 ) -> tuple[ReactionsForSbml, Any]:
     """This function creates all reactions
     Returns the reactions_for_sbml and parameters_for_sbml dictionary
@@ -438,13 +427,9 @@ def create_all_reactions(
                                     list(combination_of_reactant_species),
                                     reactant_strings,
                                     reaction.rate,
-                                    type_of_model,
-                                    dimension,
                                     reaction_rate_arguments,
-                                    parameter_exist,
                                     parameters_in_reaction,
-                                    skip_check,
-                                    model_context=model_context,
+                                    ctx,
                                 )
                             )
                         except TypeError as e:

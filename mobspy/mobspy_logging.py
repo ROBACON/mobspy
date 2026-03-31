@@ -21,7 +21,7 @@ from mobspy.exceptions import MobsPyError
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds color to warning and error messages."""
 
-    COLORS: dict[str, str] = {
+    COLORS: dict[str, str] = {  # noqa: RUF012
         "WARNING": "\033[93m",  # Yellow
         "ERROR": "\033[91m",  # Red
         "CRITICAL": "\033[91m",  # Red

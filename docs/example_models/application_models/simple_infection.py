@@ -1,3 +1,5 @@
+"""Infection model with cellular aging and strain-dependent viral infection rates."""
+
 from mobspy import *
 
 Age, Mortal, Infectable, Virus = BaseSpecies()
@@ -12,8 +14,7 @@ Reproducer >> 2 * Reproducer.young[0.1]
 def infection_rate(r1, r2):
     factor = 0.01
     factor = 2 * factor if r1.old else 1 * factor
-    factor = 2 * factor if r2.is_a(V2) else 1 * factor
-    return factor
+    return 2 * factor if r2.is_a(V2) else 1 * factor
 
 
 Infectable.not_infected + Virus >> Infectable.infected[infection_rate]

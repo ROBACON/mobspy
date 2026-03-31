@@ -11,7 +11,7 @@ from mobspy.modules.assignments_implementation import Assign
 from mobspy.modules.meta_class import Reacting_Species, Species
 
 
-def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any) -> Any:
+def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any) -> Any:  # noqa: N802
     """Generate a rate function from an ODE expression using a closure.
 
     Replaces species placeholders in the expression string with
@@ -69,16 +69,18 @@ class ODEBinding:
         operator = "+=" if is_birth else "-="
 
         # Validation
-        if isinstance(expression, Reacting_Species):  # noqa: SIM102
-            if len(expression.list_of_reactants) > 1:
-                raise ValidationError(
-                    "ODE expressions must be built within"
-                    f" the dt[...] {operator} context.\n"
-                    "Expressions like 'C = A + B' followed"
-                    f" by 'dt[X] {operator} C' are not"
-                    " valid.\n"
-                    f"Use: dt[X] {operator} A + B"
-                )
+        if (
+            isinstance(expression, Reacting_Species)
+            and len(expression.list_of_reactants) > 1
+        ):
+            raise ValidationError(
+                "ODE expressions must be built within"
+                f" the dt[...] {operator} context.\n"
+                "Expressions like 'C = A + B' followed"
+                f" by 'dt[X] {operator} C' are not"
+                " valid.\n"
+                f"Use: dt[X] {operator} A + B"
+            )
 
         if isinstance(expression, (Species, Reacting_Species)):
             expression = Assign.mul(1, expression)
@@ -92,10 +94,7 @@ class ODEBinding:
 
         reactants = None
         for spe in species_list_operation_order:
-            if reactants is None:  # noqa: SIM108
-                reactants = spe
-            else:
-                reactants = reactants + spe
+            reactants = spe if reactants is None else reactants + spe
 
         # Create reaction based on type
         if is_birth:
@@ -136,8 +135,7 @@ class DifferentialOperator:
         if isinstance(item, (Species, Reacting_Species)):
             Assign.set_context()  # Turn ON before expression is evaluated
             return ODEBinding(item)
-        else:
-            raise ValidationError("MobsPy ODE object must only be applied on a species")
+        raise ValidationError("MobsPy ODE object must only be applied on a species")
 
 
 dt = DifferentialOperator()

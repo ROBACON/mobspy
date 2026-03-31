@@ -22,8 +22,10 @@ from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 
+_REVERSIBLE_RATE_PAIR_LEN = 2
 
-class __Operator_Base:
+
+class __Operator_Base:  # noqa: N801
     """Order operator base with shared utilities.
 
     Contains functions useful for the reaction operators.
@@ -192,10 +194,9 @@ class __Operator_Base:
             for e in product_species
         ]:
             if ALL_CHAR in characteristics:
-                species_is_referenced_by: list[Any] = []
-                for spe_obe in model:
-                    if species in spe_obe.get_references():
-                        species_is_referenced_by.append(spe_obe)
+                species_is_referenced_by: list[Any] = [
+                    spe_obe for spe_obe in model if species in spe_obe.get_references()
+                ]
                 all_strings = self.find_all_string_references_to_born_species(
                     species_is_referenced_by,
                     characteristics,
@@ -270,7 +271,7 @@ class __Operator_Base:
         return products
 
 
-class __Round_Robin_Base(__Operator_Base):
+class __Round_Robin_Base(__Operator_Base):  # noqa: N801
     """Here we have the implementation of the round robin order it goes like this:
 
     2*Ecoli >> 4*Ecoli
@@ -326,7 +327,7 @@ class __Round_Robin_Base(__Operator_Base):
 All = __Round_Robin_Base()
 
 
-class __RR_Default_Base(__Operator_Base):
+class __RR_Default_Base(__Operator_Base):  # noqa: N801
     """Only default options for born species (no reference in reactant)
     See __Round_Robin_Base for clarification
     """
@@ -366,7 +367,7 @@ class __RR_Default_Base(__Operator_Base):
 Default = __RR_Default_Base()
 
 
-class __Set_Reversible_Rate:
+class __Set_Reversible_Rate:  # noqa: N801
     """This class is responsible for dealing with reversible reactions.
     Since reversible reactions have two rates, the process is in __getitem__.
     """
@@ -378,7 +379,7 @@ class __Set_Reversible_Rate:
             both_rates: Rate function from the direct and reverse reaction.
         """
         try:
-            if len(both_rates) != 2:
+            if len(both_rates) != _REVERSIBLE_RATE_PAIR_LEN:
                 raise ReactionError("The reversible reaction must receive 2 rates")
         except TypeError as e:
             raise ReactionError("The reversible reaction must receive 2 rates") from e
@@ -398,7 +399,7 @@ class __Set_Reversible_Rate:
 
 
 # Reversible reaction operator
-class __Reversible_Base:
+class __Reversible_Base:  # noqa: N801
     def __getitem__(self, reaction: Reactions) -> __Set_Reversible_Rate:
         """Set reversible reaction rates via rate setter.
 
@@ -423,7 +424,7 @@ class __Reversible_Base:
 Rev = __Reversible_Base(__Set_Reversible_Rate())
 
 
-class _Set_Reaction_User_Base:
+class _Set_Reaction_User_Base:  # noqa: N801
     def __getitem__(self, reaction: Reactions) -> _Set_Reaction_Method:
         """Assign a reaction to a Set operator.
 
@@ -436,7 +437,7 @@ class _Set_Reaction_User_Base:
 Set = _Set_Reaction_User_Base()
 
 
-class _Set_Reaction_Method:
+class _Set_Reaction_Method:  # noqa: N801
     _number_of_calls: int = 0
 
     def __init__(self, reaction: Reactions) -> None:
@@ -447,7 +448,7 @@ class _Set_Reaction_Method:
 
         self.reaction = reaction
 
-    def at(self, time: int | float) -> _Set_Reaction_Method:
+    def at(self, time: int | float) -> _Set_Reaction_Method:  # noqa: ARG002
         """Schedule this reaction to activate at the given time."""
         self._number_of_calls += 1
         self._set_species = Species("dummy")
@@ -464,7 +465,7 @@ class _Set_Reaction_Method:
         self.reaction.products.append(dict_insert_species)
 
         for spe_obj in self.reaction.reactants + self.reaction.products:
-            spe_obj = spe_obj["object"]
+            spe_obj = spe_obj["object"]  # noqa: PLW2901
             spe_obj.link_a_species(self._set_species)
 
         return self

@@ -19,6 +19,10 @@ from mobspy.modules.mobspy_expressions import u as _mobspy_u
 
 _ur = _mobspy_u.unit_registry_object
 
+# Tolerance for floating-point unit magnitude comparison (0.99..1.01 ~ 1.0)
+_UNIT_MATCH_LOWER = 0.99
+_UNIT_MATCH_UPPER = 1.01
+
 
 # ---------------------------------------------------------------------------
 # Pint unit -> libsbml UnitDefinition mapping
@@ -152,11 +156,38 @@ class ModelUnitContext:
         """
         ctx = cls()
 
-        # Track volume/time units from input, but don't commit yet
-        _vol_unit_from_input = None
-        _time_unit_from_input = None
+        _vol_unit_from_input, dimension = cls._resolve_volume_input(
+            ctx, volume, dimension
+        )
+        if dimension is not None:
+            ctx.dimension = dimension
 
-        # 1. Volume (extract dimension, tentatively store volume unit)
+        _time_unit_from_input = cls._resolve_duration_input(duration)
+
+        has_substance_units = cls._scan_species_counts(ctx, species_counts)
+
+        if not ctx._volume_set:
+            ctx.volume_unit = _ur.decimeter**ctx.dimension  # type: ignore[assignment]
+
+        if has_substance_units:
+            if _vol_unit_from_input is not None and not ctx._volume_set:
+                ctx.volume_unit = _vol_unit_from_input  # type: ignore[assignment]
+                ctx._volume_set = True
+            if _time_unit_from_input is not None and not ctx._time_set:
+                ctx.time_unit = _time_unit_from_input  # type: ignore[assignment]
+                ctx._time_set = True
+
+        return ctx
+
+    @classmethod
+    def _resolve_volume_input(
+        cls,
+        ctx: ModelUnitContext,
+        volume: Any,
+        dimension: int | None,
+    ) -> tuple[Any, int | None]:
+        """Extract volume unit and dimension from the volume parameter."""
+        _vol_unit_from_input = None
         if isinstance(volume, Quantity):
             vol_q = cls._to_plain_quantity(volume)
             vol_ur = _ur.Quantity(1, str(vol_q.units))
@@ -167,19 +198,26 @@ class ModelUnitContext:
                     dimension = length_exp
                 ctx.dimension = dimension
                 _vol_unit_from_input = vol_ur.units
+        return _vol_unit_from_input, dimension
 
-        if dimension is not None:
-            ctx.dimension = dimension
-
-        # 2. Duration (tentatively store time unit)
+    @classmethod
+    def _resolve_duration_input(cls, duration: Any) -> Any:
+        """Extract time unit from the duration parameter."""
         if isinstance(duration, Quantity):
             dur_q = cls._to_plain_quantity(duration)
             dur_ur = _ur.Quantity(1, str(dur_q.units))
             dim_dict = dict(dur_ur.dimensionality)
             if "[time]" in dim_dict and len(dim_dict) == 1:
-                _time_unit_from_input = dur_ur.units
+                return dur_ur.units
+        return None
 
-        # 3. Species counts (substance detection + volume from concentrations)
+    @classmethod
+    def _scan_species_counts(
+        cls,
+        ctx: ModelUnitContext,
+        species_counts: list[dict[str, Any]] | None,
+    ) -> bool:
+        """Scan species counts for substance units and concentration-derived volume."""
         has_substance_units = False
         if species_counts is not None:
             for count in species_counts:
@@ -197,29 +235,13 @@ class ModelUnitContext:
                     if "[length]" in dim_dict and not ctx._volume_set:
                         ctx._volume_set = True
                         ctx.volume_unit = _extract_volume_unit(q, ctx.dimension)
-
-        # Update default volume unit to match resolved dimension
-        if not ctx._volume_set:
-            ctx.volume_unit = _ur.decimeter**ctx.dimension  # type: ignore[assignment]
-
-        # Only activate non-default volume/time units when substance units
-        # are present. This ensures backward compatibility for models with
-        # unit volumes but dimensionless rates/counts.
-        if has_substance_units:
-            if _vol_unit_from_input is not None and not ctx._volume_set:
-                ctx.volume_unit = _vol_unit_from_input  # type: ignore[assignment]
-                ctx._volume_set = True
-            if _time_unit_from_input is not None and not ctx._time_set:
-                ctx.time_unit = _time_unit_from_input  # type: ignore[assignment]
-                ctx._time_set = True
-
-        return ctx
+        return has_substance_units
 
     # ------------------------------------------------------------------
     # Conversion methods
     # ------------------------------------------------------------------
 
-    def convert_rate(
+    def convert_rate(  # noqa: PLR0911
         self,
         quantity: int | float | Quantity,
         reaction_order: int,
@@ -250,7 +272,7 @@ class ModelUnitContext:
                 converted = quantity.to(target)
                 return converted.magnitude, dimension, True
 
-            elif has_substance and not has_length:
+            if has_substance and not has_length:
                 # [substance]/[time] rate (e.g. mol/s)
                 if self.substance_is_molar:
                     if self.substance_unit is None:
@@ -260,13 +282,12 @@ class ModelUnitContext:
                     target = self.substance_unit / self.time_unit
                     converted = quantity.to(target)
                     return converted.magnitude, dimension, True
-                else:
-                    # Convert to moles/time_unit then multiply by N_A for counts
-                    target = _ur.mole / self.time_unit
-                    converted = quantity.to(target)
-                    return converted.magnitude * N_A, dimension, True
+                # Convert to moles/time_unit then multiply by N_A for counts
+                target = _ur.mole / self.time_unit
+                converted = quantity.to(target)
+                return converted.magnitude * N_A, dimension, True
 
-            elif has_substance:
+            if has_substance:
                 # Concentration rate with moles: [length]^n/([substance]^m*[time])
                 if self.substance_is_molar:
                     if self.substance_unit is None:
@@ -279,23 +300,21 @@ class ModelUnitContext:
                     )
                     converted = quantity.to(target)
                     return converted.magnitude, dimension, False
-                else:
-                    # Convert substance to moles then to counts via N_A
-                    target = self.volume_unit**volume_power / (
-                        _ur.mole**volume_power * self.time_unit
-                    )
-                    converted = quantity.to(target)
-                    return (
-                        converted.magnitude / (N_A**volume_power),
-                        dimension,
-                        False,
-                    )
-
-            else:
-                # [length]^n/[time] concentration rate (no substance)
-                target = self.volume_unit**volume_power / self.time_unit
+                # Convert substance to moles then to counts via N_A
+                target = self.volume_unit**volume_power / (
+                    _ur.mole**volume_power * self.time_unit
+                )
                 converted = quantity.to(target)
-                return converted.magnitude, dimension, False
+                return (
+                    converted.magnitude / (N_A**volume_power),
+                    dimension,
+                    False,
+                )
+
+            # [length]^n/[time] concentration rate (no substance)
+            target = self.volume_unit**volume_power / self.time_unit
+            converted = quantity.to(target)
+            return converted.magnitude, dimension, False
 
         except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
@@ -304,7 +323,7 @@ class ModelUnitContext:
                 f"Is the rate in the form [volume]**{volume_power}/[time]?"
             ) from e
 
-    def convert_counts(
+    def convert_counts(  # noqa: PLR0911
         self,
         quantity: int | float | Quantity | Any,
         volume: int | float,
@@ -331,7 +350,7 @@ class ModelUnitContext:
         try:
             if has_substance:
                 if has_length:
-                    # Concentration (e.g. molar, millimolar)
+                    # Concentration (e.g. molar, millimolar)  # noqa: ERA001
                     if self.substance_is_molar:
                         if self.substance_unit is None:
                             raise UnitError(
@@ -342,29 +361,26 @@ class ModelUnitContext:
                         converted = quantity.to(target)
                         # Multiply by volume to get amount
                         return converted.magnitude * volume
-                    else:
-                        # Convert to moles/volume_unit then to counts
-                        target = _ur.mole / self.volume_unit
-                        converted = quantity.to(target)
-                        return converted.magnitude * volume * N_A
+                    # Convert to moles/volume_unit then to counts
+                    target = _ur.mole / self.volume_unit
+                    converted = quantity.to(target)
+                    return converted.magnitude * volume * N_A
                 # Pure substance amount (e.g. 5 * u.mole)
-                elif self.substance_is_molar:
+                if self.substance_is_molar:
                     if self.substance_unit is None:
                         raise UnitError(
                             "substance_unit is required for molar substance conversion"
                         )
                     converted = quantity.to(self.substance_unit)
                     return converted.magnitude
-                else:
-                    converted = quantity.to(_ur.mole)
-                    return converted.magnitude * N_A
-            else:
-                if has_length:
-                    # Count concentration (e.g. 1/L)
-                    target = 1 / self.volume_unit
-                    converted = quantity.to(target)
-                    return converted.magnitude * volume
-                return quantity.magnitude
+                converted = quantity.to(_ur.mole)
+                return converted.magnitude * N_A
+            if has_length:
+                # Count concentration (e.g. 1/L)
+                target = 1 / self.volume_unit
+                converted = quantity.to(target)
+                return converted.magnitude * volume
+            return quantity.magnitude
 
         except (DimensionalityError, TypeError, ValueError) as e:
             raise UnitError(
@@ -477,7 +493,7 @@ def _extract_substance_unit(quantity: Quantity) -> Unit:  # type: ignore[type-ar
     for target in candidates:
         try:
             converted = isolated.to(target)
-            if 0.99 < abs(converted.magnitude) < 1.01:
+            if _UNIT_MATCH_LOWER < abs(converted.magnitude) < _UNIT_MATCH_UPPER:
                 return target  # type: ignore[no-any-return]
         except (DimensionalityError, TypeError, ValueError):
             continue
@@ -509,7 +525,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
         for target in candidates:
             try:
                 converted = q_norm.to(target)
-                if 0.99 < abs(converted.magnitude) < 1.01:
+                if _UNIT_MATCH_LOWER < abs(converted.magnitude) < _UNIT_MATCH_UPPER:
                     return target  # type: ignore[no-any-return]
             except (DimensionalityError, TypeError, ValueError):
                 continue
@@ -538,7 +554,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:  # type: i
         for target, _base_m3 in candidates_vol:
             try:
                 test = q.to(target)
-                if 0.99 < abs(test.magnitude) < 1.01:
+                if _UNIT_MATCH_LOWER < abs(test.magnitude) < _UNIT_MATCH_UPPER:
                     return target  # type: ignore[no-any-return]
             except (DimensionalityError, TypeError, ValueError):
                 continue
@@ -571,7 +587,7 @@ def _create_unit_def(model: Any, unit_id: str, pint_unit: Unit) -> None:
         components = _decompose_pint_unit(pint_unit)
 
     if components is None:
-        # Fallback: dimensionless
+        # Fallback: dimensionless  # noqa: ERA001
         components = [_SbmlUnitComponent(sbml.UNIT_KIND_DIMENSIONLESS)]
 
     ud = model.createUnitDefinition()

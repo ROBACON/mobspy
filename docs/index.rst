@@ -7,6 +7,7 @@ Welcome to the MobsPy's documentation!
    readme
    tutorial
    application
+   journal
 
 API
 ===

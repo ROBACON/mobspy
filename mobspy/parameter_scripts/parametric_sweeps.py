@@ -82,7 +82,7 @@ def unite_parameter_dictionaries(
     dict_2: dict[str, Any],
 ) -> dict[str, Any]:
     """Merge two parameter-usage dicts, unifying ``used_in`` sets."""
-    for key in dict_2:
+    for key in dict_2:  # noqa: PLC0206
         if key not in dict_1:
             dict_1[key] = dict_2[key]
         else:

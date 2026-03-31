@@ -68,12 +68,10 @@ def get_all_non_listed_characteristics(
         if dimension_cha:
             multi_list_char_struct.append(dimension_cha)
 
-    combinations = [
+    return [
         set(combo) | operator_characteristics
         for combo in ite_product(*multi_list_char_struct)
     ]
-
-    return combinations
 
 
 def new_reaction_with_new_characteristics(
@@ -93,7 +91,7 @@ def new_reaction_with_new_characteristics(
         New Reactions object.
     """
     # Build new reactants list
-    React: Any = Zero
+    React: Any = Zero  # noqa: N806
     for reactant in r.reactants:
         if reactant["object"] == spe_to_modify:
             rs = Reacting_Species(
@@ -110,10 +108,10 @@ def new_reaction_with_new_characteristics(
                 reactant["label"],
             )
 
-        React = React + rs
+        React = React + rs  # noqa: N806
 
     # Build new products list
-    Product: Any = Zero
+    Product: Any = Zero  # noqa: N806
     for product in r.products:
         if product["object"] == spe_to_modify:
             ps = Reacting_Species(
@@ -130,7 +128,7 @@ def new_reaction_with_new_characteristics(
                 product["label"],
             )
 
-        Product = Product + ps
+        Product = Product + ps  # noqa: N806
 
     # Create new reaction
     return React >> Product[r.rate]

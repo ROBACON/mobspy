@@ -8,7 +8,7 @@ import mobspy.data_handler.time_series_object as tso
 from mobspy.exceptions import ValidationError
 
 
-class Experimental_Data_Holder:
+class Experimental_Data_Holder:  # noqa: N801
     """Mixin that stores experimental data for parameter estimation."""
 
     def __init__(self) -> None:

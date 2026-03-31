@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import re
+from collections.abc import Callable
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -49,12 +50,38 @@ from mobspy.modules.species_operators import (  # noqa: F401
     Specific_Species_Operator,
     _ms_active_ctx,
 )
+from mobspy.types import RenderContext
 
 if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
 
     from mobspy.modules.meta_class import Species
     from mobspy.modules.model_unit_context import ModelUnitContext
+
+
+_QUANTITY_OPS: dict[str, Callable[..., Any]] = {
+    "__add__": Quantity.__add__,
+    "__radd__": Quantity.__radd__,  # type: ignore[dict-item, misc]
+    "__sub__": Quantity.__sub__,
+    "__rsub__": Quantity.__rsub__,
+    "__mul__": Quantity.__mul__,
+    "__rmul__": Quantity.__rmul__,  # type: ignore[dict-item, misc]
+    "__truediv__": Quantity.__truediv__,
+    "__rtruediv__": Quantity.__rtruediv__,
+}
+
+_RAW_OPS: dict[str, Callable[..., Any]] = {
+    "__add__": lambda a, b: a + b,
+    "__radd__": lambda a, b: b + a,
+    "__sub__": lambda a, b: a - b,
+    "__rsub__": lambda a, b: b - a,
+    "__mul__": lambda a, b: a * b,
+    "__rmul__": lambda a, b: b * a,
+    "__truediv__": lambda a, b: a / b,
+    "__rtruediv__": lambda a, b: b / a,
+    "__pow__": lambda a, b: a**b,
+    "__rpow__": lambda a, b: b**a,
+}
 
 
 class ExpressionDefiner:
@@ -147,49 +174,16 @@ class ExpressionDefiner:
         raw_first = first.q_object if isinstance(first, OverrideQuantity) else first
         raw_second = second.q_object if isinstance(second, OverrideQuantity) else second
 
-        q_object = None
         if isinstance(raw_first, Quantity) and isinstance(raw_second, Quantity):
-            if operation == "__add__":
-                q_object = Quantity.__add__(raw_first, raw_second)
-            elif operation == "__radd__":
-                q_object = Quantity.__radd__(raw_first, raw_second)  # type: ignore[misc]
-            elif operation == "__sub__":
-                q_object = Quantity.__sub__(raw_first, raw_second)
-            elif operation == "__rsub__":
-                q_object = Quantity.__rsub__(raw_first, raw_second)
-            elif operation == "__mul__":
-                q_object = Quantity.__mul__(raw_first, raw_second)
-            elif operation == "__rmul__":
-                q_object = Quantity.__rmul__(raw_first, raw_second)  # type: ignore[misc]
-            elif operation == "__truediv__":
-                q_object = Quantity.__truediv__(raw_first, raw_second)
-            elif operation == "__rtruediv__":
-                q_object = Quantity.__rtruediv__(raw_first, raw_second)
-        elif operation == "__add__":
-            q_object = raw_first + raw_second
-        elif operation == "__radd__":
-            q_object = raw_second + raw_first
-        elif operation == "__sub__":
-            q_object = raw_first - raw_second
-        elif operation == "__rsub__":
-            q_object = raw_second - raw_first
-        elif operation == "__mul__":
-            q_object = raw_first * raw_second
-        elif operation == "__rmul__":
-            q_object = raw_second * raw_first
-        elif operation == "__truediv__":
-            q_object = raw_first / raw_second
-        elif operation == "__rtruediv__":
-            q_object = raw_second / raw_first
-        elif operation == "__pow__":
-            q_object = raw_first**raw_second
-        elif operation == "__rpow__":
-            q_object = raw_second**raw_first
+            q_op = _QUANTITY_OPS.get(operation)
+            if q_op is not None:
+                return q_op(raw_first, raw_second)
 
-        if q_object is not None:
-            return q_object
-        else:
-            raise TypeError("Non Valid Operation resulted in no q_object creation")
+        raw_op = _RAW_OPS.get(operation)
+        if raw_op is not None:
+            return raw_op(raw_first, raw_second)
+
+        raise TypeError("Non Valid Operation resulted in no q_object creation")
 
     @staticmethod
     def _normalize_substance(value: Any) -> Any:
@@ -286,25 +280,20 @@ class ExpressionDefiner:
         if ufunc == np_add:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__radd__(inputs[0])
-            else:
-                raise CompilationError(self._NUMPY_ARRAY_ERR)
-        elif ufunc == np_subtract:
+            raise CompilationError(self._NUMPY_ARRAY_ERR)
+        if ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rsub__(inputs[0])
-            else:
-                raise CompilationError(self._NUMPY_ARRAY_ERR)
-        elif ufunc == np_multiply:
+            raise CompilationError(self._NUMPY_ARRAY_ERR)
+        if ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rmul__(inputs[0])
-            else:
-                raise CompilationError(self._NUMPY_ARRAY_ERR)
-        elif ufunc == np_divide:
+            raise CompilationError(self._NUMPY_ARRAY_ERR)
+        if ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return self.__rtruediv__(inputs[0])
-            else:
-                raise CompilationError(self._NUMPY_ARRAY_ERR)
-        else:
-            raise CompilationError("Numpy operation not yet supported by MobsPy")
+            raise CompilationError(self._NUMPY_ARRAY_ERR)
+        raise CompilationError("Numpy operation not yet supported by MobsPy")
 
     # T avoids problems with __getattr__ from units/quantities
     def __add__(self, other: Any) -> Any:
@@ -312,91 +301,76 @@ class ExpressionDefiner:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__add__")
             return self.create_from_new_operation(other, "+", count_op, conc_op, True)
-        else:
-            return self.non_expression_add(other)
+        return self.non_expression_add(other)
 
     def __radd__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__radd__")
             return self.create_from_new_operation(other, "+", count_op, conc_op, False)
-        else:
-            return self.non_expression_radd(other)
+        return self.non_expression_radd(other)
 
     def __sub__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__sub__")
             return self.create_from_new_operation(other, "-", count_op, conc_op, True)
-        else:
-            return self.non_expression_sub(other)
+        return self.non_expression_sub(other)
 
     def __rsub__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__rsub__")
             return self.create_from_new_operation(other, "-", count_op, conc_op, False)
-        else:
-            return self.non_expression_rsub(other)
+        return self.non_expression_rsub(other)
 
     def __mul__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__mul__")
             return self.create_from_new_operation(other, "*", count_op, conc_op, True)
-        else:
-            return self.non_expression_mul(other)
+        return self.non_expression_mul(other)
 
     def __rmul__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__rmul__")
             return self.create_from_new_operation(other, "*", count_op, conc_op, False)
-        else:
-            return self.non_expression_rmul(other)
+        return self.non_expression_rmul(other)
 
     def __truediv__(self, other: Any) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__truediv__")
             return self.create_from_new_operation(other, "/", count_op, conc_op, True)
-        else:
-            return self.non_expression_truediv(other)
+        return self.non_expression_truediv(other)
 
     def __rtruediv__(self, other: Any) -> Any:
         if self._ms_active:
             count_op, conc_op = self.execute_quantity_op(other, "__rtruediv__")
             return self.create_from_new_operation(other, "/", count_op, conc_op, False)
-        else:
-            return self.non_expression_rtruediv(other)
+        return self.non_expression_rtruediv(other)
 
     def __pow__(self, other: Any) -> Any:
-        # if type(other) != int and type(other) != float:
-        #    raise TypeError('Power must only be int or float')
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__pow__")
             return self.create_from_new_operation(other, "^", count_op, conc_op)
-        else:
-            return self.non_expression_pow(other)
+        return self.non_expression_pow(other)
 
     def __rpow__(self, other: Any) -> Any:
-        # if type(other) != int and type(other) != float:
-        #    raise TypeError('Power must only be int or float')
         if self._ms_active:
             other = check_if_non_expression_operated(other)
             count_op, conc_op = self.execute_quantity_op(other, "__rpow__")
             return self.create_from_new_operation(other, "^", count_op, conc_op, False)
-        else:
-            return self.non_expression_rpow(other)
+        return self.non_expression_rpow(other)
 
     def __neg__(self) -> Any:
         if self._ms_active:
             other = check_if_non_expression_operated(-1)
             count_op, conc_op = self.execute_quantity_op(-1, "__mul__")
             return self.create_from_new_operation(other, "*", count_op, conc_op, False)
-        else:
-            return self.non_expression_neg()
+        return self.non_expression_neg()
 
     def combine_binary_attributes(self, other: Any, attribute: str) -> bool:
         """
@@ -459,7 +433,7 @@ class ExpressionDefiner:
 
         self.species_list_operation_order: list[Any] = []
 
-    def create_from_new_operation(
+    def create_from_new_operation(  # noqa: PLR0913
         self,
         other: Any,
         symbol: str,
@@ -481,90 +455,20 @@ class ExpressionDefiner:
             direct_sense: Sense of the operation.
             operation: Current operation in the stack.
         """
-        _has_units: bool = False
-        try:
-            if self._has_units:
-                _has_units = True
-            if other._has_units:
-                _has_units = True
-        except AttributeError:
-            pass
-
-        try:
-            c1 = self._has_units
-        except AttributeError:
-            c1 = False
-        try:
-            c2 = other._has_units
-        except AttributeError:
-            c2 = False
-        if (
-            (c1 or c2)
-            and isinstance(count_op, Exception)
-            and isinstance(conc_op, Exception)
-        ):
-            raise UnitError(
-                "Incompatible units in expression. "
-                "Both the count and concentration interpretations failed:\n"
-                f"  count path: {count_op}\n"
-                f"  concentration path: {conc_op}\n"
-                "Check that all terms in additions/subtractions "
-                "have matching dimensions. "
-                "Example of an invalid expression: "
-                "(1/u.s) + (1*u.l/u.s)"
-            )
+        _has_units = _check_either_has_units(self, other)
+        _validate_unit_ops(self, other, count_op, conc_op)
 
         if isinstance(self, (Quantity, OverrideQuantity)):
-            self = QuantityConverter.convert_received_unit(self)  # type: ignore[assignment]
+            self = QuantityConverter.convert_received_unit(self)  # type: ignore[assignment]  # noqa: PLW0642
         if isinstance(other, (Quantity, OverrideQuantity)):
             other = QuantityConverter.convert_received_unit(other)
 
-        try:
-            if isinstance(count_op, Quantity):
-                count_op = QuantityConverter.convert_received_unit(count_op)
-        except (DimensionalityError, TypeError, ValueError) as e:
-            count_op = e
+        count_op = _safe_convert_unit_op(count_op)
+        conc_op = _safe_convert_unit_op(conc_op)
 
-        try:
-            if isinstance(conc_op, Quantity):
-                conc_op = QuantityConverter.convert_received_unit(conc_op)
-        except (DimensionalityError, TypeError, ValueError) as e:
-            conc_op = e
-
-        # Check if either operand has a symbolic (non-numeric) operation
-        self_is_symbolic = isinstance(self._operation, (str, ExprNode))
-        other_is_symbolic = isinstance(other, ExpressionDefiner) and isinstance(
-            other._operation, (str, ExprNode)
+        operation = _build_operation_node(
+            self, other, symbol, count_op, direct_sense, operation
         )
-
-        if self_is_symbolic or other_is_symbolic:
-            node_self = (
-                _to_expr_node(self.magnitude)
-                if isinstance(self, (Quantity, OverrideQuantity))
-                else _to_expr_node(self._operation)
-                if isinstance(self._operation, ExprNode)
-                else _to_expr_node(str(self))
-            )
-            node_other = (
-                _to_expr_node(other.magnitude)
-                if isinstance(other, (Quantity, OverrideQuantity))
-                else _to_expr_node(other._operation)
-                if isinstance(other, ExpressionDefiner)
-                and isinstance(other._operation, ExprNode)
-                else _to_expr_node(str(other))
-            )
-
-            if direct_sense:
-                left, right = node_self, node_other
-            else:
-                left, right = node_other, node_self
-
-            if operation is None:
-                operation = BinaryOpNode(left, symbol, right)
-        else:
-            if isinstance(count_op, Exception):
-                raise count_op
-            operation = count_op.magnitude
 
         new_parameter_set = self._parameter_set
         new_expression_variables = self._expression_variables
@@ -576,7 +480,6 @@ class ExpressionDefiner:
                 other._expression_variables
             )
 
-        # Accumulate species in operation order
         new_species_list_operation_order = list(
             getattr(self, "species_list_operation_order", [])
         )
@@ -612,27 +515,7 @@ class ExpressionDefiner:
         for variable in self._expression_variables:
             variable._operation = SpeciesRefNode(variable.species_string)
 
-        dimension_1 = None
-        if isinstance(self, MobsPyExpression):
-            dimension_1 = self._dimension
-
-        dimension_2 = None
-        if isinstance(other, MobsPyExpression):
-            dimension_2 = other._dimension
-
-        if dimension_1 is not None and dimension_2 is None:
-            dimension = dimension_1
-        elif dimension_1 is None and dimension_2 is not None:
-            dimension = dimension_2
-        elif dimension_1 is not None and dimension_2 is not None:
-            if dimension_1 != dimension_2:
-                raise TypeError(
-                    "Dimensions are inconsistent between "
-                    "different MobsPy expression objects"
-                )
-            dimension = dimension_1
-        else:
-            dimension = None
+        dimension = _resolve_dimension(self, other)
 
         return MobsPyExpression(
             species_string=NULL_SPECIES,
@@ -650,6 +533,125 @@ class ExpressionDefiner:
             has_units=_has_units,
             species_list_operation_order=new_species_list_operation_order,
         )
+
+
+def _check_either_has_units(self_obj: Any, other: Any) -> bool:
+    """Return True if either operand has units."""
+    _has_units = False
+    try:
+        if self_obj._has_units:
+            _has_units = True
+        if other._has_units:
+            _has_units = True
+    except AttributeError:
+        pass
+    return _has_units
+
+
+def _validate_unit_ops(self_obj: Any, other: Any, count_op: Any, conc_op: Any) -> None:
+    """Raise UnitError if both count and concentration unit operations failed."""
+    try:
+        c1 = self_obj._has_units
+    except AttributeError:
+        c1 = False
+    try:
+        c2 = other._has_units
+    except AttributeError:
+        c2 = False
+    if (
+        (c1 or c2)
+        and isinstance(count_op, Exception)
+        and isinstance(conc_op, Exception)
+    ):
+        raise UnitError(
+            "Incompatible units in expression. "
+            "Both the count and concentration interpretations failed:\n"
+            f"  count path: {count_op}\n"
+            f"  concentration path: {conc_op}\n"
+            "Check that all terms in additions/subtractions "
+            "have matching dimensions. "
+            "Example of an invalid expression: "
+            "(1/u.s) + (1*u.l/u.s)"
+        )
+
+
+def _safe_convert_unit_op(op: Any) -> Any:
+    """Convert a Quantity unit op via QuantityConverter.
+
+    Captures conversion failures as exceptions.
+    """
+    try:
+        if isinstance(op, Quantity):
+            op = QuantityConverter.convert_received_unit(op)
+    except (DimensionalityError, TypeError, ValueError) as e:
+        op = e
+    return op
+
+
+def _build_operation_node(  # noqa: PLR0913
+    self_obj: Any,
+    other: Any,
+    symbol: str,
+    count_op: Any,
+    direct_sense: bool,
+    operation: Any,
+) -> Any:
+    """Build the AST operation node or extract numeric magnitude."""
+    self_is_symbolic = isinstance(self_obj._operation, (str, ExprNode))
+    other_is_symbolic = isinstance(other, ExpressionDefiner) and isinstance(
+        other._operation, (str, ExprNode)
+    )
+
+    if self_is_symbolic or other_is_symbolic:
+        node_self = (
+            _to_expr_node(self_obj.magnitude)
+            if isinstance(self_obj, (Quantity, OverrideQuantity))
+            else _to_expr_node(self_obj._operation)
+            if isinstance(self_obj._operation, ExprNode)
+            else _to_expr_node(str(self_obj))
+        )
+        node_other = (
+            _to_expr_node(other.magnitude)
+            if isinstance(other, (Quantity, OverrideQuantity))
+            else _to_expr_node(other._operation)
+            if isinstance(other, ExpressionDefiner)
+            and isinstance(other._operation, ExprNode)
+            else _to_expr_node(str(other))
+        )
+
+        if direct_sense:
+            left, right = node_self, node_other
+        else:
+            left, right = node_other, node_self
+
+        if operation is None:
+            operation = BinaryOpNode(left, symbol, right)
+    else:
+        if isinstance(count_op, Exception):
+            raise count_op
+        operation = count_op.magnitude
+    return operation
+
+
+def _resolve_dimension(self_obj: Any, other: Any) -> int | None:
+    """Merge dimension from two expression operands."""
+    dimension_1 = (
+        self_obj._dimension if isinstance(self_obj, MobsPyExpression) else None
+    )
+    dimension_2 = other._dimension if isinstance(other, MobsPyExpression) else None
+
+    if dimension_1 is not None and dimension_2 is None:
+        return dimension_1
+    if dimension_1 is None and dimension_2 is not None:
+        return dimension_2
+    if dimension_1 is not None and dimension_2 is not None:
+        if dimension_1 != dimension_2:
+            raise TypeError(
+                "Dimensions are inconsistent between "
+                "different MobsPy expression objects"
+            )
+        return dimension_1
+    return None
 
 
 class OverrideUnitRegistry:
@@ -694,18 +696,35 @@ class QuantityConverter:
         Args:
             quantity: Received quantity to convert.
         """
+        is_override = isinstance(quantity, OverrideQuantity)
+        copied_quantity = deepcopy(quantity.q_object if is_override else quantity)
+
+        length_repl, time_repl, has_model_substance = cls._base_units_from_context(
+            model_context
+        )
+
+        to_convert_into, copied_quantity = cls._apply_dimension_replacements(
+            copied_quantity,
+            length_repl,
+            time_repl,
+            has_model_substance,
+            model_context,
+            quantity,
+        )
+
+        copied_quantity.ito(to_convert_into)
+
+        if not is_override:
+            return copied_quantity  # type: ignore[no-any-return]  # pyright: ignore[reportReturnType]
+        return OverrideQuantity(copied_quantity)  # pyright: ignore[reportReturnType]
+
+    @classmethod
+    def _base_units_from_context(
+        cls,
+        model_context: ModelUnitContext | None,
+    ) -> tuple[str, str, bool]:
+        """Extract base unit replacement strings from model context."""
         ur = u.unit_registry_object
-
-        is_override = False
-        if isinstance(quantity, OverrideQuantity):
-            is_override = True
-            copied_quantity = deepcopy(quantity.q_object)
-        else:
-            copied_quantity = deepcopy(quantity)
-
-        to_convert_into = str(copied_quantity.dimensionality)
-
-        # Determine base units from model_context or defaults
         length_repl = "dm"
         time_repl = "s"
         has_model_substance = False
@@ -720,17 +739,34 @@ class QuantityConverter:
             time_repl = str(model_context.time_unit)
             has_model_substance = model_context.substance_is_molar
 
-        if "[length]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[length]", length_repl)
-        if "[time]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[time]", time_repl)
-        if "[temperature]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[temperature]", "K")
-        if "[mass]" in to_convert_into:
-            to_convert_into = to_convert_into.replace("[mass]", "kg")
+        return length_repl, time_repl, has_model_substance
+
+    @classmethod
+    def _apply_dimension_replacements(  # noqa: PLR0913
+        cls,
+        copied_quantity: Any,
+        length_repl: str,
+        time_repl: str,
+        has_model_substance: bool,
+        model_context: ModelUnitContext | None,
+        original_quantity: Any,
+    ) -> tuple[str, Any]:
+        """Replace dimension placeholders in the dimensionality string."""
+        ur = u.unit_registry_object
+        to_convert_into = str(copied_quantity.dimensionality)
+
+        _simple_replacements: dict[str, str] = {
+            "[length]": length_repl,
+            "[time]": time_repl,
+            "[temperature]": "K",
+            "[mass]": "kg",
+        }
+        for dim_key, repl in _simple_replacements.items():
+            if dim_key in to_convert_into:
+                to_convert_into = to_convert_into.replace(dim_key, repl)
+
         if "[substance]" in to_convert_into:
             mol_power = int(dict(copied_quantity.dimensionality).get("[substance]", 1))
-
             if has_model_substance:
                 sub_repl = str(model_context.substance_unit)  # type: ignore[union-attr]
                 to_convert_into = to_convert_into.replace("[substance]", sub_repl)
@@ -738,17 +774,12 @@ class QuantityConverter:
                 copied_quantity = copied_quantity * (N_A / (1 * ur.mol)) ** mol_power
                 if "[substance]" in str(copied_quantity.dimensionality):
                     raise TypeError(
-                        f"Could not convert molar quantity {quantity} "
+                        f"Could not convert molar quantity {original_quantity} "
                         f"(substance power={mol_power})"
                     )
                 to_convert_into = to_convert_into.replace("[substance]", "1")
 
-        copied_quantity.ito(to_convert_into)
-
-        if not is_override:
-            return copied_quantity  # pyright: ignore[reportReturnType]
-        else:
-            return OverrideQuantity(copied_quantity)  # pyright: ignore[reportReturnType]
+        return to_convert_into, copied_quantity
 
 
 class OverrideQuantity(ExpressionDefiner, Quantity):
@@ -781,37 +812,32 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         if ufunc == np_add:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) + self.q_object)  # pyright: ignore[reportReturnType]
-            else:
-                raise CompilationError(
-                    "MobsPy does not yet support array-wise "
-                    "numpy operations, only element-wise"
-                )
-        elif ufunc == np_subtract:
+            raise CompilationError(
+                "MobsPy does not yet support array-wise "
+                "numpy operations, only element-wise"
+            )
+        if ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) - self.q_object)  # pyright: ignore[reportReturnType]
-            else:
-                raise CompilationError(
-                    "MobsPy does not yet support array-wise "
-                    "numpy operations, only element-wise"
-                )
-        elif ufunc == np_multiply:
+            raise CompilationError(
+                "MobsPy does not yet support array-wise "
+                "numpy operations, only element-wise"
+            )
+        if ufunc == np_multiply:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) * self.q_object)  # pyright: ignore[reportReturnType]
-            else:
-                raise CompilationError(
-                    "MobsPy does not yet support array-wise "
-                    "numpy operations, only element-wise"
-                )
-        elif ufunc == np_divide:
+            raise CompilationError(
+                "MobsPy does not yet support array-wise "
+                "numpy operations, only element-wise"
+            )
+        if ufunc == np_divide:
             if isinstance(inputs[0], (np_int_, np_float_)):
                 return OverrideQuantity(float(inputs[0]) / self.q_object)  # pyright: ignore[reportReturnType]
-            else:
-                raise CompilationError(
-                    "MobsPy does not yet support array-wise "
-                    "numpy operations, only element-wise"
-                )
-        else:
-            raise CompilationError("Numpy operation not yet supported by MobsPy")
+            raise CompilationError(
+                "MobsPy does not yet support array-wise "
+                "numpy operations, only element-wise"
+            )
+        raise CompilationError("Numpy operation not yet supported by MobsPy")
         return None
 
     def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
@@ -956,7 +982,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
     def __str__(self) -> str:
         return str(self._operation)
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         species_string: str,
         species_object: Species | None,
@@ -1038,13 +1064,8 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 debugging.
             reaction_order: Order of the reaction - to check if the unit is correct.
         """
-        ur = u.unit_registry_object
-
         if dimension is None:
-            if self._dimension is None:  # noqa: SIM108
-                dimension = 3
-            else:
-                dimension = self._dimension
+            dimension = 3 if self._dimension is None else self._dimension
 
         operation = str(self._operation)
 
@@ -1054,22 +1075,36 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         if not self._has_units:
             self._count_in_expression = True
 
-        # Resolve effective model_context (parameter or instance attribute)
         _ctx = model_context or getattr(self, "_model_context", None)
+        _time_u, _vol_u = _resolve_validation_units(_ctx)
 
-        # Determine validation units from context or defaults
-        _time_u = ur.second
-        _vol_u = ur.decimeter
-        if _ctx is not None:
-            _time_u = ur.Quantity(1, str(_ctx.time_unit)).units  # type: ignore[assignment]
-            vol_q = ur.Quantity(1, str(_ctx.volume_unit))
-            vol_dim = dict(vol_q.dimensionality)
-            length_exp = int(vol_dim.get("[length]", 3))
-            if length_exp != 0:
-                _vol_u = (vol_q ** (1.0 / length_exp)).units
-            else:
-                _vol_u = ur.decimeter
+        early = self._check_constant_expression_units(
+            operation, reaction_order, dimension, _time_u, _vol_u
+        )
+        if early is not None:
+            return early
 
+        self._resolve_expression_mode(dimension, _time_u, _vol_u)
+
+        if isinstance(self._operation, ExprNode):
+            convert_operation = self._convert_ast_path()
+        else:
+            convert_operation = self._convert_legacy_string_path()
+
+        return convert_operation, self._count_in_expression
+
+    def _check_constant_expression_units(
+        self,
+        operation: str,
+        reaction_order: int | None,
+        dimension: int,
+        _time_u: Any,
+        _vol_u: Any,
+    ) -> tuple[str, bool] | None:
+        """Check unit match for constant (no-variable) expressions.
+
+        Returns early result or None.
+        """
         if (
             self._has_units
             and self._expression_variables == set()
@@ -1077,14 +1112,23 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         ):
             if self._unit_count_op.units == (1 / _time_u).units:  # pyright: ignore[reportAttributeAccessIssue]
                 return operation, True
-            elif self._unit_conc_op.units == (  # pyright: ignore[reportAttributeAccessIssue]
+            if self._unit_conc_op.units == (  # pyright: ignore[reportAttributeAccessIssue]
                 _vol_u ** (dimension * (reaction_order - 1)) / _time_u
             ):
                 return operation, False
+        return None
 
+    def _resolve_expression_mode(
+        self,
+        dimension: int,
+        _time_u: Any,
+        _vol_u: Any,
+    ) -> None:
+        """Determine whether expression uses counts or concentrations."""
         c1 = self._has_units
         c2 = isinstance(self._unit_count_op, Exception)
         c3 = isinstance(self._unit_conc_op, Exception)
+
         if c1 and (c2 and c3):
             raise TypeError(
                 "Unit resolution failed for reaction rate. "
@@ -1094,17 +1138,15 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 "Verify that all arithmetic operations have compatible dimensions."
             )
 
-        # If both count and concentration are valid, count takes priority
         if c1 and not c3:
-            if self._unit_conc_op.units == (1 / (_time_u * _vol_u**dimension)):
-                self._concentration_in_expression = True
-            elif self._unit_conc_op.units == (1 / _time_u):
-                # Concentration dimensions canceled (e.g. Michaelis-Menten)
+            conc_units = self._unit_conc_op.units
+            is_vol_rate = conc_units == (1 / (_time_u * _vol_u**dimension))
+            is_time_rate = conc_units == (1 / _time_u)
+            if is_vol_rate or is_time_rate:
                 self._concentration_in_expression = True
 
-        if c1 and not c2:  # noqa: SIM102
-            if self._unit_count_op.units == (1 / _time_u):
-                self._count_in_expression = True
+        if c1 and not c2 and self._unit_count_op.units == (1 / _time_u):
+            self._count_in_expression = True
 
         if (
             self._has_units
@@ -1120,118 +1162,158 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 "or 1/([time]*[volume]) for concentrations."
             )
 
-        if isinstance(self._operation, ExprNode):
-            # AST path: walk the tree to resolve species references
-            if (
-                not self._count_in_model
-                and not self._concentration_in_model
-                and not self._count_in_expression
-                and not self._concentration_in_expression
-            ):
-                raise ValueError(
-                    "The expression did not resolve for "
-                    "lack of concentration/count "
-                    "specifications"
-                )
+    def _convert_ast_path(self) -> str:
+        """Resolve expression via AST node tree."""
+        if (
+            not self._count_in_model
+            and not self._concentration_in_model
+            and not self._count_in_expression
+            and not self._concentration_in_expression
+        ):
+            raise ValueError(
+                "The expression did not resolve for "
+                "lack of concentration/count "
+                "specifications"
+            )
 
-            convert_operation = _render_resolved(
-                self._operation,
-                self._expression_variables,
+        convert_operation = _render_resolved(
+            self._operation,
+            self._expression_variables,
+            RenderContext(
+                count_in_model=self._count_in_model,
+                concentration_in_model=self._concentration_in_model,
+                count_in_expression=self._count_in_expression,
+                concentration_in_expression=self._concentration_in_expression,
+            ),
+        )
+
+        expr_vars = self._expression_variables
+        n_vars = len(expr_vars) if expr_vars else 0
+        if (
+            self._count_in_model
+            and self._concentration_in_expression
+            and not self._count_in_expression
+        ):
+            for _ in range(max(n_vars, 1)):
+                convert_operation = "(" + convert_operation + ")" + "*volume"
+        elif (
+            self._concentration_in_model
+            and self._count_in_expression
+            and not self._concentration_in_expression
+        ):
+            for _ in range(max(n_vars, 1)):
+                convert_operation = "(" + convert_operation + ")" + "/volume"
+        return convert_operation
+
+    def _convert_legacy_string_path(self) -> str:
+        """Resolve expression via legacy string replacement."""
+        convert_operation = str(self._operation)
+
+        for variable in self._expression_variables:
+            convert_operation = _apply_legacy_variable_conversion(
+                convert_operation,
+                variable,
                 self._count_in_model,
                 self._concentration_in_model,
                 self._count_in_expression,
                 self._concentration_in_expression,
             )
 
-            # Apply volume wrapper when model/expression contexts differ.
-            # Count takes priority when both flags are set.
-            # The wrapper is applied once per expression variable (matching
-            # the legacy per-variable loop behavior).
-            expr_vars = self._expression_variables
-            n_vars = len(expr_vars) if expr_vars else 0
-            if (
-                self._count_in_model
-                and self._concentration_in_expression
-                and not self._count_in_expression
-            ):
-                for _ in range(max(n_vars, 1)):
-                    convert_operation = "(" + convert_operation + ")" + "*volume"
-            elif (
-                self._concentration_in_model
-                and self._count_in_expression
-                and not self._concentration_in_expression
-            ):
-                for _ in range(max(n_vars, 1)):
-                    convert_operation = "(" + convert_operation + ")" + "/volume"
+        return convert_operation
+
+
+def _resolve_validation_units(
+    ctx: ModelUnitContext | None,
+) -> tuple[Any, Any]:
+    """Return (time_unit, volume_base_unit) from a model context or defaults."""
+    ur = u.unit_registry_object
+    _time_u = ur.second
+    _vol_u = ur.decimeter
+    if ctx is not None:
+        _time_u = ur.Quantity(1, str(ctx.time_unit)).units  # type: ignore[assignment]
+        vol_q = ur.Quantity(1, str(ctx.volume_unit))
+        vol_dim = dict(vol_q.dimensionality)
+        length_exp = int(vol_dim.get("[length]", 3))
+        if length_exp != 0:
+            _vol_u = (vol_q ** (1.0 / length_exp)).units
         else:
-            # Legacy string path fallback
-            convert_operation = str(self._operation)
+            _vol_u = ur.decimeter
+    return _time_u, _vol_u
 
-            for variable in self._expression_variables:
-                count_name = COUNT_PREFIX + variable.species_string
-                concentration_name = CONCENTRATION_PREFIX + variable.species_string
 
-                default_name = variable.species_string
-                replace_name = variable.species_string
+def _apply_legacy_variable_conversion(  # noqa: PLR0913
+    convert_operation: str,
+    variable: Any,
+    count_in_model: bool,
+    concentration_in_model: bool,
+    count_in_expression: bool,
+    concentration_in_expression: bool,
+) -> str:
+    """Apply count/concentration name substitutions for one variable.
 
-                if self._count_in_model:
-                    convert_operation = replace_spe_in_expr(
-                        convert_operation, count_name, replace_name
-                    )
-                    convert_operation = replace_spe_in_expr(
-                        convert_operation,
-                        concentration_name,
-                        "(" + replace_name + "/volume)",
-                    )
+    Used in the legacy string-based expression resolution mode.
+    """
+    count_name = COUNT_PREFIX + variable.species_string
+    concentration_name = CONCENTRATION_PREFIX + variable.species_string
+    default_name = variable.species_string
+    replace_name = variable.species_string
 
-                    if self._count_in_expression:
-                        pass  # count model + count expression: no conversion needed
-                    elif self._concentration_in_expression:
-                        convert_operation = replace_spe_in_expr(
-                            convert_operation,
-                            default_name,
-                            "(" + replace_name + "/volume)",
-                        )
-                        convert_operation = "(" + convert_operation + ")" + "*volume"
-                    else:
-                        raise ValueError(
-                            "The expression did not resolve for "
-                            "lack of concentration/count "
-                            "specifications"
-                        )
-                elif self._concentration_in_model:
-                    convert_operation = replace_spe_in_expr(
-                        convert_operation, concentration_name, replace_name
-                    )
-                    convert_operation = convert_operation.replace(
-                        count_name, "(" + replace_name + "*volume)"
-                    )
-                    convert_operation = replace_spe_in_expr(
-                        convert_operation,
-                        count_name,
-                        "(" + replace_name + "*volume)",
-                    )
+    if count_in_model:
+        convert_operation = replace_spe_in_expr(
+            convert_operation, count_name, replace_name
+        )
+        convert_operation = replace_spe_in_expr(
+            convert_operation,
+            concentration_name,
+            "(" + replace_name + "/volume)",
+        )
+        if count_in_expression:
+            pass
+        elif concentration_in_expression:
+            convert_operation = replace_spe_in_expr(
+                convert_operation,
+                default_name,
+                "(" + replace_name + "/volume)",
+            )
+            convert_operation = "(" + convert_operation + ")" + "*volume"
+        else:
+            raise ValueError(
+                "The expression did not resolve for "
+                "lack of concentration/count "
+                "specifications"
+            )
+    elif concentration_in_model:
+        convert_operation = replace_spe_in_expr(
+            convert_operation, concentration_name, replace_name
+        )
+        convert_operation = convert_operation.replace(
+            count_name, "(" + replace_name + "*volume)"
+        )
+        convert_operation = replace_spe_in_expr(
+            convert_operation,
+            count_name,
+            "(" + replace_name + "*volume)",
+        )
+        if count_in_expression:
+            convert_operation = convert_operation.replace(
+                default_name, "(" + replace_name + "*volume)"
+            )
+            convert_operation = replace_spe_in_expr(
+                convert_operation,
+                default_name,
+                "(" + replace_name + "*volume)",
+            )
+            convert_operation = "(" + convert_operation + ")" + "/volume"
+        elif concentration_in_expression:
+            pass
+        else:
+            raise ValueError(
+                "The expression did not resolve for "
+                "lack of concentration/count "
+                "specifications"
+            )
 
-                    if self._count_in_expression:
-                        convert_operation = convert_operation.replace(
-                            default_name, "(" + replace_name + "*volume)"
-                        )
-                        convert_operation = replace_spe_in_expr(
-                            convert_operation,
-                            default_name,
-                            "(" + replace_name + "*volume)",
-                        )
-                        convert_operation = "(" + convert_operation + ")" + "/volume"
-                    elif self._concentration_in_expression:
-                        pass  # conc model + conc expression: no conversion needed
-                    else:
-                        raise ValueError(
-                            "The expression did not resolve for "
-                            "lack of concentration/count "
-                            "specifications"
-                        )
-
-        return convert_operation, self._count_in_expression
+    return convert_operation
 
 
 def check_if_non_expression_operated(other: Any) -> Any:
@@ -1287,7 +1369,7 @@ def _set_species_mode_in_tree(operation: Any, species_string: str, mode: str) ->
     return operation
 
 
-class _Count_Base:
+class _Count_Base:  # noqa: N801
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:
@@ -1311,7 +1393,7 @@ class _Count_Base:
 Count = _Count_Base()
 
 
-class _Conc_Base:
+class _Conc_Base:  # noqa: N801
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression | None:
         try:
             for v in item._expression_variables:

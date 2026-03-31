@@ -65,7 +65,7 @@ class ValidationError(MobsPyError):
     pass
 
 
-class ImportError(MobsPyError):
+class ImportError(MobsPyError):  # noqa: A001
     """Errors related to module imports and dependencies."""
 
     pass

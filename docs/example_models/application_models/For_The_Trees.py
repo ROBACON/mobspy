@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # color cycling
     colors = ["green", "yellow", "brown"]
-    for color, next_color in zip(colors, colors[1:] + colors[:1]):
+    for color, next_color in zip(colors, colors[1:] + colors[:1], strict=False):
         Tree.c(color) >> Tree.c(next_color)[10 / u.year]
 
     # initial conditions

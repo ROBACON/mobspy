@@ -27,7 +27,7 @@ def query_plot_data(species: set[str] | list[str], data: Any) -> tuple[list[str]
 
     species_to_plot: set[str] = set()
     for time_series in data.ts_data:
-        for key in time_series.keys():  # noqa: SIM118
+        for key in time_series:
             if key in species:
                 species_to_plot.add(key)
 
@@ -59,7 +59,7 @@ def check_plot_parameters(species: list[str], plot_params: dict[str, Any]) -> No
         raise ValidationError("Time must not be a plot parameter name")
 
     for spe in species:
-        if spe in dictionary.keys():  # noqa: SIM118
+        if spe in dictionary:
             raise ValidationError(
                 f"Plotting is impossible, species {spe} is a parameter name"
             )
@@ -88,7 +88,7 @@ def time_filter_operation(
     new_time_data: list[float] = []
     new_data: list[float] = []
 
-    for t, d in zip(time_data, data):
+    for t, d in zip(time_data, data, strict=False):
         if t < low:
             continue
         if low < t < high:
@@ -107,7 +107,7 @@ def y_filter_operation(
     new_time_data: list[float] = []
     new_data: list[float] = []
 
-    for t, d in zip(time_data, data):
+    for t, d in zip(time_data, data, strict=False):
         if d < low_y:
             continue
         if low_y <= d <= high_y:

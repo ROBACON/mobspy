@@ -35,7 +35,7 @@ Promoter >> Zero[2.3e-2 / u.minute]
 """
     Simple loop through the gRNAs and Promoters for assigning the activation reaction
 """
-for Prom, Grna in zip(P, G):
+for Prom, Grna in zip(P, G, strict=False):
     act_rt = lambda dna: 5 / u.minute if dna.active else 0
     Prom >> Grna.no_cas + Prom[act_rt]
 
@@ -44,7 +44,7 @@ for Prom, Grna in zip(P, G):
     Here we use the characteristics of gRNA_rep_list as the different type of gRNAs
 """
 gRNA_rep_List = [G[-1], G[0], G[1]]
-for Prom, Grna in zip(P, gRNA_rep_List):
+for Prom, Grna in zip(P, gRNA_rep_List, strict=False):
     dna_rt1 = 1.2e-2 * u.liter / (u.nanomoles * u.second)
     dna_rt2 = 2.3e-2 / u.minute
     Prom.active + Grna.cas >> Prom.inactive[dna_rt1]

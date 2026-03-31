@@ -47,7 +47,9 @@ from mobspy.modules.unit_handler import (
     extract_length_dimension as uh_extract_length_dimension,
 )
 from mobspy.types import (
+    CompilationContext,
     CompilerResult,
+    CountAccumulator,
     EventData,
     ParameterUsedInfo,
     ReactionData,
@@ -225,13 +227,12 @@ class Compiler:
             dimension = 3
 
         for count in species_counts:
-            if isinstance(count["quantity"], Quantity):  # noqa: SIM102
-                if uh_extract_length_dimension(
+            if isinstance(count["quantity"], Quantity) and uh_extract_length_dimension(
+                str(count["quantity"].dimensionality), dimension
+            ):
+                dimension = uh_extract_length_dimension(
                     str(count["quantity"].dimensionality), dimension
-                ):
-                    dimension = uh_extract_length_dimension(
-                        str(count["quantity"].dimensionality), dimension
-                    )
+                )
 
         volume = uh_convert_volume(volume, dimension, model_context=model_context)
 
@@ -246,24 +247,18 @@ class Compiler:
     def _apply_count_to_species(
         quantity: Any,
         species_strings: set[str] | list[str],
-        species_for_sbml: SpeciesForSbml,
-        assigned_species: list[str],
-        parameters_in_counts: set[mp_Mobspy_Parameter],
-        parameters_used: ParametersUsed,
-        volume: int | float,
-        dimension: int,
-        type_of_model: str,
-        model_context: ModelUnitContext | None = None,
+        acc: CountAccumulator,
+        ctx: CompilationContext,
     ) -> None:
         """Register a parameter if applicable, convert count, and assign."""
         if isinstance(quantity, mp_Mobspy_Parameter):
-            parameters_in_counts.add(quantity)
-            if quantity.name in parameters_used:
-                parameters_used[quantity.name].used_in = parameters_used[
+            acc.parameters_in_counts.add(quantity)
+            if quantity.name in acc.parameters_used:
+                acc.parameters_used[quantity.name].used_in = acc.parameters_used[
                     quantity.name
                 ].used_in.union(set(species_strings))
             else:
-                parameters_used[quantity.name] = ParameterUsedInfo(
+                acc.parameters_used[quantity.name] = ParameterUsedInfo(
                     name=quantity.name,
                     values=quantity.value,
                     used_in=set(species_strings),
@@ -271,15 +266,15 @@ class Compiler:
                 )
 
         temp_count = uh_convert_counts(
-            quantity, volume, dimension, model_context=model_context
+            quantity, ctx.volume, ctx.dimension, model_context=ctx.model_context
         )
         for spe_str in species_strings:
-            if isinstance(temp_count, float) and type_of_model != "deterministic":
+            if isinstance(temp_count, float) and ctx.type_of_model != "deterministic":
                 _logger.warning("The stochastic simulation rounds floats to integers")
-                species_for_sbml[spe_str] = int(temp_count)
+                acc.species_for_sbml[spe_str] = int(temp_count)
             else:
-                species_for_sbml[spe_str] = temp_count
-            assigned_species.append(spe_str)
+                acc.species_for_sbml[spe_str] = temp_count
+            acc.assigned_species.append(spe_str)
 
     @classmethod
     def _assign_initial_counts(
@@ -287,18 +282,17 @@ class Compiler:
         species_counts: list[dict[str, Any]],
         species_for_sbml: SpeciesForSbml,
         orthogonal_vector_structure: dict[str, Any],
-        volume: int | float,
-        dimension: int,
-        type_of_model: str,
         parameters_used: ParametersUsed,
-        model_context: ModelUnitContext | None = None,
+        ctx: CompilationContext,
     ) -> tuple[list[str], set[mp_Mobspy_Parameter]]:
         """Process species counts and assign initial values.
 
         Returns (assigned_species, parameters_in_counts).
         """
-        assigned_species: list[str] = []
-        parameters_in_counts: set[mp_Mobspy_Parameter] = set()
+        acc = CountAccumulator(
+            species_for_sbml=species_for_sbml,
+            parameters_used=parameters_used,
+        )
 
         # All-assignments first (lower priority, can be overridden)
         for count in species_counts:
@@ -317,14 +311,8 @@ class Compiler:
             cls._apply_count_to_species(
                 count["quantity"],
                 species_strings,
-                species_for_sbml,
-                assigned_species,
-                parameters_in_counts,
-                parameters_used,
-                volume,
-                dimension,
-                type_of_model,
-                model_context,
+                acc,
+                ctx,
             )
 
         # Specific assignments (higher priority)
@@ -347,17 +335,11 @@ class Compiler:
             cls._apply_count_to_species(
                 count["quantity"],
                 [species_string],
-                species_for_sbml,
-                assigned_species,
-                parameters_in_counts,
-                parameters_used,
-                volume,
-                dimension,
-                type_of_model,
-                model_context,
+                acc,
+                ctx,
             )
 
-        return assigned_species, parameters_in_counts
+        return acc.assigned_species, acc.parameters_in_counts
 
     @classmethod
     def _build_reactions(
@@ -365,11 +347,7 @@ class Compiler:
         reactions_set: set[Any],
         meta_species_to_simulate: List_Species,
         orthogonal_vector_structure: dict[str, Any],
-        type_of_model: str,
-        dimension: int,
-        parameter_exist: dict[str, mp_Mobspy_Parameter],
-        skip_expression_check: bool,
-        model_context: ModelUnitContext | None = None,
+        ctx: CompilationContext,
     ) -> tuple[ReactionsForSbml, set[mp_Mobspy_Parameter]]:
         """Expand meta-reactions into concrete SBML reactions."""
         reactions_set = cof_create_all_not_reactions(reactions_set)
@@ -379,12 +357,8 @@ class Compiler:
             reactions_set,
             meta_species_to_simulate,
             orthogonal_vector_structure,
-            type_of_model,
-            dimension,
-            parameter_exist,
             parameters_in_reaction,
-            skip_expression_check,
-            model_context=model_context,
+            ctx,
         )
         return reactions_for_sbml, parameters_in_reaction
 
@@ -417,15 +391,9 @@ class Compiler:
         cls,
         species_for_sbml: SpeciesForSbml,
         reactions_for_sbml: ReactionsForSbml,
-        event_dictionary: list[Any] | None,
         orthogonal_vector_structure: dict[str, Any],
-        volume: int | float,
-        dimension: int,
         meta_species_to_simulate: List_Species,
-        parameter_exist: dict[str, mp_Mobspy_Parameter],
-        continuous_sim: bool,
-        ending_condition: Any,
-        model_context: ModelUnitContext | None = None,
+        ctx: CompilationContext,
     ) -> tuple[dict[str, Any], set[mp_Mobspy_Parameter]]:
         """Build events and add phantom reactions for event-only species.
 
@@ -434,14 +402,11 @@ class Compiler:
         parameters_in_events: set[mp_Mobspy_Parameter] = set()
         events_for_sbml, species_in_events = eh_format_event_dictionary_for_sbml(
             species_for_sbml,
-            event_dictionary or [],
+            ctx.event_dictionary or [],
             orthogonal_vector_structure,
-            volume,
-            dimension,
             meta_species_to_simulate,
-            parameter_exist,
             parameters_in_events,
-            model_context=model_context,
+            ctx,
         )
 
         # Phantom reactions for species in events but not in reactions
@@ -456,9 +421,11 @@ class Compiler:
         )
 
         # End condition event for continuous simulations
-        if continuous_sim:
+        if ctx.continuous_sim:
             end_event = EventData(
-                trigger=ending_condition.generate_string(orthogonal_vector_structure),
+                trigger=ctx.ending_condition.generate_string(
+                    orthogonal_vector_structure
+                ),
                 delay="0",
                 assignments=[(END_FLAG_SPECIES_NAME, "1")],
             )
@@ -510,19 +477,19 @@ class Compiler:
         orthogonal_vector_structure: dict[str, Any],
     ) -> dict[str, Any]:
         """Compile species assignments for SBML."""
-        non_processed_assignments: dict[str, Any] = {}
-        for spe in meta_species_to_simulate:
-            for asgn, expression in spe._assignments.items():
-                non_processed_assignments[asgn] = expression  # noqa: PERF403
+        non_processed_assignments: dict[str, Any] = {
+            asgn: expression
+            for spe in meta_species_to_simulate
+            for asgn, expression in spe._assignments.items()
+        }
         return asgi_Assign.compile_assignments_for_sbml(
             non_processed_assignments,
             orthogonal_vector_structure,
             meta_species_to_simulate,
         )
 
-    @classmethod
-    def _generate_model_string(
-        cls,
+    @staticmethod
+    def _generate_model_string(  # noqa: PLR0913
         species_for_sbml: SpeciesForSbml,
         mappings_for_sbml: MappingsForSbml,
         parameters_for_sbml: ParametersForSbml,
@@ -584,12 +551,13 @@ class Compiler:
     # ------------------------------------------------------------------
 
     @classmethod
-    def compile(
+    def compile(  # noqa: PLR0913
         cls,
         meta_species_to_simulate: List_Species,
         reactions_set: set[Any],
         species_counts: list[dict[str, Any]],
         orthogonal_vector_structure: dict[str, Any],
+        *,
         volume: int | float | Quantity = 1,
         dimension: int | None = None,
         type_of_model: str = "deterministic",
@@ -630,8 +598,23 @@ class Compiler:
         # ModelUnitContext is passed from Simulation when full unit pipeline is active.
         # Do NOT auto-create here: downstream (SBML, results) must be ready first.
 
-        volume, dimension, parameters_for_sbml = cls._resolve_volume_and_dimension(
-            volume, dimension, species_counts, model_context
+        resolved_volume, resolved_dimension, parameters_for_sbml = (
+            cls._resolve_volume_and_dimension(
+                volume, dimension, species_counts, model_context
+            )
+        )
+
+        # Build shared compilation context
+        ctx = CompilationContext(
+            volume=resolved_volume,
+            dimension=resolved_dimension,
+            type_of_model=type_of_model,
+            model_context=model_context,
+            parameter_exist=parameter_exist,
+            skip_expression_check=skip_expression_check,
+            continuous_sim=continuous_sim,
+            ending_condition=ending_condition,
+            event_dictionary=event_dictionary,
         )
 
         # Add end flag species for continuous simulations
@@ -650,11 +633,8 @@ class Compiler:
             species_counts,
             species_for_sbml,
             orthogonal_vector_structure,
-            volume,
-            dimension,
-            type_of_model,
             parameters_used,
-            model_context=model_context,
+            ctx,
         )
         cls.add_to_parameters_to_sbml(
             parameters_used,
@@ -668,11 +648,7 @@ class Compiler:
             reactions_set,
             meta_species_to_simulate,
             orthogonal_vector_structure,
-            type_of_model,
-            dimension,
-            parameter_exist,
-            skip_expression_check,
-            model_context=model_context,
+            ctx,
         )
         cls.add_to_parameters_to_sbml(
             parameters_used,
@@ -688,15 +664,9 @@ class Compiler:
         events_for_sbml, parameters_in_events = cls._build_events(
             species_for_sbml,
             reactions_for_sbml,
-            event_dictionary,
             orthogonal_vector_structure,
-            volume,
-            dimension,
             meta_species_to_simulate,
-            parameter_exist,
-            continuous_sim,
-            ending_condition,
-            model_context=model_context,
+            ctx,
         )
         cls.add_to_parameters_to_sbml(
             parameters_used,

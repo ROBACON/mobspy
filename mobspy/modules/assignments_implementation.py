@@ -25,7 +25,7 @@ from mobspy.types import AssignmentData
 _asg_context_cv: ContextVar[bool] = ContextVar("_asg_context_cv", default=False)
 
 
-class Assignment_Operator:
+class Assignment_Operator:  # noqa: N801
     """Manages assignment context and compiles assignment expressions for SBML.
 
     Acts as a context manager that activates/deactivates assignment mode,
@@ -256,7 +256,7 @@ class Assignment_Operator:
         """Compile raw assignment definitions into SBML-ready AssignmentData entries."""
         assignments_for_sbml: AssignmentsForSbml = {}
         assignment_counter = 0
-        for asg in unprocessed_asgns:
+        for asg in unprocessed_asgns:  # noqa: PLC0206
             if ALL_CHAR not in asg[1]:
                 continue
 
@@ -279,7 +279,7 @@ class Assignment_Operator:
                 )
                 assignment_counter += 1
 
-        for asg in unprocessed_asgns:
+        for asg in unprocessed_asgns:  # noqa: PLC0206
             if ALL_CHAR in asg[1]:
                 continue
 
@@ -322,7 +322,7 @@ class Asg:
     Stores species and characteristics.
     """
 
-    assignments: dict[Any, Any] = {}
+    assignments: dict[Any, Any] = {}  # noqa: RUF012
 
     def __init__(self, meta_spe: Any, species_or_reacting: bool) -> None:
         Assign.set_context()
@@ -340,7 +340,7 @@ class Asg:
         self.species_or_reacting = species_or_reacting
 
     def __call__(self, assignment: Any) -> None:
-        for spe, key in zip(self.meta_spe, self.asgn_key):
+        for spe, key in zip(self.meta_spe, self.asgn_key, strict=False):
             spe._assignments[key] = assignment
         Assign.reset_context()
 

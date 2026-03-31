@@ -74,16 +74,18 @@ class MathFunctionWrapper:
             return self._create_expression(expression, new_operation)
 
         # Species passed
-        elif (
-            isinstance(expression, Species) or isinstance(expression, Reacting_Species)  # noqa: SIM101
+        if (
+            isinstance(expression, (Species, Reacting_Species))
         ) and Assign.check_context():
-            if isinstance(expression, Reacting_Species):  # noqa: SIM102
-                if len(expression.list_of_reactants) > 1:
-                    raise ValidationError(
-                        "Reacting species with multiple"
-                        " reactants should not be applied"
-                        " to a function"
-                    )
+            if (
+                isinstance(expression, Reacting_Species)
+                and len(expression.list_of_reactants) > 1
+            ):
+                raise ValidationError(
+                    "Reacting species with multiple"
+                    " reactants should not be applied"
+                    " to a function"
+                )
 
             expression = Assign.mul(1, expression)
             new_operation = FunctionCallNode(
@@ -91,13 +93,12 @@ class MathFunctionWrapper:
             )
             return self._create_expression(expression, new_operation)
 
-        else:
-            raise ValidationError(
-                f"ms_{self.name}() received an unsupported "
-                f"argument type: {type(expression).__name__}."
-                " Expected a species, MobsPyExpression,"
-                " or numeric value."
-            )
+        raise ValidationError(
+            f"ms_{self.name}() received an unsupported "
+            f"argument type: {type(expression).__name__}."
+            " Expected a species, MobsPyExpression,"
+            " or numeric value."
+        )
         return None
 
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from mobspy.modules.species import Species
 
 
-class List_Species:
+class List_Species:  # noqa: N801
     """Store species after the ``|`` operation.
 
     Creates a list of species that can be looped through or given
@@ -28,7 +28,7 @@ class List_Species:
         Args:
             iterable: Species to store.
         """
-        from mobspy.modules.species import Species
+        from mobspy.modules.species import Species  # noqa: PLC0415
 
         self._list_species: list[Species] = []
         for item in iterable:
@@ -45,7 +45,7 @@ class List_Species:
         Args:
             species: Meta-species to be added.
         """
-        from mobspy.modules.species import Species
+        from mobspy.modules.species import Species  # noqa: PLC0415
 
         if not isinstance(species, Species):
             raise ValidationError("Only Species can be appended")
@@ -53,10 +53,7 @@ class List_Species:
 
     def __str__(self) -> str:
         """String representation: list of meta-species names."""
-        to_return = []
-        for spe in self:
-            to_return.append(spe.get_name())
-        return str(to_return)
+        return str([spe.get_name() for spe in self])
 
     def __or__(self, other: Species | List_Species) -> Self:
         """Implementation of the ``|`` operator.
@@ -64,7 +61,7 @@ class List_Species:
         Args:
             other: Species or List_Species to combine.
         """
-        from mobspy.modules.species import Species
+        from mobspy.modules.species import Species  # noqa: PLC0415
 
         if isinstance(other, Species):
             self._list_species.append(other)
@@ -78,8 +75,7 @@ class List_Species:
         return self
 
     def __iter__(self) -> Generator[Species, None, None]:
-        for spe in self._list_species:  # noqa: UP028
-            yield spe
+        yield from self._list_species
 
     def __len__(self) -> int:
         return len(self._list_species)

@@ -38,7 +38,7 @@ def _get_any_stack() -> list[set[str]]:
         return lst
 
 
-class Context_specie_named_any(Species):
+class Context_specie_named_any(Species):  # noqa: N801
     """
     Class which inherits from Species. It only has one
     object, Any, which is defined at the end of this
@@ -114,7 +114,7 @@ class Context_specie_named_any(Species):
             Species.get_meta_specie_named_any_context() - previous_chars
         )
 
-    def __call__(self, quantity: TypingAny) -> None:
+    def __call__(self, quantity: TypingAny) -> None:  # noqa: ARG002
         """
         The call operator is overloaded as the Any specie
         cannot be called, as it is not supposed to be used

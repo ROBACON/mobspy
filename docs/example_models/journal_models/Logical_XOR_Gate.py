@@ -20,7 +20,7 @@ ara_entrace_rate, atc_entrace_rate = ModelParameters(
 
 # Death and movement reactions
 Mortal >> Zero[1]
-for x, y in zip(["c1", "c1", "c2", "c3"], ["c2", "c3", "c4", "c4"]):
+for x, y in zip(["c1", "c1", "c2", "c3"], ["c2", "c3", "c4", "c4"], strict=False):
     Movable.c(x) >> Movable.c(y)[0.1]
 
 

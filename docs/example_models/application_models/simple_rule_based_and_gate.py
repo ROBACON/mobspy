@@ -1,3 +1,5 @@
+"""Rule-based AND gate using promoter logic with Hill function dynamics."""
+
 import matplotlib.pyplot as plt
 import seaborn
 

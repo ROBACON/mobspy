@@ -23,7 +23,7 @@ def Read(Pro, R, strand):
     Rev[Pro + R.c("free_" + str(R)) >> Pro + R.c(sp).c("at_" + strand[0][0])][rate]
     next_location = strand[1:]
     # Movement of the reader
-    for (location, Product), (next_l, _) in zip(strand, next_location):
+    for (location, Product), (next_l, _) in zip(strand, next_location, strict=False):
         R.c(sp).c("at_" + location) >> R.c(sp).c("at_" + next_l) + Product[1]
     # Remove reader from final location
     R.c(sp).c("at_" + next_location[-1][0]) >> R.c(sp).c("free_" + str(R))[1]

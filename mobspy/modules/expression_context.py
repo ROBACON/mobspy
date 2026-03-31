@@ -17,7 +17,7 @@ def expression_compilation_finish() -> None:
     _ms_active_ctx.set(False)
 
 
-class Unit_Context_Setter:
+class Unit_Context_Setter:  # noqa: N801
     """Context manager for unit-aware compilation.
 
     Activates expression-building mode.

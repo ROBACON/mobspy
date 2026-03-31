@@ -22,15 +22,17 @@ from mobspy.modules.unit_handler import (
     convert_counts as uh_convert_counts,
 )
 
+_NAME_VALUE_PAIR_LEN = 2
 
-def sim_remove_reaction(sim: Any, reaction: Any, Simulation_Constructor: Any) -> Any:
+
+def sim_remove_reaction(sim: Any, reaction: Any, Simulation_Constructor: Any) -> Any:  # noqa: N803
     """Create a new simulation with the given reaction removed."""
     new_sim = Simulation_Constructor(sim.model)
     new_sim._reactions_set.remove(reaction)
     return new_sim
 
 
-class Simulation_Utils:
+class Simulation_Utils:  # noqa: N801
     """Mixin providing post-compilation model update utilities for Simulation."""
 
     _list_of_models: list[CompiledModelDict]
@@ -57,7 +59,7 @@ class Simulation_Utils:
 
         # Check every argument to see if it is in the proper format - len 2
         for arg in args:
-            if len(arg) != 2:
+            if len(arg) != _NAME_VALUE_PAIR_LEN:
                 raise SimulationError(
                     "In .update_model method - \n"
                     "Please all parameters and species changes"
@@ -117,15 +119,9 @@ class Simulation_Utils:
         except TypeError:
             iterable = False
 
-        if iterable:  # noqa: SIM108
-            value_to_update = arg[1][0]
-        else:
-            value_to_update = arg[1]
+        value_to_update = arg[1][0] if iterable else arg[1]
 
-        if isinstance(arg[0], str):  # noqa: SIM108
-            parameter_str = arg[0]
-        else:
-            parameter_str = arg[0].get_name()
+        parameter_str = arg[0] if isinstance(arg[0], str) else arg[0].get_name()
 
         # Update values on standard compiler
         for model in self._list_of_models:
@@ -156,10 +152,7 @@ class Simulation_Utils:
     def _update_species(self, arg: Any) -> None:
         """Update species counts in the compiled model, expanding queries if needed."""
         # Prepare count
-        if "volume" not in self.__dict__:  # noqa: SIM108
-            volume = 1
-        else:
-            volume = self.__dict__["volume"]
+        volume = self.__dict__.get("volume", 1)
         dimension = self.__dict__["dimension"]
 
         spe_count = uh_convert_counts(arg[1], volume, dimension)

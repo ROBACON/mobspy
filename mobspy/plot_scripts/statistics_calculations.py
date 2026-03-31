@@ -24,10 +24,9 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
         A list with the average values from all runs.
     """
 
-    list_series: list[Any] = []
-    for series in mobspy_ts:
-        if species_string in series.keys():  # noqa: SIM118
-            list_series.append(series)
+    list_series: list[Any] = [
+        series for series in mobspy_ts if species_string in series
+    ]
 
     war_1, war_2 = (True, True)
     for s1 in list_series:
@@ -43,7 +42,7 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
                 )
                 war_1 = False
 
-            for t1, t2 in zip(s1["Time"], s2["Time"]):
+            for t1, t2 in zip(s1["Time"], s2["Time"], strict=False):
                 if t1 != t2 and war_2:
                     _logger.warning(
                         "Times in Time Series Objects are different. \n"
@@ -139,7 +138,7 @@ def average_plus_standard_deviation(
 
     plus: list[float] = []
     minus: list[float] = []
-    for average, deviation in zip(series_average, series_deviation):
+    for average, deviation in zip(series_average, series_deviation, strict=False):
         plus.append(average + deviation)
         minus.append(average - deviation)
 

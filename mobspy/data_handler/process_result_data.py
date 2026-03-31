@@ -74,7 +74,7 @@ def extract_time_and_volume_list(
     return volume_list, sim_time_list, flag_concentration
 
 
-def convert_data_to_desired_unit(
+def convert_data_to_desired_unit(  # noqa: PLR0913
     data: dict[str, list[float]],
     time_list: list[float],
     volume_list: list[float],
@@ -104,61 +104,77 @@ def convert_data_to_desired_unit(
     converted_data = deepcopy(data)
 
     if unit_x is not None:
-        new_time: list[float] = []
-        # Time from COPASI is in model time units (default: seconds)
         time_unit = model_context.time_unit if model_context is not None else ur.seconds
-        for time in data["Time"]:
-            quantity = time * time_unit
-            new_time.append(quantity.to(unit_x).magnitude)  # pyright: ignore[reportAttributeAccessIssue]
-        converted_data["Time"] = new_time
-
-    def multiply_data_by_factor(data: dict[str, list[float]], factor: float) -> None:
-        """Scale all non-Time species data by a constant factor."""
-        for key in data:
-            if key == "Time":
-                continue
-
-            converted_data[key] = [count * factor for count in data[key]]
+        converted_data["Time"] = [
+            (time * time_unit).to(unit_x).magnitude  # pyright: ignore[reportAttributeAccessIssue]
+            for time in data["Time"]
+        ]
 
     if output_concentration:
         converted_data = convert_to_concentration(
             data, converted_data, volume_list, time_list
         )
 
-    # Convert substance units
-    _substance_is_molar = model_context is not None and model_context.substance_is_molar
     if unit_y is not None:
-        if "mol" in str(unit_y):
-            if not _substance_is_molar:
-                # Legacy: data is in items/counts, convert to moles first
-                multiply_data_by_factor(converted_data, N_A**-1)
-            if output_concentration:
-                if _substance_is_molar:
-                    # Data is in model substance/volume, convert to target
-                    source = (
-                        1 * model_context.substance_unit / model_context.volume_unit
-                    )
-                    factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-                else:
-                    factor = (1 * ur.molar).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-                multiply_data_by_factor(converted_data, factor)
-            else:
-                if _substance_is_molar:
-                    source = 1 * model_context.substance_unit
-                    factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-                else:
-                    factor = (1 * ur.moles).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-                multiply_data_by_factor(converted_data, factor)
-        elif output_concentration:
-            if _substance_is_molar:
-                # Data is already in substance/volume units
-                source = 1 / model_context.volume_unit
-                factor = source.to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-            else:
-                factor = (1 / ur.l).to(unit_y).magnitude  # pyright: ignore[reportAttributeAccessIssue]
-            multiply_data_by_factor(converted_data, factor)
+        _apply_unit_y_conversion(
+            converted_data,
+            unit_y,
+            output_concentration,
+            model_context,
+            ur,
+        )
 
     return converted_data
+
+
+def _multiply_data_by_factor(
+    converted_data: dict[str, list[float]],
+    factor: float,
+) -> None:
+    """Scale all non-Time species data by a constant factor."""
+    for key in list(converted_data):
+        if key == "Time":
+            continue
+        converted_data[key] = [count * factor for count in converted_data[key]]
+
+
+def _apply_unit_y_conversion(
+    converted_data: dict[str, list[float]],
+    unit_y: str,
+    output_concentration: bool,
+    model_context: Any,
+    ur: Any,
+) -> None:
+    """Apply substance/concentration unit conversion on the y-axis data."""
+    _substance_is_molar = model_context is not None and model_context.substance_is_molar
+
+    if "mol" in str(unit_y):
+        if not _substance_is_molar:
+            _multiply_data_by_factor(converted_data, N_A**-1)
+        if output_concentration:
+            if _substance_is_molar:
+                source = 1 * model_context.substance_unit / model_context.volume_unit
+            else:
+                source = 1 * ur.molar
+            _multiply_data_by_factor(
+                converted_data,
+                source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]
+            )
+        else:
+            if _substance_is_molar:
+                source = 1 * model_context.substance_unit
+            else:
+                source = 1 * ur.moles
+            _multiply_data_by_factor(
+                converted_data,
+                source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]
+            )
+    elif output_concentration:
+        source = 1 / model_context.volume_unit if _substance_is_molar else 1 / ur.l
+        _multiply_data_by_factor(
+            converted_data,
+            source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]
+        )
 
 
 def convert_to_concentration(

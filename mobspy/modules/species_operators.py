@@ -23,7 +23,7 @@ __all__ = [
 _ms_active_ctx: ContextVar[bool] = ContextVar("_ms_active_ctx", default=False)
 
 
-class Bool_Override:
+class Bool_Override:  # noqa: N801
     """
     Just a base class for implementing the . operation in the rate
     function arguments through boolean overriding. It is responsible
@@ -65,7 +65,7 @@ class Bool_Override:
         return to_return_boolean
 
 
-class Specific_Species_Operator(Bool_Override):
+class Specific_Species_Operator(Bool_Override):  # noqa: N801
     """
     Creates objects from species strings from the meta-species to
     pass them to rate functions as arguments. Uses Bool_Override to
@@ -127,12 +127,11 @@ class Specific_Species_Operator(Bool_Override):
             if self._species_object is None:
                 raise CompilationError("Species object is not set for this operator")
             return reference in self._species_object.get_references()
-        else:
-            raise CompilationError(
-                "Cannot chain is_a() with dot-notation characteristic queries. "
-                "Use them in separate conditions: "
-                "'r.is_a(X) and r.alive' instead of chaining."
-            )
+        raise CompilationError(
+            "Cannot chain is_a() with dot-notation characteristic queries. "
+            "Use them in separate conditions: "
+            "'r.is_a(X) and r.alive' instead of chaining."
+        )
 
     def add(self, characteristic: str) -> None:
         """

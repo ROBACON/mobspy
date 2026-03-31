@@ -67,14 +67,41 @@ def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
     code_line = code_line.replace(" ", "")
     names = code_line.split(",")
 
-    new_names = []
-    for name in names:
-        new_names.append(clean_species_name(name))
+    new_names = [clean_species_name(name) for name in names]
 
     return n, new_names
 
 
-def _Create_Species(
+def _validate_number_or_names(number_or_names: int | list[str] | None) -> None:
+    """Validate the number_or_names argument for species creation."""
+    if number_or_names is None:
+        return
+    if isinstance(number_or_names, int):
+        if number_or_names < 1:
+            raise ValidationError(
+                "Please use strictly positive integers for number of properties"
+            )
+    elif not isinstance(number_or_names, list):
+        raise ValidationError("Only numbers or lists of strings accepted")
+
+
+def _resolve_names(
+    code_line: str,
+    number_or_names: int | list[str] | None,
+) -> tuple[int, list[str]]:
+    """Resolve the number of species and their names from the caller's context."""
+    if isinstance(number_or_names, list):
+        return len(number_or_names), number_or_names
+
+    number_of_properties, compiled_names = compile_species_number_line(code_line)
+    if number_or_names is not None and number_of_properties != number_or_names:
+        raise ValidationError(
+            "The number of properties is not equal to the number of variables"
+        )
+    return number_of_properties, compiled_names
+
+
+def _Create_Species(  # noqa: N802
     species: Species | None,
     code_line: str,
     number_or_names: int | list[str] | None = None,
@@ -83,28 +110,8 @@ def _Create_Species(
 
     Infers names from the assignment source.
     """
-    if number_or_names is not None:
-        if isinstance(number_or_names, int):
-            if number_or_names < 1:
-                raise ValidationError(
-                    "Please use strictly positive integers for number of properties"
-                )
-        elif isinstance(number_or_names, list):
-            pass
-        else:
-            raise ValidationError("Only numbers or lists of strings accepted")
-
-    if number_or_names is None or isinstance(number_or_names, int):
-        number_of_properties, compiled_names = compile_species_number_line(code_line)
-        names = compiled_names
-        if number_or_names is not None:  # noqa: SIM102
-            if number_of_properties != number_or_names:
-                raise ValidationError(
-                    "The number of properties is not equal to the number of variables"
-                )
-    elif isinstance(number_or_names, list):
-        number_of_properties = len(number_or_names)
-        names = number_or_names
+    _validate_number_or_names(number_or_names)
+    number_of_properties, names = _resolve_names(code_line, number_or_names)
 
     to_return = []
     for i in range(number_of_properties):
@@ -122,11 +129,10 @@ def _Create_Species(
 
     if len(to_return) == 1:
         return to_return[0]
-    else:
-        return tuple(to_return)
+    return tuple(to_return)
 
 
-def BaseSpecies(
+def BaseSpecies(  # noqa: N802
     number_or_names: int | list[str] | None = None,
 ) -> Species | tuple[Species, ...]:
     """Return base species with no inheritance.
@@ -151,7 +157,7 @@ def BaseSpecies(
     return _Create_Species(None, code_line, number_or_names)
 
 
-def New(
+def New(  # noqa: N802
     species: Species,
     number_or_names: int | list[str] | None = None,
 ) -> Species | tuple[Species, ...]:
@@ -178,7 +184,7 @@ def New(
     return _Create_Species(species, code_line, number_or_names)
 
 
-def ListSpecies(
+def ListSpecies(  # noqa: N802
     number_of_elements: int,
     inherits_from: Species | None = None,
 ) -> List_Species:

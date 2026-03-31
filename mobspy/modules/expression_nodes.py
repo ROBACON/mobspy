@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from mobspy.constants import ASSIGNMENT_PREFIX, CONCENTRATION_PREFIX, COUNT_PREFIX
+from mobspy.types import RenderContext
 
 __all__ = [
     "BinaryOpNode",
@@ -70,9 +71,9 @@ class SpeciesRefNode(ExprNode):
     def render(self) -> str:
         if self.mode == "count":
             return COUNT_PREFIX + self.species_string
-        elif self.mode == "concentration":
+        if self.mode == "concentration":
             return CONCENTRATION_PREFIX + self.species_string
-        elif self.mode == "assignment":
+        if self.mode == "assignment":
             return "(" + ASSIGNMENT_PREFIX + self.species_string + ")"
         return self.species_string
 
@@ -136,12 +137,9 @@ def _to_expr_node(value: Any) -> ExprNode:
 
 
 def _render_resolved(
-    node: ExprNode,
+    node: ExprNode | int | float,
     expression_vars: set[Any],
-    count_in_model: bool,
-    concentration_in_model: bool,
-    count_in_expression: bool,
-    concentration_in_expression: bool,
+    render_ctx: RenderContext,
 ) -> str:
     """Render an AST with species references resolved for count/concentration context.
 
@@ -154,8 +152,12 @@ def _render_resolved(
       - 'assignment' -> rendered as-is (for ODE references)
     """
     var_names = {v.species_string for v in expression_vars}
+    count_in_model = render_ctx.count_in_model
+    concentration_in_model = render_ctx.concentration_in_model
+    count_in_expression = render_ctx.count_in_expression
+    concentration_in_expression = render_ctx.concentration_in_expression
 
-    def _resolve(n: ExprNode) -> str:
+    def _resolve(n: ExprNode) -> str:  # noqa: PLR0911
         """Resolve an expression node to its SBML string.
 
         Applies count/concentration conversion as needed.
@@ -164,34 +166,33 @@ def _render_resolved(
             name = n.species_string
             if n.mode == "assignment":
                 return n.render()
-            elif n.mode == "count":
+            if n.mode == "count":
                 if count_in_model:
                     return name
-                elif concentration_in_model:
+                if concentration_in_model:
                     return "(" + name + "*volume)"
                 return name
-            elif n.mode == "concentration":
+            if n.mode == "concentration":
                 if count_in_model:
                     return "(" + name + "/volume)"
-                elif concentration_in_model:
+                if concentration_in_model:
                     return name
                 return name
-            else:
-                # default mode - resolved by expression context
-                # Count takes priority when both flags are set
-                if (
-                    count_in_model
-                    and concentration_in_expression
-                    and not count_in_expression
-                ):
-                    return "(" + name + "/volume)"
-                elif (
-                    concentration_in_model
-                    and count_in_expression
-                    and not concentration_in_expression
-                ):
-                    return "(" + name + "*volume)"
-                return name
+            # default mode - resolved by expression context
+            # Count takes priority when both flags are set
+            if (
+                count_in_model
+                and concentration_in_expression
+                and not count_in_expression
+            ):
+                return "(" + name + "/volume)"
+            if (
+                concentration_in_model
+                and count_in_expression
+                and not concentration_in_expression
+            ):
+                return "(" + name + "*volume)"
+            return name
 
         if isinstance(n, BinaryOpNode):
             return "(" + _resolve(n.left) + n.op + _resolve(n.right) + ")"
@@ -199,4 +200,4 @@ def _render_resolved(
             return n.name + "(" + _resolve(n.arg) + ")"
         return n.render()
 
-    return _resolve(node)
+    return _resolve(_to_expr_node(node))
