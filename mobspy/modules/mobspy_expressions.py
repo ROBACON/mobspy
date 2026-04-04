@@ -6,7 +6,7 @@ import contextlib
 import re
 from collections.abc import Callable
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from numpy import (
     add as np_add,
@@ -26,7 +26,7 @@ from numpy import (
 from numpy import (
     subtract as np_subtract,
 )
-from pint import DimensionalityError, Quantity, UnitRegistry
+from pint import DimensionalityError, Quantity
 from scipy.constants import N_A
 
 from mobspy.constants import (
@@ -292,74 +292,77 @@ class ExpressionDefiner:
             raise CompilationError(self._NUMPY_ARRAY_ERR)
         raise CompilationError("Numpy operation not yet supported by MobsPy")
 
-    # T avoids problems with __getattr__ from units/quantities
+    # ----------------------------------------------------------------
+    # Operator dispatch table: (unit_op_name, symbol, direct_sense)
+    # ----------------------------------------------------------------
+    _EXPR_OPS: ClassVar[dict[str, tuple[str, str, bool]]] = {
+        "__add__": ("__add__", "+", True),
+        "__radd__": ("__radd__", "+", False),
+        "__sub__": ("__sub__", "-", True),
+        "__rsub__": ("__rsub__", "-", False),
+        "__mul__": ("__mul__", "*", True),
+        "__rmul__": ("__rmul__", "*", False),
+        "__truediv__": ("__truediv__", "/", True),
+        "__rtruediv__": ("__rtruediv__", "/", False),
+        "__pow__": ("__pow__", "^", True),
+        "__rpow__": ("__rpow__", "^", False),
+    }
+
+    def _expr_binop(self, other: Any, op_name: str) -> MobsPyExpression:
+        """Generic expression-mode binary operation."""
+        unit_op, symbol, direct = self._EXPR_OPS[op_name]
+        other = check_if_non_expression_operated(other)
+        count_op, conc_op = self.execute_quantity_op(other, unit_op)
+        return self.create_from_new_operation(other, symbol, count_op, conc_op, direct)
+
     def __add__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__add__")
-            return self.create_from_new_operation(other, "+", count_op, conc_op, True)
+            return self._expr_binop(other, "__add__")
         return self.non_expression_add(other)
 
     def __radd__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__radd__")
-            return self.create_from_new_operation(other, "+", count_op, conc_op, False)
+            return self._expr_binop(other, "__radd__")
         return self.non_expression_radd(other)
 
     def __sub__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__sub__")
-            return self.create_from_new_operation(other, "-", count_op, conc_op, True)
+            return self._expr_binop(other, "__sub__")
         return self.non_expression_sub(other)
 
     def __rsub__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__rsub__")
-            return self.create_from_new_operation(other, "-", count_op, conc_op, False)
+            return self._expr_binop(other, "__rsub__")
         return self.non_expression_rsub(other)
 
     def __mul__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__mul__")
-            return self.create_from_new_operation(other, "*", count_op, conc_op, True)
+            return self._expr_binop(other, "__mul__")
         return self.non_expression_mul(other)
 
     def __rmul__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__rmul__")
-            return self.create_from_new_operation(other, "*", count_op, conc_op, False)
+            return self._expr_binop(other, "__rmul__")
         return self.non_expression_rmul(other)
 
     def __truediv__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__truediv__")
-            return self.create_from_new_operation(other, "/", count_op, conc_op, True)
+            return self._expr_binop(other, "__truediv__")
         return self.non_expression_truediv(other)
 
     def __rtruediv__(self, other: Any) -> Any:
         if self._ms_active:
-            count_op, conc_op = self.execute_quantity_op(other, "__rtruediv__")
-            return self.create_from_new_operation(other, "/", count_op, conc_op, False)
+            return self._expr_binop(other, "__rtruediv__")
         return self.non_expression_rtruediv(other)
 
     def __pow__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__pow__")
-            return self.create_from_new_operation(other, "^", count_op, conc_op)
+            return self._expr_binop(other, "__pow__")
         return self.non_expression_pow(other)
 
     def __rpow__(self, other: Any) -> Any:
         if self._ms_active:
-            other = check_if_non_expression_operated(other)
-            count_op, conc_op = self.execute_quantity_op(other, "__rpow__")
-            return self.create_from_new_operation(other, "^", count_op, conc_op, False)
+            return self._expr_binop(other, "__rpow__")
         return self.non_expression_rpow(other)
 
     def __neg__(self) -> Any:
@@ -651,29 +654,11 @@ def _resolve_dimension(self_obj: Any, other: Any) -> int | None:
     return None
 
 
-class OverrideUnitRegistry:
-    """
-    It was necessary to override Pint's unit registry so it
-    behaves one way under context and normally without context
-    """
-
-    def __init__(self) -> None:
-        self.unit_registry_object = UnitRegistry()
-
-    def __call__(self, *args: Any, **kwargs: Any) -> OverrideQuantity:
-        q_object = self.unit_registry_object(*args, **kwargs)
-        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
-
-    def __getattr__(self, item: str) -> OverrideQuantity:
-        if item == "h":
-            item = "hour"
-
-        q_object = 1 * self.unit_registry_object.__getattr__(item)
-        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
-
-
-# u is defined here
-u = OverrideUnitRegistry()
+# Re-exported from unit_registry for backward compatibility
+from mobspy.modules.unit_registry import (  # noqa: E402
+    OverrideUnitRegistry as OverrideUnitRegistry,  # noqa: PLC0414
+)
+from mobspy.modules.unit_registry import u as u  # noqa: E402, PLC0414
 
 
 class QuantityConverter:
@@ -837,106 +822,65 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         raise CompilationError("Numpy operation not yet supported by MobsPy")
         return None
 
-    def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
-        """Perform unit-aware addition outside expression mode.
+    # Mapping from non_expression method name to (Quantity dunder, reverse dunder)
+    _Q_OPS: ClassVar[dict[str, tuple[str, str | None]]] = {
+        "add": ("__add__", "__radd__"),
+        "radd": ("__radd__", "__add__"),
+        "sub": ("__sub__", "__rsub__"),
+        "rsub": ("__rsub__", "__sub__"),
+        "mul": ("__mul__", "__rmul__"),
+        "rmul": ("__rmul__", "__mul__"),
+        "truediv": ("__truediv__", "__rtruediv__"),
+        "rtruediv": ("__rtruediv__", None),
+        "pow": ("__pow__", None),
+        "rpow": ("__rpow__", None),
+    }
 
-        Same pattern applies to all other ``non_expression_*`` methods
-        on OverrideQuantity: they delegate to Pint's Quantity arithmetic
-        when expression-building mode is not active.
+    def _q_binop(self, other: Any, op_key: str) -> OverrideQuantity | Any:
+        """Generic non-expression Quantity binary operation.
+
+        Delegates to Pint's Quantity arithmetic, handling OverrideQuantity
+        unwrapping and ExpressionDefiner reverse dispatch.
         """
+        q_method_name, reverse_dunder = self._Q_OPS[op_key]
+        q_method = getattr(Quantity, q_method_name)
         if isinstance(other, OverrideQuantity):
-            # Don't delegate to other.__radd__ to avoid infinite loops
-            # Just perform the operation directly
-            q_object = Quantity.__add__(self.q_object, other.q_object)
-        elif isinstance(other, ExpressionDefiner):
-            return other.__radd__(self)
+            q_object = q_method(self.q_object, other.q_object)
+        elif isinstance(other, ExpressionDefiner) and reverse_dunder is not None:
+            return getattr(other, reverse_dunder)(self)
         else:
-            q_object = Quantity.__add__(self.q_object, other)
-        return OverrideQuantity(q_object)
+            q_object = q_method(self.q_object, other)
+        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
+
+    def non_expression_add(self, other: Any) -> OverrideQuantity | Any:
+        return self._q_binop(other, "add")
 
     def non_expression_radd(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            # Don't delegate to other.__add__ to avoid infinite loops
-            # Just perform the operation directly
-            q_object = Quantity.__radd__(self.q_object, other.q_object)  # type: ignore[misc]
-        elif isinstance(other, ExpressionDefiner):
-            return other.__add__(self)
-        else:
-            q_object = Quantity.__radd__(self.q_object, other)  # type: ignore[misc]
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "radd")
 
     def non_expression_sub(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            # Don't delegate to other.__rsub__ to avoid infinite loops
-            # Just perform the operation directly
-            q_object = Quantity.__sub__(self.q_object, other.q_object)
-        elif isinstance(other, ExpressionDefiner):
-            return other.__rsub__(self)
-        else:
-            q_object = Quantity.__sub__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "sub")
 
     def non_expression_rsub(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            # Don't delegate to other.__sub__ to avoid infinite loops
-            # Just perform the operation directly
-            q_object = Quantity.__rsub__(self.q_object, other.q_object)
-        elif isinstance(other, ExpressionDefiner):
-            return other.__sub__(self)
-        else:
-            q_object = Quantity.__rsub__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "rsub")
 
     def non_expression_mul(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__mul__(self.q_object, other.q_object)
-        elif isinstance(other, ExpressionDefiner):
-            # If multiplying with an expression, delegate to its __rmul__
-            return other.__rmul__(self)
-        else:
-            q_object = Quantity.__mul__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "mul")
 
     def non_expression_rmul(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__rmul__(self.q_object, other.q_object)  # type: ignore[misc]
-        elif isinstance(other, ExpressionDefiner):
-            # If multiplying with an expression, delegate to its __mul__
-            return other.__mul__(self)
-        else:
-            q_object = Quantity.__rmul__(self.q_object, other)  # type: ignore[misc]
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "rmul")
 
     def non_expression_truediv(self, other: Any) -> OverrideQuantity | Any:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__truediv__(self.q_object, other.q_object)
-        elif isinstance(other, ExpressionDefiner):
-            # If dividing by an expression, delegate to its __rtruediv__
-            return other.__rtruediv__(self)
-        else:
-            q_object = Quantity.__truediv__(self.q_object, other)
-        return OverrideQuantity(q_object)
+        return self._q_binop(other, "truediv")
 
     def non_expression_rtruediv(self, other: Any) -> OverrideQuantity:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__rtruediv__(self.q_object, other.q_object)
-        else:
-            q_object = Quantity.__rtruediv__(self.q_object, other)
-        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
+        return self._q_binop(other, "rtruediv")
 
     def non_expression_pow(self, other: Any) -> OverrideQuantity:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__pow__(self.q_object, other.q_object)
-        else:
-            q_object = Quantity.__pow__(self.q_object, other)
-        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
+        return self._q_binop(other, "pow")
 
     def non_expression_rpow(self, other: Any) -> OverrideQuantity:
-        if isinstance(other, OverrideQuantity):
-            q_object = Quantity.__rpow__(self.q_object, other.q_object)
-        else:
-            q_object = Quantity.__rpow__(self.q_object, other)
-        return OverrideQuantity(q_object)  # pyright: ignore[reportReturnType]
+        return self._q_binop(other, "rpow")
 
     def __init__(self, quantity_object: Quantity) -> None:
         self._generate_necessary_attributes()

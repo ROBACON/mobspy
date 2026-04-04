@@ -15,7 +15,7 @@ from scipy.constants import N_A
 
 from mobspy.exceptions import UnitError
 from mobspy.modules.mobspy_expressions import OverrideQuantity
-from mobspy.modules.mobspy_expressions import u as _mobspy_u
+from mobspy.modules.unit_registry import u as _mobspy_u
 
 _ur = _mobspy_u.unit_registry_object
 

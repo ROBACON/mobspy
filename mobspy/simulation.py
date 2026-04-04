@@ -53,7 +53,6 @@ from mobspy.modules.list_species import List_Species
 from mobspy.modules.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
 )
-from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as _ParameterConstructor,
 )
@@ -82,9 +81,7 @@ from mobspy.modules.species_utils import (
 from mobspy.modules.unit_handler import (
     extract_length_dimension as uh_extract_length_dimension,
 )
-from mobspy.parameter_estimation_data_loader.data_loader import (
-    Experimental_Data_Holder as pdl_Experimental_Data_Holder,
-)
+from mobspy.modules.unit_registry import u
 from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
     basiCO_parameter_estimation,
 )
@@ -109,14 +106,8 @@ from mobspy.parameter_scripts.parametric_sweeps import (
 from mobspy.parameter_scripts.parametric_sweeps import (
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries,
 )
-from mobspy.plot_params.default_plot_reader import (
-    get_default_plot_parameters,
-)
 from mobspy.plotting import PlottingMixin, plot_results
-from mobspy.simulation_config import SimulationConfig
-from mobspy.simulator_object.utils import (
-    Simulation_Utils,
-)
+from mobspy.simulation_config import PlotConfig, SimulationConfig
 from mobspy.simulator_object.utils import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
@@ -164,22 +155,7 @@ _logger = get_logger(__name__)
 simlog = _logger
 
 
-class PlotConfigProxy:
-    """Proxy object for setting plot parameters via sim.plot_config.param = value."""
-
-    def __init__(self, plot_params: dict[str, TypingAny]) -> None:
-        object.__setattr__(self, "_plot_params", plot_params)
-
-    def __setattr__(self, name: str, value: TypingAny) -> None:
-        self._plot_params[name] = value
-
-    def __getattr__(self, name: str) -> TypingAny:
-        return self._plot_params.get(name)
-
-
 class Simulation(
-    pdl_Experimental_Data_Holder,
-    Simulation_Utils,
     EventHandlingMixin,
     ModelGenerationMixin,
     PlottingMixin,
@@ -189,12 +165,14 @@ class Simulation(
     Collects meta-species and reactions, compiles them via the Compiler into
     SBML, runs the simulation through BasiCO/COPASI, and stores the results.
 
+    Uses mixins for event handling, model generation, and plotting.
+
     Examples:
         >>> from mobspy import *
         >>> A, B = BaseSpecies(['A', 'B'])
         >>> _ = A >> B[1]
-        >>> A(10)  # doctest: +ELLIPSIS
-        <...>
+        >>> A(10)
+        Species('A')
         >>> S = Simulation(A | B)
         >>> S.duration = 5
         >>> _ = S.compile(verbose=False)
@@ -202,13 +180,14 @@ class Simulation(
         True
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         model: Species | List_Species,
         reactions: set[Reactions] | None = None,
         names: dict[str, TypingAny] | None = None,
         parameters: dict[str, TypingAny] | None = None,
         plot_parameters: dict[str, TypingAny] | None = None,
+        backend: TypingAny = None,
     ) -> None:
         """
         Constructor of the simulation object.
@@ -221,12 +200,20 @@ class Simulation(
             names: Optional dictionary of meta-species names in globals() format
             parameters: Optional dictionary of simulation parameters
             plot_parameters: Optional dictionary of plotting parameters
+            backend: Simulation backend (default: SBMLBackend).
+                Must conform to the ``SimulationBackend`` protocol.
 
         Raises:
             ValidationError: If model contains invalid species types
             ParameterError: If required parameters are missing
         """
-        super().__init__()
+        if backend is None:
+            from mobspy.backends import SBMLBackend  # noqa: PLC0415
+
+            self._backend = SBMLBackend()
+        else:
+            self._backend = backend
+        self.experimental_data: TypingAny = None
         self._declarations = snapshot_registry()
         self._init_event_state()
         self._init_model(model, names)
@@ -249,7 +236,7 @@ class Simulation(
         self._assigned_species_list: list[str] = []
         self._conditional_event = False
         self._end_condition = None
-        self.model_parameters = {}
+        self.model_parameters: dict[str, TypingAny] = {}
         self.sbml_data_list: ParameterSweepList = []
         self._parameter_list_of_dic: list[dict[str, TypingAny]] = []
         self._is_compiled = False
@@ -347,7 +334,9 @@ class Simulation(
             self.parameters = config  # type: ignore[assignment]
 
         if not plot_parameters:
-            self.plot_parameters = get_default_plot_parameters()
+            self.plot_parameters: dict[str, TypingAny] = PlotConfig()
+        else:
+            self.plot_parameters = PlotConfig(plot_parameters)
 
         self.results: MobsPyList_of_TS | dict[str, TypingAny] = {}
         self.fres: MobsPyList_of_TS | dict[str, TypingAny] = {}
@@ -366,6 +355,176 @@ class Simulation(
     def _set_parameter(self, name: str, value: TypingAny) -> None:
         """Set a simulation parameter directly, bypassing __setattr__."""
         self.__dict__["parameters"][name] = value
+
+    # ------------------------------------------------------------------
+    # Inlined from Experimental_Data_Holder
+    # ------------------------------------------------------------------
+
+    def load_experiment_data(self, data: TypingAny) -> None:
+        """Store experimental data for parameter estimation.
+
+        Args:
+            data: List of dicts or a MobsPyList_of_TS result.
+
+        Raises:
+            ValidationError: If the data format is invalid.
+        """
+        from mobspy.data_handler.time_series_object import (  # noqa: PLC0415
+            MobsPyList_of_TS as _TS,
+        )
+
+        flag_jump_checks = isinstance(data, _TS)
+        if not isinstance(data, list) and not flag_jump_checks:
+            raise ValidationError(
+                "Data added must be in the format of list with"
+                " each element being a dictionary "
+                "with species names and time as keys"
+                " or a MobsPy results object"
+            )
+        for e in data:
+            if not isinstance(e, dict) and not flag_jump_checks:
+                raise ValidationError(
+                    "Data added must be in the format of list"
+                    " with each element being a dictionary "
+                    "with species names and time as keys"
+                    " or a MobsPy results object"
+                )
+        self.experimental_data = data
+
+    # ------------------------------------------------------------------
+    # Inlined from Simulation_Utils
+    # ------------------------------------------------------------------
+
+    def update_model(self, *args: TypingAny) -> None:
+        """Update species counts or parameters on an already-compiled model.
+
+        Args:
+            *args: Pairs of ``(name, value)`` to update.
+
+        Raises:
+            SimulationError: If the model has not been compiled yet
+                or arguments are malformed.
+        """
+        if not self._list_of_models:
+            raise SimulationError(
+                "In .update_model method - \n"
+                "The model was not compiled yet. The update_model"
+                " method is reserved for simulations that "
+                "have already been compiled"
+            )
+        _NAME_VALUE_PAIR_LEN = 2  # noqa: N806
+        for arg in args:
+            if len(arg) != _NAME_VALUE_PAIR_LEN:
+                raise SimulationError(
+                    "In .update_model method - \n"
+                    "Please all parameters and species changes"
+                    " must be in the format: \n"
+                    "(name, value)"
+                )
+            self._update_from_compiler(arg)
+
+    def _update_from_compiler(self, arg: TypingAny) -> None:
+        """Dispatch a (name, value) update to either parameters or species."""
+        from mobspy.modules.mobspy_parameters import (  # noqa: PLC0415
+            Internal_Parameter_Constructor,
+        )
+        from mobspy.types import ConcreteSpeciesId as _CID  # noqa: PLC0415, N814
+
+        try:
+            is_species = arg[0].is_spe_or_reac()
+        except AttributeError:
+            is_species = False
+
+        if isinstance(arg[0], Internal_Parameter_Constructor):
+            self._update_parameter(arg)
+        elif isinstance(arg[0], str):
+            test_model = self._list_of_models[0]
+            not_parameter = arg[0] not in test_model.parameters_for_sbml
+            display_key = _CID.from_sbml_id(arg[0]).to_display()
+            not_species = display_key not in test_model.species_for_sbml
+
+            if not not_parameter:
+                self._update_parameter(arg)
+            if not not_species:
+                self._update_species(arg)
+            if not_species and not_parameter:
+                raise SimulationError(
+                    f"The string {arg[0]} was not found either in parameters or species"
+                )
+        elif is_species:
+            self._update_species(arg)
+        else:
+            raise SimulationError("Unsupported argument type for model update")
+
+    def _update_parameter(self, arg: TypingAny) -> None:
+        """Update a parameter value across all compiled models."""
+        try:
+            iterable = iter(arg[1])
+        except TypeError:
+            iterable = False  # type: ignore[assignment]
+
+        value_to_update = arg[1][0] if iterable else arg[1]
+        parameter_str = arg[0] if isinstance(arg[0], str) else arg[0].get_name()
+
+        for model in self._list_of_models:
+            try:
+                model.parameters_for_sbml[parameter_str] = (
+                    value_to_update,
+                    "dimensionless",
+                )
+            except KeyError as e:
+                raise SimulationError(
+                    f"The parameter named {parameter_str} was not found in the model"
+                ) from e
+
+        parameter_object = self.model_parameters[parameter_str].object
+        parameter_object.update_value(arg[1])
+
+        try:
+            if not iterable:
+                self.model_parameters[parameter_str].values = [parameter_object.value]
+            else:
+                self.model_parameters[parameter_str].values = parameter_object.value
+        except KeyError as e:
+            raise SimulationError(
+                f"The parameter named {parameter_str} was not found in the model"
+            ) from e
+
+    def _update_species(self, arg: TypingAny) -> None:
+        """Update species counts in the compiled model."""
+        from mobspy.constants import ALL_CHAR as _ALL  # noqa: PLC0415
+        from mobspy.modules.species_string_generator import (  # noqa: PLC0415
+            construct_all_species_ids as sp_construct_all_species_ids,
+        )
+        from mobspy.modules.species_string_generator import (  # noqa: PLC0415
+            construct_species_id as sp_construct_species_id,
+        )
+        from mobspy.modules.unit_handler import (  # noqa: PLC0415
+            convert_counts as uh_convert_counts_fn,
+        )
+
+        volume = self.__dict__.get("volume", 1)
+        dimension = self.__dict__["dimension"]
+        model_context = getattr(self, "_model_context", None)
+
+        spe_count = uh_convert_counts_fn(
+            arg[1], volume, dimension, model_context=model_context
+        )
+
+        query = arg[0].get_query_characteristics()
+        if _ALL in query:
+            spe_ids = sp_construct_all_species_ids(
+                arg[0], query, self.orthogonal_vector_structure
+            )
+            for sid in spe_ids:
+                self._list_of_models[0].species_for_sbml[sid.to_sbml_id()] = spe_count
+        else:
+            spe_string = sp_construct_species_id(
+                arg[0],
+                query,
+                self.orthogonal_vector_structure,
+            ).to_sbml_id()
+            self._list_of_models[0].species_for_sbml[spe_string] = spe_count
 
     def compile(self, verbose: bool = True) -> str | None:
         """
@@ -859,6 +1018,7 @@ class Simulation(
             "_has_mole",
             "_model_context",
             "_declarations",
+            "_backend",
         }
     )
 
@@ -925,9 +1085,10 @@ class Simulation(
         return super().__getattribute__(item)
 
     @property
-    def plot_config(self) -> PlotConfigProxy:
+    def plot_config(self) -> PlotConfig:
         """Access plot configuration. Usage: sim.plot_config.param = value."""
-        return PlotConfigProxy(self.__dict__["plot_parameters"])
+        result: PlotConfig = self.__dict__["plot_parameters"]
+        return result
 
     def __getattr__(self, item: str) -> TypingAny:
         """Fallback attribute access: look up simulation parameters."""
@@ -1159,7 +1320,7 @@ class SimulationComposition:
                 sim._set_parameter(name, par)
 
     @property
-    def plot_config(self) -> PlotConfigProxy:
+    def plot_config(self) -> PlotConfig:
         """Access plot configuration via the base simulation."""
         return self.base_sim.plot_config
 

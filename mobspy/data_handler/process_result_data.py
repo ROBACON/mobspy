@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from scipy.constants import N_A
 
 from mobspy.mobspy_logging import get_logger
-from mobspy.modules.mobspy_expressions import u
+from mobspy.modules.unit_registry import u
 
 if TYPE_CHECKING:
     from mobspy.types import SimulationParameters

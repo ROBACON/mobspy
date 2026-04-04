@@ -8,7 +8,35 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
+
+# --- Simulation backend protocol ---
+
+
+@runtime_checkable
+class SimulationBackend(Protocol):
+    """Protocol for pluggable simulation backends.
+
+    The default backend is ``SBMLBackend`` which generates SBML
+    and runs simulations via BasiCO/COPASI. Custom backends can
+    be passed to ``Simulation(model, backend=my_backend)``.
+    """
+
+    def generate_model(
+        self, compiled: CompilerResult, model_context: Any = None
+    ) -> str:
+        """Generate a model string from compiled data."""
+        ...
+
+    def run(
+        self,
+        model_strings: list[Any],
+        parameters: list[Any],
+        jobs: int = -1,
+    ) -> list[Any]:
+        """Execute simulations and return raw results."""
+        ...
+
 
 # --- SBML data structures (compiler -> builder -> sbml_writer) ---
 

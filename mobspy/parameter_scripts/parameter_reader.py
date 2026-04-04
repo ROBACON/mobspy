@@ -15,7 +15,7 @@ from pint import Quantity
 
 import mobspy.modules.unit_handler as uh
 from mobspy.exceptions import ParameterError
-from mobspy.modules.mobspy_expressions import u
+from mobspy.modules.unit_registry import u
 
 
 def read_json(json_file_name: str) -> Any:

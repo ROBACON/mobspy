@@ -169,3 +169,29 @@ class SimulationConfig:
     def __iter__(self) -> Any:
         """Allow iteration over keys (for `for key in config` patterns)."""
         return iter(self.keys())
+
+
+class PlotConfig(dict[str, Any]):
+    """Plot configuration with attribute-style access.
+
+    Behaves as a regular dict (so existing code using ``plot_parameters[key]``
+    continues to work) while also supporting ``sim.plot_config.param = value``.
+
+    Examples:
+        >>> cfg = PlotConfig()
+        >>> cfg.unit_x = "hours"
+        >>> cfg["unit_x"]
+        'hours'
+        >>> cfg["simulation_method"] = "stochastic"
+        >>> cfg.simulation_method
+        'stochastic'
+    """
+
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self[name]
+        except KeyError:
+            return None
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        self[name] = value

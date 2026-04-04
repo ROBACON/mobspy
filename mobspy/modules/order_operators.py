@@ -61,24 +61,20 @@ class __Operator_Base:  # noqa: N801
     Operator[Reaction] to assign an order to the reaction.
     """
 
-    # Assign order structure
     def __getitem__(self, item: Any) -> Any:
-        try:
-            if isinstance(item, str):
-                return item + "." + ALL_CHAR
-
-            if item.is_species():
-                return item.c(ALL_CHAR)
-            if not item.is_species():
-                for reactant in item.list_of_reactants:
-                    reactant["characteristics"].add(ALL_CHAR)
-                return item
-        except AttributeError as e:
-            raise ReactionError(
-                "All can only be used on species, reacting"
-                " species and strings under set_count"
-            ) from e
-        return None
+        """Mark a species or reacting species for all-characteristic expansion."""
+        if isinstance(item, str):
+            return item + "." + ALL_CHAR
+        if isinstance(item, Species):
+            return item.c(ALL_CHAR)
+        if hasattr(item, "list_of_reactants"):
+            for reactant in item.list_of_reactants:
+                reactant["characteristics"].add(ALL_CHAR)
+            return item
+        raise ReactionError(
+            "All can only be used on species, reacting"
+            " species and strings under set_count"
+        )
 
     # Transform product function
     @staticmethod

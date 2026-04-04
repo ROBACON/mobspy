@@ -210,6 +210,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return self._name
         return Species.str_under_context(self, STD_CHAR)
 
+    def __repr__(self) -> str:
+        return f"Species({self._name!r})"
+
     def c(self, item: Any) -> Reacting_Species:
         """c query implementation, queries by value.
 

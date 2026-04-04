@@ -13,7 +13,8 @@ from typing import TYPE_CHECKING, Any
 from pint import DimensionalityError, Quantity
 
 from mobspy.exceptions import UnitError
-from mobspy.modules.mobspy_expressions import OverrideQuantity, u
+from mobspy.modules.mobspy_expressions import OverrideQuantity
+from mobspy.modules.unit_registry import u
 
 if TYPE_CHECKING:
     from mobspy.modules.model_unit_context import ModelUnitContext
