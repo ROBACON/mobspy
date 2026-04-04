@@ -83,7 +83,7 @@ class Simulation_Utils:  # noqa: N801
 
             # Check to see if string is in parameters
             try:
-                test_model["parameters_for_sbml"][arg[0]]
+                test_model.parameters_for_sbml[arg[0]]
                 self._update_parameter(arg)
                 not_parameter = False
             except KeyError:
@@ -91,7 +91,7 @@ class Simulation_Utils:  # noqa: N801
 
             # Check to see if string is in species
             try:
-                test_model["species_for_sbml"][arg[0].replace(DOT_SEPARATOR, ".")]
+                test_model.species_for_sbml[arg[0].replace(DOT_SEPARATOR, ".")]
                 self._update_species(arg)
                 not_species = False
             except KeyError:
@@ -126,7 +126,7 @@ class Simulation_Utils:  # noqa: N801
         # Update values on standard compiler
         for model in self._list_of_models:
             try:
-                model["parameters_for_sbml"][parameter_str] = (
+                model.parameters_for_sbml[parameter_str] = (
                     value_to_update,
                     "dimensionless",
                 )
@@ -168,11 +168,16 @@ class Simulation_Utils:  # noqa: N801
             )
 
             for spe_string in spe_string_list:
-                self._list_of_models[0]["species_for_sbml"][spe_string] = spe_count
+                self._list_of_models[0].species_for_sbml[spe_string] = spe_count
 
         else:
-            spe_string = sp_construct_species_char_list(
-                arg[0], query, self.orthogonal_vector_structure, symbol=DOT_SEPARATOR
+            spe_string = str(
+                sp_construct_species_char_list(
+                    arg[0],
+                    query,
+                    self.orthogonal_vector_structure,
+                    symbol=DOT_SEPARATOR,
+                )
             )
 
-            self._list_of_models[0]["species_for_sbml"][spe_string] = spe_count
+            self._list_of_models[0].species_for_sbml[spe_string] = spe_count

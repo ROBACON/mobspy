@@ -57,7 +57,7 @@ class TestUnitRateFunctions:
 
     def test_first_order_rate_with_time_unit(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[lambda r: 2 / u.hour * r]
+        A >> mobspy.Zero @ (lambda r: 2 / u.hour * r)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -72,12 +72,13 @@ class TestUnitRateFunctions:
         A, B = BaseSpecies()
         (
             A + B
-            >> mobspy.Zero[
+            >> mobspy.Zero
+            @ (
                 lambda r1, r2: (
                     (1 * u.millimolar / u.hour)
                     * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)
                 )
-            ]
+            )
         )
         A(100), B(200)
         S = Simulation(A | B)
@@ -90,7 +91,7 @@ class TestUnitRateFunctions:
 
     def test_zero_order_unit_rate(self):
         A = BaseSpecies()
-        mobspy.Zero >> A[1 / u.s]
+        mobspy.Zero >> A @ (1 / u.s)
         A(0)
         S = Simulation(A)
         S.level = -1
@@ -101,7 +102,7 @@ class TestUnitRateFunctions:
 
     def test_unit_rate_with_volume(self):
         A = BaseSpecies()
-        A + A >> mobspy.Zero[1 * u.liter / u.second]
+        A + A >> mobspy.Zero @ (1 * u.liter / u.second)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -111,7 +112,7 @@ class TestUnitRateFunctions:
 
     def test_rate_function_division_by_species(self):
         A, B = BaseSpecies()
-        A >> mobspy.Zero[lambda r: (10 / u.s) / (1 + r)]
+        A >> mobspy.Zero @ (lambda r: (10 / u.s) / (1 + r))
         A(50)
         S = Simulation(A)
         S.level = -1
@@ -122,7 +123,7 @@ class TestUnitRateFunctions:
 
     def test_mixed_unit_and_unitless_in_expression(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[lambda r: (1 / u.minute) * (r / (50 + r))]
+        A >> mobspy.Zero @ (lambda r: (1 / u.minute) * (r / (50 + r)))
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -133,14 +134,14 @@ class TestUnitRateFunctions:
     def test_rate_function_minute_hour_conversion(self):
         """Verify that 60/u.minute and 1/u.second produce the same rate."""
         A = BaseSpecies()
-        A >> mobspy.Zero[60 / u.minute]
+        A >> mobspy.Zero @ (60 / u.minute)
         A(100)
         S1 = Simulation(A)
         S1.level = -1
         r1 = S1.compile()
 
         A.reset_reactions()
-        A >> mobspy.Zero[1 / u.second]
+        A >> mobspy.Zero @ (1 / u.second)
         S2 = Simulation(A)
         S2.level = -1
         r2 = S2.compile()
@@ -162,7 +163,7 @@ class TestIsAInRates:
         Mortal = BaseSpecies()
         Protein = New(Mortal)
         mRNA = New(Mortal)
-        Mortal >> mobspy.Zero[lambda r: 0.01 if r.is_a(Protein) else 1.0]
+        Mortal >> mobspy.Zero @ (lambda r: 0.01 if r.is_a(Protein) else 1.0)
         Protein(100), mRNA(50)
         S = Simulation(Protein | mRNA)
         S.level = -1
@@ -178,7 +179,7 @@ class TestIsAInRates:
         Mortal = BaseSpecies()
         Fast = New(Mortal)
         Slow = New(Mortal)
-        Mortal >> mobspy.Zero[lambda r: 10 / u.hour if r.is_a(Fast) else 1 / u.hour]
+        Mortal >> mobspy.Zero @ (lambda r: 10 / u.hour if r.is_a(Fast) else 1 / u.hour)
         Fast(100), Slow(100)
         S = Simulation(Fast | Slow)
         S.level = -1
@@ -196,9 +197,8 @@ class TestIsAInRates:
         TypeB = New(Base)
         (
             Base + Base
-            >> mobspy.Zero[
-                lambda r1, r2: 1 * u.l / u.s if r1.is_a(TypeA) else 0.001 * u.l / u.s
-            ]
+            >> mobspy.Zero
+            @ (lambda r1, r2: 1 * u.l / u.s if r1.is_a(TypeA) else 0.001 * u.l / u.s)
         )
         TypeA(100), TypeB(50)
         S = Simulation(TypeA | TypeB)
@@ -214,9 +214,8 @@ class TestIsAInRates:
         Virus = New(Organism)
         (
             Organism
-            >> mobspy.Zero[
-                lambda r: (0.5 / u.min) * r if r.is_a(Bacterium) else (2 / u.min) * r
-            ]
+            >> mobspy.Zero
+            @ (lambda r: (0.5 / u.min) * r if r.is_a(Bacterium) else (2 / u.min) * r)
         )
         Bacterium(1000), Virus(500)
         S = Simulation(Bacterium | Virus)
@@ -232,7 +231,7 @@ class TestIsAInRates:
         # Leaf.is_a(Leaf) -> True, Leaf.is_a(Mid) -> True
         # Mid.is_a(Leaf) -> False, Mid.is_a(Mid) -> True
         # Base has no concrete instances (not in sim) so only Mid and Leaf get reactions
-        Base >> mobspy.Zero[lambda r: 1 if r.is_a(Leaf) else 0.5]
+        Base >> mobspy.Zero @ (lambda r: 1 if r.is_a(Leaf) else 0.5)
         Leaf(10), Mid(20)
         S = Simulation(Leaf | Mid)
         S.level = -1
@@ -256,7 +255,7 @@ class TestCharacteristicQueries:
     def test_single_characteristic(self):
         A = BaseSpecies()
         A.alive, A.dead
-        A >> mobspy.Zero[lambda r: 1 if r.alive else 0.5]
+        A >> mobspy.Zero @ (lambda r: 1 if r.alive else 0.5)
         A.alive(50), A.dead(50)
         S = Simulation(A)
         S.level = -1
@@ -271,7 +270,7 @@ class TestCharacteristicQueries:
     def test_characteristic_with_units(self):
         Cell = BaseSpecies()
         Cell.healthy, Cell.infected
-        Cell >> mobspy.Zero[lambda r: 0.01 / u.hour if r.healthy else 1 / u.hour]
+        Cell >> mobspy.Zero @ (lambda r: 0.01 / u.hour if r.healthy else 1 / u.hour)
         Cell.healthy(1000), Cell.infected(100)
         S = Simulation(Cell)
         S.level = -1
@@ -284,7 +283,7 @@ class TestCharacteristicQueries:
         A.a1, A.a2
         B.b1, B.b2
         Combo = A * B
-        Combo >> mobspy.Zero[lambda r: 1 if r.a1 else (2 if r.b1 else 3)]
+        Combo >> mobspy.Zero @ (lambda r: 1 if r.a1 else (2 if r.b1 else 3))
         S = Simulation(Combo)
         S.level = -1
         result = S.compile()
@@ -294,7 +293,7 @@ class TestCharacteristicQueries:
     def test_characteristic_with_rate_arithmetic_and_units(self):
         Gene = BaseSpecies()
         Gene.on, Gene.off
-        Gene >> mobspy.Zero[lambda r: (5 / u.min) * r if r.on else (0.1 / u.min) * r]
+        Gene >> mobspy.Zero @ (lambda r: (5 / u.min) * r if r.on else (0.1 / u.min) * r)
         Gene.on(10), Gene.off(90)
         S = Simulation(Gene)
         S.level = -1
@@ -307,7 +306,7 @@ class TestCharacteristicQueries:
     def test_characteristic_in_two_reactant_rate(self):
         A, B = BaseSpecies()
         A.fast, A.slow
-        A + B >> mobspy.Zero[lambda r1, r2: 1 if r1.fast else 0.1]
+        A + B >> mobspy.Zero @ (lambda r1, r2: 1 if r1.fast else 0.1)
         A.fast(50), A.slow(50), B(100)
         S = Simulation(A | B)
         S.level = -1
@@ -320,7 +319,7 @@ class TestCharacteristicQueries:
         Mortal.young, Mortal.old
         Human = New(Mortal)
         Animal = New(Mortal)
-        Mortal >> mobspy.Zero[lambda r: 0.1 if r.is_a(Human) and r.young else 1.0]
+        Mortal >> mobspy.Zero @ (lambda r: 0.1 if r.is_a(Human) and r.young else 1.0)
         Human.young(50), Human.old(50)
         Animal.young(30), Animal.old(30)
         S = Simulation(Human | Animal)
@@ -341,9 +340,8 @@ class TestCharacteristicQueries:
         TypeB = New(Base)
         (
             Base
-            >> mobspy.Zero[
-                lambda r: 10 / u.s if r.is_a(TypeA) and r.active else 0.1 / u.s
-            ]
+            >> mobspy.Zero
+            @ (lambda r: 10 / u.s if r.is_a(TypeA) and r.active else 0.1 / u.s)
         )
         TypeA.active(100), TypeA.inactive(50)
         TypeB.active(80), TypeB.inactive(40)
@@ -486,7 +484,7 @@ class TestParametersWithUnits:
 
         A = BaseSpecies()
         k = ModelParameters(1 / u.h)
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -498,7 +496,7 @@ class TestParametersWithUnits:
 
         A = BaseSpecies()
         k1, k2 = ModelParameters(0.1 / u.s, 50)
-        A >> mobspy.Zero[lambda r: k1 * r / (k2 + r)]
+        A >> mobspy.Zero @ (lambda r: k1 * r / (k2 + r))
         A(200)
         S = Simulation(A)
         S.level = -1
@@ -515,7 +513,7 @@ class TestParametersWithUnits:
         A = BaseSpecies()
         Km = ModelParameters(10 * u.millimolar)
         Vmax = ModelParameters(5 / u.s)
-        A >> mobspy.Zero[lambda r: Vmax * r / (Km + r)]
+        A >> mobspy.Zero @ (lambda r: Vmax * r / (Km + r))
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -534,7 +532,7 @@ class TestUnitCounts:
 
     def test_count_in_molecules(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(1000)
         S = Simulation(A)
         S.level = -1
@@ -544,7 +542,7 @@ class TestUnitCounts:
 
     def test_count_in_moles(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(1 * u.mol)
         S = Simulation(A)
         S.level = -1
@@ -556,7 +554,7 @@ class TestUnitCounts:
 
     def test_count_in_concentration_with_volume(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(1 * u.mol / u.liter)
         S = Simulation(A)
         S.level = -1
@@ -569,7 +567,7 @@ class TestUnitCounts:
 
     def test_dimensionless_count(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         a = 100 * u.l / u.l
         A(a)
         S = Simulation(A)
@@ -589,7 +587,7 @@ class TestVolumeAndDimension:
 
     def test_2d_model_with_units(self):
         A = BaseSpecies()
-        A + A >> mobspy.Zero[1 * u.decimeter**2 / u.s]
+        A + A >> mobspy.Zero @ (1 * u.decimeter**2 / u.s)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -599,7 +597,7 @@ class TestVolumeAndDimension:
 
     def test_3d_model_default(self):
         A = BaseSpecies()
-        A + A >> mobspy.Zero[1 * u.liter / u.second]
+        A + A >> mobspy.Zero @ (1 * u.liter / u.second)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -608,7 +606,7 @@ class TestVolumeAndDimension:
 
     def test_volume_conversion_ml_to_l(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(100)
         S = Simulation(A)
         S.volume = 500 * u.mL
@@ -627,10 +625,8 @@ class TestReversibleWithUnits:
     """Reversible reactions with unit-aware rates."""
 
     def test_rev_constant_rates_with_units(self):
-        from mobspy import Rev
-
         A, B = BaseSpecies()
-        Rev[A >> B][1 / u.s, 2 / u.s]
+        A >> B @ (1 / u.s, 2 / u.s)
         A(100), B(0)
         S = Simulation(A | B)
         S.level = -1
@@ -639,13 +635,11 @@ class TestReversibleWithUnits:
         assert len(kin) == 2
 
     def test_rev_lambda_rates_with_units(self):
-        from mobspy import Rev
-
         A, B = BaseSpecies()
-        Rev[A >> B][
+        A >> B @ (
             lambda r: (1 / u.hour) * r,
             lambda r: (0.5 / u.hour) * r,
-        ]
+        )
         A(100), B(0)
         S = Simulation(A | B)
         S.level = -1
@@ -672,7 +666,7 @@ class TestCharacteristicEqualityInRates:
             if Location(r1) == Location(r2)
             else 0.5 * u.decimeter**2 / u.h
         )
-        2 * Something >> 3 * Something[rate]
+        2 * Something >> 3 * Something @ rate
         S = Simulation(Something)
         S.level = -1
         S.volume = 1 * u.m**2
@@ -692,7 +686,7 @@ class TestEdgeCases:
     def test_zero_rate_with_units(self):
         """Zero rate with units should compile without error."""
         A = BaseSpecies()
-        A >> mobspy.Zero[0 / u.s]
+        A >> mobspy.Zero @ (0 / u.s)
         S = Simulation(A)
         S.level = -1
         result = S.compile()
@@ -703,7 +697,7 @@ class TestEdgeCases:
 
     def test_very_small_rate_with_units(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1e-15 / u.s]
+        A >> mobspy.Zero @ (1e-15 / u.s)
         A(1000)
         S = Simulation(A)
         S.level = -1
@@ -713,7 +707,7 @@ class TestEdgeCases:
 
     def test_rate_function_returning_species_times_unit(self):
         A = BaseSpecies()
-        A >> 2 * A[lambda r: r * (1 / u.s)]
+        A >> 2 * A @ (lambda r: r * (1 / u.s))
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -724,14 +718,14 @@ class TestEdgeCases:
     def test_multiple_unit_systems_consistent(self):
         """Same rate expressed in different units should compile."""
         A = BaseSpecies()
-        A >> mobspy.Zero[3600 / u.hour]
+        A >> mobspy.Zero @ (3600 / u.hour)
         A(100)
         S1 = Simulation(A)
         S1.level = -1
         r1 = S1.compile()
 
         A.reset_reactions()
-        A >> mobspy.Zero[60 / u.minute]
+        A >> mobspy.Zero @ (60 / u.minute)
         S2 = Simulation(A)
         S2.level = -1
         r2 = S2.compile()
@@ -742,7 +736,7 @@ class TestEdgeCases:
 
     def test_event_with_unit_condition(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1 / u.s]
+        A >> mobspy.Zero @ (1 / u.s)
         A(1 * u.mol)
         S = Simulation(A)
         S.level = -1
@@ -763,7 +757,7 @@ class TestSimulationRunWithUnits:
 
     def test_exponential_decay_with_units(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1 / u.s]
+        A >> mobspy.Zero @ (1 / u.s)
         A(1000)
         S = Simulation(A)
         S.duration = 5
@@ -775,7 +769,7 @@ class TestSimulationRunWithUnits:
 
     def test_growth_with_unit_rate(self):
         A = BaseSpecies()
-        A >> 2 * A[1 / u.minute]
+        A >> 2 * A @ (1 / u.minute)
         A(10)
         S = Simulation(A)
         S.duration = 60  # 60 seconds = 1 minute
@@ -789,7 +783,7 @@ class TestSimulationRunWithUnits:
         Mortal = BaseSpecies()
         Fast = New(Mortal)
         Slow = New(Mortal)
-        Mortal >> mobspy.Zero[lambda r: 10 / u.s if r.is_a(Fast) else 0.001 / u.s]
+        Mortal >> mobspy.Zero @ (lambda r: 10 / u.s if r.is_a(Fast) else 0.001 / u.s)
         Fast(1000), Slow(1000)
         S = Simulation(Fast | Slow)
         S.duration = 1
@@ -801,7 +795,7 @@ class TestSimulationRunWithUnits:
     def test_characteristic_rate_produces_different_dynamics(self):
         Cell = BaseSpecies()
         Cell.healthy, Cell.sick
-        Cell >> mobspy.Zero[lambda r: 0.001 if r.healthy else 1]
+        Cell >> mobspy.Zero @ (lambda r: 0.001 if r.healthy else 1)
         Cell.healthy(500), Cell.sick(500)
         S = Simulation(Cell)
         S.duration = 5
@@ -822,7 +816,7 @@ class TestModelInUserUnits:
     def test_compile_molar_species_uses_moles(self):
         """Species in moles should stay in moles, not be converted to N_A counts."""
         A = BaseSpecies()
-        A >> mobspy.Zero[1 / u.minute]
+        A >> mobspy.Zero @ (1 / u.minute)
         A(2 * u.mmol)
         S = Simulation(A)
         S.level = -1
@@ -834,7 +828,7 @@ class TestModelInUserUnits:
     def test_compile_molar_concentration_with_volume(self):
         """Molar concentration * volume should give moles."""
         A = BaseSpecies()
-        A >> mobspy.Zero[1 / u.second]
+        A >> mobspy.Zero @ (1 / u.second)
         A(0.5 * u.mol / u.liter)
         S = Simulation(A)
         S.volume = 2 * u.liter
@@ -847,7 +841,7 @@ class TestModelInUserUnits:
     def test_run_molar_model_time_axis(self):
         """Time axis in model time units when duration uses minutes."""
         A = BaseSpecies()
-        A >> mobspy.Zero[0.1 / u.minute]
+        A >> mobspy.Zero @ (0.1 / u.minute)
         A(1 * u.mol)
         S = Simulation(A)
         S.duration = 10 * u.minute
@@ -861,7 +855,7 @@ class TestModelInUserUnits:
         """Exponential decay A -> 0 with rate k: A(t) = A0 * exp(-k*t)."""
         A = BaseSpecies()
         k = 0.5  # 1/second (dimensionless)
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(1 * u.mol)
         S = Simulation(A)
         S.duration = 4
@@ -876,7 +870,7 @@ class TestModelInUserUnits:
     def test_plain_number_model_unchanged(self):
         """Model with no Pint units should produce identical results to legacy."""
         A = BaseSpecies()
-        A >> mobspy.Zero[0.1]
+        A >> mobspy.Zero @ 0.1
         A(100)
         S = Simulation(A)
         S.duration = 10

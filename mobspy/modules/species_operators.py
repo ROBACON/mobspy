@@ -9,7 +9,7 @@ from mobspy.constants import DOT_SEPARATOR, NULL_SPECIES
 from mobspy.exceptions import CompilationError
 
 if TYPE_CHECKING:
-    from mobspy.modules.meta_class import Species
+    from mobspy.modules.species import Species
 
 __all__ = [
     "Bool_Override",

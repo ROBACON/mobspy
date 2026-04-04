@@ -27,7 +27,7 @@ def test_def_by_str():
 
     A = BaseSpecies()
     A(A0)
-    A >> 2 * A[rate_fn]
+    A >> 2 * A @ rate_fn
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
@@ -47,7 +47,7 @@ def test_def_by_quantity():
 
     A = BaseSpecies()
     A(A0)
-    A >> 2 * A[rate_fn]
+    A >> 2 * A @ rate_fn
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
@@ -65,7 +65,7 @@ def test_def_by_quantity_with_run():
 
     A = BaseSpecies()
     A(A0)
-    A >> 2 * A[rate_fn]
+    A >> 2 * A @ rate_fn
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()
@@ -88,7 +88,7 @@ def test_print_vs_str():
 
     A = BaseSpecies()
     A(A0)
-    A >> 2 * A[rate_fn]
+    A >> 2 * A @ rate_fn
     MySim = Simulation(A)
     MySim.volume = 1 * u.mL
     MySim.compile()

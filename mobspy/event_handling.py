@@ -10,8 +10,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
+from mobspy.constants import STD_CHAR
 from mobspy.exceptions import EventError, ValidationError
-from mobspy.modules.meta_class import Species
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 from mobspy.types import SimulationEventData
 
 if TYPE_CHECKING:
@@ -138,3 +140,90 @@ class EventHandlingMixin:
             yield 0
         finally:
             self.event_context_add(time, "true")
+
+    def at(
+        self,
+        time: float | int | Quantity,
+        assignments: dict[Species | Reacting_Species, Any],
+    ) -> None:
+        """Define a time event without a context manager.
+
+        Equivalent to::
+
+            with S.event_time(t):
+                A(count)
+                B(count)
+
+        Args:
+            time: Time at which the event fires.
+            assignments: ``{species_or_reacting: count}`` pairs.
+        """
+        self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
+        event_counts = _resolve_event_assignments(assignments)
+        event_data = SimulationEventData(
+            event_time=time,
+            event_counts=event_counts,
+            trigger="true",
+        )
+        if event_counts:
+            self.total_packed_events.append(event_data)
+
+    def when(
+        self,
+        condition: Any,
+        assignments: dict[Species | Reacting_Species, Any],
+        delay: float | int | Quantity = 0,
+    ) -> None:
+        """Define a condition event without a context manager.
+
+        Equivalent to::
+
+            with S.event_condition(trigger, delay):
+                A(count)
+
+        Args:
+            condition: Trigger condition (e.g. ``A <= 10``).
+            assignments: ``{species_or_reacting: count}`` pairs.
+            delay: Delay after condition becomes true.
+        """
+        if isinstance(condition, (bool, float, int)):
+            raise ValidationError(
+                f"Invalid trigger type: {type(condition)}. "
+                "Do not use == for event conditions."
+            )
+        self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
+        event_counts = _resolve_event_assignments(assignments)
+        event_data = SimulationEventData(
+            event_time=delay,
+            event_counts=event_counts,
+            trigger=condition,
+        )
+        if event_counts:
+            self.total_packed_events.append(event_data)
+
+
+def _resolve_event_assignments(
+    assignments: dict[Species | Reacting_Species, Any],
+) -> list[dict[str, Any]]:
+    """Convert ``{species: count}`` dict into internal event count format."""
+    event_counts: list[dict[str, Any]] = []
+    for target, quantity in assignments.items():
+        if isinstance(target, Reacting_Species):
+            species_obj = target.list_of_reactants[0]["object"]
+            chars = target.list_of_reactants[0]["characteristics"]
+        elif isinstance(target, Species):
+            species_obj = target
+            chars = STD_CHAR
+        else:
+            raise ValidationError(
+                f"Event assignment keys must be Species or Reacting_Species, "
+                f"got {type(target)}"
+            )
+        event_counts.append(
+            {
+                "species": species_obj,
+                "characteristics": chars,
+                "quantity": quantity,
+            }
+        )
+    return event_counts

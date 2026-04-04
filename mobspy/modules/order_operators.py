@@ -9,12 +9,14 @@ that is a also a reaction operator.
 
 from __future__ import annotations
 
+import warnings
 from copy import deepcopy
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from mobspy.constants import ALL_CHAR, DOT_SEPARATOR, SET_SPECIES_PREFIX
 from mobspy.exceptions import ReactionError
-from mobspy.modules.meta_class import Reactions, Species
+from mobspy.modules.reactions import Reactions
+from mobspy.modules.species import Species
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
@@ -23,6 +25,29 @@ from mobspy.modules.species_string_generator import (
 )
 
 _REVERSIBLE_RATE_PAIR_LEN = 2
+
+
+@runtime_checkable
+class OrderOperator(Protocol):
+    """Protocol for reaction order operators (All, Default).
+
+    Allows type-annotating parameters that accept order operators::
+
+        def my_func(order: OrderOperator) -> None: ...
+        my_func(All)   # ok
+        my_func(Default)  # ok
+    """
+
+    def __getitem__(self, item: Any) -> Any: ...
+
+    def __call__(
+        self,
+        order_dictionary: dict[tuple[Any, Any], list[Any]],
+        product_species: list[dict[str, Any]],
+        model: list[Any] | set[Any],
+        ref_characteristics_to_object: dict[str, Any],
+        all_reactions: bool = False,
+    ) -> list[list[tuple[Any, Any]]]: ...
 
 
 class __Operator_Base:  # noqa: N801
@@ -406,9 +431,18 @@ class __Reversible_Base:  # noqa: N801
         Uses __Set_Reversible_Rate instance to set rates.
         Also creates the reverse reaction.
 
+        .. deprecated::
+            Use ``A >> B @ (k_fwd, k_rev)`` instead.
+
         Args:
             reaction: Object from the reaction class.
         """
+        warnings.warn(
+            "Rev[reaction][k_fwd, k_rev] is deprecated. "
+            "Use 'A >> B @ (k_fwd, k_rev)' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         reaction_direct = reaction
         reaction_reverse = Reactions(
             reaction_direct.products, reaction_direct.reactants

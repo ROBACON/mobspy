@@ -62,11 +62,11 @@ class TestAssign:
             pass
         try:
             simlog.global_simlog_level = -1
-            A >> mobspy.Zero[1]
+            A >> mobspy.Zero @ 1
         except (SystemExit, MobsPyError):
             pass
         A, B = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         B.assign(A / 2)
         S = Simulation(A | B)
         S.level = -1

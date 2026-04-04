@@ -10,7 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import SimulationError, ValidationError
-from mobspy.modules.meta_class import Reacting_Species, Species
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 from mobspy.plot_scripts.default_plots import (
     deterministic_plot as dp_deterministic_plot,
 )
@@ -30,6 +31,31 @@ if TYPE_CHECKING:
 
 if TYPE_CHECKING:
     from mobspy.data_handler.time_series_object import MobsPyList_of_TS
+
+
+def plot_results(
+    results: Any,
+    plot_parameters: dict[str, Any],
+    species_strings: set[str] | None = None,
+    method: str = "deterministic",
+) -> Any:
+    """Plot simulation results without a Simulation instance.
+
+    Standalone function for composition-friendly workflows.
+
+    Args:
+        results: MobsPyList_of_TS or similar result object.
+        plot_parameters: Plot configuration dictionary.
+        species_strings: Species to plot (None for all).
+        method: ``"deterministic"`` or ``"stochastic"``.
+
+    Returns:
+        The plot object.
+    """
+    strings = species_strings or set()
+    if method == "stochastic":
+        return dp_stochastic_plot(strings, results, plot_parameters)
+    return dp_deterministic_plot(strings, results, plot_parameters)
 
 
 class PlottingMixin:
@@ -54,7 +80,7 @@ class PlottingMixin:
         if not species:
             species_strings: set[str] = set()
             for model in self._list_of_models:
-                species_strings = species_strings.union(model["mappings"])
+                species_strings = species_strings.union(model.mappings)
         else:
             species_strings = set()
 
@@ -82,10 +108,8 @@ class PlottingMixin:
         if not hasattr(self, "results") or not self.results:
             raise SimulationError("No simulation results available for plotting")
 
-        plot_essentials = self.extract_plot_essentials(*species)
-        return dp_stochastic_plot(
-            plot_essentials[0], plot_essentials[1], plot_essentials[2]
-        )
+        spe_strings, results, params = self.extract_plot_essentials(*species)
+        return plot_results(results, params, spe_strings, method="stochastic")
 
     def plot_deterministic(self, *species: str | Species | Reacting_Species) -> Any:
         """Generate a deterministic plot of the simulation results.
@@ -99,10 +123,8 @@ class PlottingMixin:
         if not hasattr(self, "results") or not self.results:
             raise SimulationError("No simulation results available for plotting")
 
-        plot_essentials = self.extract_plot_essentials(*species)
-        return dp_deterministic_plot(
-            plot_essentials[0], plot_essentials[1], plot_essentials[2]
-        )
+        spe_strings, results, params = self.extract_plot_essentials(*species)
+        return plot_results(results, params, spe_strings, method="deterministic")
 
     def plot_parametric(self, *species: str | Species | Reacting_Species) -> Any:
         """Generate a parametric plot of the simulation results.
@@ -116,10 +138,8 @@ class PlottingMixin:
         if not hasattr(self, "results") or not self.results:
             raise SimulationError("No simulation results available for plotting")
 
-        plot_essentials = self.extract_plot_essentials(*species)
-        return dp_parametric_plot(
-            plot_essentials[0], plot_essentials[1], plot_essentials[2]
-        )
+        spe_strings, results, params = self.extract_plot_essentials(*species)
+        return dp_parametric_plot(spe_strings, results, params)
 
     def plot(self, *species: str | Species | Reacting_Species) -> Any:
         """Generate a deterministic plot (alias for plot_deterministic).

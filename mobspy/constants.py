@@ -7,19 +7,43 @@ Examples:
     >>> from mobspy.constants import DOT_SEPARATOR, ALL_CHAR
     >>> DOT_SEPARATOR
     '_dot_'
-    >>> ALL_CHAR
+    >>> str(ALL_CHAR)
     'all$'
+    >>> from mobspy.constants import CharacteristicMarker
+    >>> CharacteristicMarker.ALL == 'all$'
+    True
 """
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 # Separator used in species names for SBML compatibility (dots are invalid in SBML IDs)
 DOT_SEPARATOR: str = "_dot_"
 
-# Characteristic markers used in the compiler and reaction system
-ALL_CHAR: str = "all$"
-STD_CHAR: str = "std$"
-NOT_CHAR: str = "not$"
+
+class CharacteristicMarker(StrEnum):
+    """Enum for characteristic markers used in the compiler.
+
+    Inherits from ``str`` so values are directly usable as strings,
+    maintaining backward compatibility with the old constants.
+
+    Examples:
+        >>> CharacteristicMarker.ALL == "all$"
+        True
+        >>> "all$" in {CharacteristicMarker.ALL}
+        True
+    """
+
+    ALL = "all$"
+    STD = "std$"
+    NOT = "not$"
+
+
+# Backward-compatible aliases (existing code uses these)
+ALL_CHAR: str = CharacteristicMarker.ALL
+STD_CHAR: str = CharacteristicMarker.STD
+NOT_CHAR: str = CharacteristicMarker.NOT
 
 # Expression mode prefixes for species references in rate expressions
 COUNT_PREFIX: str = "$count$"

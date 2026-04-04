@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 from mobspy.exceptions import ValidationError
-from mobspy.modules.meta_class import Reacting_Species, Species
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 
 _TUPLE_PAIR_LEN = 2
 

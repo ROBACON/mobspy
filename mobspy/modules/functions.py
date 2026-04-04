@@ -7,13 +7,14 @@ from typing import Any
 from mobspy.constants import NULL_SPECIES
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.meta_class import Reacting_Species, Species
 from mobspy.modules.mobspy_expressions import (
     ExprNode,
     FunctionCallNode,
     MobsPyExpression,
     _to_expr_node,
 )
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 
 
 class MathFunctionWrapper:

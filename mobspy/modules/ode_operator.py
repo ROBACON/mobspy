@@ -8,7 +8,8 @@ from typing import Any
 from mobspy.constants import ASSIGNMENT_PREFIX, POSITION_PREFIX
 from mobspy.exceptions import ValidationError
 from mobspy.modules.assignments_implementation import Assign
-from mobspy.modules.meta_class import Reacting_Species, Species
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 
 
 def generate_ODE_reaction_rate(list_of_used_species: list[Any], expression: Any) -> Any:  # noqa: N802
@@ -96,11 +97,11 @@ class ODEBinding:
         for spe in species_list_operation_order:
             reactants = spe if reactants is None else reactants + spe
 
-        # Create reaction based on type
+        # Create reaction based on type (return value unused; side effect registers it)
         if is_birth:
-            reactants >> self.state_variable + reactants[rate_fn]  # type: ignore[index]
+            _ = reactants >> (self.state_variable + reactants) @ rate_fn
         else:
-            reactants + self.state_variable >> reactants[rate_fn]  # type: ignore[index]
+            _ = (reactants + self.state_variable) >> reactants @ rate_fn
 
         return self
 

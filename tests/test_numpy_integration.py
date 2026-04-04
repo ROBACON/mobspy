@@ -31,7 +31,7 @@ reaction_0,{'re': [(1, 'A')], 'pr': [(1, 'B')], 'kin': 'A * 1.0'}
     A, B = BaseSpecies()
     params = np.array([10.0, 1.0])
     A(params[0])
-    A >> B[params[1]]
+    A >> B @ params[1]
     MySim = Simulation(A | B)
     MySim.level = -1
     result = MySim.compile()
@@ -56,10 +56,10 @@ def test_numpy_in_expression_function():
         return b
 
     A, B, C, D = BaseSpecies()
-    A >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 1)]
-    B >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 2)]
-    C >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 3)]
-    D >> mobspy.Zero[lambda r: test_numpy_in_expression(r, 4)]
+    A >> mobspy.Zero @ (lambda r: test_numpy_in_expression(r, 1))
+    B >> mobspy.Zero @ (lambda r: test_numpy_in_expression(r, 2))
+    C >> mobspy.Zero @ (lambda r: test_numpy_in_expression(r, 3))
+    D >> mobspy.Zero @ (lambda r: test_numpy_in_expression(r, 4))
     A(100)
     S = Simulation(A | B | C | D)
     S.level = -1
@@ -75,9 +75,9 @@ def test_numpy_with_units():
         return b
 
     A, B, C, D = BaseSpecies()
-    A >> mobspy.Zero[test_numpy_in_expression]
+    A >> mobspy.Zero @ test_numpy_in_expression
     for a in np_array:
-        B >> mobspy.Zero[a / u.hour]
+        B >> mobspy.Zero @ (a / u.hour)
     S = Simulation(A | B | C | D)
     S.level = -1
     assert compare_model(S.compile(), "model_47.txt")
@@ -88,7 +88,7 @@ def test_numpy_in_rates():
     for a in np_array:
         b = a
     A = BaseSpecies()
-    A >> mobspy.Zero[b]
+    A >> mobspy.Zero @ b
     A(200)
     S = Simulation(A)
     S.level = -1
@@ -103,7 +103,7 @@ def test_numpy_in_counts():
     for a in np_array:
         b = a
     A = BaseSpecies()
-    A >> mobspy.Zero[b]
+    A >> mobspy.Zero @ b
     A(b)
     S = Simulation(A)
     S.level = -1
@@ -118,7 +118,7 @@ def test_numpy_in_set_counts():
     for a in np_array:
         b = a
     A = BaseSpecies()
-    A >> mobspy.Zero[b]
+    A >> mobspy.Zero @ b
     model = set_counts({A: b})
     S = Simulation(model)
     S.level = -1

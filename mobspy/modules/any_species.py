@@ -11,7 +11,7 @@ from typing import NoReturn
 
 from mobspy.constants import CONTEXT_ANY_SPECIES_NAME
 from mobspy.exceptions import ValidationError
-from mobspy.modules.meta_class import Species
+from mobspy.modules.species import Species
 
 _any_chars_cv: ContextVar[set[str]] = ContextVar("_any_chars_cv")
 _any_stack_cv: ContextVar[list[set[str]]] = ContextVar("_any_stack_cv")

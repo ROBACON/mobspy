@@ -80,7 +80,7 @@ def job_execution(
                     end_condition_not_satisfied = False
 
                 reformatted_data = __remap_species(
-                    reformatted_data, model["mappings"], model["species_for_sbml"]
+                    reformatted_data, model.mappings, model.species_for_sbml
                 )
                 added_data = __add_simulations_data(added_data, reformatted_data)
 
@@ -166,7 +166,7 @@ def __sbml_new_initial_values(
     sim_para: SimParams,
     new_model: bool = False,
 ) -> str:
-    species_for_sbml = model["species_for_sbml"]
+    species_for_sbml = model.species_for_sbml
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
@@ -190,19 +190,15 @@ def __sbml_new_initial_values(
             species_for_sbml[END_FLAG_SPECIES_NAME] = 0
 
     # Extract model_context if available (for proper SBML unit declarations)
-    model_context = (
-        model.get("model_context")  # pyright: ignore[reportAttributeAccessIssue]
-        if hasattr(model, "get")
-        else getattr(model, "model_context", None)
-    )
+    model_context = getattr(model, "model_context", None)
 
     return sbml_builder.build(
         SBMLModelData(
             species_for_sbml=species_for_sbml,
-            parameters_for_sbml=model["parameters_for_sbml"],
-            reactions_for_sbml=model["reactions_for_sbml"],
-            events_for_sbml=model["events_for_sbml"],
-            assignments_for_sbml=model["assignments_for_sbml"],
+            parameters_for_sbml=model.parameters_for_sbml,
+            reactions_for_sbml=model.reactions_for_sbml,
+            events_for_sbml=model.events_for_sbml,
+            assignments_for_sbml=model.assignments_for_sbml,
         ),
         model_context=model_context,
     )

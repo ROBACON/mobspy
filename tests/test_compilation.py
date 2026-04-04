@@ -23,7 +23,7 @@ from .conftest import compare_model, compare_model_ignore_order
 class TestBasicModels:
     def test_model_1(self):
         A, B, C = BaseSpecies()
-        A + B >> C[1]
+        A + B >> C @ 1
         MySim = Simulation(A | B | C)
         MySim.level = -1
         assert compare_model(MySim.compile(), "model_1.txt")
@@ -31,7 +31,7 @@ class TestBasicModels:
     def test_model_2(self):
         Carnivore, Herbivore = BaseSpecies()
         Cat, Dog = New(Carnivore, 2)
-        Carnivore + Herbivore(1 * u.mol) >> Carnivore[1]
+        Carnivore + Herbivore(1 * u.mol) >> Carnivore @ 1
         Cat(1 * u.mol), Dog(1 * u.mol)
         MySim = Simulation(Cat | Dog | Herbivore)
         MySim.level = -1
@@ -41,8 +41,8 @@ class TestBasicModels:
     def test_model_3(self):
         MGMT, Blue_Oyster_Cult, The_Smiths = BaseSpecies(3)
         MGMT.eletric_fell, MGMT.little_dark_age, MGMT.kids
-        Blue_Oyster_Cult.burning_for_you >> Blue_Oyster_Cult.reaper[1]
-        The_Smiths.stop_me >> The_Smiths.charming_man[1]
+        Blue_Oyster_Cult.burning_for_you >> Blue_Oyster_Cult.reaper @ 1
+        The_Smiths.stop_me >> The_Smiths.charming_man @ 1
         Music = MGMT * Blue_Oyster_Cult * The_Smiths
         MySim = Simulation(Music)
         MySim.level = -1
@@ -52,7 +52,7 @@ class TestBasicModels:
         Bacteria, Virus = BaseSpecies()
         B1, B2 = New(Bacteria, 2)
         V1, V2 = New(Virus, 2)
-        Bacteria.not_infected + Virus >> Bacteria.infected[1]
+        Bacteria.not_infected + Virus >> Bacteria.infected @ 1
         MySim = Simulation(B1 | B2 | V1 | V2)
         MySim.level = -1
         assert compare_model(MySim.compile(), "model_4.txt")
@@ -60,8 +60,8 @@ class TestBasicModels:
     def test_model_5(self):
         A = BaseSpecies()
         B, C = New(A, 2)
-        A >> 2 * A[1]
-        2 * A >> 3 * A[1]
+        A >> 2 * A @ 1
+        2 * A >> 3 * A @ 1
         MySim = Simulation(B | C)
         MySim.level = -1
         assert compare_model(MySim.compile(), "model_5.txt")
@@ -71,7 +71,7 @@ class TestBasicModels:
         B = New(A)
         C = New(A)
         B.b1, B.b2, C.c1, C.c2
-        mobspy.Zero >> 2 * A[1]
+        mobspy.Zero >> 2 * A @ 1
         MySim = Simulation(B | C)
         MySim.level = -1
         assert compare_model(MySim.compile(), "model_6.txt")
@@ -86,13 +86,15 @@ class TestBasicModels:
             for m, p in zip(["m1", "m2", "m3"], ["x2", "x3", "x1"], strict=False):
                 (
                     Protein.c(p)
-                    >> Protein.c(p)
-                    + mRNA.c(m)[lambda pro: f"{beta_m}/(1 + ({pro}/{k})^{n})"]
+                    >> (Protein.c(p) + mRNA.c(m))
+                    @ (lambda pro: f"{beta_m}/(1 + ({pro}/{k})^{n})")
                 )
             for m, p in zip(["m1", "m2", "m3"], ["x1", "x2", "x3"], strict=False):
-                mRNA.c(m) >> mRNA.c(m) + Protein.c(p)[beta_p]
-            Mortal >> mobspy.Zero[lambda r1: gamma_p if r1.is_a(Protein) else gamma_m]
-            mobspy.Zero >> Creator[leaky]
+                mRNA.c(m) >> (mRNA.c(m) + Protein.c(p)) @ beta_p
+            Mortal >> mobspy.Zero @ (
+                lambda r1: gamma_p if r1.is_a(Protein) else gamma_m
+            )
+            mobspy.Zero >> Creator @ leaky
             MySim = Simulation(mRNA | Protein)
             MySim.level = -1
             return MySim.compile()
@@ -106,7 +108,7 @@ class TestInheritanceAndQueries:
         A, B = BaseSpecies(2)
         A.a1, A.a2, B.b1, B.b2
         Combination = A * B
-        Combination >> mobspy.Zero[lambda r1: 0 if r1.b2 else 1]
+        Combination >> mobspy.Zero @ (lambda r1: 0 if r1.b2 else 1)
         S = Simulation(Combination)
         S.level = -1
         assert compare_model(S.compile(), "model_12.txt")
@@ -120,7 +122,7 @@ class TestInheritanceAndQueries:
             factor2 = 0.5 if ball.b1 else 1
             return factor1 * factor2
 
-        A + B >> mobspy.Zero[rate]
+        A + B >> mobspy.Zero @ rate
         S = Simulation(A | B)
         S.level = -1
         assert compare_model(S.compile(), "model_13.txt")
@@ -132,7 +134,7 @@ class TestInheritanceAndQueries:
         def rate(r1):
             return 0.5 if r1.a1 else 1
 
-        A + B >> mobspy.Zero[rate]
+        A + B >> mobspy.Zero @ rate
         S = Simulation(A | B)
         S.level = -1
         assert compare_model(S.compile(), "model_14.txt")
@@ -147,7 +149,7 @@ class TestInheritanceAndQueries:
             factor3 = 0.5 if r3.c1 else 1
             return factor1 * factor2 * factor3
 
-        A + B >> mobspy.Zero[rate]
+        A + B >> mobspy.Zero @ rate
         S = Simulation(A | B)
         S.level = -1
         assert compare_model(S.compile(), "model_13.txt")
@@ -156,14 +158,14 @@ class TestInheritanceAndQueries:
         A = BaseSpecies()
         B, C = New(A)
         A.a1, A.a2, A.a3
-        B + C >> mobspy.Zero[lambda r1, r2: 100 if A(r1) == A(r2) else 0]
+        B + C >> mobspy.Zero @ (lambda r1, r2: 100 if A(r1) == A(r2) else 0)
         S = Simulation(B | C)
         S.level = -1
         assert compare_model(S.compile(), "model_43.txt")
 
     def test_stack_position(self):
         Cell = BaseSpecies()
-        Cell >> 2 * Cell[1]
+        Cell >> 2 * Cell @ 1
         A, B, C = New(Cell)
         S = Simulation(A | B | C)
         S.level = -1
@@ -171,7 +173,7 @@ class TestInheritanceAndQueries:
 
         def hi():
             Cell = BaseSpecies()
-            Cell >> 2 * Cell[1]
+            Cell >> 2 * Cell @ 1
             A, B, C = New(Cell)
             S = Simulation(A | B | C)
             S.level = -1
@@ -193,7 +195,7 @@ class TestAllOperator:
         B.b1, B.b2
         C = A * B
         All[C](100)
-        C >> All[C][1]
+        C >> All[C] @ 1
         S = Simulation(C)
         S.level = -1
         assert compare_model(S.compile(), "model_21.txt")
@@ -203,7 +205,7 @@ class TestAllOperator:
         B.b1, B.b2
         C, D = New(B)
         C.c1, C.c2, D.d1, D.d2
-        mobspy.Zero >> All[B.b1][1]
+        mobspy.Zero >> All[B.b1] @ 1
         S = Simulation(C | D)
         S.level = -1
         assert compare_model(S.compile(), "model_22.txt")
@@ -241,7 +243,7 @@ class TestSetCounts:
     def test_set_counts_parameters(self):
         A = BaseSpecies()
         a = ModelParameters([1, 2])
-        A >> 2 * A[a]
+        A >> 2 * A @ a
         set_counts({"A": a})
         S = Simulation(A)
         S.level = -1
@@ -263,9 +265,9 @@ class TestDimensions:
         Ball(10 / u.meter**2)
         Child(1 / u.meter**2)
         Bacteria(1 * u.mol)
-        Bacteria >> mobspy.Zero[1 * u.mol / u.second]
-        Ball + Child + Child >> Ball + Child[1e-3 * (u.meter**4) / u.hour]
-        Ball + Child >> Ball[1e-3 * (u.meter**2) / u.hour]
+        Bacteria >> mobspy.Zero @ (1 * u.mol / u.second)
+        Ball + Child + Child >> (Ball + Child) @ (1e-3 * (u.meter**4) / u.hour)
+        Ball + Child >> Ball @ (1e-3 * (u.meter**2) / u.hour)
         S = Simulation(Ball | Child | Bacteria)
         S.volume = 2 * u.m**2
         S.level = -1
@@ -273,7 +275,7 @@ class TestDimensions:
 
     def test_dimension_in_function_only(self):
         A = BaseSpecies()
-        A + A >> 3 * A[lambda: 1 * u.milliliter / u.second]
+        A + A >> 3 * A @ (lambda: 1 * u.milliliter / u.second)
         A(1)
         S = Simulation(A)
         S.level = -1
@@ -282,7 +284,7 @@ class TestDimensions:
     def test_dimensionless_count(self):
         a = 100 * u.l / u.l
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(a)
         S = Simulation(A)
         S.duration = 10
@@ -294,7 +296,7 @@ class TestDimensions:
 class TestEmptyArgAndExpressions:
     def test_empty_arguments(self):
         A, B = BaseSpecies()
-        A >> mobspy.Zero[lambda: f"{A}*0.01"]
+        A >> mobspy.Zero @ (lambda: f"{A}*0.01")
         S = Simulation(A)
         S.duration = 5
         S.level = -1
@@ -303,25 +305,26 @@ class TestEmptyArgAndExpressions:
     def test_initial_expression(self):
         A, B, Hey = BaseSpecies()
         D = New(A)
-        A >> 2 * A[lambda r: 1 / u.hour * (1 + 10 / r)]
+        A >> 2 * A @ (lambda r: 1 / u.hour * (1 + 10 / r))
         (
             A + B
-            >> mobspy.Zero[
+            >> mobspy.Zero
+            @ (
                 lambda r1, r2: (
                     (1 * u.millimolar / u.hour)
                     * (1 + 10 * u.millimolar / r1 + 20 * u.millimolar / r2)
                 )
-            ]
+            )
         )
-        Hey >> mobspy.Zero[lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r)]
-        D >> 2 * D[lambda r: 20 / u.hour * r]
+        Hey >> mobspy.Zero @ (lambda r: 1 / u.hour * (20 * r + 30 * r + 40 * r))
+        D >> 2 * D @ (lambda r: 20 / u.hour * r)
         S = Simulation(A | B | Hey | D)
         S.level = -1
         assert compare_model(S.compile(), "model_33.txt")
 
     def test_more_than_used(self):
         A = BaseSpecies()
-        mobspy.Zero >> A[lambda r1: 20]
+        mobspy.Zero >> A @ (lambda r1: 20)
         S = Simulation(A)
         S.level = -1
         assert compare_model(S.compile(), "model_34.txt")
@@ -330,7 +333,7 @@ class TestEmptyArgAndExpressions:
         n_0 = 10
         mu_g = 0.2 / u.hour
         Cell, Lysis, AHL, LuxI = BaseSpecies()
-        Cell >> 2 * Cell[lambda cell: mu_g * cell * (n_0 - cell)]
+        Cell >> 2 * Cell @ (lambda cell: mu_g * cell * (n_0 - cell))
         MySim = Simulation(Cell)
         MySim.level = -1
         assert compare_model(MySim.compile(), "model_36.txt")
@@ -340,7 +343,7 @@ class TestEmptyArgAndExpressions:
         A.something
         B = New(A)
         for a in [1, 2, 3]:
-            mobspy.Zero >> B.something.c("at_" + str(a))[1]
+            mobspy.Zero >> B.something.c("at_" + str(a)) @ 1
         B(1)
         S = Simulation(B)
         S.level = -1
@@ -350,11 +353,9 @@ class TestEmptyArgAndExpressions:
 @pytest.mark.compilation
 class TestReversibleReactions:
     def test_rev(self):
-        from mobspy import Rev
-
         A, B, C = BaseSpecies()
-        Rev[A + 4 * B >> C][1, 2]
-        Rev[A + 4 * B >> C][lambda r1, r2: (100 - r1) * (100 - r2), lambda r: r**3]
+        A + 4 * B >> C @ (1, 2)
+        A + 4 * B >> C @ (lambda r1, r2: (100 - r1) * (100 - r2), lambda r: r**3)
         S = Simulation(A | B | C)
         S.level = -1
         assert compare_model(S.compile(), "model_53.txt")
@@ -362,9 +363,9 @@ class TestReversibleReactions:
     def test_new_reversible_reaction_notation(self):
         A = BaseSpecies()
         k1, k2 = ModelParameters(1, 1)
-        A >> mobspy.Zero[1, 1]
-        A >> mobspy.Zero[1 / (k1 + k2), k1]
-        A >> 2 * A[10]
+        A >> mobspy.Zero @ (1, 1)
+        A >> mobspy.Zero @ (1 / (k1 + k2), k1)
+        A >> 2 * A @ 10
         S = Simulation(A)
         S.level = -1
         assert compare_model(S.compile(), "model_63.txt")
@@ -375,7 +376,7 @@ class TestSpeciesNaming:
     def test_silicon_valley(self):
         A = BaseSpecies()
         A.name("\tA")
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(200)
         S = Simulation(A)
         S.plot_data = False
@@ -393,7 +394,7 @@ class TestSpeciesNaming:
     def test_blocked_names(self):
         try:
             _S0 = BaseSpecies()
-            _S0 >> mobspy.Zero[1]
+            _S0 >> mobspy.Zero @ 1
             assert False
         except (SystemExit, MobsPyError):
             assert True
@@ -406,9 +407,9 @@ class TestSpeciesNaming:
             pass
 
         S0, S1, S2 = BaseSpecies()
-        S0 >> mobspy.Zero[1]
-        S1 >> mobspy.Zero[1]
-        S2 >> mobspy.Zero[1]
+        S0 >> mobspy.Zero @ 1
+        S1 >> mobspy.Zero @ 1
+        S2 >> mobspy.Zero @ 1
         S = Simulation(S0 | S1 | S2)
         S.level = -1
         assert compare_model(S.compile(), "model_56.txt")
@@ -418,7 +419,7 @@ class TestSpeciesNaming:
 class TestSBMLGeneration:
     def test_sbml_generation(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -429,7 +430,7 @@ class TestSBMLGeneration:
 
     def test_multi_sim_sbml(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(100)
         S1 = Simulation(A)
         S2 = Simulation(A)
@@ -442,7 +443,7 @@ class TestSBMLGeneration:
 
     def test_inline_comment(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]  # Test comment
+        A >> mobspy.Zero @ 1  # Test comment
         assert True
 
 
@@ -458,14 +459,14 @@ class TestWithStatement:
 
         with Age.old, Dense.sparse:
             with Color.red:
-                Tree >> Grass[1]
+                Tree >> Grass @ 1
             with Color.blue:
-                Tree >> Grass[1]
+                Tree >> Grass @ 1
                 Tree(10)
             Tree(9)
             All[Grass](1)
         with mobspy.Any.young.green:
-            Tree + Grass >> Tree + Tree[2]
+            Tree + Grass >> (Tree + Tree) @ 2
 
         S1 = Simulation(Tree | Grass)
         S1.level = -1
@@ -480,9 +481,9 @@ class TestWithStatement:
 
         with Age.old, Dense.sparse:
             with mobspy.Any.red:
-                Tree >> Grass[1]
+                Tree >> Grass @ 1
             with Color.blue:
-                Tree >> Grass[1]
+                Tree >> Grass @ 1
                 Tree(10)
             Tree(9)
             All[Grass](1)
@@ -506,8 +507,8 @@ class TestParameters:
     def test_parameter_operation_in_rate(self):
         A, B = BaseSpecies()
         a = ModelParameters(0.1)
-        A >> mobspy.Zero[a]
-        B >> mobspy.Zero[2 * a]
+        A >> mobspy.Zero @ a
+        B >> mobspy.Zero @ (2 * a)
         A(100), B(200)
         S1 = Simulation(A | B)
         S1.level = -1
@@ -524,7 +525,7 @@ class TestParameters:
     def test_parameters_in_lambda_expression(self):
         L, R = BaseSpecies()
         kf, kr = ModelParameters(1e-3, 1e-3)
-        L.sl_0 + R.sr_0 >> L.sl_1 + R.sr_1[kf, lambda r: kr * r]
+        L.sl_0 + R.sr_0 >> (L.sl_1 + R.sr_1) @ (kf, lambda r: kr * r)
         S = Simulation(L | R)
         S.level = -1
         assert compare_model(S.compile(), "model_66.txt")
@@ -532,7 +533,7 @@ class TestParameters:
     def test_update_parameter_through_str(self):
         A = BaseSpecies()
         k1 = ModelParameters(0.00000001)
-        A >> mobspy.Zero[k1]
+        A >> mobspy.Zero @ k1
         S = Simulation(A)
         S.level = -1
         S.compile()
@@ -542,7 +543,7 @@ class TestParameters:
     def test_update_multiple_parameters_in_expression(self):
         A = BaseSpecies()
         k1, k2 = ModelParameters(0.00000001, 10)
-        A >> mobspy.Zero[k1 / (10 + k2**4)]
+        A >> mobspy.Zero @ (k1 / (10 + k2**4))
         S = Simulation(A)
         S.level = -1
         S.compile()
@@ -552,7 +553,7 @@ class TestParameters:
     def test_update_parameter_with_unit(self):
         A = BaseSpecies()
         k1 = ModelParameters(1 / u.h)
-        A >> mobspy.Zero[k1]
+        A >> mobspy.Zero @ k1
         S = Simulation(A)
         S.level = -1
         S.compile()
@@ -565,7 +566,7 @@ class TestParameters:
         B = New(A)
         B.b1, B.b2
         k1 = ModelParameters(1)
-        B >> mobspy.Zero[k1]
+        B >> mobspy.Zero @ k1
         B(100), B.b2(100)
         S = Simulation(B)
         S.level = -1
@@ -579,7 +580,7 @@ class TestParameters:
         B = New(A)
         B.b1, B.b2
         k1 = ModelParameters(1)
-        B >> mobspy.Zero[k1]
+        B >> mobspy.Zero @ k1
         B(100), B.b2(100)
         S = Simulation(B)
         S.level = -1
@@ -596,14 +597,14 @@ class TestParameters:
     def test_update_parameter_for_multi_model(self):
         A, B, C, D = BaseSpecies()
         k1 = ModelParameters([1, 2, 3])
-        A >> mobspy.Zero[2 * k1]
+        A >> mobspy.Zero @ (2 * k1)
         A(100)
         S1 = Simulation(A)
         S1.level = -1
         S1.duration = 10
 
         A.reset_reactions()
-        B >> mobspy.Zero[1]
+        B >> mobspy.Zero @ 1
         B(200)
         S2 = Simulation(A | B)
         S2.level = -1
@@ -626,7 +627,7 @@ class TestParameters:
             if Location(r1) == Location(r2)
             else 0.5 * u.decimeter**2 / u.h
         )
-        2 * Something >> 3 * Something[rate]
+        2 * Something >> 3 * Something @ rate
         S = Simulation(Something)
         S.level = -1
         S.volume = 1 * u.m**2

@@ -22,6 +22,12 @@ from mobspy.modules.assignments_implementation import (
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
 )
+from mobspy.modules.declarations import (
+    RatedProduct,
+    ReactantRef,
+    ReactionDecl,
+    get_registry,
+)
 from mobspy.modules.logic_operators import (
     ReactingSpeciesComparator as lop_ReactingSpeciesComparator,
 )
@@ -45,10 +51,23 @@ if TYPE_CHECKING:
 _last_rate_cv: ContextVar[Any] = ContextVar("_last_rate_cv", default=None)
 _entity_counter_cv: ContextVar[int] = ContextVar("_entity_counter_cv", default=0)
 
-_REVERSIBLE_RATE_PAIR_LEN = 2
-
 
 class _Last_rate_storage:  # noqa: N801
+    """Legacy rate buffering for the ``[]`` bracket syntax.
+
+    When the user writes ``A[rate] >> B``, Python evaluates
+    ``A[rate]`` first (via ``__getitem__``), which stores the rate
+    in a thread-local ``ContextVar``.  Then ``A >> B`` (via
+    ``__rshift__``) retrieves it.
+
+    **This mechanism is not needed for the ``@`` rate syntax.**
+    ``A >> B @ rate`` produces a ``RatedProduct`` that carries the
+    rate directly, bypassing this class entirely.
+
+    The entity counter is unrelated to rate storage and is used
+    to generate unique names for auto-created species.
+    """
+
     @staticmethod
     def get_last_rate() -> Any:
         """Return the stored rate for the current thread."""
@@ -73,21 +92,31 @@ class _Last_rate_storage:  # noqa: N801
     def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
         """Store the rate before the reaction is fully defined.
 
-        Due to priority in Python the item is stored before the
-        reaction. It is stored at the Compiler level and passed
-        to the reaction object in the end.
+        .. deprecated::
+            Use ``A >> B @ rate`` instead of ``A >> B[rate]``.
 
         Args:
             object_to_return: Returns the object that __getitem__ was performed on.
             item: Stored reaction rate.
         """
+        import warnings  # noqa: PLC0415
+
+        warnings.warn(
+            "A >> B[rate] is deprecated. Use 'A >> B @ rate' instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         _last_rate_cv.set(item)
         return object_to_return
 
     @classmethod
     def process_rate(cls, rate: Any) -> Any:
         """Validate and normalize a reaction rate value."""
+        from mobspy.modules.rate_builder import RateExpression  # noqa: PLC0415
         from mobspy.modules.species import Species  # noqa: PLC0415
+
+        if isinstance(rate, RateExpression):
+            return rate.node
 
         if isinstance(rate, (np_int_, np_float_)):
             rate = float(rate)
@@ -189,10 +218,39 @@ class Reactions:
 
         self.order = None
 
+        # Track on species for filtering (e.g. reset_reactions())
         for reactant in reactants:
             reactant["object"].add_reaction(self)
         for product in products:
             product["object"].add_reaction(self)
+
+        self._register_declaration()
+
+    def _register_declaration(self) -> None:
+        """Register this reaction as a ReactionDecl in the ModelRegistry."""
+        registry = get_registry()
+        decl = ReactionDecl(
+            reactants=tuple(
+                ReactantRef(
+                    species=r["object"],
+                    characteristics=frozenset(r["characteristics"]),
+                    stoichiometry=r["stoichiometry"],
+                    label=r.get("label"),
+                )
+                for r in self.reactants
+            ),
+            products=tuple(
+                ReactantRef(
+                    species=p["object"],
+                    characteristics=frozenset(p["characteristics"]),
+                    stoichiometry=p["stoichiometry"],
+                    label=p.get("label"),
+                )
+                for p in self.products
+            ),
+            rate=self.rate,
+        )
+        registry.add_reaction(decl, reaction_obj=self)
 
     @staticmethod
     def _validate_reaction_context(products: list[dict[str, Any]]) -> None:
@@ -216,30 +274,33 @@ class Reactions:
         products: list[dict[str, Any]],
         rate: Any,
     ) -> Any:
-        """Resolve the reaction rate, handling reversible reaction pairs."""
-        stored_rate = _Last_rate_storage.get_last_rate()
-        try:
-            flag_len = len(stored_rate) == _REVERSIBLE_RATE_PAIR_LEN
-        except (TypeError, AttributeError):
-            flag_len = False
+        """Resolve the reaction rate from explicit arg or ContextVar.
 
-        if flag_len and rate is None:
-            store_last_rate = stored_rate[0]
-            Reactions(
-                reactants=products,
-                products=reactants,
-                rate=stored_rate[1],
-            )
-            resolved = _Last_rate_storage.process_rate(store_last_rate)
-        elif rate is not None:
-            resolved = _Last_rate_storage.process_rate(rate)
-        elif not flag_len:
-            resolved = _Last_rate_storage.process_rate(stored_rate)
+        The ``@`` path passes rate explicitly. The ``[]`` path
+        stores the rate in ``_Last_rate_storage`` and passes
+        ``rate=None`` here. Handles reversible tuple rates from
+        ``Rev[...][k1, k2]``.
+        """
+        if rate is not None:
+            return _Last_rate_storage.process_rate(rate)
+
+        stored = _Last_rate_storage.get_last_rate()
+
+        # Reversible tuple from Rev[...][k1, k2]
+        import contextlib  # noqa: PLC0415
+
+        is_tuple = False
+        with contextlib.suppress(TypeError, AttributeError):
+            is_tuple = isinstance(stored, tuple) and len(stored) == 2  # noqa: PLR2004
+
+        if is_tuple:
+            fwd_rate = stored[0]
+            Reactions(reactants=products, products=reactants, rate=stored[1])
+            resolved = _Last_rate_storage.process_rate(fwd_rate)
         else:
-            raise ReactionError("Too many rates provided")
+            resolved = _Last_rate_storage.process_rate(stored)
 
-        if stored_rate is not None:
-            _Last_rate_storage.set_last_rate(None)
+        _Last_rate_storage.set_last_rate(None)
         return resolved
 
     @staticmethod
@@ -271,12 +332,28 @@ class Reactions:
         )
 
     def __getitem__(self, item: Any) -> Self:
-        """Override of __getitem__ for dealing with reaction rates.
+        """Attach a rate to this reaction via ``[]`` syntax.
 
         Args:
             item: Reaction rate.
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+
+    def __matmul__(self, rate: Any) -> Reactions:
+        """Attach or update a rate via the ``@`` operator.
+
+        ``(A >> B) @ rate`` sets the rate on an existing reaction.
+        A tuple ``(k_fwd, k_rev)`` creates the reverse reaction too.
+
+        Args:
+            rate: Reaction rate (number, callable, tuple for reversible).
+        """
+        if isinstance(rate, tuple) and len(rate) == 2:  # noqa: PLR2004
+            self.rate = _Last_rate_storage.process_rate(rate[0])
+            Reactions(self.products, self.reactants, rate=rate[1])
+        else:
+            self.rate = _Last_rate_storage.process_rate(rate)
+        return self
 
     def set_rate(self, rate: Any) -> None:
         """Set the stored reaction rate.
@@ -444,12 +521,34 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         return self
 
     def __getitem__(self, item: Any) -> Self:
-        """Override of __getitem__ for dealing with reaction rates.
+        """Attach a rate via ``[]`` syntax.
+
+        Stores the rate in a ContextVar for ``>>`` to retrieve.
+        Unlike ``@``, returns ``self`` to allow stoichiometry:
+        ``2 * A.x[rate]`` works because ``A.x[rate]`` returns ``A.x``.
 
         Args:
             item: Reaction rate.
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+
+    def __matmul__(self, rate: Any) -> RatedProduct:
+        """Attach a rate via the ``@`` operator.
+
+        ``B @ rate`` returns a RatedProduct consumed by ``>>``.
+        A tuple ``(k_fwd, k_rev)`` creates a reversible reaction.
+
+        Args:
+            rate: Reaction rate (number, callable, tuple for reversible).
+        """
+        if isinstance(rate, tuple) and len(rate) == 2:  # noqa: PLR2004
+            return RatedProduct(
+                products=list(self.list_of_reactants),
+                rate=rate[0],
+                is_reversible=True,
+                reverse_rate=rate[1],
+            )
+        return RatedProduct(products=list(self.list_of_reactants), rate=rate)
 
     def get_spe_object(self) -> Species:
         """Return the single underlying Species object.
@@ -531,25 +630,22 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             "Reacting Species in the wrong context"
         )
 
-    def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
+    def __rshift__(self, other: Species | Reacting_Species | RatedProduct) -> Reactions:
         """The ``>>`` operator for defining reactions.
+
+        Accepts Species, Reacting_Species, or RatedProduct (from ``@``).
 
         Args:
             other: Product side of the reaction being added.
         """
-        import sys  # noqa: PLC0415
+        if isinstance(other, RatedProduct):
+            from mobspy.modules.species import (  # noqa: PLC0415
+                _create_reaction_from_rated,
+            )
 
-        from mobspy.modules.species import (  # noqa: PLC0415
-            Species,
-            _get_multiline_code_context,
-        )
+            return _create_reaction_from_rated(self.list_of_reactants, other)
 
-        frame = sys._getframe(1)
-        code_line = _get_multiline_code_context(
-            frame.f_code.co_filename, frame.f_lineno
-        )
-        line_number = frame.f_lineno
-        Species._compile_defined_reaction(code_line, line_number)
+        from mobspy.modules.species import Species  # noqa: PLC0415
 
         p = Reacting_Species(other, set()) if isinstance(other, Species) else other
 
@@ -665,14 +761,12 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """Return True; this is a species-or-reaction type."""
         return True
 
-    old_context: set[str] = set()  # noqa: RUF012
-
     def context_initiator_for_reacting_specie(self) -> None:
         """Add the current context and update the Cts context in all meta-species."""
         from mobspy.modules.species import Species  # noqa: PLC0415
 
         if len(self.list_of_reactants) == 1:
-            self.old_context = Species.get_meta_specie_named_any_context()
+            self._old_context = Species.get_meta_specie_named_any_context()
             new_context = Species.get_meta_specie_named_any_context().union(
                 self.list_of_reactants[0]["characteristics"]
             )
@@ -686,7 +780,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """Remove the ending context and update."""
         from mobspy.modules.species import Species  # noqa: PLC0415
 
-        Species.update_meta_specie_named_any_context(self.old_context)
+        Species.update_meta_specie_named_any_context(self._old_context)
 
 
 _methods_Reacting_Species = set(dir(Reacting_Species))  # noqa: N816

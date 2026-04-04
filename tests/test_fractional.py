@@ -11,7 +11,7 @@ def test_deterministic():
     A, B, C = BaseSpecies()
     A(10)
     B(1)
-    A + B >> 0.5 * C + B[0.005]
+    A + B >> (0.5 * C + B) @ 0.005
     Sim = Simulation(A | B | C)
     Sim.method = "deterministic"
     Sim.volume = 1 * u.mL
@@ -24,7 +24,7 @@ def test_deterministic_variable():
     A(10)
     B(1)
     yield_coeff = 0.5
-    A + B >> yield_coeff * C + B[0.005]
+    A + B >> (yield_coeff * C + B) @ 0.005
     Sim = Simulation(A | B | C)
     Sim.method = "deterministic"
     Sim.volume = 1 * u.mL
@@ -36,7 +36,7 @@ def test_stochastic():
     A, B, C = BaseSpecies()
     A(10)
     B(1)
-    A + B >> 0.5 * C + B[0.005]
+    A + B >> (0.5 * C + B) @ 0.005
     Sim = Simulation(A | B | C)
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL
@@ -49,7 +49,7 @@ def test_stochastic_variable():
     A(10)
     B(1)
     yield_coeff = 0.5
-    A + B >> yield_coeff * C + B[0.005]
+    A + B >> (yield_coeff * C + B) @ 0.005
     Sim = Simulation(A | B | C)
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL

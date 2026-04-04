@@ -47,8 +47,8 @@ def test_ode_neg_test():
 def test_ode_compartments():
     A = BaseSpecies()
     A.c1, A.c2
-    Zero >> A.c1[1]
-    A.c1 >> A.c2[1]
+    Zero >> A.c1 @ 1
+    A.c1 >> A.c2 @ 1
     dt[A] += -0.1 * A
     S = Simulation(A)
     assert compare_model(S.compile(), "model_ode_compartments.txt")

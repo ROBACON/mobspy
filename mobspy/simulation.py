@@ -38,6 +38,7 @@ from mobspy.exceptions import (
     SimulationError,
     ValidationError,
 )
+from mobspy.execution import generate_sbml_from_compiled, run_sbml
 from mobspy.mobspy_logging import get_logger
 from mobspy.model_generation import ModelGenerationMixin
 from mobspy.modules.any_species import (
@@ -46,18 +47,11 @@ from mobspy.modules.any_species import (
 from mobspy.modules.assignments_implementation import (
     Assign,
 )
-from mobspy.modules.compiler import Compiler
+from mobspy.modules.compiler import compile_model
+from mobspy.modules.declarations import snapshot_registry
+from mobspy.modules.list_species import List_Species
 from mobspy.modules.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
-)
-from mobspy.modules.meta_class import (
-    BaseSpecies,
-    List_Species,
-    ListSpecies,
-    New,
-    Reacting_Species,
-    Species,
-    Zero,
 )
 from mobspy.modules.mobspy_expressions import u
 from mobspy.modules.mobspy_parameters import (
@@ -73,7 +67,15 @@ from mobspy.modules.order_operators import (
     Rev,
     Set,
 )
+from mobspy.modules.reactions import Reacting_Species
 from mobspy.modules.set_counts_module import set_counts
+from mobspy.modules.species import Species
+from mobspy.modules.species_constructors import (
+    BaseSpecies,
+    ListSpecies,
+    New,
+    Zero,
+)
 from mobspy.modules.species_utils import (
     create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
@@ -110,8 +112,7 @@ from mobspy.parameter_scripts.parametric_sweeps import (
 from mobspy.plot_params.default_plot_reader import (
     get_default_plot_parameters,
 )
-from mobspy.plotting import PlottingMixin
-from mobspy.sbml_simulator.run import simulate as sbml_simulate
+from mobspy.plotting import PlottingMixin, plot_results
 from mobspy.simulation_config import SimulationConfig
 from mobspy.simulator_object.utils import (
     Simulation_Utils,
@@ -150,6 +151,10 @@ __all__ = [
     "SimulationComposition",
     "Zero",
     "basiCO_parameter_estimation",
+    "compile_model",
+    "generate_sbml_from_compiled",
+    "plot_results",
+    "run_sbml",
     "set_counts",
     "simlog",
     "u",
@@ -222,6 +227,7 @@ class Simulation(
             ParameterError: If required parameters are missing
         """
         super().__init__()
+        self._declarations = snapshot_registry()
         self._init_event_state()
         self._init_model(model, names)
         self._init_reactions(reactions)
@@ -273,29 +279,65 @@ class Simulation(
         self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]
 
     def _init_reactions(self, reactions: set[Reactions] | None) -> None:
-        """Collect reactions from explicit set or from model species."""
+        """Collect reactions from explicit set or from the model registry.
+
+        Uses the registry as the primary source, filtered by species
+        references (respects ``reset_reactions()``).
+        """
         if reactions is not None:
             self._reactions_set = set(reactions)
+        elif self._declarations.reaction_objects:
+            # Primary path: registry, filtered by what species still track
+            species_reactions = self._collect_species_reactions()
+            self._reactions_set = {
+                rxn
+                for rxn in self._declarations.reaction_objects
+                if rxn in species_reactions
+            }
         else:
-            self._reactions_set = set()
-            for spe_object in self.model:
-                for reference in spe_object.get_references():
-                    self._reactions_set = self._reactions_set.union(
-                        reference.get_reactions()
-                    )
+            # Legacy fallback: traverse Species._reactions directly
+            self._reactions_set = self._collect_species_reactions()
+
+    def _collect_species_reactions(self) -> set[Reactions]:
+        """Collect reactions tracked by model species and their references."""
+        result: set[Reactions] = set()
+        for spe_object in self.model:
+            for reference in spe_object.get_references():
+                result.update(reference.get_reactions())
+        return result
 
     def _init_counts(self) -> None:
-        """Gather species counts from the model."""
-        self._species_counts = []
-        for spe_object in self.model:
-            for count in spe_object.get_quantities():
-                self._species_counts.append(
-                    {
-                        "object": spe_object,
-                        "characteristics": count["characteristics"],
-                        "quantity": count["quantity"],
-                    }
-                )
+        """Gather species counts from the registry or Species objects.
+
+        The registry is the primary source (supports overwrite and
+        reset semantics). Falls back to Species traversal when
+        the registry has no counts for model species.
+        """
+        model_species = set(self.model)
+        registry_counts = [
+            ca for ca in self._declarations.counts if ca.species in model_species
+        ]
+        if registry_counts:
+            self._species_counts = [
+                {
+                    "object": ca.species,
+                    "characteristics": ca.characteristics,
+                    "quantity": ca.quantity,
+                }
+                for ca in registry_counts
+            ]
+        else:
+            # Legacy fallback
+            self._species_counts = []
+            for spe_object in self.model:
+                for count in spe_object.get_quantities():
+                    self._species_counts.append(
+                        {
+                            "object": spe_object,
+                            "characteristics": count["characteristics"],
+                            "quantity": count["quantity"],
+                        }
+                    )
 
     def _init_config(
         self,
@@ -393,7 +435,7 @@ class Simulation(
                 dimension=self.dimension,
             )
 
-            _result = Compiler.compile(
+            _result = compile_model(
                 self.model,
                 reactions_set=self._reactions_set,
                 species_counts=self._species_counts,
@@ -477,18 +519,7 @@ class Simulation(
     def _execute_simulations(self) -> tuple[list[TypingAny], int]:
         """Run SBML simulations via joblib and return raw results with job count."""
         jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
-
-        def simulation_function(x: TypingAny) -> TypingAny:
-            """Run a single SBML simulation batch."""
-            return sbml_simulate(jobs, self._list_of_parameters, x)
-
-        results: list[TypingAny] = list(  # pyright: ignore[reportArgumentType]
-            joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(simulation_function)(sbml)
-                for sbml in self.sbml_data_list
-            )
-        )
-
+        results = run_sbml(self.sbml_data_list, self._list_of_parameters, jobs=jobs)
         return results, jobs
 
     def _convert_and_store_results(
@@ -833,6 +864,7 @@ class Simulation(
             "_assignments_for_sbml",
             "_has_mole",
             "_model_context",
+            "_declarations",
         }
     )
 

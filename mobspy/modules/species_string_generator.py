@@ -6,6 +6,7 @@ from itertools import product as itertools_product
 from typing import Any
 
 from mobspy.constants import STD_CHAR
+from mobspy.types import ConcreteSpeciesId
 
 
 def characteristics_dictionary(
@@ -142,3 +143,58 @@ def construct_all_combinations(
             to_return.append(list(i))
 
     return to_return
+
+
+# ------------------------------------------------------------------
+# Structured variants returning ConcreteSpeciesId
+# ------------------------------------------------------------------
+
+
+def construct_species_id(
+    spe_or_reacting_object: Any,
+    characteristics: set[str] | str,
+    characteristics_to_object: dict[str, Any],
+) -> ConcreteSpeciesId:
+    """Build a single ConcreteSpeciesId for the default state.
+
+    Structured alternative to ``construct_species_char_list``
+    with ``symbol=DOT_SEPARATOR``.
+    """
+    char_list = construct_species_char_list(
+        spe_or_reacting_object, characteristics, characteristics_to_object
+    )
+    if isinstance(char_list, str):
+        return ConcreteSpeciesId.from_sbml_id(char_list)
+    spe_obj = char_list[0]
+    return ConcreteSpeciesId(
+        base=spe_obj.get_name(),
+        characteristics=tuple(str(c) for c in char_list[1:]),
+    )
+
+
+def construct_all_species_ids(
+    spe_or_reacting_object: Any,
+    characteristics: set[str] | str,
+    characteristics_to_object: dict[str, Any],
+) -> list[ConcreteSpeciesId]:
+    """Build all ConcreteSpeciesId combinations.
+
+    Structured alternative to ``construct_all_combinations``
+    with ``symbol=DOT_SEPARATOR``.
+    """
+    raw = construct_all_combinations(
+        spe_or_reacting_object, characteristics, characteristics_to_object
+    )
+    result: list[ConcreteSpeciesId] = []
+    for entry in raw:
+        if isinstance(entry, list):
+            spe_obj = entry[0]
+            result.append(
+                ConcreteSpeciesId(
+                    base=spe_obj.get_name(),
+                    characteristics=tuple(str(c) for c in entry[1:]),
+                )
+            )
+        else:
+            result.append(ConcreteSpeciesId.from_sbml_id(str(entry)))
+    return result

@@ -396,13 +396,17 @@ class ModelUnitContext:
             return pq.to(self.volume_unit).magnitude  # type: ignore[no-any-return]
         return volume  # pyright: ignore[reportReturnType]
 
-    def convert_time(self, time: int | float | Quantity) -> int | float:  # type: ignore[type-arg]
-        """Convert a time quantity to model time units."""
+    def convert_time(self, time: int | float | Quantity) -> int | float | None:  # type: ignore[type-arg]
+        """Convert a time quantity to model time units.
+
+        Returns None if the quantity is not a pure time dimension.
+        """
         if isinstance(time, Quantity):
             pq = self._to_plain_quantity(time)
             dim = dict(pq.dimensionality)
             if dim.get("[time]") and len(dim) == 1:
                 return pq.to(self.time_unit).magnitude  # type: ignore[no-any-return]
+            return None
         return time  # type: ignore[return-value]
 
     # ------------------------------------------------------------------

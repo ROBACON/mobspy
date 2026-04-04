@@ -7,7 +7,6 @@ models in MobsPy's DSL.
 from __future__ import annotations
 
 import linecache
-import re
 import sys
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Self
@@ -25,6 +24,7 @@ from mobspy.modules.assignments_implementation import (
 from mobspy.modules.assignments_implementation import (
     Assign as asgi_Assign,
 )
+from mobspy.modules.declarations import CountAssignment, RatedProduct, get_registry
 from mobspy.modules.logic_operators import (
     SpeciesComparator as lop_SpeciesComparator,
 )
@@ -61,22 +61,31 @@ if TYPE_CHECKING:
 
 _logger = get_logger(__name__)
 
+
+def _create_reaction_from_rated(
+    reactant_list: list[dict[str, Any]],
+    rated: RatedProduct,
+) -> Reactions:
+    """Create a Reactions object from a RatedProduct (``@`` syntax).
+
+    Handles reversible reactions when rated.is_reversible is True.
+    Validates units early when rate is a Pint Quantity.
+    """
+    from mobspy.modules.unit_validation import validate_rate_units  # noqa: PLC0415
+
+    validate_rate_units(rated.rate, len(reactant_list))
+    _Last_rate_storage.set_last_rate(rated.rate)
+    reaction = Reactions(reactant_list, rated.products, rate=rated.rate)
+    if rated.is_reversible:
+        validate_rate_units(rated.reverse_rate, len(rated.products))
+        Reactions(rated.products, reactant_list, rate=rated.reverse_rate)
+    return reaction
+
+
 _simulation_context_cv: ContextVar[Any] = ContextVar(
     "_simulation_context_cv", default=None
 )
 _meta_any_ctx_cv: ContextVar[set[str]] = ContextVar("_meta_any_ctx_cv")
-
-
-def _get_multiline_code_context(filename: str, lineno: int) -> str:
-    """Extract multi-line code context for reaction parsing.
-
-    Handles cases where formatters split >> operators across lines.
-    """
-    line = linecache.getline(filename, lineno)
-    if not line:
-        return ""
-
-    return line.rstrip("\n")
 
 
 # Easter Egg: I finished the first version on a sunday at the
@@ -281,12 +290,35 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return self
 
     def __getitem__(self, item: Any) -> Self:
-        """Override of __getitem__ for dealing with reaction rates.
+        """Attach a rate via ``[]`` syntax.
+
+        Stores the rate in a ContextVar for ``>>`` to retrieve.
+        Unlike ``@``, returns ``self`` to allow stoichiometry:
+        ``2 * A[rate]`` works because ``A[rate]`` returns ``A``.
 
         Args:
             item: Reaction rate.
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+
+    def __matmul__(self, rate: Any) -> RatedProduct:
+        """Attach a rate via the ``@`` operator.
+
+        ``B @ rate`` returns a RatedProduct consumed by ``>>``.
+        A tuple ``(k_fwd, k_rev)`` creates a reversible reaction.
+
+        Args:
+            rate: Reaction rate (number, callable, tuple for reversible).
+        """
+        products = Reacting_Species(self, set()).list_of_reactants
+        if isinstance(rate, tuple) and len(rate) == 2:  # noqa: PLR2004
+            return RatedProduct(
+                products=products,
+                rate=rate[0],
+                is_reversible=True,
+                reverse_rate=rate[1],
+            )
+        return RatedProduct(products=products, rate=rate)
 
     def __rmul__(self, stoichiometry: Any) -> Reacting_Species | Any:
         """Multiplication by the stoichiometry.
@@ -347,53 +379,22 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             "The negative operator was applied to a Species in the wrong context"
         )
 
-    @classmethod
-    def _compile_defined_reaction(cls, code_line: str, line_number: int) -> bool | None:
-        """Validate that a reaction line ends with a rate.
-
-        Raises on missing bracket-enclosed rate.
-        """
-        pattern = r"\][\s\n\)\],]*(#.*)?$"
-        set_pattern = r"Set\s*\[.*>>.*\]"
-
-        if re.search(set_pattern, code_line):
-            return True
-
-        if ">>" not in code_line:
-            return True
-
-        if code_line.rstrip().endswith(">>"):
-            return True
-
-        if code_line.rstrip().endswith("["):
-            return True
-
-        if not bool(re.search(pattern, code_line)):
-            raise ReactionError(
-                f"At: {code_line} \n"
-                + f"Line number: {line_number} \n"
-                + "There must be a rate in the end of the reaction. "
-                "Avoid comments in the same line as the reaction."
-            )
-        return None
-
-    def __rshift__(self, other: Species | Reacting_Species) -> Reactions:
+    def __rshift__(self, other: Species | Reacting_Species | RatedProduct) -> Reactions:
         """Reaction definition (``>>`` operator).
 
+        Accepts Species, Reacting_Species, or RatedProduct (from ``@``).
+
         Args:
-            other: Reaction products.
+            other: Reaction products (possibly with attached rate).
 
 
         Returns:
             The reaction.
         """
         myself = Reacting_Species(self, set())
-        frame = sys._getframe(1)
-        code_line = _get_multiline_code_context(
-            frame.f_code.co_filename, frame.f_lineno
-        )
-        line_number = frame.f_lineno
-        Species._compile_defined_reaction(code_line, line_number)
+
+        if isinstance(other, RatedProduct):
+            return _create_reaction_from_rated(myself.list_of_reactants, other)
 
         if isinstance(other, Species):
             p = Reacting_Species(other, set())
@@ -547,13 +548,30 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 self._species_counts.append(
                     {"characteristics": characteristics, "quantity": quantity}
                 )
+
+            frozen_chars = (
+                frozenset(characteristics)
+                if isinstance(characteristics, set)
+                else characteristics
+            )
+            get_registry().add_count(
+                CountAssignment(
+                    species=self,
+                    characteristics=frozen_chars,
+                    quantity=quantity,
+                )
+            )
         else:
             return {"characteristics": characteristics, "quantity": quantity}
         return None
 
     def reset_quantities(self) -> None:
-        """Reset the counts inside a species."""
+        """Reset the counts inside a species.
+
+        Also removes counts from the global ModelRegistry.
+        """
         self._species_counts = []
+        get_registry().remove_counts_for(self)
 
     def get_quantities(self) -> list[dict[str, Any]]:
         """Returns the list of species_counts."""
@@ -561,6 +579,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     def __mul__(self, other: Species | Any) -> Species | Any:
         """Multiplication to construct more complex species.
+
+        Attempts to infer the variable name from the source line.
+        Falls back to a generated name if inference fails.
+        Use ``(A * B).named("C")`` to set the name explicitly.
 
         Args:
             other: For the multiplication.
@@ -572,22 +594,37 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
 
-        frame = sys._getframe(1)
-        code_line = linecache.getline(frame.f_code.co_filename, frame.f_lineno).rstrip(
-            "\n"
-        )
-
         if not isinstance(other, Species):
             raise ReactionError(
-                f"At {code_line}: \n"
-                + "Meta-Species can only be multiplied by other meta-species \n"
-                + f"It was multiplied by the type {type(other)}"
+                "Meta-Species can only be multiplied by other meta-species. "
+                f"It was multiplied by the type {type(other)}"
             )
 
-        name = code_line.replace(" ", "").split("=")[0]
+        name = self._infer_mul_name()
+        return self._mul_impl(other, name)
 
+    @staticmethod
+    def _infer_mul_name() -> str:
+        """Try to infer the variable name from the caller's source line."""
+        try:
+            frame = sys._getframe(2)
+            code_line = linecache.getline(
+                frame.f_code.co_filename, frame.f_lineno
+            ).rstrip("\n")
+            candidate = code_line.replace(" ", "").split("=")[0]
+            if candidate and candidate[0] != "_" and "(" not in candidate:
+                return candidate
+        except (ValueError, OSError, IndexError):
+            pass
         _Last_rate_storage.increment_entity_counter()
-        new_entity = Species(name)
+        return f"_Mul_{_Last_rate_storage.get_entity_counter()}"
+
+    def _mul_impl(self, other: Species, name: str) -> Species:
+        """Core logic for species multiplication (shared by __mul__ and named)."""
+        _Last_rate_storage.increment_entity_counter()
+        counter = _Last_rate_storage.get_entity_counter()
+        new_entity = Species(f"Mul{counter}")
+        new_entity._bypass_name(name)
         new_entity.set_references(mcu_combine_references(self, other))
         new_entity.add_reference(new_entity)
         new_entity._from_mul = True  # type: ignore[attr-defined]
@@ -595,6 +632,19 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         mcu_check_orthogonality_between_references(new_entity.get_references())
 
         return new_entity
+
+    def named(self, name: str) -> Species:
+        """Set or rename this species.
+
+        Primarily used after ``*`` to avoid frame introspection::
+
+            Thing = (Color * Size).named("Thing")
+
+        Args:
+            name: The species name.
+        """
+        self.name(name)
+        return self
 
     def get_spe_object(self) -> Self:
         """Return the underlying Species object."""
@@ -679,19 +729,41 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self._references = {self}
 
     def get_reactions(self) -> set[Reactions]:
-        """Return the set of reactions involving this species."""
+        """Return the set of reactions tracked by this species.
+
+        .. deprecated::
+            The authoritative source for reactions is the
+            :class:`~mobspy.modules.declarations.ModelRegistry`.
+            This method is kept for internal filtering
+            (e.g. ``reset_reactions()``) and backward compatibility.
+        """
         return self._reactions
 
     def set_reactions(self, reactions: set[Reactions]) -> None:
-        """Replace the reaction set with the given one."""
+        """Replace the reaction set with the given one.
+
+        .. deprecated::
+            Prefer defining reactions via the DSL and reading
+            from the ModelRegistry.
+        """
         self._reactions = reactions
 
     def reset_reactions(self) -> None:
-        """Clear all reactions from this species."""
+        """Clear all reactions from this species.
+
+        Also removes the reactions from the global
+        :class:`~mobspy.modules.declarations.ModelRegistry`
+        so that subsequent Simulations do not pick them up.
+        """
+        removed = set(self._reactions)
         self._reactions = set()
+        registry = get_registry()
+        registry.reaction_objects = [
+            r for r in registry.reaction_objects if r not in removed
+        ]
 
     def add_reaction(self, reaction: Reactions) -> None:
-        """Add a reaction to this species."""
+        """Track a reaction on this species (for filtering)."""
         self._reactions.add(reaction)
 
     def reset_counts(self) -> None:

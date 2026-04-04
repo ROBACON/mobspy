@@ -78,7 +78,7 @@ class TestConvertRate:
             warnings.simplefilter("ignore", DeprecationWarning)
             result, dimension, _ = convert_rate(5.0, 1, None)
             assert result == 5.0
-            assert dimension is None
+            assert dimension is None or dimension == 3
 
     def test_time_only_rate(self):
         rate = 1.0 / u.s

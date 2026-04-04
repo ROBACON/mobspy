@@ -12,7 +12,7 @@ from .conftest import compare_model
 class TestTimeEvents:
     def test_event_type(self):
         A, B, C, D, E, F = BaseSpecies(6)
-        A + B >> mobspy.Zero[1]
+        A + B >> mobspy.Zero @ 1
         A(50), B(50), C(0)
         S = Simulation(A | B | C | D | E | F)
         S.plot_data = False
@@ -32,9 +32,9 @@ class TestTimeEvents:
         B = BaseSpecies(1)
         B.b1, B.b2
         A = New(B)
-        B >> mobspy.Zero[1]
-        A.b2 >> mobspy.Zero[0.5]
-        A.a1 >> mobspy.Zero[1]
+        B >> mobspy.Zero @ 1
+        A.b2 >> mobspy.Zero @ 0.5
+        A.a1 >> mobspy.Zero @ 1
         A.a1(100), A.b2(100), B.b1(100)
         S = Simulation(A | B)
         S.level = -1
@@ -45,7 +45,7 @@ class TestTimeEvents:
 
     def test_unit_event_test(self):
         A = BaseSpecies(1)
-        A >> mobspy.Zero[1 / u.s]
+        A >> mobspy.Zero @ (1 / u.s)
         A(1 * u.mol)
         S = Simulation(A)
         S.level = -1
@@ -59,7 +59,7 @@ class TestTimeEvents:
         Acka.a1, Acka.a2
         Baka = New(Acka)
         Baka.b1, Baka.b2
-        Baka >> mobspy.Zero[1]
+        Baka >> mobspy.Zero @ 1
         S = Simulation(Baka)
         S.level = -1
         S.plot_data = False
@@ -97,10 +97,10 @@ class TestTimeEvents:
     def test_event_reaction_not_allowed(self):
         try:
             A = BaseSpecies()
-            A >> mobspy.Zero[1]
+            A >> mobspy.Zero @ 1
             S = Simulation(A)
             with S.event_time(0):
-                mobspy.Zero >> A[1]
+                mobspy.Zero >> A @ 1
             assert False
         except (SystemExit, MobsPyError):
             assert True
@@ -156,8 +156,8 @@ class TestLogicOperators:
         Cu.c1, Cu.c2
         Azi, Byy = New(Cu)
         Azi.a1, Azi.a2, Byy.b1, Byy.b2
-        Azi >> mobspy.Zero[1]
-        Byy >> mobspy.Zero[0.1]
+        Azi >> mobspy.Zero @ 1
+        Byy >> mobspy.Zero @ 0.1
         Azi(200), Byy(50)
         S = Simulation(Azi | Byy)
         S.plot_data = False
@@ -173,8 +173,8 @@ class TestLogicOperators:
 
     def test_conditional_between_meta_species_2(self):
         A, B = BaseSpecies()
-        A >> mobspy.Zero[1]
-        B >> mobspy.Zero[0.1]
+        A >> mobspy.Zero @ 1
+        B >> mobspy.Zero @ 0.1
         r1 = (A < B) & (A < B) | (A < B)
         A(200), B(50)
         S = Simulation(A | B)
@@ -185,7 +185,7 @@ class TestLogicOperators:
 
     def test_bool_error(self):
         B = BaseSpecies()
-        B >> mobspy.Zero[1]
+        B >> mobspy.Zero @ 1
         B(100)
         S = Simulation(B)
         simlog.global_simlog_level = -1

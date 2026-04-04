@@ -10,7 +10,7 @@ def test_multiline():
     # fmt: off
     (
         A >>
-        B [1]
+        B @ 1
     )
     # fmt: on
     MySim = Simulation(A | B)
@@ -25,7 +25,7 @@ def test_ruff_style_multiline_reaction():
     # fmt: off
     (
         A + B >>
-        C + D [1]
+        (C + D) @ 1
     )
     # fmt: on
     MySim = Simulation(A | B | C | D)
@@ -40,7 +40,7 @@ def test_simple_multiline_reaction():
     # fmt: off
     (
         A >>
-        B [1]
+        B @ 1
     )
     # fmt: on
     MySim = Simulation(A | B)
@@ -55,7 +55,7 @@ def test_complex_multiline_reaction():
     # fmt: off
     (
         2*A + B >>
-        3*C + 2*D [1]
+        (3*C + 2*D) @ 1
     )
     # fmt: on
     MySim = Simulation(A | B | C | D)
@@ -67,7 +67,7 @@ def test_complex_multiline_reaction():
 
 def test_normal_reaction():
     A, B, C = BaseSpecies(3)
-    A + B >> C[1]
+    A + B >> C @ 1
     MySim = Simulation(A | B | C)
     MySim.level = -1
     result = MySim.compile()

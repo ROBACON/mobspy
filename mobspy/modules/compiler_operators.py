@@ -6,7 +6,8 @@ from itertools import product as ite_product
 from typing import Any
 
 from mobspy.constants import NOT_CHAR
-from mobspy.modules.meta_class import Reacting_Species, Zero
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species_constructors import Zero
 
 
 def create_all_not_reactions(reactions: set[Any]) -> set[Any]:

@@ -1,4 +1,8 @@
-"""Resolve meta-species inheritance and expand meta-reactions."""
+"""Resolve meta-species inheritance and expand meta-reactions.
+
+The primary entry point is :func:`compile_model`, a standalone pure
+function.  The legacy ``Compiler`` class delegates to it.
+"""
 
 from __future__ import annotations
 
@@ -24,13 +28,13 @@ from mobspy.modules.compiler_operators import (
 from mobspy.modules.event_functions import (
     format_event_dictionary_for_sbml as eh_format_event_dictionary_for_sbml,
 )
-from mobspy.modules.meta_class import EndFlagSpecies
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
 from mobspy.modules.reaction_expansion import (
     create_all_reactions as rc_create_all_reactions,
 )
+from mobspy.modules.species_constructors import EndFlagSpecies
 from mobspy.modules.species_string_generator import (
     construct_all_combinations as ssg_construct_all_combinations,
 )
@@ -49,6 +53,7 @@ from mobspy.modules.unit_handler import (
 from mobspy.types import (
     CompilationContext,
     CompilerResult,
+    ConcreteSpeciesId,
     CountAccumulator,
     EventData,
     ParameterUsedInfo,
@@ -206,7 +211,11 @@ class Compiler:
                 ".".join(x) for x in species_string_list
             ]
             for species_string in species_string_list:
-                species_for_sbml[DOT_SEPARATOR.join(species_string)] = 0
+                sid = ConcreteSpeciesId(
+                    base=species_string[0],
+                    characteristics=tuple(species_string[1:]),
+                )
+                species_for_sbml[sid.to_sbml_id()] = 0
 
         return species_for_sbml, mappings_for_sbml
 
@@ -489,6 +498,18 @@ class Compiler:
         )
 
     @staticmethod
+    def _display_species(sbml_id: str) -> str:
+        """Convert an SBML species ID to human-readable dotted form."""
+        return ConcreteSpeciesId.from_sbml_id(sbml_id).to_display()
+
+    @staticmethod
+    def _display_text(text: str) -> str:
+        """Replace all _dot_ occurrences in a string with dots."""
+        if DOT_SEPARATOR in text:
+            return ConcreteSpeciesId.from_sbml_id(text).to_display()
+        return text
+
+    @staticmethod
     def _generate_model_string(  # noqa: PLR0913
         species_for_sbml: SpeciesForSbml,
         mappings_for_sbml: MappingsForSbml,
@@ -498,12 +519,12 @@ class Compiler:
         assignments_for_sbml: dict[str, Any],
     ) -> str:
         """Generate a human-readable model string for verbose output."""
+        display = Compiler._display_species
         model_str = "\n"
 
         model_str += "Species\n"
         for spe in sorted(species_for_sbml):
-            spe_display = spe.replace(DOT_SEPARATOR, ".")
-            model_str += spe_display + "," + str(species_for_sbml[spe]) + "\n"
+            model_str += display(spe) + "," + str(species_for_sbml[spe]) + "\n"
 
         model_str += "\nMappings\n"
         for map_key in sorted(mappings_for_sbml):
@@ -718,3 +739,71 @@ class Compiler:
             has_mole=has_mole,
             model_context=model_context,
         )
+
+
+# ------------------------------------------------------------------
+# Standalone pure-function entry point
+# ------------------------------------------------------------------
+
+
+def compile_model(  # noqa: PLR0913
+    meta_species_to_simulate: List_Species,
+    reactions_set: set[Any],
+    species_counts: list[dict[str, Any]],
+    orthogonal_vector_structure: dict[str, Any],
+    *,
+    volume: int | float | Quantity = 1,
+    dimension: int | None = None,
+    type_of_model: str = "deterministic",
+    verbose: bool = True,
+    event_dictionary: list[Any] | None = None,
+    continuous_sim: bool = False,
+    ending_condition: Any = None,
+    skip_expression_check: bool = False,
+    parameter_context: dict[str, mp_Mobspy_Parameter] | None = None,
+    model_context: ModelUnitContext | None = None,
+) -> CompilerResult:
+    """Compile a MobsPy model into SBML-ready data structures.
+
+    Pure-function entry point: takes data in, returns data out.
+    No side effects on Species objects beyond what the legacy
+    Compiler classmethods already do (ordering references).
+
+    This is the preferred API for programmatic compilation.
+    ``Compiler.compile()`` delegates here for backward compatibility.
+
+    Args:
+        meta_species_to_simulate: Species in the model.
+        reactions_set: Set of meta-reactions.
+        species_counts: Initial count assignments.
+        orthogonal_vector_structure: Characteristic-to-species mapping.
+        volume: System volume.
+        dimension: Spatial dimension (0-3).
+        type_of_model: ``"deterministic"`` or ``"stochastic"``.
+        verbose: Generate human-readable model string.
+        event_dictionary: Packed event data from Simulation.
+        continuous_sim: Whether this is a continuous simulation.
+        ending_condition: End condition for continuous sims.
+        skip_expression_check: Skip rate expression validation.
+        parameter_context: Pre-built parameter registry.
+        model_context: Unit context for SBML generation.
+
+    Returns:
+        CompilerResult with all SBML-ready data structures.
+    """
+    return Compiler.compile(
+        meta_species_to_simulate,
+        reactions_set,
+        species_counts,
+        orthogonal_vector_structure,
+        volume=volume,
+        dimension=dimension,
+        type_of_model=type_of_model,
+        verbose=verbose,
+        event_dictionary=event_dictionary,
+        continuous_sim=continuous_sim,
+        ending_condition=ending_condition,
+        skip_expression_check=skip_expression_check,
+        parameter_context=parameter_context,
+        model_context=model_context,
+    )

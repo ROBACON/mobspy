@@ -24,16 +24,16 @@ def assign_values_to_model(
         if location == SBML_LOCATION:
             for model in models:
                 with contextlib.suppress(KeyError):
-                    model["parameters_for_sbml"][parameter_name] = (
+                    model.parameters_for_sbml[parameter_name] = (
                         parameter_value,
                         "dimensionless",
                     )
         else:
             for model in models:
                 try:
-                    model["species_for_sbml"][location] = parameter_value
+                    model.species_for_sbml[location] = parameter_value
                     dot_loc = location.replace(DOT_SEPARATOR, ".")
-                    model["species_not_mapped"][dot_loc] = parameter_value
+                    model.species_not_mapped[dot_loc] = parameter_value
                 except KeyError:
                     pass
 

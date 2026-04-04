@@ -13,7 +13,7 @@ def test_rate_function_right_multiplication():
 
     A = BaseSpecies()
     A(1000 * u.counts / u.mL)
-    A >> 2 * A[antibio_uptake_senders]
+    A >> 2 * A @ antibio_uptake_senders
     S = Simulation(A)
     S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
 
@@ -24,7 +24,7 @@ def test_rate_function_inside_multiplication():
 
     A = BaseSpecies()
     A(1000 * u.counts / u.mL)
-    A >> 2 * A[antibio_uptake_senders]
+    A >> 2 * A @ antibio_uptake_senders
     S = Simulation(A)
     S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)
 
@@ -37,6 +37,6 @@ def test_rate_function_left_multiplication():
 
     A = BaseSpecies()
     A(1000 * u.counts / u.mL)
-    A >> 2 * A[antibio_uptake_senders]
+    A >> 2 * A @ antibio_uptake_senders
     S = Simulation(A)
     S.run(duration=1222 * u.min, unit_x=u.min, unit_y=u.counts / u.mL, plot_data=False)

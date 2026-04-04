@@ -1,5 +1,11 @@
 """Meta-species, meta-reactions, and related classes for MobsPy.
 
+.. deprecated::
+    Import directly from the sub-modules instead::
+
+        from mobspy.modules.species import Species
+        from mobspy.modules.reactions import Reactions
+
 This module re-exports everything from the split sub-modules so that
 existing imports like ``from mobspy.modules.meta_class import Species``
 continue to work unchanged.
@@ -13,6 +19,8 @@ The actual implementations live in:
 
 from __future__ import annotations
 
+from mobspy.modules.declarations import RatedProduct
+
 # Re-export everything for backward compatibility
 from mobspy.modules.list_species import List_Species
 from mobspy.modules.reactions import (
@@ -24,7 +32,7 @@ from mobspy.modules.reactions import (
 )
 from mobspy.modules.species import (
     Species,
-    _get_multiline_code_context,
+    _create_reaction_from_rated,
     _methods_Species,
     clean_species_name,
 )
@@ -47,13 +55,14 @@ __all__ = [
     "List_Species",
     "New",
     "One",
+    "RatedProduct",
     "Reacting_Species",
     "Reactions",
     "Species",
     "Zero",
     "_Create_Species",
     "_Last_rate_storage",
-    "_get_multiline_code_context",
+    "_create_reaction_from_rated",
     "_methods_Reacting_Species",
     "_methods_Species",
     "clean_species_name",

@@ -73,7 +73,11 @@ class TestCompiledModel:
                 )
             },
         )
-        assert m["species_for_sbml"]["A"] == 10
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            assert m["species_for_sbml"]["A"] == 10
         assert "species_for_sbml" in m
 
     def test_items(self):

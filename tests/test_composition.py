@@ -14,7 +14,7 @@ simlog.global_simlog_level = -1
 class TestBasicComposition:
     def test_two_simulations(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(100)
         S1 = Simulation(A)
         S1.duration = 3
@@ -28,17 +28,17 @@ class TestBasicComposition:
 
     def test_three_simulations(self):
         A, B, C = BaseSpecies(3)
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(50)
         S1 = Simulation(A)
         S1.duration = 2
 
-        B >> mobspy.Zero[1]
+        B >> mobspy.Zero @ 1
         B(50)
         S2 = Simulation(B)
         S2.duration = 3
 
-        C >> mobspy.Zero[1]
+        C >> mobspy.Zero @ 1
         C(50)
         S3 = Simulation(C)
         S3.duration = 4
@@ -237,7 +237,7 @@ class TestPlotConfig:
 class TestCompilation:
     def test_compile_returns_string(self):
         A = BaseSpecies()
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(100)
         S1 = Simulation(A)
         S1.duration = 3
@@ -252,12 +252,12 @@ class TestCompilation:
 
     def test_compile_with_different_species(self):
         A, B = BaseSpecies(2)
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         A(50)
         S1 = Simulation(A)
         S1.duration = 3
 
-        B >> mobspy.Zero[0.5]
+        B >> mobspy.Zero @ 0.5
         B(100)
         S2 = Simulation(A | B)
         S2.duration = 5

@@ -12,7 +12,7 @@ class TestParameterInReactions:
     def test_single_parameter_in_rate(self):
         A = BaseSpecies()
         k = ModelParameters(0.5)
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -23,7 +23,7 @@ class TestParameterInReactions:
     def test_parameter_expression_in_rate(self):
         A = BaseSpecies()
         k = ModelParameters(2.0)
-        A >> mobspy.Zero[3 * k]
+        A >> mobspy.Zero @ (3 * k)
         A(50)
         S = Simulation(A)
         S.level = -1
@@ -33,7 +33,7 @@ class TestParameterInReactions:
     def test_two_parameters_in_rate(self):
         A = BaseSpecies()
         k1, k2 = ModelParameters(1.0, 0.5)
-        A >> mobspy.Zero[k1 * k2]
+        A >> mobspy.Zero @ (k1 * k2)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -54,7 +54,7 @@ class TestParameterSweeps:
     def test_single_parameter_sweep(self):
         A = BaseSpecies()
         k = ModelParameters([1, 2, 3])
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -64,7 +64,7 @@ class TestParameterSweeps:
     def test_parameter_sweep_with_expression(self):
         A = BaseSpecies()
         k = ModelParameters([0.5, 1.0, 1.5])
-        A >> mobspy.Zero[2 * k]
+        A >> mobspy.Zero @ (2 * k)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -74,7 +74,7 @@ class TestParameterSweeps:
     def test_parameter_sweep_as_count(self):
         A = BaseSpecies()
         n = ModelParameters([10, 50, 100])
-        A >> mobspy.Zero[1]
+        A >> mobspy.Zero @ 1
         set_counts({"A": n})
         S = Simulation(A)
         S.level = -1
@@ -84,7 +84,7 @@ class TestParameterSweeps:
     def test_two_sweep_parameters(self):
         A = BaseSpecies()
         k1, k2 = ModelParameters([1, 2], [0.1, 0.2, 0.3])
-        A >> mobspy.Zero[k1 + k2]
+        A >> mobspy.Zero @ (k1 + k2)
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -97,7 +97,7 @@ class TestParameterRenaming:
         A = BaseSpecies()
         k = ModelParameters(1.0)
         k.rename("rate_constant")
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -108,7 +108,7 @@ class TestParameterRenaming:
         A = BaseSpecies()
         k = ModelParameters([1, 2, 3])
         k.rename("decay_rate")
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -126,7 +126,7 @@ class TestParameterWithUnits:
     def test_parameter_with_rate_unit(self):
         A = BaseSpecies()
         k = ModelParameters(1 / u.hour)
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -136,7 +136,7 @@ class TestParameterWithUnits:
     def test_parameter_sweep_with_units(self):
         A = BaseSpecies()
         k = ModelParameters([1 / u.hour, 2 / u.hour, 3 / u.hour])
-        A >> mobspy.Zero[k]
+        A >> mobspy.Zero @ k
         A(100)
         S = Simulation(A)
         S.level = -1
@@ -158,7 +158,7 @@ class TestParameterWithUnits:
     def test_two_parameters_with_different_units(self):
         A = BaseSpecies()
         k1, k2 = ModelParameters(1, [1 / u.hour, 2 / u.hour])
-        A >> mobspy.Zero[k1 * k2]
+        A >> mobspy.Zero @ (k1 * k2)
         A(100)
         S = Simulation(A)
         S.level = -1

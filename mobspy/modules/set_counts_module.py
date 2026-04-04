@@ -12,14 +12,12 @@ from pint import Quantity
 
 from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import ValidationError
-from mobspy.modules.meta_class import (
-    List_Species,
-    Reacting_Species,
-    Species,
-)
+from mobspy.modules.list_species import List_Species
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
+from mobspy.modules.reactions import Reacting_Species
+from mobspy.modules.species import Species
 
 
 def set_counts(count_dic: dict[Any, Any]) -> List_Species:

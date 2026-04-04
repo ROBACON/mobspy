@@ -129,6 +129,30 @@ class FunctionCallNode(ExprNode):
         return self.arg.walk_species()
 
 
+class ConditionalNode(ExprNode):
+    """Piecewise conditional: if condition then if_true else if_false.
+
+    Renders as ``piecewise(if_true, condition, if_false)`` for SBML.
+    """
+
+    __slots__ = ("condition", "if_false", "if_true")
+
+    def __init__(self, condition: str, if_true: ExprNode, if_false: ExprNode) -> None:
+        self.condition = condition
+        self.if_true = if_true
+        self.if_false = if_false
+
+    def render(self) -> str:
+        return (
+            f"piecewise({self.if_true.render()}, "
+            f"{self.condition}, "
+            f"{self.if_false.render()})"
+        )
+
+    def walk_species(self) -> list[SpeciesRefNode]:
+        return self.if_true.walk_species() + self.if_false.walk_species()
+
+
 def _to_expr_node(value: Any) -> ExprNode:
     """Wrap a raw value into an ExprNode if it isn't one already."""
     if isinstance(value, ExprNode):

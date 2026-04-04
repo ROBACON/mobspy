@@ -6,6 +6,7 @@ MobsPy package for structured, type-safe data access.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -79,7 +80,10 @@ class ParameterUsedInfo:
 
 @dataclass
 class SBMLModelData:
-    """Data passed to builder.build() / sbml_writer."""
+    """Data passed to builder.build() / sbml_writer.
+
+    Mutable: used as a builder during simulation composition.
+    """
 
     species_for_sbml: dict[str, int | float] = field(default_factory=dict)
     parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
@@ -89,11 +93,21 @@ class SBMLModelData:
     events_for_sbml: dict[str, EventData] = field(default_factory=dict)
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
 
-    # Backward compatibility: dict-like access for gradual migration
+    # Deprecated: use attribute access instead
     def __getitem__(self, key: str) -> Any:
+        warnings.warn(
+            f'SBMLModelData["{key}"] is deprecated, use .{key} instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return getattr(self, key)
 
     def __setitem__(self, key: str, value: Any) -> None:
+        warnings.warn(
+            f'SBMLModelData["{key}"] = ... is deprecated, use .{key} = ... instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         setattr(self, key, value)
 
 
@@ -104,8 +118,6 @@ class CompiledModel:
     Examples:
         >>> m = CompiledModel()
         >>> m.species_for_sbml
-        {}
-        >>> m["species_for_sbml"]
         {}
     """
 
@@ -121,11 +133,21 @@ class CompiledModel:
     assigned_species: list[str] = field(default_factory=list)
     model_context: Any = None  # ModelUnitContext | None (avoid circular import)
 
-    # Backward compatibility: dict-like access for gradual migration
+    # Deprecated: use attribute access instead
     def __getitem__(self, key: str) -> Any:
+        warnings.warn(
+            f'CompiledModel["{key}"] is deprecated, use .{key} instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return getattr(self, key)
 
     def __setitem__(self, key: str, value: Any) -> None:
+        warnings.warn(
+            f'CompiledModel["{key}"] = ... is deprecated, use .{key} = ... instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         setattr(self, key, value)
 
     def __contains__(self, key: str) -> bool:
@@ -228,11 +250,11 @@ CompiledModelDict = CompiledModel
 # --- Compiler result ---
 
 
-@dataclass
+@dataclass(frozen=True)
 class CompilerResult:
     """Structured result from Compiler.compile().
 
-    Replaces the 11-element tuple previously returned.
+    Immutable: the compiler produces it once, consumers only read.
     """
 
     species_for_sbml: dict[str, int | float] = field(default_factory=dict)
@@ -308,7 +330,7 @@ class CountAccumulator:
     parameters_used: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenderContext:
     """Flags controlling how species references are resolved to SBML strings."""
 
@@ -316,3 +338,109 @@ class RenderContext:
     concentration_in_model: bool = False
     count_in_expression: bool = True
     concentration_in_expression: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Structured IR types (replace string-encoded species IDs)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class CharacteristicValue:
+    """A single characteristic belonging to a specific parent species."""
+
+    name: str
+    parent_name: str
+
+    def __str__(self) -> str:
+        return self.name
+
+
+@dataclass(frozen=True)
+class ConcreteSpeciesId:
+    """Structured identifier for a concrete species (after expansion).
+
+    Replaces the ``_dot_``-encoded strings used internally.  The
+    encoding now only happens at the SBML serialization boundary
+    via ``to_sbml_id()``.
+
+    Examples:
+        >>> sid = ConcreteSpeciesId("A", ("alive",))
+        >>> sid.to_sbml_id()
+        'A_dot_alive'
+        >>> str(sid)
+        'A.alive'
+    """
+
+    base: str
+    characteristics: tuple[str, ...] = ()
+
+    def to_sbml_id(self, separator: str = "_dot_") -> str:
+        """Serialize to an SBML-compatible species identifier."""
+        if not self.characteristics:
+            return self.base
+        return self.base + separator + separator.join(self.characteristics)
+
+    def to_display(self) -> str:
+        """Human-readable dotted form."""
+        if not self.characteristics:
+            return self.base
+        return self.base + "." + ".".join(self.characteristics)
+
+    @classmethod
+    def from_sbml_id(cls, sbml_id: str, separator: str = "_dot_") -> ConcreteSpeciesId:
+        """Parse from an SBML-encoded species string."""
+        parts = sbml_id.split(separator)
+        if len(parts) == 1:
+            return cls(base=parts[0])
+        return cls(base=parts[0], characteristics=tuple(parts[1:]))
+
+    def __str__(self) -> str:
+        return self.to_display()
+
+
+@dataclass(frozen=True)
+class CharacteristicQuery:
+    """Structured query over characteristics (replaces string-set queries).
+
+    Used during reaction expansion to match concrete species against
+    meta-species characteristic constraints.
+    """
+
+    include: frozenset[str] = frozenset()
+    exclude: frozenset[str] = frozenset()
+    match_all: bool = False
+
+    @classmethod
+    def from_legacy_set(cls, chars: set[str] | str) -> CharacteristicQuery:
+        """Convert from legacy string-set representation.
+
+        Interprets ``all$``, ``not$``, and ``std$`` markers.
+        """
+        from mobspy.constants import ALL_CHAR, NOT_CHAR, STD_CHAR  # noqa: PLC0415
+
+        if isinstance(chars, str):
+            if chars == STD_CHAR:
+                return cls()
+            if chars == ALL_CHAR:
+                return cls(match_all=True)
+            return cls(include=frozenset({chars}))
+
+        include: set[str] = set()
+        exclude: set[str] = set()
+        match_all = False
+        for c in chars:
+            if c == ALL_CHAR:
+                match_all = True
+            elif c in (NOT_CHAR, STD_CHAR):
+                pass
+            elif c.startswith(NOT_CHAR):
+                exclude.add(c.removeprefix(NOT_CHAR))
+            else:
+                include.add(c)
+
+        return cls(
+            include=frozenset(include),
+            exclude=frozenset(exclude),
+            match_all=match_all,
+        )

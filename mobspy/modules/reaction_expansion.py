@@ -13,7 +13,7 @@ from mobspy.types import CompilationContext, ReactionData
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
-    from mobspy.modules.meta_class import Reactions
+    from mobspy.modules.reactions import Reactions
     from mobspy.types import ReactionsForSbml
 
 from mobspy.modules.expression_context import (

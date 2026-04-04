@@ -52,8 +52,8 @@ from mobspy.types import RenderContext
 if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
 
-    from mobspy.modules.meta_class import Species
     from mobspy.modules.model_unit_context import ModelUnitContext
+    from mobspy.modules.species import Species
 
 
 _QUANTITY_OPS: dict[str, Callable[..., Any]] = {
@@ -1040,6 +1040,17 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._unit_conc_op = None
 
         self._has_units: bool = has_units
+
+    @property
+    def expr_node(self) -> ExprNode | int | float:
+        """Return the underlying ExprNode AST.
+
+        Both the lambda-replay path (producing MobsPyExpression)
+        and the builder path (producing ExprNode directly) converge
+        on this type.  The compiler renders ExprNode via
+        ``_render_resolved()`` for SBML output.
+        """
+        return self._operation
 
     def __getattr__(self, item: str) -> Specific_Species_Operator:
         return super().__getattr__(item)

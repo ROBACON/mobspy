@@ -17,7 +17,7 @@ from pint import Quantity
 from mobspy.constants import NULL_SPECIES
 from mobspy.exceptions import CompilationError
 from mobspy.mobspy_logging import get_logger
-from mobspy.modules.meta_class import Zero as mc_Zero
+from mobspy.modules.expression_nodes import ExprNode
 from mobspy.modules.mobspy_expressions import (
     ExpressionDefiner as mbe_ExpressionDefiner,
 )
@@ -30,6 +30,7 @@ from mobspy.modules.mobspy_expressions import (
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
+from mobspy.modules.species_constructors import Zero as mc_Zero
 from mobspy.modules.species_utils import (
     count_stoichiometry as mcu_count_string_dictionary,
 )
@@ -123,6 +124,8 @@ def extract_reaction_rate(  # noqa: PLR0913
             "There is a reaction rate missing for the "
             "following reactants: \n" + str(reactant_string_list)
         )
+    elif isinstance(reaction_rate_function, ExprNode):
+        reaction_rate_string = reaction_rate_function.render()
     elif isinstance(reaction_rate_function, str):
         reaction_rate_string = reaction_rate_function
     else:
@@ -196,6 +199,8 @@ def _process_callable_rate(  # noqa: PLR0913
             str(rate),
             type_of_model,
         )
+    elif isinstance(rate, ExprNode):
+        reaction_rate_string = rate.render()
     elif rate is None:
         raise CompilationError(
             "There is a reaction rate missing for the "
@@ -205,7 +210,7 @@ def _process_callable_rate(  # noqa: PLR0913
         raise CompilationError(
             f"The rate function {reaction_rate_function},"
             " returned a non-valid value. \n"
-            "Only int, floats and str are accepted"
+            "Only int, floats, str, and ExprNode are accepted"
         )
 
     return reaction_rate_string, parameters_in_reaction
