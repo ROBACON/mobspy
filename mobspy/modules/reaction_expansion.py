@@ -6,9 +6,9 @@ from inspect import signature as inspect_signature
 from itertools import product as itertools_product
 from typing import TYPE_CHECKING, Any
 
-from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
+from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import CompilationError
-from mobspy.types import CompilationContext, ReactionData
+from mobspy.types import CompilationContext, ConcreteSpeciesId, ReactionData
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
@@ -415,7 +415,10 @@ def create_all_reactions(
                             )
 
                         reactant_strings = [
-                            DOT_SEPARATOR.join([reactant[0].get_name(), *reactant[1:]])
+                            ConcreteSpeciesId(
+                                base=reactant[0].get_name(),
+                                characteristics=tuple(reactant[1:]),
+                            ).to_sbml_id()
                             if len(reactant) > 1
                             else reactant[0].get_name()
                             for reactant in reactant_string_list

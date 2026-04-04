@@ -55,17 +55,17 @@ def test_tools_dir() -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _clear_model_registry() -> Generator[None, None, None]:
-    """Clear the global ModelRegistry between tests.
+def _clear_session() -> Generator[None, None, None]:
+    """Reset the full session context between tests.
 
-    Prevents reaction/count declarations from leaking across tests
-    since the registry is append-only within a thread.
+    Prevents reaction/count declarations and other DSL state
+    from leaking across tests.
     """
-    from mobspy.modules.declarations import get_registry
+    from mobspy.modules.session_context import reset_session
 
-    get_registry().clear()
+    reset_session()
     yield
-    get_registry().clear()
+    reset_session()
 
 
 # ------------------------------------------------------------------

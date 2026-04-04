@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import linecache
 import sys
-from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -51,6 +50,9 @@ from mobspy.modules.species_utils import (
     combine_references as mcu_combine_references,
 )
 from mobspy.modules.species_utils import (
+    compute_ordered_references as mcu_compute_ordered_references,
+)
+from mobspy.modules.species_utils import (
     unite_characteristics as mcu_unite_characteristics,
 )
 
@@ -80,12 +82,6 @@ def _create_reaction_from_rated(
         validate_rate_units(rated.reverse_rate, len(rated.products))
         Reactions(rated.products, reactant_list, rate=rated.reverse_rate)
     return reaction
-
-
-_simulation_context_cv: ContextVar[Any] = ContextVar(
-    "_simulation_context_cv", default=None
-)
-_meta_any_ctx_cv: ContextVar[set[str]] = ContextVar("_meta_any_ctx_cv")
 
 
 # Easter Egg: I finished the first version on a sunday at the
@@ -129,15 +125,13 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self.name(name)
         self._characteristics: set[str] = set()
         self._references: set[Species] = {self}
-        self._ordered_references: list[Species] = []
-        self._reference_index_dictionary: dict[Species, int] = {}
+        self._ordered_references: list[Species] | None = None
+        self._reference_index_dictionary: dict[Species, int] | None = None
         self._unit: str = ""
         self._assignments: dict[str, Any] = {}
         self._linked_species: set[Species] = set()
 
         self.first_characteristic: str | None = None
-
-        self._reactions: set[Reactions] = set()
 
         self._species_counts: list[dict[str, Any]] = []
 
@@ -716,55 +710,41 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             all_char = all_char.union(reference.get_characteristics())
         return all_char
 
+    def _invalidate_ordered_references(self) -> None:
+        """Invalidate the cached ordered references."""
+        self._ordered_references = None
+        self._reference_index_dictionary = None
+
     def add_reference(self, reference: Species) -> None:
         """Add a reference species to this species."""
         self._references.add(reference)
+        self._invalidate_ordered_references()
 
     def set_references(self, reference_set: set[Species]) -> None:
         """Replace the reference set with the given one."""
         self._references = reference_set
+        self._invalidate_ordered_references()
 
     def reset_references(self) -> None:
         """Reset references to only contain this species."""
         self._references = {self}
+        self._invalidate_ordered_references()
 
     def get_reactions(self) -> set[Reactions]:
-        """Return the set of reactions tracked by this species.
+        """Return the set of reactions involving this species.
 
-        .. deprecated::
-            The authoritative source for reactions is the
-            :class:`~mobspy.modules.declarations.ModelRegistry`.
-            This method is kept for internal filtering
-            (e.g. ``reset_reactions()``) and backward compatibility.
+        Queries the :class:`~mobspy.modules.declarations.ModelRegistry`.
         """
-        return self._reactions
-
-    def set_reactions(self, reactions: set[Reactions]) -> None:
-        """Replace the reaction set with the given one.
-
-        .. deprecated::
-            Prefer defining reactions via the DSL and reading
-            from the ModelRegistry.
-        """
-        self._reactions = reactions
+        registry = get_registry()
+        return registry.reactions_for_species(frozenset({id(self)}))
 
     def reset_reactions(self) -> None:
-        """Clear all reactions from this species.
+        """Remove all reactions involving this species from the registry.
 
-        Also removes the reactions from the global
-        :class:`~mobspy.modules.declarations.ModelRegistry`
-        so that subsequent Simulations do not pick them up.
+        Subsequent Simulations will not pick up the removed reactions.
         """
-        removed = set(self._reactions)
-        self._reactions = set()
         registry = get_registry()
-        registry.reaction_objects = [
-            r for r in registry.reaction_objects if r not in removed
-        ]
-
-    def add_reaction(self, reaction: Reactions) -> None:
-        """Track a reaction on this species (for filtering)."""
-        self._reactions.add(reaction)
+        registry.remove_reactions_for(self)
 
     def reset_counts(self) -> None:
         """Clear all initial count assignments."""
@@ -777,8 +757,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Raises:
             ValidationError: If a context is already set.
         """
-        if _simulation_context_cv.get() is None:
-            _simulation_context_cv.set(sim)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        session = get_session()
+        if session.simulation_context is None:
+            session.simulation_context = sim
         else:
             raise ValidationError(
                 "A different Simulation Object was assigned "
@@ -792,54 +775,58 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         cls,
         meta_specie_named_any_characteristics: set[str],
     ) -> None:
-        """Update the meta-species Any context for the current thread.
+        """Update the meta-species Any context for the current thread."""
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
 
-        Args:
-            meta_specie_named_any_characteristics: Set of characteristics of the
-                currently active any context.
-        """
-        _meta_any_ctx_cv.set(meta_specie_named_any_characteristics)
+        get_session().meta_any_ctx = meta_specie_named_any_characteristics
 
     @classmethod
     def reset_simulation_context(cls) -> None:
         """Clear the active simulation context."""
-        _simulation_context_cv.set(None)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().simulation_context = None
 
     @classmethod
     def get_simulation_context(cls) -> Any:
         """Return the active simulation context, or None."""
-        return _simulation_context_cv.get()
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().simulation_context
 
     @classmethod
     def get_meta_specie_named_any_context(cls) -> set[str]:
         """Return the current Any context characteristics for this thread."""
-        try:
-            return _meta_any_ctx_cv.get()
-        except LookupError:
-            s: set[str] = set()
-            _meta_any_ctx_cv.set(s)
-            return s
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().meta_any_ctx
+
+    def _ensure_ordered_references(self) -> None:
+        """Lazily compute ordered references and index map."""
+        if self._ordered_references is None:
+            ordered, index_dict = mcu_compute_ordered_references(self)
+            self._ordered_references = ordered
+            self._reference_index_dictionary = index_dict
 
     def order_references(self) -> None:
-        """Sort references by characteristics and build an index map."""
-        cleaned_references = [
-            x for x in self.get_references() if x.get_characteristics() != set()
-        ]
-        self._ordered_references = sorted(
-            cleaned_references, key=lambda x: sorted(x.get_characteristics())
-        )
-        i = 1
-        for reference in self._ordered_references:
-            self._reference_index_dictionary[reference] = i
-            i = i + 1
+        """Sort references by characteristics and build an index map.
+
+        Now delegates to the lazy computation. Calling this explicitly
+        is no longer required but remains safe.
+        """
+        self._ordered_references = None
+        self._reference_index_dictionary = None
+        self._ensure_ordered_references()
 
     def get_ordered_references(self) -> list[Species]:
         """Return references sorted by characteristics."""
-        return self._ordered_references
+        self._ensure_ordered_references()
+        return self._ordered_references  # type: ignore[return-value]
 
     def get_index_from_reference_dict(self, reference: Species) -> int:
         """Return the 1-based index of a reference species."""
-        return self._reference_index_dictionary[reference]
+        self._ensure_ordered_references()
+        return self._reference_index_dictionary[reference]  # type: ignore[index]
 
     @classmethod
     def is_species(cls) -> bool:

@@ -87,6 +87,27 @@ def unite_characteristics(species: list[Any] | None) -> set[str]:
     return characteristics
 
 
+def compute_ordered_references(
+    species: Any,
+) -> tuple[list[Any], dict[Any, int]]:
+    """Compute ordered references and index map for a species.
+
+    Pure function: returns the result without mutating the species.
+
+    Args:
+        species: A meta-species object.
+
+    Returns:
+        Tuple of (ordered_references, reference_index_dictionary).
+    """
+    cleaned_references = [
+        x for x in species.get_references() if x.get_characteristics() != set()
+    ]
+    ordered = sorted(cleaned_references, key=lambda x: sorted(x.get_characteristics()))
+    index_dict = {reference: i for i, reference in enumerate(ordered, start=1)}
+    return ordered, index_dict
+
+
 def create_orthogonal_vector_structure(
     species: list[Any] | set[Any],
 ) -> dict[str, Any]:

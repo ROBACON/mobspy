@@ -281,30 +281,24 @@ class Simulation(
     def _init_reactions(self, reactions: set[Reactions] | None) -> None:
         """Collect reactions from explicit set or from the model registry.
 
-        Uses the registry as the primary source, filtered by species
-        references (respects ``reset_reactions()``).
+        Filters the registry snapshot by species membership: only reactions
+        where at least one participant is in the model (including references).
         """
         if reactions is not None:
             self._reactions_set = set(reactions)
-        elif self._declarations.reaction_objects:
-            # Primary path: registry, filtered by what species still track
-            species_reactions = self._collect_species_reactions()
-            self._reactions_set = {
-                rxn
-                for rxn in self._declarations.reaction_objects
-                if rxn in species_reactions
-            }
         else:
-            # Legacy fallback: traverse Species._reactions directly
-            self._reactions_set = self._collect_species_reactions()
+            model_species_ids = self._model_species_ids()
+            self._reactions_set = self._declarations.reactions_for_species(
+                model_species_ids
+            )
 
-    def _collect_species_reactions(self) -> set[Reactions]:
-        """Collect reactions tracked by model species and their references."""
-        result: set[Reactions] = set()
+    def _model_species_ids(self) -> frozenset[int]:
+        """Collect ids of all species in the model, including references."""
+        ids: set[int] = set()
         for spe_object in self.model:
             for reference in spe_object.get_references():
-                result.update(reference.get_reactions())
-        return result
+                ids.add(id(reference))
+        return frozenset(ids)
 
     def _init_counts(self) -> None:
         """Gather species counts from the registry or Species objects.

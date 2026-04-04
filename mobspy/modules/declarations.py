@@ -28,7 +28,6 @@ ContextVar                     Status     Notes
 
 from __future__ import annotations
 
-from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -128,6 +127,7 @@ class ModelRegistry:
         self.reaction_objects: list[Any] = []
         self._counts: dict[tuple[int, Any], CountAssignment] = {}
         self.events: list[EventDecl] = []
+        self._reaction_species: dict[int, frozenset[int]] = {}
 
     @property
     def counts(self) -> list[CountAssignment]:
@@ -143,6 +143,12 @@ class ModelRegistry:
         self.reactions.append(decl)
         if reaction_obj is not None:
             self.reaction_objects.append(reaction_obj)
+            species_ids: set[int] = set()
+            for ref in decl.reactants:
+                species_ids.add(id(ref.species))
+            for ref in decl.products:
+                species_ids.add(id(ref.species))
+            self._reaction_species[id(reaction_obj)] = frozenset(species_ids)
 
     def add_count(self, assignment: CountAssignment) -> None:
         """Register or overwrite a count assignment.
@@ -164,6 +170,47 @@ class ModelRegistry:
         for k in to_remove:
             del self._counts[k]
 
+    def remove_reactions_for(self, species: Any) -> None:
+        """Remove all reactions where the given species participates.
+
+        Called by ``Species.reset_reactions()`` to keep the
+        registry in sync.
+        """
+        species_id = id(species)
+        to_remove_ids: set[int] = set()
+        for rxn_id, spe_ids in self._reaction_species.items():
+            if species_id in spe_ids:
+                to_remove_ids.add(rxn_id)
+
+        # Filter both parallel lists together
+        new_reactions: list[ReactionDecl] = []
+        new_objects: list[Any] = []
+        for decl, obj in zip(self.reactions, self.reaction_objects, strict=False):
+            if id(obj) not in to_remove_ids:
+                new_reactions.append(decl)
+                new_objects.append(obj)
+        self.reactions = new_reactions
+        self.reaction_objects = new_objects
+        for rxn_id in to_remove_ids:
+            self._reaction_species.pop(rxn_id, None)
+
+    def reactions_for_species(
+        self,
+        model_species_ids: frozenset[int],
+    ) -> set[Any]:
+        """Return reaction objects where at least one participant is in the set.
+
+        Args:
+            model_species_ids: Set of ``id(species)`` for all species in the
+                model (including their references).
+        """
+        result: set[Any] = set()
+        for rxn_obj in self.reaction_objects:
+            spe_ids = self._reaction_species.get(id(rxn_obj), frozenset())
+            if spe_ids & model_species_ids:
+                result.add(rxn_obj)
+        return result
+
     def add_event(self, event: EventDecl) -> None:
         """Register an event declaration."""
         self.events.append(event)
@@ -175,6 +222,7 @@ class ModelRegistry:
         snap.reaction_objects = list(self.reaction_objects)
         snap._counts = dict(self._counts)
         snap.events = list(self.events)
+        snap._reaction_species = dict(self._reaction_species)
         return snap
 
     def clear(self) -> None:
@@ -183,6 +231,7 @@ class ModelRegistry:
         self.reaction_objects.clear()
         self._counts.clear()
         self.events.clear()
+        self._reaction_species.clear()
 
     def snapshot_and_clear(self) -> ModelRegistry:
         """Snapshot then clear.  Used by Simulation.__init__."""
@@ -191,17 +240,14 @@ class ModelRegistry:
         return snap
 
 
-_registry_cv: ContextVar[ModelRegistry] = ContextVar("_registry_cv")
-
-
 def get_registry() -> ModelRegistry:
     """Return the thread-local ModelRegistry, creating one if needed."""
-    try:
-        return _registry_cv.get()
-    except LookupError:
-        reg = ModelRegistry()
-        _registry_cv.set(reg)
-        return reg
+    from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+    session = get_session()
+    if session.registry is None:
+        session.registry = ModelRegistry()
+    return session.registry
 
 
 def snapshot_registry() -> ModelRegistry:

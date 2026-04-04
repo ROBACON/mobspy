@@ -117,7 +117,6 @@ def construct_all_combinations(
         char_set2 = characteristics
     spe_object = spe_or_reactiong_object.get_spe_object()
 
-    spe_object.order_references()
     ordered_references_list = spe_object.get_ordered_references()
 
     objects_to_characteristic = characteristics_dictionary(

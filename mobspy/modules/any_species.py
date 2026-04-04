@@ -5,7 +5,6 @@ for defining the Context_specie_named_any class.
 
 from __future__ import annotations
 
-from contextvars import ContextVar
 from typing import Any as TypingAny
 from typing import NoReturn
 
@@ -13,29 +12,19 @@ from mobspy.constants import CONTEXT_ANY_SPECIES_NAME
 from mobspy.exceptions import ValidationError
 from mobspy.modules.species import Species
 
-_any_chars_cv: ContextVar[set[str]] = ContextVar("_any_chars_cv")
-_any_stack_cv: ContextVar[list[set[str]]] = ContextVar("_any_stack_cv")
-_any_building_cv: ContextVar[bool] = ContextVar("_any_building_cv", default=False)
-
 
 def _get_any_chars() -> set[str]:
-    """Return the current Any characteristics set, lazily initialized per-thread."""
-    try:
-        return _any_chars_cv.get()
-    except LookupError:
-        s: set[str] = set()
-        _any_chars_cv.set(s)
-        return s
+    """Return the current Any characteristics set from session context."""
+    from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+    return get_session().any_chars
 
 
 def _get_any_stack() -> list[set[str]]:
-    """Return the nested Any context stack, lazily initialized per-thread."""
-    try:
-        return _any_stack_cv.get()
-    except LookupError:
-        lst: list[set[str]] = []
-        _any_stack_cv.set(lst)
-        return lst
+    """Return the nested Any context stack from session context."""
+    from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+    return get_session().any_stack
 
 
 class Context_specie_named_any(Species):  # noqa: N801
@@ -63,7 +52,9 @@ class Context_specie_named_any(Species):  # noqa: N801
         if item.startswith("_"):
             raise AttributeError(item)
 
-        _any_building_cv.set(True)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().any_building = True
         _get_any_chars().add(item)
         return self
 
@@ -72,11 +63,14 @@ class Context_specie_named_any(Species):  # noqa: N801
         Context manager for Any's characteristics.
         Called in "with Any.example_characteristic :" format, when entering.
         """
-        if not _any_building_cv.get(False):
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        session = get_session()
+        if not session.any_building:
             raise ValidationError(
                 "Characteristics cannot be added to the Any specie outside of a context"
             )
-        _any_building_cv.set(False)
+        session.any_building = False
         self.context_initiator_for_meta_specie_named_any()
         return 0
 
@@ -104,12 +98,15 @@ class Context_specie_named_any(Species):  # noqa: N801
         the nested stack and updates the current Any context.
         Then, it updates the Any context in all meta-species.
         """
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
         stack = _get_any_stack()
         previous_chars = stack.pop()
+        session = get_session()
         if len(stack) > 0:
-            _any_chars_cv.set(stack[-1])
+            session.any_chars = stack[-1]
         else:
-            _any_chars_cv.set(set())
+            session.any_chars = set()
         Species.update_meta_specie_named_any_context(
             Species.get_meta_specie_named_any_context() - previous_chars
         )

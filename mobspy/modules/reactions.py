@@ -7,7 +7,6 @@ here for organizational clarity.
 
 from __future__ import annotations
 
-from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -48,10 +47,6 @@ if TYPE_CHECKING:
     from mobspy.modules.species import Species
 
 
-_last_rate_cv: ContextVar[Any] = ContextVar("_last_rate_cv", default=None)
-_entity_counter_cv: ContextVar[int] = ContextVar("_entity_counter_cv", default=0)
-
-
 class _Last_rate_storage:  # noqa: N801
     """Legacy rate buffering for the ``[]`` bracket syntax.
 
@@ -71,22 +66,30 @@ class _Last_rate_storage:  # noqa: N801
     @staticmethod
     def get_last_rate() -> Any:
         """Return the stored rate for the current thread."""
-        return _last_rate_cv.get()
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().last_rate
 
     @staticmethod
     def set_last_rate(value: Any) -> None:
         """Store a rate value for the current thread."""
-        _last_rate_cv.set(value)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().last_rate = value
 
     @staticmethod
     def get_entity_counter() -> int:
         """Return the entity counter for the current thread."""
-        return _entity_counter_cv.get()
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().entity_counter
 
     @staticmethod
     def increment_entity_counter() -> None:
         """Increment the entity counter for the current thread."""
-        _entity_counter_cv.set(_entity_counter_cv.get() + 1)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().entity_counter += 1
 
     @classmethod
     def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
@@ -106,7 +109,7 @@ class _Last_rate_storage:  # noqa: N801
             DeprecationWarning,
             stacklevel=3,
         )
-        _last_rate_cv.set(item)
+        cls.set_last_rate(item)
         return object_to_return
 
     @classmethod
@@ -123,7 +126,7 @@ class _Last_rate_storage:  # noqa: N801
 
         if isinstance(rate, (Species, Reacting_Species, Reactions)):
             raise ReactionError(
-                f"Reaction rate of type {type(_last_rate_cv.get())} not valid"
+                f"Reaction rate of type {type(cls.get_last_rate())} not valid"
             )
 
         if not (
@@ -217,12 +220,6 @@ class Reactions:
         self.products = products
 
         self.order = None
-
-        # Track on species for filtering (e.g. reset_reactions())
-        for reactant in reactants:
-            reactant["object"].add_reaction(self)
-        for product in products:
-            product["object"].add_reaction(self)
 
         self._register_declaration()
 

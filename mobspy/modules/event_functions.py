@@ -5,7 +5,7 @@ from __future__ import annotations
 from re import split as re_split
 from typing import TYPE_CHECKING, Any
 
-from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
+from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import EventError
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 from mobspy.modules.unit_handler import convert_time as uh_convert_time
@@ -20,10 +20,10 @@ from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
 from mobspy.modules.species_string_generator import (
-    construct_all_combinations as ssg_construct_all_combinations,
+    construct_all_species_ids as ssg_construct_all_species_ids,
 )
 from mobspy.modules.species_string_generator import (
-    construct_species_char_list as ssg_construct_species_char_list,
+    construct_species_id as ssg_construct_species_id,
 )
 
 
@@ -171,13 +171,13 @@ def _process_all_char_assignments(
             continue
         temp_char = set(ec["characteristics"])
         temp_char.remove(ALL_CHAR)
-        dummy = ssg_construct_all_combinations(
+        species_ids = ssg_construct_all_species_ids(
             ec["species"],
             temp_char,
             characteristics_to_object,
-            symbol=DOT_SEPARATOR,
         )
-        for d in dummy:
+        for sid in species_ids:
+            d = sid.to_sbml_id()
             if not isinstance(ec["quantity"], str):
                 event_dictionary[d] = uh_convert_counts(
                     ec["quantity"],
@@ -200,15 +200,11 @@ def _process_specific_assignments(
     for ec in ev.event_counts:
         if ALL_CHAR in ec["characteristics"]:
             continue
-        dummy_result = ssg_construct_species_char_list(
+        dummy_key = ssg_construct_species_id(
             ec["species"],
             ec["characteristics"],
             characteristics_to_object,
-            symbol=DOT_SEPARATOR,
-        )
-        dummy_key: str = (
-            dummy_result if isinstance(dummy_result, str) else str(dummy_result)
-        )
+        ).to_sbml_id()
         if not isinstance(ec["quantity"], str):
             if isinstance(ec["quantity"], mp_Mobspy_Parameter):
                 parameters_in_events.add(ec["quantity"])

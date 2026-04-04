@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any
 from joblib import Parallel, delayed
 
 import mobspy.sbml_simulator.builder as sbml_builder
-from mobspy.constants import DOT_SEPARATOR, END_FLAG_SPECIES_NAME
+from mobspy.constants import END_FLAG_SPECIES_NAME
 from mobspy.exceptions import SimulationError
 from mobspy.import_manager.lazy_import_class import LazyImporter as ipm_LazyImporter
 from mobspy.mobspy_logging import get_logger
-from mobspy.types import SBMLModelData
+from mobspy.types import ConcreteSpeciesId, SBMLModelData
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -138,7 +138,7 @@ def reformat_time_series(
     data_dict: dict[str, list[float]] = {"Time": data.index.tolist()}
 
     for key in data:
-        data_dict[key.replace(DOT_SEPARATOR, ".")] = list(data[key])
+        data_dict[ConcreteSpeciesId.from_sbml_id(key).to_display()] = list(data[key])
 
     return data_dict
 
@@ -170,7 +170,10 @@ def __sbml_new_initial_values(
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
-        sbml_key = key.replace(".", DOT_SEPARATOR)
+        parts = key.split(".")
+        sbml_key = ConcreteSpeciesId(
+            base=parts[0], characteristics=tuple(parts[1:])
+        ).to_sbml_id()
         if sbml_key not in species_for_sbml:
             continue
 
@@ -293,7 +296,7 @@ def __remap_species(
 
     dot_species_not_mapped: dict[str, float] = {}
     for key in species_not_mapped:  # noqa: PLC0206
-        dot_key = key.replace(DOT_SEPARATOR, ".")
+        dot_key = ConcreteSpeciesId.from_sbml_id(key).to_display()
         dot_species_not_mapped[dot_key] = species_not_mapped[key]
 
     # 1st pass with sum mappings

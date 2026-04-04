@@ -7,20 +7,21 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParametersUsed
 
-from mobspy.constants import ALL_CHAR, DOT_SEPARATOR
+from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import SimulationError
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor,
 )
 from mobspy.modules.species_string_generator import (
-    construct_all_combinations as sp_construct_all_combinations,
+    construct_all_species_ids as sp_construct_all_species_ids,
 )
 from mobspy.modules.species_string_generator import (
-    construct_species_char_list as sp_construct_species_char_list,
+    construct_species_id as sp_construct_species_id,
 )
 from mobspy.modules.unit_handler import (
     convert_counts as uh_convert_counts,
 )
+from mobspy.types import ConcreteSpeciesId
 
 _NAME_VALUE_PAIR_LEN = 2
 
@@ -91,7 +92,9 @@ class Simulation_Utils:  # noqa: N801
 
             # Check to see if string is in species
             try:
-                test_model.species_for_sbml[arg[0].replace(DOT_SEPARATOR, ".")]
+                test_model.species_for_sbml[
+                    ConcreteSpeciesId.from_sbml_id(arg[0]).to_display()
+                ]
                 self._update_species(arg)
                 not_species = False
             except KeyError:
@@ -163,21 +166,18 @@ class Simulation_Utils:  # noqa: N801
         # Get query - construct all combinations - or just one
         query = arg[0].get_query_characteristics()
         if ALL_CHAR in query:
-            spe_string_list = sp_construct_all_combinations(
-                arg[0], query, self.orthogonal_vector_structure, symbol=DOT_SEPARATOR
+            spe_ids = sp_construct_all_species_ids(
+                arg[0], query, self.orthogonal_vector_structure
             )
 
-            for spe_string in spe_string_list:
-                self._list_of_models[0].species_for_sbml[spe_string] = spe_count
+            for sid in spe_ids:
+                self._list_of_models[0].species_for_sbml[sid.to_sbml_id()] = spe_count
 
         else:
-            spe_string = str(
-                sp_construct_species_char_list(
-                    arg[0],
-                    query,
-                    self.orthogonal_vector_structure,
-                    symbol=DOT_SEPARATOR,
-                )
-            )
+            spe_string = sp_construct_species_id(
+                arg[0],
+                query,
+                self.orthogonal_vector_structure,
+            ).to_sbml_id()
 
             self._list_of_models[0].species_for_sbml[spe_string] = spe_count

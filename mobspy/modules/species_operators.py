@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
 from mobspy.constants import DOT_SEPARATOR, NULL_SPECIES
@@ -17,10 +16,40 @@ __all__ = [
     "_ms_active_ctx",
 ]
 
-# Global context variable for expression mode.
+
+class _MsActiveProxy:
+    """Proxy that mimics a ContextVar[bool] but delegates to SessionContext.
+
+    Provides ``.get()``, ``.set()``, and ``.reset()`` so that existing
+    call sites (including tests) continue to work unchanged.
+    """
+
+    def get(self, default: bool = False) -> bool:  # noqa: ARG002
+        """Return the current ms_active state."""
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().ms_active
+
+    def set(self, value: bool) -> object:
+        """Set the ms_active state. Returns a token for reset()."""
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        session = get_session()
+        old = session.ms_active
+        session.ms_active = value
+        return old
+
+    def reset(self, token: object) -> None:
+        """Restore the ms_active state from a token."""
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().ms_active = bool(token)
+
+
+# Global proxy for expression mode.
 # When True, arithmetic on ExpressionDefiner subclasses builds expression
 # trees instead of performing plain numeric/unit operations.
-_ms_active_ctx: ContextVar[bool] = ContextVar("_ms_active_ctx", default=False)
+_ms_active_ctx = _MsActiveProxy()
 
 
 class Bool_Override:  # noqa: N801

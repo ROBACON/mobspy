@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import linecache
 import sys
-import threading
 from typing import Any
 
 from mobspy.exceptions import ParameterError
@@ -31,9 +30,24 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
     parameters using this object.
     """
 
-    # convert_received_unit
-    parameter_stack: dict[str, Internal_Parameter_Constructor] = {}  # noqa: RUF012
-    _parameter_stack_lock: threading.Lock = threading.Lock()
+    class _ParameterStackDescriptor:
+        """Descriptor that redirects class-level access to the session."""
+
+        def __get__(
+            self,
+            obj: Any,
+            objtype: type | None = None,
+        ) -> dict[str, Internal_Parameter_Constructor]:
+            from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+            return get_session().parameter_stack  # type: ignore[return-value]
+
+        def __set__(self, obj: Any, value: Any) -> None:
+            from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+            get_session().parameter_stack = value
+
+    parameter_stack = _ParameterStackDescriptor()
 
     def __init__(self, name: str, value: Any) -> None:
         self._generate_necessary_attributes()
@@ -42,8 +56,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         temp_set.add(self)
         self.name = name
         self.original_value = value
-        with self._parameter_stack_lock:
-            self.parameter_stack[name] = self
+        self.parameter_stack[name] = self
 
         self._ms_active = True
 
@@ -123,9 +136,8 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
                 " the old will be deleted and replaced by this one."
             )
 
-        with self._parameter_stack_lock:
-            del self.parameter_stack[self.name]
-            self.parameter_stack[new_name] = self
+        del self.parameter_stack[self.name]
+        self.parameter_stack[new_name] = self
         self.name = new_name
 
     def set_value(self, new_value: Any) -> Internal_Parameter_Constructor:

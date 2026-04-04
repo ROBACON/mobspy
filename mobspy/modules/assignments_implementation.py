@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextvars import ContextVar
 from re import compile as re_compile
 from re import escape as re_escape
 from typing import TYPE_CHECKING, Any
@@ -21,8 +20,6 @@ from mobspy.modules.species_string_generator import (
     construct_species_char_list as ssg_construct_species_char_list,
 )
 from mobspy.types import AssignmentData
-
-_asg_context_cv: ContextVar[bool] = ContextVar("_asg_context_cv", default=False)
 
 
 class Assignment_Operator:  # noqa: N801
@@ -56,23 +53,33 @@ class Assignment_Operator:  # noqa: N801
         return arg_strings
 
     def __enter__(self) -> Assignment_Operator:
-        _asg_context_cv.set(True)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().asg_context = True
         return self
 
     def set_context(self) -> None:
         """Activate the assignment context."""
-        _asg_context_cv.set(True)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().asg_context = True
 
     def __exit__(self, *args: Any) -> None:
-        _asg_context_cv.set(False)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().asg_context = False
 
     def reset_context(self) -> None:
         """Deactivate the assignment context."""
-        _asg_context_cv.set(False)
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        get_session().asg_context = False
 
     def check_context(self) -> bool:
         """Return whether the assignment context is currently active."""
-        return _asg_context_cv.get()
+        from mobspy.modules.session_context import get_session  # noqa: PLC0415
+
+        return get_session().asg_context
 
     @staticmethod
     def check_arguments(
