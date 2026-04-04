@@ -50,7 +50,6 @@ tests/plot_output/*.png
 CLAUDE.md
 .claude/
 
-# Docs build (keep example sources)
-docs/*
-!docs/example_models/
-docs/example_models/images/
+# Docs build output
+docs/_build/
+docs/_autosummary/

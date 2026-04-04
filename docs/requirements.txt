@@ -1,5 +1,0 @@
-sphinx>=7.0
-myst_parser
-sphinx-rtd-theme
-nbsphinx
-pygments

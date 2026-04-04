@@ -70,9 +70,11 @@ def _patched_run(self, *args, **kwargs):
 _sim_mod.Simulation.run = _patched_run
 _sim_mod.Simulation.__init__ = _patched_init
 
-# Suppress plt.show()
+# Suppress all plotting output
 import matplotlib.pyplot as plt
 plt.show = lambda *a, **k: None
+plt.savefig = lambda *a, **k: None
+_sim_mod.Simulation.plot = lambda *a, **k: None
 
 import runpy
 runpy.run_path({str(model_path)!r}, run_name='__main__')
