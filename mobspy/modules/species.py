@@ -60,6 +60,8 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     from mobspy.modules.list_species import List_Species
+    from mobspy.modules.mobspy_expressions import MobsPyExpression
+    from mobspy.simulation import Simulation
 
 _logger = get_logger(__name__)
 
@@ -136,7 +138,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self._species_counts: list[dict[str, Any]] = []
 
     @classmethod
-    def check_if_valid_characteristic(cls, affected_object: Any, char: str) -> bool:
+    def check_if_valid_characteristic(
+        cls, affected_object: Species | Reacting_Species, char: str
+    ) -> bool:
         """Check if the characteristic name is valid.
 
         Args:
@@ -177,7 +181,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return True
 
     @classmethod
-    def str_under_context(cls, species_object: Species, characteristics: Any) -> str:
+    def str_under_context(
+        cls, species_object: Species, characteristics: set[str] | str
+    ) -> str:
         """Return the str representation of a species under context.
 
         Args:
@@ -189,7 +195,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             String in format (A_dot_a1 + A_dot_a2 + ....).
         """
         ref_char_to_spe_obj = (
-            Species.get_simulation_context().orthogonal_vector_structure
+            Species.get_simulation_context().orthogonal_vector_structure  # type: ignore[union-attr]
         )
         all_strings = sorted(
             ssg_construct_all_combinations(
@@ -213,7 +219,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def __repr__(self) -> str:
         return f"Species({self._name!r})"
 
-    def c(self, item: Any) -> Reacting_Species:
+    def c(self, item: str | int | float) -> Reacting_Species:
         """c query implementation, queries by value.
 
         Args:
@@ -296,7 +302,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Args:
             item: Reaction rate.
         """
-        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[return-value,arg-type]
 
     def __matmul__(self, rate: Any) -> RatedProduct:
         """Attach a rate via the ``@`` operator.
@@ -317,7 +323,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             )
         return RatedProduct(products=products, rate=rate)
 
-    def __rmul__(self, stoichiometry: Any) -> Reacting_Species | Any:
+    def __rmul__(  # type: ignore[override]
+        self, stoichiometry: int | float
+    ) -> Reacting_Species | MobsPyExpression:
         """Multiplication by the stoichiometry.
 
         Args:
@@ -338,10 +346,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return r
         return asgi_Assign.mul(stoichiometry, self)
 
-    def __add__(
+    def __add__(  # type: ignore[override]
         self,
-        other: Species | Reacting_Species | RatedProduct | Any,
-    ) -> Reacting_Species | RatedProduct | Any:
+        other: Species | Reacting_Species | RatedProduct,
+    ) -> Reacting_Species | RatedProduct | MobsPyExpression:
         """Addition for reaction construction.
 
         When the right-hand side is a ``RatedProduct`` (from ``C @ rate``),
@@ -365,7 +373,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             return r1 + r2
         return asgi_Assign.add(self, other)
 
-    def __radd__(self, other: Any) -> Reacting_Species | Any:
+    def __radd__(  # type: ignore[override]
+        self, other: Species | Reacting_Species | RatedProduct
+    ) -> Reacting_Species | RatedProduct | MobsPyExpression:
         """Making addition symmetric, see __add__."""
         if not asgi_Assign.check_context():
             return Species.__add__(self, other)
@@ -374,7 +384,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def __invert__(self) -> Reacting_Species:
         return self.c(NOT_CHAR)
 
-    def __neg__(self) -> Any:
+    def __neg__(self) -> MobsPyExpression:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         raise ValidationError(
@@ -442,7 +452,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
             self.add_characteristic(characteristic)
         return Reacting_Species(self, characteristics)
 
-    def __call__(self, quantity: Any) -> Self | str | None:  # type: ignore[return]
+    def __call__(  # type: ignore[return]
+        self,
+        quantity: int
+        | float
+        | str
+        | Quantity
+        | me_Specific_Species_Operator
+        | Reacting_Species
+        | mp_Mobspy_Parameter,
+    ) -> Self | str | None:
         """Handle count assignment and characteristic extraction.
 
         Args:
@@ -472,13 +491,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 return cha
         raise ReactionError(f"{quantity} contains no characteristics from {self._name}")
 
-    def _resolve_quantity(self, quantity: Any) -> dict[str, Any] | None:
+    def _resolve_quantity(
+        self,
+        quantity: int | float | str | Quantity | Reacting_Species | mp_Mobspy_Parameter,
+    ) -> dict[str, Any] | None:
         """Resolve the quantity into a quantity_dict based on context and type."""
         _any_ctx = Species.get_meta_specie_named_any_context()
         if len(_any_ctx) != 0:
             for i in _any_ctx:
                 self.c(i)
-            return self.add_quantities(_any_ctx.copy(), quantity)
+            return self.add_quantities(_any_ctx.copy(), quantity)  # type: ignore[arg-type]
 
         if (
             isinstance(quantity, (int, float, Quantity, mp_Mobspy_Parameter))
@@ -503,7 +525,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     def _apply_event_context(
         self,
-        quantity: Any,
+        quantity: int | float | str | Quantity | Reacting_Species | mp_Mobspy_Parameter,
         quantity_dict: dict[str, Any] | None,
     ) -> None:
         """Apply quantity assignment within a simulation event context."""
@@ -516,7 +538,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 raise ValidationError(
                     "quantity_dict is None during event context assignment"
                 )
-            sim_under_context.current_event_count_data.append(
+            sim_under_context.current_event_count_data.append(  # type: ignore[union-attr]
                 {
                     "species": self,
                     "characteristics": quantity_dict["characteristics"],
@@ -531,8 +553,8 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     def add_quantities(
         self,
-        characteristics: Any,
-        quantity: Any,
+        characteristics: set[str] | str,
+        quantity: int | float | str | Quantity | mp_Mobspy_Parameter,
     ) -> dict[str, Any] | None:
         """Set the quantity of a specific string of species.
 
@@ -560,7 +582,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
                 CountAssignment(
                     species=self,
                     characteristics=frozen_chars,
-                    quantity=quantity,
+                    quantity=quantity,  # type: ignore[arg-type]
                 )
             )
         else:
@@ -579,7 +601,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """Returns the list of species_counts."""
         return self._species_counts
 
-    def __mul__(self, other: Species | Any) -> Species | Any:
+    def __mul__(self, other: Species) -> Species | MobsPyExpression:  # type: ignore[override]
         """Multiplication to construct more complex species.
 
         Attempts to infer the variable name from the source line.
@@ -683,7 +705,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         self._linked_species.add(other_species)
 
-    def unit(self, unit: Any) -> None:
+    def unit(self, unit: str) -> None:
         """Set the unit for this species (no-op at base level)."""
         pass
 
@@ -778,7 +800,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self._species_counts = []
 
     @classmethod
-    def set_simulation_context(cls, sim: Any) -> None:
+    def set_simulation_context(cls, sim: Simulation) -> None:
         """Set the active simulation context for all species.
 
         Raises:
@@ -815,11 +837,11 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         get_session().simulation_context = None
 
     @classmethod
-    def get_simulation_context(cls) -> Any:
+    def get_simulation_context(cls) -> Simulation | None:
         """Return the active simulation context, or None."""
         from mobspy.modules.session_context import get_session  # noqa: PLC0415
 
-        return get_session().simulation_context
+        return get_session().simulation_context  # type: ignore[no-any-return]
 
     @classmethod
     def get_meta_specie_named_any_context(cls) -> set[str]:

@@ -10,6 +10,8 @@ from mobspy.constants import ALL_CHAR, ASSIGNMENT_PREFIX, DOT_SEPARATOR
 from mobspy.exceptions import CompilationError
 
 if TYPE_CHECKING:
+    from mobspy.modules.reactions import Reacting_Species as _Reacting_Species
+    from mobspy.modules.species import Species as _Species
     from mobspy.types import AssignmentsForSbml
 
 from mobspy.modules.mobspy_expressions import MobsPyExpression as mbe_MobsPyExpression
@@ -64,7 +66,7 @@ class Assignment_Operator:  # noqa: N801
 
         get_session().asg_context = True
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         from mobspy.modules.session_context import get_session  # noqa: PLC0415
 
         get_session().asg_context = False
@@ -83,8 +85,8 @@ class Assignment_Operator:  # noqa: N801
 
     @staticmethod
     def check_arguments(
-        first: Any,
-        second: Any,
+        first: mbe_MobsPyExpression | int | float | object,
+        second: mbe_MobsPyExpression | int | float | object,
     ) -> tuple[mbe_MobsPyExpression, mbe_MobsPyExpression]:
         """Coerce both operands into MobsPyExpression instances.
 
@@ -148,31 +150,31 @@ class Assignment_Operator:  # noqa: N801
         return first, second
 
     @staticmethod
-    def add(first: Any, second: Any) -> mbe_MobsPyExpression:
+    def add(first: object, second: object) -> mbe_MobsPyExpression:
         """Build an addition expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first + second  # type: ignore[no-any-return]
 
     @staticmethod
-    def sub(first: Any, second: Any) -> mbe_MobsPyExpression:
+    def sub(first: object, second: object) -> mbe_MobsPyExpression:
         """Build a subtraction expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first - second  # type: ignore[no-any-return]
 
     @staticmethod
-    def mul(first: Any, second: Any) -> mbe_MobsPyExpression:
+    def mul(first: object, second: object) -> mbe_MobsPyExpression:
         """Build a multiplication expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first * second  # type: ignore[no-any-return]
 
     @staticmethod
-    def div(first: Any, second: Any) -> mbe_MobsPyExpression:
+    def div(first: object, second: object) -> mbe_MobsPyExpression:
         """Build a division expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first / second  # type: ignore[no-any-return]
 
     @staticmethod
-    def pow(first: Any, second: Any) -> mbe_MobsPyExpression:
+    def pow(first: object, second: object) -> mbe_MobsPyExpression:
         """Build an exponentiation expression from two assignment operands."""
         first, second = Assignment_Operator.check_arguments(first, second)
         return first**second  # type: ignore[no-any-return]
@@ -329,9 +331,11 @@ class Asg:
     Stores species and characteristics.
     """
 
-    assignments: dict[Any, Any] = {}  # noqa: RUF012
+    assignments: dict[tuple[object, tuple[object, ...]], object] = {}  # noqa: RUF012
 
-    def __init__(self, meta_spe: Any, species_or_reacting: bool) -> None:
+    def __init__(
+        self, meta_spe: _Species | _Reacting_Species, species_or_reacting: bool
+    ) -> None:
         Assign.set_context()
         self.meta_spe: list[Any] = []
         self.asgn_key: list[tuple[Any, tuple[Any, ...]]] = []
@@ -346,7 +350,7 @@ class Asg:
                 )
         self.species_or_reacting = species_or_reacting
 
-    def __call__(self, assignment: Any) -> None:
+    def __call__(self, assignment: mbe_MobsPyExpression) -> None:
         for spe, key in zip(self.meta_spe, self.asgn_key, strict=False):
             spe._assignments[key] = assignment
         Assign.reset_context()

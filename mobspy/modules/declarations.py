@@ -28,11 +28,33 @@ ContextVar                     Status     Notes
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
+    from pint import Quantity
+
+    from mobspy.modules.expression_nodes import ExprNode
+    from mobspy.modules.mobspy_expressions import OverrideQuantity
+    from mobspy.modules.rate_builder import RateExpression
+    from mobspy.modules.reactions import Reactions
     from mobspy.modules.species import Species
+
+    # Rate values: numeric, string, callable (lambda replay), expression AST,
+    # Quantity/OverrideQuantity, or tuple for reversible rates (k_fwd, k_rev).
+    RateValue: TypeAlias = (
+        int
+        | float
+        | str
+        | Callable[..., Any]
+        | RateExpression
+        | ExprNode
+        | Quantity
+        | OverrideQuantity
+        | tuple[Any, ...]
+        | None
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -59,9 +81,9 @@ class ReactionDecl:
 
     reactants: tuple[ReactantRef, ...]
     products: tuple[ReactantRef, ...]
-    rate: Any = None
+    rate: RateValue = None
     is_reversible: bool = False
-    reverse_rate: Any = None
+    reverse_rate: RateValue = None
 
 
 @dataclass(frozen=True)
@@ -70,7 +92,7 @@ class CountAssignment:
 
     species: Species
     characteristics: frozenset[str] | str
-    quantity: Any
+    quantity: int | float | Quantity
 
 
 @dataclass(frozen=True)
@@ -78,7 +100,7 @@ class EventDecl:
     """Event declaration produced by ``S.at()`` or ``S.when()``."""
 
     trigger: str
-    delay: float | int | Any = 0
+    delay: float | int = 0
     assignments: tuple[EventAssignmentDecl, ...] = ()
 
 
@@ -88,7 +110,7 @@ class EventAssignmentDecl:
 
     species: Species
     characteristics: frozenset[str] | str
-    quantity: Any
+    quantity: int | float | Quantity
 
 
 # ---------------------------------------------------------------------------
@@ -110,9 +132,9 @@ class RatedProduct:
     """
 
     products: list[dict[str, Any]]
-    rate: Any
+    rate: RateValue
     is_reversible: bool = False
-    reverse_rate: Any = None
+    reverse_rate: RateValue = None
 
     def __radd__(self, other: Any) -> RatedProduct:
         """Support ``Species + RatedProduct``."""
@@ -146,8 +168,8 @@ class ModelRegistry:
 
     def __init__(self) -> None:
         self.reactions: list[ReactionDecl] = []
-        self.reaction_objects: list[Any] = []
-        self._counts: dict[tuple[int, Any], CountAssignment] = {}
+        self.reaction_objects: list[Reactions] = []
+        self._counts: dict[tuple[int, frozenset[str] | str], CountAssignment] = {}
         self.events: list[EventDecl] = []
         self._reaction_species: dict[int, frozenset[int]] = {}
 
@@ -159,7 +181,7 @@ class ModelRegistry:
     def add_reaction(
         self,
         decl: ReactionDecl,
-        reaction_obj: Any = None,
+        reaction_obj: Reactions | None = None,
     ) -> None:
         """Register a reaction declaration and its Reactions object."""
         self.reactions.append(decl)
@@ -181,7 +203,7 @@ class ModelRegistry:
         key = (id(assignment.species), assignment.characteristics)
         self._counts[key] = assignment
 
-    def remove_counts_for(self, species: Any) -> None:
+    def remove_counts_for(self, species: Species) -> None:
         """Remove all count assignments for a species.
 
         Called by ``Species.reset_quantities()`` to keep the
@@ -192,7 +214,7 @@ class ModelRegistry:
         for k in to_remove:
             del self._counts[k]
 
-    def remove_reactions_for(self, species: Any) -> None:
+    def remove_reactions_for(self, species: Species) -> None:
         """Remove all reactions where the given species participates.
 
         Called by ``Species.reset_reactions()`` to keep the
@@ -206,7 +228,7 @@ class ModelRegistry:
 
         # Filter both parallel lists together
         new_reactions: list[ReactionDecl] = []
-        new_objects: list[Any] = []
+        new_objects: list[Reactions] = []
         for decl, obj in zip(self.reactions, self.reaction_objects, strict=False):
             if id(obj) not in to_remove_ids:
                 new_reactions.append(decl)
@@ -219,14 +241,14 @@ class ModelRegistry:
     def reactions_for_species(
         self,
         model_species_ids: frozenset[int],
-    ) -> set[Any]:
+    ) -> set[Reactions]:
         """Return reaction objects where at least one participant is in the set.
 
         Args:
             model_species_ids: Set of ``id(species)`` for all species in the
                 model (including their references).
         """
-        result: set[Any] = set()
+        result: set[Reactions] = set()
         for rxn_obj in self.reaction_objects:
             spe_ids = self._reaction_species.get(id(rxn_obj), frozenset())
             if spe_ids & model_species_ids:

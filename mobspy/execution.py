@@ -14,7 +14,7 @@ from mobspy.sbml_simulator.run import simulate as sbml_simulate
 from mobspy.types import ConcreteModel, SBMLModelData
 
 if TYPE_CHECKING:
-    from mobspy.types import CompilerResult
+    from mobspy.types import CompiledModel, CompilerResult, SimulationParameters
 
 
 def generate_sbml_from_compiled(
@@ -54,8 +54,8 @@ def generate_sbml_from_compiled(
 
 
 def run_sbml(
-    sbml_models: list[list[Any]],
-    parameters: list[Any],
+    sbml_models: list[list[CompiledModel]],
+    parameters: list[SimulationParameters],
     jobs: int = -1,
 ) -> list[Any]:
     """Run SBML simulations via BasiCO/COPASI.
@@ -63,7 +63,7 @@ def run_sbml(
     Standalone wrapper around the simulation engine.
 
     Args:
-        sbml_models: Nested list of SBMLModelData (parameter sweeps).
+        sbml_models: Nested list of compiled models (parameter sweeps).
         parameters: List of simulation parameter dicts.
         jobs: Number of parallel jobs (-1 for auto).
 
@@ -72,7 +72,7 @@ def run_sbml(
     """
     import joblib  # noqa: PLC0415
 
-    def _sim_one(x: Any) -> Any:
+    def _sim_one(x: list[CompiledModel]) -> Any:
         return sbml_simulate(jobs, parameters, x)
 
     results: list[Any] = list(

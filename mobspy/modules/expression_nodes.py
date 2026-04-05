@@ -153,7 +153,7 @@ class ConditionalNode(ExprNode):
         return self.if_true.walk_species() + self.if_false.walk_species()
 
 
-def _to_expr_node(value: Any) -> ExprNode:
+def _to_expr_node(value: ExprNode | int | float | str) -> ExprNode:
     """Wrap a raw value into an ExprNode if it isn't one already."""
     if isinstance(value, ExprNode):
         return value

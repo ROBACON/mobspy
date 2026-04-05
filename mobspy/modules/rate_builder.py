@@ -18,7 +18,7 @@ directly, without ``sys._getframe`` introspection or lambda replay.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from mobspy.modules.expression_nodes import (
     BinaryOpNode,
@@ -59,7 +59,7 @@ class RateExpression:
             msg = f"Cannot create RateExpression from {type(value)}"
             raise TypeError(msg)
 
-    def _wrap(self, other: Any) -> ExprNode:
+    def _wrap(self, other: RateExpression | ExprNode | int | float | str) -> ExprNode:
         if isinstance(other, RateExpression):
             return other.node
         if isinstance(other, ExprNode):
@@ -71,34 +71,54 @@ class RateExpression:
         msg = f"Unsupported operand type: {type(other)}"
         raise TypeError(msg)
 
-    def __mul__(self, other: Any) -> RateExpression:
+    def __mul__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self.node, "*", self._wrap(other)))
 
-    def __rmul__(self, other: Any) -> RateExpression:
+    def __rmul__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self._wrap(other), "*", self.node))
 
-    def __truediv__(self, other: Any) -> RateExpression:
+    def __truediv__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self.node, "/", self._wrap(other)))
 
-    def __rtruediv__(self, other: Any) -> RateExpression:
+    def __rtruediv__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self._wrap(other), "/", self.node))
 
-    def __add__(self, other: Any) -> RateExpression:
+    def __add__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self.node, "+", self._wrap(other)))
 
-    def __radd__(self, other: Any) -> RateExpression:
+    def __radd__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self._wrap(other), "+", self.node))
 
-    def __sub__(self, other: Any) -> RateExpression:
+    def __sub__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self.node, "-", self._wrap(other)))
 
-    def __rsub__(self, other: Any) -> RateExpression:
+    def __rsub__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self._wrap(other), "-", self.node))
 
-    def __pow__(self, other: Any) -> RateExpression:
+    def __pow__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self.node, "^", self._wrap(other)))
 
-    def __rpow__(self, other: Any) -> RateExpression:
+    def __rpow__(
+        self, other: RateExpression | ExprNode | int | float | str
+    ) -> RateExpression:
         return RateExpression(BinaryOpNode(self._wrap(other), "^", self.node))
 
     def __neg__(self) -> RateExpression:

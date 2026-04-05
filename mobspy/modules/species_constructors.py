@@ -123,9 +123,9 @@ def _Create_Species(  # noqa: N802
         if species is None:
             to_return.append(Species(name))
         else:
-            temp = One * species
-            temp.name(name)
-            to_return.append(temp)
+            temp = One * species  # type: ignore[operator]
+            temp.name(name)  # type: ignore[union-attr,operator]
+            to_return.append(temp)  # type: ignore[arg-type]
 
     if len(to_return) == 1:
         return to_return[0]

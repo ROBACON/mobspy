@@ -13,13 +13,14 @@ from typing import TYPE_CHECKING, Any
 from mobspy.exceptions import SBMLError
 from mobspy.mobspy_logging import get_logger
 from mobspy.sbml_simulator.builder import build as sbml_build
-from mobspy.types import EventData, ReactionData, SBMLModelData
+from mobspy.types import ConcreteModel, EventData, ReactionData, SBMLModelData
 
 if TYPE_CHECKING:
     from mobspy.types import (
         CompiledModelDict,
         ParameterSweepList,
         SBMLModelDict,
+        SimulationBackend,
         SimulationParameters,
     )
 
@@ -213,11 +214,26 @@ def generate_antimony_strings(
     return results
 
 
+def _compiled_model_to_concrete(
+    model_data: CompiledModelDict | SBMLModelData,
+) -> ConcreteModel:
+    """Convert a CompiledModel or SBMLModelData to a ConcreteModel."""
+    return ConcreteModel(
+        species=dict(model_data.species_for_sbml),
+        parameters=dict(model_data.parameters_for_sbml),
+        reactions=dict(model_data.reactions_for_sbml),
+        events=dict(model_data.events_for_sbml),
+        assignments=dict(model_data.assignments_for_sbml),
+        unit_context=getattr(model_data, "model_context", None),
+    )
+
+
 class ModelGenerationMixin:
     """Mixin providing SBML and Antimony model generation for Simulation."""
 
     # Attributes provided by Simulation
     _list_of_parameters: list[SimulationParameters]
+    _backend: SimulationBackend
     sbml_data_list: ParameterSweepList
     _species_for_sbml: dict[str, Any] | None
 
@@ -400,7 +416,12 @@ class ModelGenerationMixin:
         self._assemble_multi_simulation_structure()
 
         data = self.compose_sbml() if compose else self.sbml_data_list
-        return generate_sbml_strings(data)
+        results: list[str] = []
+        for parameter_sweep in data:
+            for model_data in parameter_sweep:
+                concrete = _compiled_model_to_concrete(model_data)
+                results.append(self._backend.generate_model(concrete))
+        return results
 
     def generate_antimony(
         self, compose: bool = False, model_name: str | None = None

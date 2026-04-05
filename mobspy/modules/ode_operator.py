@@ -95,13 +95,13 @@ class ODEBinding:
 
         reactants = None
         for spe in species_list_operation_order:
-            reactants = spe if reactants is None else reactants + spe
+            reactants = spe if reactants is None else reactants + spe  # type: ignore[assignment]
 
         # Create reaction based on type (return value unused; side effect registers it)
         if is_birth:
-            _ = reactants >> (self.state_variable + reactants) @ rate_fn
+            _ = reactants >> (self.state_variable + reactants) @ rate_fn  # type: ignore[operator]
         else:
-            _ = (reactants + self.state_variable) >> reactants @ rate_fn
+            _ = (reactants + self.state_variable) >> reactants @ rate_fn  # type: ignore[operator]
 
         return self
 

@@ -76,7 +76,7 @@ class EventHandlingMixin:
 
     def event_context_initiator(self) -> None:
         """Set the context in all meta-species."""
-        Species.set_simulation_context(self)
+        Species.set_simulation_context(self)  # type: ignore[arg-type]
 
     def _event_handler(self) -> None:
         """Activate the current context, checking it is the only one active."""

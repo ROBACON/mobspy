@@ -61,7 +61,7 @@ class __Operator_Base:  # noqa: N801
     Operator[Reaction] to assign an order to the reaction.
     """
 
-    def __getitem__(self, item: Any) -> Any:
+    def __getitem__(self, item: str | Species | Any) -> str | Any:
         """Mark a species or reacting species for all-characteristic expansion."""
         if isinstance(item, str):
             return item + "." + ALL_CHAR
@@ -405,15 +405,19 @@ class __Set_Reversible_Rate:  # noqa: N801
         except TypeError as e:
             raise ReactionError("The reversible reaction must receive 2 rates") from e
 
+        if self.reaction_direct is None or self.reaction_reverse is None:
+            raise ReactionError("Reactions not set before rate assignment")
         self.reaction_direct.rate = both_rates[0]
         self.reaction_reverse.rate = both_rates[1]
 
     def __init__(self) -> None:
         """Dummy constructor for rate setter."""
-        self.reaction_direct: Any = None
-        self.reaction_reverse: Any = None
+        self.reaction_direct: Reactions | None = None
+        self.reaction_reverse: Reactions | None = None
 
-    def set_reactions(self, reaction_direct: Any, reaction_reverse: Any) -> None:
+    def set_reactions(
+        self, reaction_direct: Reactions, reaction_reverse: Reactions
+    ) -> None:
         """Store the forward and reverse reaction pair."""
         self.reaction_direct = reaction_direct
         self.reaction_reverse = reaction_reverse

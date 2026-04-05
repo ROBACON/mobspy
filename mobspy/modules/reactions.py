@@ -7,6 +7,7 @@ here for organizational clarity.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Self
 
 from numpy import floating as np_float_
@@ -44,6 +45,8 @@ from mobspy.modules.species_utils import (
 )
 
 if TYPE_CHECKING:
+    from mobspy.modules.declarations import RateValue
+    from mobspy.modules.mobspy_expressions import MobsPyExpression
     from mobspy.modules.species import Species
 
 
@@ -64,14 +67,14 @@ class _Last_rate_storage:  # noqa: N801
     """
 
     @staticmethod
-    def get_last_rate() -> Any:
+    def get_last_rate() -> RateValue:
         """Return the stored rate for the current thread."""
         from mobspy.modules.session_context import get_session  # noqa: PLC0415
 
-        return get_session().last_rate
+        return get_session().last_rate  # type: ignore[no-any-return]
 
     @staticmethod
-    def set_last_rate(value: Any) -> None:
+    def set_last_rate(value: RateValue) -> None:
         """Store a rate value for the current thread."""
         from mobspy.modules.session_context import get_session  # noqa: PLC0415
 
@@ -92,7 +95,11 @@ class _Last_rate_storage:  # noqa: N801
         get_session().entity_counter += 1
 
     @classmethod
-    def override_get_item(cls, object_to_return: Any, item: Any) -> Any:
+    def override_get_item(
+        cls,
+        object_to_return: Reactions | Reacting_Species,
+        item: RateValue,
+    ) -> Reactions | Reacting_Species:
         """Store the rate before the reaction is fully defined.
 
         .. deprecated::
@@ -113,7 +120,7 @@ class _Last_rate_storage:  # noqa: N801
         return object_to_return
 
     @classmethod
-    def process_rate(cls, rate: Any) -> Any:
+    def process_rate(cls, rate: RateValue) -> RateValue:
         """Validate and normalize a reaction rate value."""
         from mobspy.modules.rate_builder import RateExpression  # noqa: PLC0415
         from mobspy.modules.species import Species  # noqa: PLC0415
@@ -185,7 +192,7 @@ class Reactions:
         self,
         reactants: list[dict[str, Any]],
         products: list[dict[str, Any]],
-        rate: Any = None,
+        rate: RateValue = None,
     ) -> None:
         """Construct a reaction from reactants and products.
 
@@ -269,8 +276,8 @@ class Reactions:
         self,
         reactants: list[dict[str, Any]],
         products: list[dict[str, Any]],
-        rate: Any,
-    ) -> Any:
+        rate: RateValue,
+    ) -> RateValue:
         """Resolve the reaction rate from explicit arg or ContextVar.
 
         The ``@`` path passes rate explicitly. The ``[]`` path
@@ -290,7 +297,7 @@ class Reactions:
         with contextlib.suppress(TypeError, AttributeError):
             is_tuple = isinstance(stored, tuple) and len(stored) == 2  # noqa: PLR2004
 
-        if is_tuple:
+        if is_tuple and isinstance(stored, tuple):
             fwd_rate = stored[0]
             Reactions(reactants=products, products=reactants, rate=stored[1])
             resolved = _Last_rate_storage.process_rate(fwd_rate)
@@ -328,15 +335,15 @@ class Reactions:
             + self.__create_reactants_string(self.products)
         )
 
-    def __getitem__(self, item: Any) -> Self:
-        """Attach a rate to this reaction via ``[]`` syntax.
+    def __getitem__(self, item: RateValue) -> Self:
+        """Attach a rate via ``[]`` syntax.
 
         Args:
             item: Reaction rate.
         """
-        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[return-value]
 
-    def __matmul__(self, rate: Any) -> Reactions:
+    def __matmul__(self, rate: RateValue | tuple[RateValue, RateValue]) -> Reactions:
         """Attach or update a rate via the ``@`` operator.
 
         ``(A >> B) @ rate`` sets the rate on an existing reaction.
@@ -352,7 +359,7 @@ class Reactions:
             self.rate = _Last_rate_storage.process_rate(rate)
         return self
 
-    def set_rate(self, rate: Any) -> None:
+    def set_rate(self, rate: RateValue) -> None:
         """Set the stored reaction rate.
 
         Args:
@@ -368,9 +375,9 @@ class Assignment_Opp_Imp:  # noqa: N801
     def _dispatch_assign_op(
         first: Any,
         second: Any,
-        op_func: Any,
+        op_func: Callable[..., MobsPyExpression],
         error_verb: str,
-    ) -> Any:
+    ) -> MobsPyExpression:
         """Dispatch an arithmetic operator to the assignment context.
 
         Args:
@@ -385,34 +392,34 @@ class Assignment_Opp_Imp:  # noqa: N801
             f"{error_verb} not implemented for meta-species in this context"
         )
 
-    def __add__(self, other: Any) -> Any:
+    def __add__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.add, "Addition")
 
-    def __radd__(self, other: Any) -> Any:
+    def __radd__(self, other: object) -> Any:
         return self._dispatch_assign_op(other, self, asgi_Assign.add, "Addition")
 
-    def __sub__(self, other: Any) -> Any:
+    def __sub__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.sub, "Subtraction")
 
-    def __rsub__(self, other: Any) -> Any:
+    def __rsub__(self, other: object) -> Any:
         return self._dispatch_assign_op(other, self, asgi_Assign.sub, "Subtraction")
 
-    def __truediv__(self, other: Any) -> Any:
+    def __truediv__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.div, "Division")
 
-    def __rtruediv__(self, other: Any) -> Any:
+    def __rtruediv__(self, other: object) -> Any:
         return self._dispatch_assign_op(other, self, asgi_Assign.div, "Division")
 
-    def __pow__(self, other: Any) -> Any:
+    def __pow__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.pow, "Exponentiation")
 
-    def __rpow__(self, other: Any) -> Any:
+    def __rpow__(self, other: object) -> Any:
         return self._dispatch_assign_op(other, self, asgi_Assign.pow, "Exponentiation")
 
-    def __mul__(self, other: Any) -> Any:
+    def __mul__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.mul, "Multiplication")
 
-    def __rmul__(self, other: Any) -> Any:
+    def __rmul__(self, other: object) -> Any:
         return self._dispatch_assign_op(other, self, asgi_Assign.mul, "Multiplication")
 
 
@@ -517,7 +524,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             )
         return self
 
-    def __getitem__(self, item: Any) -> Self:
+    def __getitem__(self, item: RateValue) -> Self:
         """Attach a rate via ``[]`` syntax.
 
         Stores the rate in a ContextVar for ``>>`` to retrieve.
@@ -527,9 +534,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         Args:
             item: Reaction rate.
         """
-        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[no-any-return]
+        return _Last_rate_storage.override_get_item(self, item)  # type: ignore[return-value]
 
-    def __matmul__(self, rate: Any) -> RatedProduct:
+    def __matmul__(self, rate: RateValue | tuple[RateValue, RateValue]) -> RatedProduct:
         """Attach a rate via the ``@`` operator.
 
         ``B @ rate`` returns a RatedProduct consumed by ``>>``.
@@ -560,7 +567,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             )
         return self.list_of_reactants[0]["object"]  # type: ignore[no-any-return]
 
-    def get_query_characteristics(self) -> Any:
+    def get_query_characteristics(self) -> set[str]:
         """Return the queried characteristics of the single reactant.
 
         Raises:
@@ -571,9 +578,9 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
                 "The internal method get_queried_characteristics can only be used for "
                 "Reacting_Species with a single reactant."
             )
-        return self.list_of_reactants[0]["characteristics"]
+        return self.list_of_reactants[0]["characteristics"]  # type: ignore[no-any-return]
 
-    def __rmul__(self, stoichiometry: Any) -> Self | Any:
+    def __rmul__(self, stoichiometry: Any) -> Self | MobsPyExpression:
         """Multiply by stoichiometry for reactions.
 
         Args:
@@ -592,8 +599,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
 
     def __add__(
         self,
-        other: Species | Reacting_Species | Any,
-    ) -> Self | RatedProduct | Any:
+        other: Species | Reacting_Species | RatedProduct | Any,
+    ) -> Self | RatedProduct | MobsPyExpression:
         """Addition of meta-species to construct the reaction.
 
         When the right-hand side is a ``RatedProduct`` (from ``C @ rate``),
@@ -626,15 +633,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             return self
         return asgi_Assign.add(self, other)
 
-    def __radd__(self, other: Any) -> Self | Any:
+    def __radd__(self, other: Any) -> Self | RatedProduct | MobsPyExpression:
         if not asgi_Assign.check_context():
-            return Reacting_Species.__add__(self, other)
+            return Reacting_Species.__add__(self, other)  # pyright: ignore[reportReturnType]
         return asgi_Assign.add(other, self)
 
     def __invert__(self) -> Reacting_Species:
         return self.c(NOT_CHAR)
 
-    def __neg__(self) -> Any:
+    def __neg__(self) -> MobsPyExpression:
         if asgi_Assign.check_context():
             return asgi_Assign.mul(-1, self)
         raise ValidationError(
@@ -663,7 +670,10 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
 
         return Reactions(self.list_of_reactants, p.list_of_reactants)
 
-    def __call__(self, quantity: Any) -> Self | None:  # type: ignore[return]
+    def __call__(  # type: ignore[return]
+        self,
+        quantity: int | float | str | Quantity | mp_Mobspy_Parameter,
+    ) -> Self | None:
         """Assign counts to species non-default state.
 
         Args:

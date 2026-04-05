@@ -119,21 +119,21 @@ class Context_specie_named_any(Species):  # noqa: N801
         """
         raise ValidationError("The Any species cannot be called")
 
-    def __add__(self, other: TypingAny) -> None:
+    def __add__(self, other: TypingAny) -> None:  # type: ignore[override]
         """
         The add operator is overloaded as the Any species
         cannot be added. Raises an error when added.
         """
         raise ValidationError("The Any species cannot be added")
 
-    def __radd__(self, other: TypingAny) -> None:
+    def __radd__(self, other: TypingAny) -> None:  # type: ignore[override]
         """
         The add operator is overloaded as the Any species
         cannot be added. Raises an error when added.
         """
         raise ValidationError("The Any species cannot be added")
 
-    def __rmul__(self, other: TypingAny) -> None:
+    def __rmul__(self, other: TypingAny) -> None:  # type: ignore[override]
         """
         The multiplication operator is overloaded as the
         Any species cannot be multiplied. Raises an error

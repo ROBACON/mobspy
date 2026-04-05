@@ -65,7 +65,7 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
 
         self.process_value(value)
 
-    def unit_process(self, value: Quantity) -> tuple[Any, Any]:  # type: ignore[type-arg]
+    def unit_process(self, value: Quantity) -> tuple[float | int, Any]:  # type: ignore[type-arg]
         """Convert a Pint quantity to MobsPy standard units.
 
         Returns:
