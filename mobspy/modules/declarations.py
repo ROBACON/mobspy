@@ -100,14 +100,36 @@ class EventAssignmentDecl:
 class RatedProduct:
     """Carries a rate alongside product species info.
 
-    Created by ``B @ rate`` (via ``__rmatmul__``), consumed by
+    Created by ``B @ rate`` (via ``__matmul__``), consumed by
     ``A >> rated_product`` (via ``__rshift__``).
+
+    Supports ``B + (C @ rate)`` via ``__radd__``: the left-hand
+    species is prepended to the product list, returning a new
+    ``RatedProduct``.  This makes ``@`` work naturally in
+    multi-product reactions without requiring parentheses.
     """
 
     products: list[dict[str, Any]]
     rate: Any
     is_reversible: bool = False
     reverse_rate: Any = None
+
+    def __radd__(self, other: Any) -> RatedProduct:
+        """Support ``Species + RatedProduct``."""
+        from mobspy.modules.reactions import Reacting_Species  # noqa: PLC0415
+        from mobspy.modules.species import Species  # noqa: PLC0415
+
+        if isinstance(other, Species):
+            other = Reacting_Species(other, set())
+        if isinstance(other, Reacting_Species):
+            merged = list(other.list_of_reactants) + self.products
+            return RatedProduct(
+                products=merged,
+                rate=self.rate,
+                is_reversible=self.is_reversible,
+                reverse_rate=self.reverse_rate,
+            )
+        return NotImplemented  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------

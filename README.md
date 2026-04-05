@@ -24,34 +24,34 @@ Meta-species are sets of species. Using them allows users to assign reactions to
 
 ## Basic syntax
 
-To create species from scratch, use the `BaseSpecies` constructor that takes as an optional argument the number of species one wants to create. To assign rates, one can define reactions using the `>>` operator and the brackets `[]`. To assign counts, use the call operator. An elementary example is the following:
+To create species from scratch, use the `BaseSpecies` constructor that takes as an optional argument the number of species one wants to create. To assign rates, use the `>>` operator and `@` for the rate. To assign counts, use the call operator. An elementary example is the following:
 
 	from mobspy import *
 
 	A, B, C, D = BaseSpecies()
-	A(200) + B(100) >> 2*C + D [420]
+	A(200) + B(100) >> 2*C + D @ 420
 
 	MySim = Simulation(A | B | C | D)
 	MySim.run()
 
 ## Reversible Reactions
 
-Reactions can be reversible, denoted via the `Rev` operator. Forward and a backward rates are provided within brackets:
+Reactions can be reversible by providing a tuple of (forward, reverse) rates:
 
-	Rev[A(200) + B(100) >> 2*C + D][420, 10]
+	A(200) + B(100) >> 2*C + D @ (420, 10)
 
 ## Inheritance
 
 For instance:
 
 	Mortal = BaseSpecies()
-	Mortal >> Zero [1]
+	Mortal >> Zero @ 1
 
 The reaction above is a death reaction where the meta-species Mortal is dying. `Zero` is the MobsPy variable for representing nothing. We can design new meta-species from other meta-species using either the multiplication or the `New()` constructor. 
 
 	Replicator, Triplicator = New(Mortal, 2)
-	Replicator >> 2*Replicator [1]
-	Triplicator  >> 3*Triplicator [1]
+	Replicator >> 2*Replicator @ 1
+	Triplicator  >> 3*Triplicator @ 1
 	Multiplicator = Replicator*Triplicator 
 
 In the code above, one can visualize the inheritance mechanism. Here both Replicator and Triplicator inherit from Mortal. Therefore, they also receive a death reaction. Multiplicator inherits from Replicator and Triplicator, and therefore from Mortal too. So Multiplicator now has three reactions, the death reaction, the duplication reaction, and the triplication reaction. 
@@ -62,10 +62,10 @@ Each meta-species has a set of states. One can add states to species by using th
 For instance:
 
 	Horned, Color = BaseSpecies()
-	Horned.small_horn >> Horned.big_horn [1]
-	Color.white >> Color.rainbow [1]
+	Horned.small_horn >> Horned.big_horn @ 1
+	Color.white >> Color.rainbow @ 1
 	Unicorn = Horned*Color
-	Unicorn.rainbow >> 2*Unicorn.white [1]
+	Unicorn.rainbow >> 2*Unicorn.white @ 1
 
 Unicorn has the states of both Horned and color in the code above and their reactions. Unicorn species will be formed by the name followed by a dot and a state for each species inheritors for all possible combinations. So here we have the species - `Unicorn.small_horn.white`, `Unicorn.big_horn.white`, `Unicorn.small_horn.rainbow`, `Unicorn.big_horn.rainbow`. 
 
@@ -98,7 +98,7 @@ For a full list of parameters, see the [parameters README](https://github.com/RO
 The variable u from the pint Python module for unit handling is used to assign units to values in MobsPy. Just add `u.name_of_the_unit`, and MobsPy will handle it. As a code example, we have:
 
 	A(100*u.molar)
-	A >> Zero [10/u.nanosecond]
+	A >> Zero @ (10 / u.nanosecond)
 
 # Compiling
 

@@ -8,6 +8,7 @@ Welcome to the MobsPy's documentation!
    tutorial
    application
    journal
+   migration_guide
 
 API
 ===

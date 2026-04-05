@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "MobsPy"
-copyright = "2025, MobsPy Team"
+copyright = "2022-2026, MobsPy Team"
 author = "MobsPy Team"
 
 # -- General configuration ---------------------------------------------------
@@ -27,9 +27,24 @@ napoleon_use_param = True
 napoleon_use_ivar = True
 autosummary_generate = True
 
+autodoc_default_options = {
+    "special-members": False,
+}
+
+suppress_warnings = [
+    "autodoc",
+    "myst.xref_missing",
+    "docutils",
+]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "_templates", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "_templates",
+    "Thumbs.db",
+    ".DS_Store",
+    "example_models/journal_models/README.md",
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

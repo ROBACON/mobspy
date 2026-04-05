@@ -5,8 +5,8 @@ from mobspy import *
 A, B = BaseSpecies()
 
 # Replication reactions
-A >> 2 * A[1.05 / u.h]
-B >> 2 * B[1 / u.h]
+A >> 2 * A @ (1.05 / u.h)
+B >> 2 * B @ (1 / u.h)
 
 # Initial counts
 A(1 / u.ml), B(1 / u.ml)
@@ -16,7 +16,7 @@ S1 = Simulation(A | B)
 S1.duration = 3 * u.h
 S1.volume = 1 * u.ml
 
-A + B >> Zero[0.1 / u.h]
+A + B >> Zero @ (0.1 / u.h)
 
 S2 = Simulation(A | B)
 S2.duration = (A <= 0) | (B <= 0)

@@ -170,7 +170,7 @@ class Simulation(
     Examples:
         >>> from mobspy import *
         >>> A, B = BaseSpecies(['A', 'B'])
-        >>> _ = A >> B[1]
+        >>> _ = A >> B @ 1
         >>> A(10)
         Species('A')
         >>> S = Simulation(A | B)

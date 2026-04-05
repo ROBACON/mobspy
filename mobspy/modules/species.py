@@ -340,19 +340,24 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
 
     def __add__(
         self,
-        other: Species | Reacting_Species | Any,
-    ) -> Reacting_Species | Any:
+        other: Species | Reacting_Species | RatedProduct | Any,
+    ) -> Reacting_Species | RatedProduct | Any:
         """Addition for reaction construction.
+
+        When the right-hand side is a ``RatedProduct`` (from ``C @ rate``),
+        this species is prepended to the product list so that
+        ``B + C @ rate`` works without parentheses.
 
         Args:
             other: Other object added to construct a reaction.
 
-
         Returns:
-            Reacting Species from the sum.
+            Reacting Species from the sum, or RatedProduct if other is rated.
         """
         if not asgi_Assign.check_context():
             r1 = Reacting_Species(self, set())
+            if isinstance(other, RatedProduct):
+                return r1 + other
             if isinstance(other, Reacting_Species):
                 r2 = other
             else:

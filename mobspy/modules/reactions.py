@@ -590,8 +590,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             return self
         return asgi_Assign.mul(stoichiometry, self)
 
-    def __add__(self, other: Species | Reacting_Species | Any) -> Self | Any:
+    def __add__(
+        self,
+        other: Species | Reacting_Species | Any,
+    ) -> Self | RatedProduct | Any:
         """Addition of meta-species to construct the reaction.
+
+        When the right-hand side is a ``RatedProduct`` (from ``C @ rate``),
+        this species is prepended to the product list so that
+        ``B + C @ rate`` works without parentheses.
 
         Args:
             other: Other object being added.
@@ -599,6 +606,14 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         from mobspy.modules.species import Species  # noqa: PLC0415
 
         if not asgi_Assign.check_context():
+            if isinstance(other, RatedProduct):
+                merged = list(self.list_of_reactants) + other.products
+                return RatedProduct(
+                    products=merged,
+                    rate=other.rate,
+                    is_reversible=other.is_reversible,
+                    reverse_rate=other.reverse_rate,
+                )
             if isinstance(other, Species):
                 other = Reacting_Species(other, set())
             try:

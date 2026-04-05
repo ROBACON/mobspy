@@ -15,10 +15,10 @@ def AND_GATE(A_conc, B_conc):
     # Here we define the Protein to be produced, the Promoter that will act as the gate
     # A and B are the inputs, they merge into AB to activate the promoter and produce the protein
     A, B, AB, Promoter, Protein = BaseSpecies()
-    A + B >> AB[0.5]
-    AB + Promoter.inactive >> Promoter.active[0.5]
-    Promoter >> Promoter + Protein[lambda promoter: 1 if promoter.active else 0]
-    Protein >> Zero[2]
+    A + B >> AB @ 0.5
+    AB + Promoter.inactive >> Promoter.active @ 0.5
+    Promoter >> (Promoter + Protein) @ (lambda promoter: 1 if promoter.active else 0)
+    Protein >> Zero @ 2
 
     Promoter(100)
     A(A_conc), B(B_conc)

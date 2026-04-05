@@ -6,13 +6,13 @@ import seaborn
 from mobspy import *
 
 A, B, C, Pa, Pb = BaseSpecies()
-C >> Zero[1]
+C >> Zero @ 1
 
 
 def Promoter_Rule(Promoter, Ligand, Protein, K):
     (
         Promoter + Ligand
-        >> Promoter + Ligand + Protein[lambda p, l: (p / u.h) * l**4 / (K**4 + l**4)]
+        >> Promoter + Ligand + Protein @ (lambda p, l: (p / u.h) * l**4 / (K**4 + l**4))
     )
 
 

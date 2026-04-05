@@ -28,26 +28,27 @@ def basiCO_parameter_estimation(  # noqa: N802, PLR0913
     verbose: bool = True,
     change_parameter_values: bool = True,
 ) -> dict[str, Any]:
-    """
-    This function fits a MobsPy parameter in a model to experimental data.
-    Bound specifies the search range.
-    If the bound is None it takes as bounds /1000 and *1000
-    the original value of the parameter
-    The function updates the value of the parameter when it is done
+    """Fit MobsPy parameters to experimental data via BasiCO.
+
+    If ``bound`` is None, the search range defaults to
+    ``value / 1000`` to ``value * 1000``.
+    Updates parameter values in place when done.
 
     Args:
-        simulation_object: - MobsPy Simulation Object.
-        parameters_to_estimate: List of MobsPy parameters to estimate.
-        experimental_data: - experimental data to fit the parameter with.
-        bound: - list of two elements with a lower and upper bound of the parameters
-            values, or dictionary with the parameter name and a two element for that
-            specific parameter.
-        method: - method to be used by basiCO optimisation - The options are Random
-            Search, Simulated Annealing, Differential Evolution, Scatter Search, Genetic
-            Algorithm, Evolutionary Programming, Genetic Algorithm SR, Evolution
-            Strategy (SRES), Particle Swarm.
-        verbose: Print the results after finishing or not.
-        change_parameter_values: Change/convert parameter values when possible.
+        simulation_object: MobsPy Simulation object.
+        parameters_to_estimate: Parameters to estimate.
+        experimental_data: Experimental data to fit against.
+        bound: Lower/upper bounds as a two-element list, or a dict
+            mapping parameter names to ``[lower, upper]`` pairs.
+        method: BasiCO optimisation method. Options include
+            ``"Random Search"``, ``"Simulated Annealing"``,
+            ``"Differential Evolution"``, ``"Scatter Search"``,
+            ``"Genetic Algorithm"``, ``"Evolutionary Programming"``,
+            ``"Genetic Algorithm SR"``,
+            ``"Evolution Strategy (SRES)"``,
+            ``"Particle Swarm"``.
+        verbose: Print results after finishing.
+        change_parameter_values: Convert parameter values when possible.
     """
     original_parameters, converted_parameters, bound = _validate_estimation_inputs(
         parameters_to_estimate,

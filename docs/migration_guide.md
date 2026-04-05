@@ -1,42 +1,35 @@
 # MobsPy Migration Guide
 
-This guide covers the new syntax and APIs introduced in the codebase refactor, with before/after examples for each change.
+This guide covers the preferred syntax and APIs, with before/after examples for each change.
 
-## Reaction Rates: `@` as alternative to `[]`
+## Reaction Rates: `@` replaces `[]`
 
-The `@` operator is an alternative syntax for attaching rates. Both `[]` and `@` are fully supported.
+The `@` operator is the preferred syntax for attaching rates. `[]` still works but emits a `DeprecationWarning`.
 
 ```python
-# Original syntax (still works, no deprecation)
+# Deprecated (emits DeprecationWarning)
 A >> B[1.5]
 A + B >> C[lambda r1, r2: k * r1 * r2]
 
-# Alternative syntax
+# Preferred
 A >> B @ 1.5
 A + B >> C @ (lambda r1, r2: k * r1 * r2)
-```
-
-Multi-product reactions require parentheses (same as before):
-
-```python
-A >> (B + C) @ 0.5
-(A + B) >> (C + D) @ 1.0
 ```
 
 ## Reversible Reactions: tuple replaces `Rev`
 
 ```python
-# Before (deprecated, emits DeprecationWarning)
+# Deprecated (emits DeprecationWarning)
 Rev[A >> B][1.0, 0.5]
 
-# After (preferred)
+# Preferred
 A >> B @ (1.0, 0.5)   # tuple = (forward_rate, reverse_rate)
 ```
 
 ## Events: `S.at()` and `S.when()` replace context managers
 
 ```python
-# Before (still works, not deprecated)
+# Context manager style (still works, not deprecated)
 with S.event_time(10):
     A(50)
     B(0)
@@ -44,7 +37,7 @@ with S.event_time(10):
 with S.event_condition(A <= 20):
     B(100)
 
-# After (preferred - no modal operator behavior)
+# Preferred -- explicit, no modal behavior
 S.at(10, {A: 50, B: 0})
 S.when(A <= 20, {B: 100})
 
@@ -58,15 +51,28 @@ S.at(10, {A.alive: 50, A.dead: 0})
 ## Species Names: explicit replaces frame introspection
 
 ```python
-# Before (deprecated, uses sys._getframe)
+# Uses sys._getframe (fragile in some environments)
 A, B = BaseSpecies(2)
 C = New(A)
 Thing = Color * Size
 
-# After (preferred - no frame introspection)
+# Preferred -- explicit names
 A, B = BaseSpecies(['A', 'B'])
 C = New(A, ['C'])
 Thing = (Color * Size).named("Thing")
+```
+
+## Simulation Backend: pluggable via `backend` parameter
+
+```python
+from mobspy.backends import SBMLBackend
+
+# Default (SBML/COPASI) -- same as omitting backend
+S = Simulation(A | B, backend=SBMLBackend())
+
+# Custom backends must implement the SimulationBackend protocol:
+# - generate_model(compiled, model_context=None) -> str
+# - run(model_strings, parameters, jobs=-1) -> list
 ```
 
 ## Rate Builder: programmatic rate construction
@@ -129,13 +135,22 @@ sbml = generate_sbml_from_compiled(result)
 ## Dataclass Attribute Access: replaces dict-style
 
 ```python
-# Before (deprecated, emits DeprecationWarning)
+# Deprecated (emits DeprecationWarning)
 model["species_for_sbml"]
 model["reactions_for_sbml"]["r1"]
 
-# After (preferred)
+# Preferred
 model.species_for_sbml
 model.reactions_for_sbml["r1"]
+```
+
+## Plot Configuration
+
+```python
+# PlotConfig is a dict subclass with attribute access
+S.plot_config.xlabel = "Time (s)"
+S.plot_config.ylabel = "Count"
+S.plot_config["simulation_method"] = "stochastic"  # dict-style also works
 ```
 
 ## Structured Types

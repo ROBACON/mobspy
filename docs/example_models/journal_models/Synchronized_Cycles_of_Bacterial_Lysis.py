@@ -55,37 +55,29 @@ from mobspy import *
 Cell, Lysis, AHL, LuxI = BaseSpecies()
 
 # Cell related reactions
-Cell >> 2 * Cell[lambda cell: mu_g * cell * (n_0 - cell)]
+Cell >> 2 * Cell @ (lambda cell: mu_g * cell * (n_0 - cell))
 # Lysis enzyme encounters the cell membrane through the inside of the cell and kills it
-Lysis + Cell >> Zero[lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2)]
+Lysis + Cell >> Zero @ (lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2))
 
 # AHL related reactions
-Cell + LuxI >> AHL + Cell + LuxI[b]
-AHL + Cell >> Cell[lambda ahl, cell: mu * ahl / (1 + cell / n_0)]
+Cell + LuxI >> (AHL + Cell + LuxI) @ b
+AHL + Cell >> Cell @ (lambda ahl, cell: mu * ahl / (1 + cell / n_0))
 
 # Lysis related reactions
-(
-    AHL
-    >> AHL
-    + Lysis[
-        lambda ahl: (
-            c_l * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
-        )
-    ]
+AHL >> (AHL + Lysis) @ (
+    lambda ahl: (
+        c_l * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+    )
 )
-Lysis >> Zero[gamma_l + mu_g]
+Lysis >> Zero @ (gamma_l + mu_g)
 
 # LuxI related reactions
-(
-    AHL
-    >> AHL
-    + LuxI[
-        lambda ahl: (
-            c_i * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
-        )
-    ]
+AHL >> (AHL + LuxI) @ (
+    lambda ahl: (
+        c_i * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+    )
 )
-LuxI >> Zero[gamma_i + mu_g + gamma_c]
+LuxI >> Zero @ (gamma_i + mu_g + gamma_c)
 
 Cell(5 / u.l), Lysis(0 / u.l), AHL(1e-5 / u.l), LuxI(1e-5 / u.l)
 

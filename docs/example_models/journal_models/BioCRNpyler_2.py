@@ -7,10 +7,10 @@ P2, Ptet = New(Promoter)
 Mrna_P2, Mrna_Ptet, GFP, RFP, CFP, GFP_F_RFP = New(Mortal)
 
 # Death here does not consider a compound for degradation.
-Mortal >> Zero[1]
+Mortal >> Zero @ 1
 
 # Promoter activation - only Ptet is activated. P2 is always active
-Rev[Ptet.inactive + Tet >> Ptet.active][1, 1]
+Ptet.inactive + Tet >> Ptet.active @ (1, 1)
 
 
 # Read expresses the reading of RNA and DNA - both transcription and translation
@@ -18,15 +18,15 @@ Rev[Ptet.inactive + Tet >> Ptet.active][1, 1]
 def Read(Pro, R, strand):
     sp = "started_" + strand[0][0]  # sp stands for start position
     Start_Positions.c(sp)
-    rate = [lambda r1, r2: 2 if r1.active else 1, 1]
+    rate = (lambda r1, r2: 2 if r1.active else 1, 1)
     # From free position to bounded to a site
-    Rev[Pro + R.c("free_" + str(R)) >> Pro + R.c(sp).c("at_" + strand[0][0])][rate]
+    Pro + R.c("free_" + str(R)) >> (Pro + R.c(sp).c("at_" + strand[0][0])) @ rate
     next_location = strand[1:]
     # Movement of the reader
     for (location, Product), (next_l, _) in zip(strand, next_location, strict=False):
-        R.c(sp).c("at_" + location) >> R.c(sp).c("at_" + next_l) + Product[1]
+        R.c(sp).c("at_" + location) >> (R.c(sp).c("at_" + next_l) + Product) @ 1
     # Remove reader from final location
-    R.c(sp).c("at_" + next_location[-1][0]) >> R.c(sp).c("free_" + str(R))[1]
+    R.c(sp).c("at_" + next_location[-1][0]) >> R.c(sp).c("free_" + str(R)) @ 1
 
 
 # Zero produces nothing

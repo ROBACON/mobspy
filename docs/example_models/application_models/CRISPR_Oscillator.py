@@ -26,18 +26,18 @@ G = ListSpecies(3, gRNA)
 P = ListSpecies(3, Promoter)
 
 rev_rt = (1.8e-3 / (u.nanomolar * u.second), 2.3e-2 / u.minute)
-Rev[gRNA.no_cas + dCas >> gRNA.cas][rev_rt]
-gRNA.no_cas >> Zero[0.0069 / u.second]
+gRNA.no_cas + dCas >> gRNA.cas @ (rev_rt)
+gRNA.no_cas >> Zero @ (0.0069 / u.second)
 
-Promoter.active >> 2 * Promoter.active[2.3e-2 / u.minute]
-Promoter >> Zero[2.3e-2 / u.minute]
+Promoter.active >> 2 * Promoter.active @ (2.3e-2 / u.minute)
+Promoter >> Zero @ (2.3e-2 / u.minute)
 
 """
     Simple loop through the gRNAs and Promoters for assigning the activation reaction
 """
 for Prom, Grna in zip(P, G, strict=False):
     act_rt = lambda dna: 5 / u.minute if dna.active else 0
-    Prom >> Grna.no_cas + Prom[act_rt]
+    Prom >> Grna.no_cas + Prom @ (act_rt)
 
 """
     Simple loop for the repression reaction
@@ -47,11 +47,11 @@ gRNA_rep_List = [G[-1], G[0], G[1]]
 for Prom, Grna in zip(P, gRNA_rep_List, strict=False):
     dna_rt1 = 1.2e-2 * u.liter / (u.nanomoles * u.second)
     dna_rt2 = 2.3e-2 / u.minute
-    Prom.active + Grna.cas >> Prom.inactive[dna_rt1]
-    Prom.inactive >> 2 * Prom.active + Grna.cas[dna_rt2]
+    Prom.active + Grna.cas >> Prom.inactive @ (dna_rt1)
+    Prom.inactive >> 2 * Prom.active + Grna.cas @ (dna_rt2)
 
-# Rev defines a reversible reaction in both senses
-Rev[Zero >> dCas][1 / u.minute, 2.3e-2 / u.minute]
+# Reversible reaction for dCas production and degradation
+Zero >> dCas @ (1 / u.minute, 2.3e-2 / u.minute)
 
 for i in range(3):
     P[i].active(1)

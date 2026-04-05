@@ -19,15 +19,15 @@ ara_entrace_rate, atc_entrace_rate = ModelParameters(
 )
 
 # Death and movement reactions
-Mortal >> Zero[1]
+Mortal >> Zero @ 1
 for x, y in zip(["c1", "c1", "c2", "c3"], ["c2", "c3", "c4", "c4"], strict=False):
-    Movable.c(x) >> Movable.c(y)[0.1]
+    Movable.c(x) >> Movable.c(y) @ 0.1
 
 
 # Represents the entrance of aTc and Ara in the system
 def diffusion_in_cell(Molecule, rate, locations):
     for l in locations:
-        Zero >> Molecule.c(l)[rate]
+        Zero >> Molecule.c(l) @ rate
 
 
 diffusion_in_cell(Ara, ara_entrace_rate, ["c1", "c2"])
@@ -43,7 +43,7 @@ def promoter_activation(
     pr = lambda r1, r2: protein_production_rate(r1, tf_linked(r2), tf_free(r2))
     for l in locations:
         with Location.c(l):
-            P + Ligand >> P + Ligand + Protein[pr]
+            P + Ligand >> (P + Ligand + Protein) @ pr
 
 
 # Inverter for each nor gate
@@ -53,13 +53,13 @@ def inverter_wire(P, R, Signal, locations):
     )
     for l in locations:
         with Location.c(l):
-            P + R >> P + R + Signal[rate_f]
+            P + R >> (P + R + Signal) @ rate_f
 
 
 # Custom buffer for clear visibility
 def buffer(L, Signal, l, n, K):
     with Location.c(l):
-        L >> L + Signal[lambda r: 30 * r**n / (r**n + K**n)]
+        L >> (L + Signal) @ (lambda r: 30 * r**n / (r**n + K**n))
 
 
 # Each promoter expression is written here and assign to the promoter function

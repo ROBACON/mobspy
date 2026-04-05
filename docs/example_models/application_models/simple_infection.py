@@ -6,9 +6,9 @@ Age, Mortal, Infectable, Virus = BaseSpecies()
 Reproducer = New(Age)
 V1, V2 = New(Virus)
 
-Age.young >> Age.old[1]
+Age.young >> Age.old @ 1
 
-Reproducer >> 2 * Reproducer.young[0.1]
+Reproducer >> 2 * Reproducer.young @ 0.1
 
 
 def infection_rate(r1, r2):
@@ -17,8 +17,8 @@ def infection_rate(r1, r2):
     return 2 * factor if r2.is_a(V2) else 1 * factor
 
 
-Infectable.not_infected + Virus >> Infectable.infected[infection_rate]
-Mortal >> Zero[lambda r1: 2 if r1.infected else 0.01]
+Infectable.not_infected + Virus >> Infectable.infected @ (infection_rate)
+Mortal >> Zero @ (lambda r1: 2 if r1.infected else 0.01)
 Cell = Infectable * Mortal * Age * Reproducer
 
 Cell(100)

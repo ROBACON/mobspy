@@ -9,6 +9,14 @@ consists of everything exported from `mobspy.__init__` (listed in `__all__`).
 
 ### Changed
 - Codebase rewrite: strict linting, type safety, thread safety, and code cleanup.
+- `@` is now the preferred rate syntax; `[]` emits `DeprecationWarning`.
+- `Rev[]` emits `DeprecationWarning`; use tuple rates `A >> B @ (k_fwd, k_rev)`.
+- `Simulation` accepts a pluggable `backend` parameter (default: `SBMLBackend`).
+- `PlotConfigProxy` replaced by `PlotConfig` (dict subclass with attribute access).
+- `Simulation_Utils` and `Experimental_Data_Holder` inlined into `Simulation`.
+- `OverrideUnitRegistry` and `u` extracted to `mobspy.modules.unit_registry`.
+- Expression engine operator boilerplate collapsed via dispatch tables.
+- All tutorials, examples, and documentation updated to use `@` syntax.
 
 ## [2.8.0]
 
