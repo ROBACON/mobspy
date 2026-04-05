@@ -68,9 +68,9 @@ class TestTimeEvents:
         cm = S._concrete_model
 
         assert len(cm.species) == 4
-        assert "A_dot_a1_dot_b1" in cm.species or "A_dot_b1_dot_a1" in cm.species
-        assert "B_dot_b1" in cm.species
-        assert "B_dot_b2" in cm.species
+        assert "A.a1.b1" in cm.species or "A.b1.a1" in cm.species
+        assert "B.b1" in cm.species
+        assert "B.b2" in cm.species
 
         assert len(cm.reactions) == 7
 
@@ -124,10 +124,10 @@ class TestTimeEvents:
         cm = S._concrete_model
 
         assert len(cm.species) == 4
-        assert "Baka_dot_a1_dot_b1" in cm.species
-        assert "Baka_dot_a1_dot_b2" in cm.species
-        assert "Baka_dot_a2_dot_b1" in cm.species
-        assert "Baka_dot_a2_dot_b2" in cm.species
+        assert "Baka.a1.b1" in cm.species
+        assert "Baka.a1.b2" in cm.species
+        assert "Baka.a2.b1" in cm.species
+        assert "Baka.a2.b2" in cm.species
 
         assert len(cm.reactions) == 4
 
@@ -170,9 +170,9 @@ class TestTimeEvents:
         cm = S._concrete_model
 
         assert len(cm.species) == 3
-        assert "A_dot_a1" in cm.species
-        assert "A_dot_a2" in cm.species
-        assert "A_dot_a3" in cm.species
+        assert "A.a1" in cm.species
+        assert "A.a2" in cm.species
+        assert "A.a3" in cm.species
 
         real_rxns = {
             k: v for k, v in cm.reactions.items() if not k.startswith("phantom_")
@@ -260,9 +260,9 @@ class TestLogicOperators:
         cm = S._concrete_model
 
         assert len(cm.species) == 3
-        assert "A_dot_a1" in cm.species
-        assert "A_dot_a2" in cm.species
-        assert "A_dot_a3" in cm.species
+        assert "A.a1" in cm.species
+        assert "A.a2" in cm.species
+        assert "A.a3" in cm.species
 
         real_rxns = {
             k: v for k, v in cm.reactions.items() if not k.startswith("phantom_")

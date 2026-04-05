@@ -76,10 +76,8 @@ class TestBasicModels:
         cm = MySim._concrete_model
 
         assert len(cm.species) == 12
-        assert (
-            "Music_dot_burning_for_you_dot_charming_man_dot_eletric_fell" in cm.species
-        )
-        assert "Music_dot_reaper_dot_stop_me_dot_kids" in cm.species
+        assert "Music.burning_for_you.charming_man.eletric_fell" in cm.species
+        assert "Music.reaper.stop_me.kids" in cm.species
         for v in cm.species.values():
             assert v == 0
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
@@ -96,10 +94,10 @@ class TestBasicModels:
         cm = MySim._concrete_model
 
         assert len(cm.species) == 6
-        assert "B1_dot_infected" in cm.species
-        assert "B1_dot_not_infected" in cm.species
-        assert "B2_dot_infected" in cm.species
-        assert "B2_dot_not_infected" in cm.species
+        assert "B1.infected" in cm.species
+        assert "B1.not_infected" in cm.species
+        assert "B2.infected" in cm.species
+        assert "B2.not_infected" in cm.species
         assert "V1" in cm.species
         assert "V2" in cm.species
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
@@ -143,10 +141,10 @@ class TestBasicModels:
         cm = MySim._concrete_model
 
         assert len(cm.species) == 4
-        assert "B_dot_b1" in cm.species
-        assert "B_dot_b2" in cm.species
-        assert "C_dot_c1" in cm.species
-        assert "C_dot_c2" in cm.species
+        assert "B.b1" in cm.species
+        assert "B.b2" in cm.species
+        assert "C.c1" in cm.species
+        assert "C.c2" in cm.species
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 4
         for rxn in rxns.values():
@@ -179,12 +177,12 @@ class TestBasicModels:
 
         cm = oscillator()
         assert len(cm.species) == 6
-        assert "Protein_dot_x1" in cm.species
-        assert "Protein_dot_x2" in cm.species
-        assert "Protein_dot_x3" in cm.species
-        assert "mRNA_dot_m1" in cm.species
-        assert "mRNA_dot_m2" in cm.species
-        assert "mRNA_dot_m3" in cm.species
+        assert "Protein.x1" in cm.species
+        assert "Protein.x2" in cm.species
+        assert "Protein.x3" in cm.species
+        assert "mRNA.m1" in cm.species
+        assert "mRNA.m2" in cm.species
+        assert "mRNA.m3" in cm.species
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 13
         kinetics = [r.kinetics for r in rxns.values()]
@@ -208,10 +206,10 @@ class TestInheritanceAndQueries:
         cm = S._concrete_model
 
         assert len(cm.species) == 4
-        assert "Combination_dot_a1_dot_b1" in cm.species
-        assert "Combination_dot_a1_dot_b2" in cm.species
-        assert "Combination_dot_a2_dot_b1" in cm.species
-        assert "Combination_dot_a2_dot_b2" in cm.species
+        assert "Combination.a1.b1" in cm.species
+        assert "Combination.a1.b2" in cm.species
+        assert "Combination.a2.b1" in cm.species
+        assert "Combination.a2.b2" in cm.species
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 2
         kinetics = sorted(r.kinetics for r in rxns.values())
@@ -296,12 +294,12 @@ class TestInheritanceAndQueries:
 
         assert len(cm.species) == 6
         for name in [
-            "B_dot_a1",
-            "B_dot_a2",
-            "B_dot_a3",
-            "C_dot_a1",
-            "C_dot_a2",
-            "C_dot_a3",
+            "B.a1",
+            "B.a2",
+            "B.a3",
+            "C.a1",
+            "C.a2",
+            "C.a3",
         ]:
             assert name in cm.species
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
@@ -363,10 +361,10 @@ class TestAllOperator:
 
         assert len(cm.species) == 4
         for name in [
-            "C_dot_a1_dot_b1",
-            "C_dot_a1_dot_b2",
-            "C_dot_a2_dot_b1",
-            "C_dot_a2_dot_b2",
+            "C.a1.b1",
+            "C.a1.b2",
+            "C.a2.b1",
+            "C.a2.b2",
         ]:
             assert name in cm.species
             assert cm.species[name] == 100
@@ -405,10 +403,10 @@ class TestSetCounts:
         S.compile(verbose=False)
         cm = S._concrete_model
 
-        assert cm.species["A_dot_a1"] == 100
-        assert cm.species["A_dot_a2"] == 50
-        assert cm.species["B_dot_a1_dot_b1"] == 100
-        assert cm.species["B_dot_a1_dot_b2"] == 100
+        assert cm.species["A.a1"] == 100
+        assert cm.species["A.a2"] == 50
+        assert cm.species["B.a1.b1"] == 100
+        assert cm.species["B.a1.b2"] == 100
         assert cm.species["C"] == 200
         assert len(cm.species) == 7
 
@@ -425,14 +423,14 @@ class TestSetCounts:
         cm = S._concrete_model
 
         assert len(cm.species) == 8
-        assert cm.species["Tree_dot_big_dot_red_dot_young"] == 150
-        assert cm.species["Tree_dot_big_dot_blue_dot_old"] == 100
-        assert cm.species["Tree_dot_big_dot_blue_dot_young"] == 100
-        assert cm.species["Tree_dot_big_dot_red_dot_old"] == 100
-        assert cm.species["Tree_dot_small_dot_blue_dot_young"] == 100
-        assert cm.species["Tree_dot_small_dot_red_dot_young"] == 10
-        assert cm.species["Tree_dot_small_dot_red_dot_old"] == 10
-        assert cm.species["Tree_dot_small_dot_blue_dot_old"] == 10
+        assert cm.species["Tree.big.red.young"] == 150
+        assert cm.species["Tree.big.blue.old"] == 100
+        assert cm.species["Tree.big.blue.young"] == 100
+        assert cm.species["Tree.big.red.old"] == 100
+        assert cm.species["Tree.small.blue.young"] == 100
+        assert cm.species["Tree.small.red.young"] == 10
+        assert cm.species["Tree.small.red.old"] == 10
+        assert cm.species["Tree.small.blue.old"] == 10
 
         Tree.reset_quantities()
         model = set_counts({All[Tree]: 30, "Tree.blue.old": 100})
@@ -442,7 +440,7 @@ class TestSetCounts:
         cm = S._concrete_model
 
         assert len(cm.species) == 8
-        assert cm.species["Tree_dot_small_dot_blue_dot_old"] == 100
+        assert cm.species["Tree.small.blue.old"] == 100
         for name, val in cm.species.items():
             if name != "Tree_dot_small_dot_blue_dot_old":
                 assert val == 30
@@ -635,10 +633,10 @@ class TestEmptyArgAndExpressions:
         cm = S._concrete_model
 
         assert len(cm.species) == 3
-        assert "B_dot_at_1_dot_something" in cm.species
-        assert "B_dot_at_2_dot_something" in cm.species
-        assert "B_dot_at_3_dot_something" in cm.species
-        assert cm.species["B_dot_at_1_dot_something"] == 1
+        assert "B.at_1.something" in cm.species
+        assert "B.at_2.something" in cm.species
+        assert "B.at_3.something" in cm.species
+        assert cm.species["B.at_1.something"] == 1
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 3
         for rxn in rxns.values():
@@ -829,11 +827,11 @@ class TestWithStatement:
         cm1 = S1._concrete_model
 
         assert len(cm1.species) == 24
-        assert cm1.species["Tree_dot_red_dot_sparse_dot_old"] == 9
-        assert cm1.species["Tree_dot_blue_dot_sparse_dot_old"] == 10
-        assert cm1.species["Grass_dot_blue_dot_sparse_dot_old"] == 1
-        assert cm1.species["Grass_dot_red_dot_sparse_dot_old"] == 1
-        assert cm1.species["Grass_dot_green_dot_sparse_dot_old"] == 1
+        assert cm1.species["Tree.red.sparse.old"] == 9
+        assert cm1.species["Tree.blue.sparse.old"] == 10
+        assert cm1.species["Grass.blue.sparse.old"] == 1
+        assert cm1.species["Grass.red.sparse.old"] == 1
+        assert cm1.species["Grass.green.sparse.old"] == 1
         rxns1 = {k: v for k, v in cm1.reactions.items() if "phantom" not in k}
         assert len(rxns1) == 6
         kinetics1 = [r.kinetics for r in rxns1.values()]
@@ -879,8 +877,8 @@ class TestWithStatement:
         cm = S._concrete_model
 
         assert len(cm.species) == 2
-        assert "A_dot_a1" in cm.species
-        assert "A_dot_a2" in cm.species
+        assert "A.a1" in cm.species
+        assert "A.a2" in cm.species
         assert len(cm.events) == 1
         event = next(iter(cm.events.values()))
         assert "<=" in event.trigger or "le" in event.trigger.lower()
@@ -936,7 +934,7 @@ class TestParameters:
         cm = S._concrete_model
 
         assert len(cm.species) == 4
-        for name in ["L_dot_sl_0", "L_dot_sl_1", "R_dot_sr_0", "R_dot_sr_1"]:
+        for name in ["L.sl_0", "L.sl_1", "R.sr_0", "R.sr_1"]:
             assert name in cm.species
         assert "kf" in cm.parameters
         assert "kr" in cm.parameters
@@ -1073,10 +1071,10 @@ class TestParameters:
 
         assert len(cm.species) == 4
         for name in [
-            "Something_dot_blue_dot_here",
-            "Something_dot_blue_dot_there",
-            "Something_dot_red_dot_here",
-            "Something_dot_red_dot_there",
+            "Something.blue.here",
+            "Something.blue.there",
+            "Something.red.here",
+            "Something.red.there",
         ]:
             assert name in cm.species
         assert cm.parameters["volume"][0] == pytest.approx(100.0, rel=1e-6)

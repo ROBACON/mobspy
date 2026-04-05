@@ -497,8 +497,8 @@ class TestSemanticAssertions:
         S.duration = 5
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
-        m.has_species("A_dot_alive", "A_dot_dead")
-        m.species_count("A_dot_alive", 100)
+        m.has_species("A.alive", "A.dead")
+        m.species_count("A.alive", 100)
         m.has_n_reactions(1)
 
     def test_event_adds_event_data(self) -> None:
@@ -704,5 +704,5 @@ class TestNamedMethod:
         S = Simulation(Thing)
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
-        m.has_species("Widget_dot_big_dot_blue")
+        m.has_species("Widget.big.blue")
         m.has_n_reactions(2)

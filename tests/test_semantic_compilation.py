@@ -39,10 +39,10 @@ class TestBasicModelStructure:
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
         m.has_species(
-            "B1_dot_not_infected",
-            "B1_dot_infected",
-            "B2_dot_not_infected",
-            "B2_dot_infected",
+            "B1.not_infected",
+            "B1.infected",
+            "B2.not_infected",
+            "B2.infected",
             "V1",
             "V2",
         )
@@ -75,7 +75,7 @@ class TestBasicModelStructure:
         S = Simulation(B | C)
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
-        m.has_species("B_dot_b1", "B_dot_b2", "C_dot_c1", "C_dot_c2")
+        m.has_species("B.b1", "B.b2", "C.c1", "C.c2")
         # Born species: 2 children * 2 chars each = 4 default products
         m.has_n_reactions(4)
 
@@ -93,9 +93,9 @@ class TestCharacteristicStructure:
         S = Simulation(A)
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
-        m.has_species("A_dot_alive", "A_dot_dead")
-        m.species_count("A_dot_alive", 100)
-        m.species_count("A_dot_dead", 0)
+        m.has_species("A.alive", "A.dead")
+        m.species_count("A.alive", 100)
+        m.species_count("A.dead", 0)
         m.has_n_reactions(1)
 
     def test_multi_axis_species(self) -> None:
@@ -112,10 +112,10 @@ class TestCharacteristicStructure:
         m = CompiledModelAssertions(S)
         # 2 colors * 2 sizes = 4 concrete species (order: Size then Color)
         m.has_species(
-            "Thing_dot_big_dot_blue",
-            "Thing_dot_big_dot_red",
-            "Thing_dot_small_dot_blue",
-            "Thing_dot_small_dot_red",
+            "Thing.big.blue",
+            "Thing.big.red",
+            "Thing.small.blue",
+            "Thing.small.red",
         )
         # red >> blue expands to 2 reactions (big and small variants)
         m.has_n_reactions(2)
@@ -129,9 +129,9 @@ class TestCharacteristicStructure:
         S = Simulation(A)
         S.compile(verbose=False)
         m = CompiledModelAssertions(S)
-        m.species_count("A_dot_x", 10)
-        m.species_count("A_dot_y", 10)
-        m.species_count("A_dot_z", 10)
+        m.species_count("A.x", 10)
+        m.species_count("A.y", 10)
+        m.species_count("A.z", 10)
 
 
 @pytest.mark.compilation

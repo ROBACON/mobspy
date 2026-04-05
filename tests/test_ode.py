@@ -54,7 +54,7 @@ def test_ode_applied_to_species():
 
     assert set(cm.species.keys()) == {"A", "B_dot_b1"}
     assert cm.species["A"] == 0
-    assert cm.species["B_dot_b1"] == 0
+    assert cm.species["B.b1"] == 0
     assert len(cm.reactions) == 2
 
     kinetics = {r.kinetics for r in cm.reactions.values()}
@@ -81,7 +81,7 @@ def test_ode_neg_test():
 
     assert set(cm.species.keys()) == {"Neg", "NegR_dot_comp1"}
     assert cm.species["Neg"] == 0
-    assert cm.species["NegR_dot_comp1"] == 0
+    assert cm.species["NegR.comp1"] == 0
     assert len(cm.reactions) == 2
 
     kinetics = {r.kinetics for r in cm.reactions.values()}
@@ -100,8 +100,8 @@ def test_ode_compartments():
     cm = S._concrete_model
 
     assert set(cm.species.keys()) == {"A_dot_c1", "A_dot_c2"}
-    assert cm.species["A_dot_c1"] == 0
-    assert cm.species["A_dot_c2"] == 0
+    assert cm.species["A.c1"] == 0
+    assert cm.species["A.c2"] == 0
     assert len(cm.reactions) == 4
 
     kinetics = sorted(r.kinetics for r in cm.reactions.values())

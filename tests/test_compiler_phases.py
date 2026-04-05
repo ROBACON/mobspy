@@ -51,8 +51,8 @@ class TestPhaseSpeciesSetup:
         model = List_Species([A])
         ovs = _make_ovs(A)
         result = phase_species_setup(model, ovs)
-        assert "A_dot_alive" in result.species
-        assert "A_dot_dead" in result.species
+        assert "A.alive" in result.species
+        assert "A.dead" in result.species
         assert "A" in result.mappings
         assert len(result.mappings["A"]) == 2
 
@@ -64,10 +64,10 @@ class TestPhaseSpeciesSetup:
         model = List_Species([Cat, Dog])
         ovs = _make_ovs(Cat, Dog)
         result = phase_species_setup(model, ovs)
-        assert "Cat_dot_alive" in result.species
-        assert "Cat_dot_dead" in result.species
-        assert "Dog_dot_alive" in result.species
-        assert "Dog_dot_dead" in result.species
+        assert "Cat.alive" in result.species
+        assert "Cat.dead" in result.species
+        assert "Dog.alive" in result.species
+        assert "Dog.dead" in result.species
 
     def test_duplicate_names_raise(self) -> None:
         A = BaseSpecies(["A"])
@@ -173,7 +173,7 @@ class TestPhaseIntegration:
         S.compile(verbose=False)
         cm = S._concrete_model
         assert len(cm.reactions) == 2
-        assert cm.species.get("Bacteria_dot_healthy") == 100
+        assert cm.species.get("Bacteria.healthy") == 100
         assert cm.species.get("Virus") == 10
 
 

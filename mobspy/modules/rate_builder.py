@@ -59,7 +59,10 @@ class RateExpression:
             msg = f"Cannot create RateExpression from {type(value)}"
             raise TypeError(msg)
 
-    def _wrap(self, other: RateExpression | ExprNode | int | float | str) -> ExprNode:
+    def _wrap(
+        self,
+        other: RateExpression | ExprNode | int | float | str | Species,
+    ) -> ExprNode:
         if isinstance(other, RateExpression):
             return other.node
         if isinstance(other, ExprNode):
@@ -68,6 +71,11 @@ class RateExpression:
             return LiteralNode(other)
         if isinstance(other, str):
             return ParamRefNode(other)
+        # Allow bare Species objects in rate arithmetic
+        from mobspy.modules.species import Species as _Species  # noqa: PLC0415
+
+        if isinstance(other, _Species):
+            return SpeciesRefNode(other.get_name())
         msg = f"Unsupported operand type: {type(other)}"
         raise TypeError(msg)
 
@@ -259,19 +267,24 @@ def hill(
     vmax: int | float | str,
     km: int | float | str,
     n: int | float = 1,
+    repression: bool = False,
 ) -> RateExpression:
-    """Hill function: vmax * S^n / (km^n + S^n).
+    """Hill function for activation or repression kinetics.
 
-    Common rate expression in biochemical kinetics.
+    Activation (default): ``vmax * S^n / (km^n + S^n)``
+    Repression: ``vmax * km^n / (km^n + S^n)``
 
     Args:
-        species: Substrate species.
+        species: Substrate/regulator species.
         vmax: Maximum rate.
         km: Half-saturation constant.
         n: Hill coefficient.
+        repression: If True, use repression form.
     """
     s = species_ref(species)
     v = literal(vmax) if isinstance(vmax, (int, float)) else param_ref(vmax)
     s_n = s**n
     k_n = literal(km) ** n if isinstance(km, (int, float)) else param_ref(km) ** n
+    if repression:
+        return v * k_n / (k_n + s_n)
     return v * s_n / (k_n + s_n)

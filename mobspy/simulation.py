@@ -66,6 +66,14 @@ from mobspy.modules.order_operators import (
     Rev,
     Set,
 )
+from mobspy.modules.rate_builder import (
+    RateExpression,
+    hill,
+    literal,
+    param_ref,
+    species_ref,
+    where,
+)
 from mobspy.modules.set_counts_module import set_counts
 from mobspy.modules.species import Species
 from mobspy.modules.species_constructors import (
@@ -108,7 +116,14 @@ from mobspy.simulation_config import PlotConfig, SimulationConfig
 from mobspy.simulator_object.utils import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
-from mobspy.types import ConcreteModel, SimulationEventData, TimeSeriesDataDict
+from mobspy.types import (
+    ConcreteModel,
+    Delta,
+    RateValue,
+    SimulationEventData,
+    SimulationMethod,
+    TimeSeriesDataDict,
+)
 
 if TYPE_CHECKING:
     from mobspy.modules.reactions import Reactions
@@ -128,22 +143,31 @@ __all__ = [
     "Assign",
     "BaseSpecies",
     "Default",
+    "Delta",
     "ListSpecies",
     "ModelParameters",
     "New",
+    "RateExpression",
+    "RateValue",
     "Rev",
     "Set",
     "Simulation",
     "SimulationComposition",
+    "SimulationMethod",
     "Zero",
     "basiCO_parameter_estimation",
     "compile_model",
     "generate_sbml_from_compiled",
+    "hill",
+    "literal",
+    "param_ref",
     "plot_results",
     "run_sbml",
     "set_counts",
     "simlog",
+    "species_ref",
     "u",
+    "where",
 ]
 
 _logger = get_logger(__name__)
@@ -534,8 +558,8 @@ class Simulation(
                 information. Defaults to True.
 
         Returns:
-            Optional[str]: The compiled model string in SBML format, or None if
-                          compilation failed or no model was generated.
+            The compiled model summary string, or None if no reactions
+            or species were defined (empty model).
 
         Raises:
             CompilationError: If the model contains syntax errors or invalid constructs.
@@ -551,8 +575,15 @@ class Simulation(
                 else:
                     self.dimension = 3
 
-            # Set log level based on parameters
-            log_level = self.parameters.get("level", logging.INFO)
+            # MobsPy level: 0=errors, 1=+warnings, 2=+info, 3=+debug
+            _LEVEL_MAP = {  # noqa: N806
+                0: logging.ERROR,
+                1: logging.WARNING,
+                2: logging.INFO,
+                3: logging.DEBUG,
+            }
+            mobspy_level = self.parameters.get("level", 3)
+            log_level = _LEVEL_MAP.get(mobspy_level, logging.INFO)
             _logger.set_log_level(log_level)
 
             pr_parameter_process(self.parameters)  # type: ignore[arg-type]

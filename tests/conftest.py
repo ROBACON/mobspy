@@ -53,10 +53,21 @@ class CompiledModelAssertions:
         self._sim = simulation
         assert simulation._is_compiled, "Simulation must be compiled first"
 
+    @staticmethod
+    def _normalize(name: str) -> str:
+        """Convert user-facing dot notation to internal ``_dot_`` format."""
+        return name.replace(".", "_dot_")
+
     @property
     def species(self) -> dict[str, int | float]:
-        """Return the species_for_sbml dict."""
+        """Return the species_for_sbml dict (internal ``_dot_`` keys)."""
         result: dict[str, int | float] = self._sim._species_for_sbml
+        return result
+
+    @property
+    def clean_species(self) -> dict[str, int | float]:
+        """Return species dict with user-facing dot notation keys."""
+        result: dict[str, int | float] = self._sim.all_species_not_mapped
         return result
 
     @property
@@ -66,16 +77,24 @@ class CompiledModelAssertions:
         return result
 
     def has_species(self, *names: str) -> None:
-        """Assert that all named species exist in the compiled model."""
+        """Assert that all named species exist in the compiled model.
+
+        Accepts both internal (``_dot_``) and user-facing (``.``) formats.
+        """
         for name in names:
-            assert name in self.species, (
+            key = self._normalize(name)
+            assert key in self.species, (
                 f"Species '{name}' not found. Available: {sorted(self.species.keys())}"
             )
 
     def species_count(self, name: str, expected: int | float) -> None:
-        """Assert the initial count of a species."""
+        """Assert the initial count of a species.
+
+        Accepts both internal (``_dot_``) and user-facing (``.``) formats.
+        """
         self.has_species(name)
-        actual = self.species[name]
+        key = self._normalize(name)
+        actual = self.species[key]
         assert actual == expected, (
             f"Species '{name}' count: expected {expected}, got {actual}"
         )
@@ -91,21 +110,29 @@ class CompiledModelAssertions:
         )
 
     def has_reaction_involving(self, species_name: str) -> None:
-        """Assert at least one reaction involves the named species."""
+        """Assert at least one reaction involves the named species.
+
+        Accepts both internal (``_dot_``) and user-facing (``.``) formats.
+        """
+        key = self._normalize(species_name)
         for rxn in self.reactions.values():
             for _, spe in rxn.reactants:
-                if species_name in spe:
+                if key in spe:
                     return
             for _, spe in rxn.products:
-                if species_name in spe:
+                if key in spe:
                     return
         msg = f"No reaction involves '{species_name}'"
         raise AssertionError(msg)
 
     def kinetics_contains(self, substring: str) -> None:
-        """Assert at least one reaction's kinetics contains the substring."""
+        """Assert at least one reaction's kinetics contains the substring.
+
+        Accepts both internal (``_dot_``) and user-facing (``.``) formats.
+        """
+        normalized = self._normalize(substring)
         for rxn in self.reactions.values():
-            if substring in rxn.kinetics:
+            if substring in rxn.kinetics or normalized in rxn.kinetics:
                 return
         msg = (
             f"No reaction kinetics contains '{substring}'. "

@@ -127,6 +127,23 @@ def extract_reaction_rate(  # noqa: PLR0913
     elif isinstance(reaction_rate_function, ExprNode):
         reaction_rate_string = reaction_rate_function.render()
     elif isinstance(reaction_rate_function, str):
+        import warnings  # noqa: PLC0415
+
+        warnings.warn(
+            "String rate expressions bypass MobsPy's unit conversion. "
+            "Ensure the rate is in the model's internal unit system "
+            "(seconds, counts). Consider using the rate builder API "
+            "(species_ref, param_ref) instead.",
+            stacklevel=4,
+        )
+        if "**" in reaction_rate_function:
+            warnings.warn(
+                "String rate contains '**' (Python exponentiation). "
+                "SBML uses '^' for exponentiation. "
+                "Did you mean: "
+                f"'{reaction_rate_function.replace('**', '^')}'?",
+                stacklevel=4,
+            )
         reaction_rate_string = reaction_rate_function
     else:
         _logger.debug(str(type(reaction_rate_function)))

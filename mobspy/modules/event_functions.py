@@ -9,7 +9,7 @@ from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import EventError
 from mobspy.modules.unit_handler import convert_counts as uh_convert_counts
 from mobspy.modules.unit_handler import convert_time as uh_convert_time
-from mobspy.types import CompilationContext, EventData, SimulationEventData
+from mobspy.types import CompilationContext, Delta, EventData, SimulationEventData
 
 if TYPE_CHECKING:
     from mobspy.types import EventsForSbml
@@ -178,7 +178,16 @@ def _process_all_char_assignments(
         )
         for sid in species_ids:
             d = sid.to_sbml_id()
-            if not isinstance(ec["quantity"], str):
+            if isinstance(ec["quantity"], Delta):
+                raw = ec["quantity"].value
+                converted = uh_convert_counts(
+                    raw,
+                    ctx.volume,
+                    ctx.dimension,
+                    model_context=ctx.model_context,
+                )
+                event_dictionary[d] = f"{d} + {converted}"
+            elif not isinstance(ec["quantity"], str):
                 event_dictionary[d] = uh_convert_counts(
                     ec["quantity"],
                     ctx.volume,
@@ -205,7 +214,16 @@ def _process_specific_assignments(
             ec["characteristics"],
             characteristics_to_object,
         ).to_sbml_id()
-        if not isinstance(ec["quantity"], str):
+        if isinstance(ec["quantity"], Delta):
+            raw = ec["quantity"].value
+            converted = uh_convert_counts(
+                raw,
+                ctx.volume,
+                ctx.dimension,
+                model_context=ctx.model_context,
+            )
+            event_dictionary[dummy_key] = f"{dummy_key} + {converted}"
+        elif not isinstance(ec["quantity"], str):
             if isinstance(ec["quantity"], mp_Mobspy_Parameter):
                 parameters_in_events.add(ec["quantity"])
                 event_dictionary[dummy_key] = ec["quantity"].name
@@ -241,8 +259,12 @@ def _assemble_events_for_sbml(
                 species_in_events.add(key)
             else:
                 raise EventError(
-                    f"Species {key} used in an event assignment"
-                    " but it is not in the model"
+                    f"Species '{key}' used in an event assignment "
+                    "but it is not in the compiled model. "
+                    "If using inheritance, list child species "
+                    "explicitly in Simulation(), e.g. "
+                    "Simulation(ChildA | ChildB) instead of "
+                    "Simulation(Parent)."
                 )
 
         assignments.sort()

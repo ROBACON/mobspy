@@ -106,7 +106,10 @@ class PlottingMixin:
             SimulationError: If no results are available for plotting.
         """
         if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available for plotting")
+            raise SimulationError(
+                "No simulation results available for plotting. "
+                "Call .run() on the Simulation object first."
+            )
 
         spe_strings, results, params = self.extract_plot_essentials(*species)
         return plot_results(results, params, spe_strings, method="stochastic")
@@ -121,7 +124,10 @@ class PlottingMixin:
             SimulationError: If no results are available for plotting.
         """
         if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available for plotting")
+            raise SimulationError(
+                "No simulation results available for plotting. "
+                "Call .run() on the Simulation object first."
+            )
 
         spe_strings, results, params = self.extract_plot_essentials(*species)
         return plot_results(results, params, spe_strings, method="deterministic")
@@ -136,7 +142,10 @@ class PlottingMixin:
             SimulationError: If no results are available for plotting.
         """
         if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available for plotting")
+            raise SimulationError(
+                "No simulation results available for plotting. "
+                "Call .run() on the Simulation object first."
+            )
 
         spe_strings, results, params = self.extract_plot_essentials(*species)
         return dp_parametric_plot(spe_strings, results, params)
@@ -162,6 +171,9 @@ class PlottingMixin:
             SimulationError: If no results are available for plotting.
         """
         if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available for plotting")
+            raise SimulationError(
+                "No simulation results available for plotting. "
+                "Call .run() on the Simulation object first."
+            )
 
         return dp_raw_plot(self.results, parameters_or_file, return_fig=return_fig)

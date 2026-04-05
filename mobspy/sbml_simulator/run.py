@@ -186,7 +186,11 @@ def __sbml_new_initial_values(
             else:
                 species_for_sbml[sbml_key] = list(data[key])[-1]
         except KeyError:
-            pass
+            _logger.debug(
+                "Species '%s' not found in species_for_sbml during "
+                "initial value update; skipping",
+                sbml_key,
+            )
 
     if new_model:
         with contextlib.suppress(KeyError):

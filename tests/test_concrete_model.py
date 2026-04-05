@@ -138,10 +138,10 @@ class TestConcreteModelWithCharacteristics:
         S = Simulation(A | B)
         S.compile(verbose=False)
         cm = S._concrete_model
-        assert "A_dot_alive" in cm.species
-        assert "A_dot_dead" in cm.species
-        assert cm.species["A_dot_alive"] == 100
-        assert cm.species["A_dot_dead"] == 0
+        assert "A.alive" in cm.species
+        assert "A.dead" in cm.species
+        assert cm.species["A.alive"] == 100
+        assert cm.species["A.dead"] == 0
 
     def test_inherited_species(self) -> None:
         from mobspy import New
@@ -153,10 +153,10 @@ class TestConcreteModelWithCharacteristics:
         S = Simulation(B1 | B2)
         S.compile(verbose=False)
         cm = S._concrete_model
-        assert "B1_dot_state1" in cm.species
-        assert "B1_dot_state2" in cm.species
-        assert "B2_dot_state1" in cm.species
-        assert "B2_dot_state2" in cm.species
+        assert "B1.state1" in cm.species
+        assert "B1.state2" in cm.species
+        assert "B2.state1" in cm.species
+        assert "B2.state2" in cm.species
 
     def test_reversible_reaction(self) -> None:
         A, B = BaseSpecies(["A", "B"])

@@ -60,9 +60,18 @@ def time_series_average(species_string: str, mobspy_ts: Any) -> list[float]:
                 add = add + series[species_string][j]
                 size += 1
             except IndexError:
-                pass
+                _logger.debug(
+                    "IndexError at index %d for species '%s' during "
+                    "average calculation; skipping this run",
+                    j,
+                    species_string,
+                )
             except KeyError:
-                pass
+                _logger.debug(
+                    "Species '%s' not found in run data during "
+                    "average calculation; skipping this run",
+                    species_string,
+                )
 
         average_series.append(add / size)
 
@@ -96,9 +105,18 @@ def standard_deviation(
                 add = add + (average_series[j] - series[species_string][j]) ** 2
                 size += 1
             except IndexError:
-                pass
+                _logger.debug(
+                    "IndexError at index %d for species '%s' during "
+                    "std dev calculation; skipping this run",
+                    j,
+                    species_string,
+                )
             except KeyError:
-                pass
+                _logger.debug(
+                    "Species '%s' not found in run data during "
+                    "std dev calculation; skipping this run",
+                    species_string,
+                )
 
         deviation_series.append(np.sqrt(add / size))
 

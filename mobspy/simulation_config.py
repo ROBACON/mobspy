@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, fields
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mobspy.types import SimulationMethod
 
 _MAX_LEVEL = 3
 
@@ -40,7 +43,7 @@ class SimulationConfig:
     rate_type: str | None = None
 
     # Simulation engine parameters
-    simulation_method: str = "deterministic"
+    simulation_method: SimulationMethod = "deterministic"
     method: str | None = None
     start_time: int | float = 0
     duration: int | float = 60

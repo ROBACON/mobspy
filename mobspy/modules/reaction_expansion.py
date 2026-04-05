@@ -318,22 +318,40 @@ def construct_rate_function_arguments(
     reaction: Reactions,
 ) -> list[str]:
     """Extract and validate parameter names from a rate function signature."""
-    rate_function_arguments = str(inspect_signature(rate_function))
+    import warnings  # noqa: PLC0415
 
-    black_list = ["*", "="]
-    if any(i in rate_function_arguments for i in black_list):
-        raise CompilationError(
-            "Rate arguments must not contain = or *. \n"
-            f"Error in reaction {reaction}. \n"
-            "Error in rate function"
-            f" {rate_function} in signature"
-            f" {inspect_signature(rate_function)!s}"
-        )
+    sig = inspect_signature(rate_function)
 
-    rate_function_arguments_str = str(rate_function_arguments).replace("(", "")
-    rate_function_arguments_str = str(rate_function_arguments_str).replace(")", "")
-    rate_function_arguments_str = str(rate_function_arguments_str).replace(" ", "")
-    return rate_function_arguments_str.split(",")
+    for param in sig.parameters.values():
+        if isinstance(param.annotation, str):
+            warnings.warn(
+                f"Rate function '{rate_function.__qualname__}' has "
+                "stringified type annotations (possibly from "
+                "'from __future__ import annotations'). MobsPy "
+                "extracts parameter names only, so this is harmless, "
+                "but if you encounter issues, remove the __future__ "
+                "import from the file defining your rate functions.",
+                stacklevel=4,
+            )
+            break
+
+    for param in sig.parameters.values():
+        if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
+            raise CompilationError(
+                "Rate arguments must not contain * or **. \n"
+                f"Error in reaction {reaction}. \n"
+                f"Error in rate function {rate_function} "
+                f"in signature {sig!s}"
+            )
+        if param.default is not param.empty:
+            raise CompilationError(
+                "Rate arguments must not have default values. \n"
+                f"Error in reaction {reaction}. \n"
+                f"Error in rate function {rate_function} "
+                f"in signature {sig!s}"
+            )
+
+    return list(sig.parameters.keys())
 
 
 def create_all_reactions(

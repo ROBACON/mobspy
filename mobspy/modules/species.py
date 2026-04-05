@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from mobspy.modules.list_species import List_Species
     from mobspy.modules.mobspy_expressions import MobsPyExpression
     from mobspy.simulation import Simulation
+    from mobspy.types import RateValue
 
 _logger = get_logger(__name__)
 
@@ -304,7 +305,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         return _Last_rate_storage.override_get_item(self, item)  # type: ignore[return-value,arg-type]
 
-    def __matmul__(self, rate: Any) -> RatedProduct:
+    def __matmul__(self, rate: RateValue | tuple[RateValue, RateValue]) -> RatedProduct:
         """Attach a rate via the ``@`` operator.
 
         ``B @ rate`` returns a RatedProduct consumed by ``>>``.

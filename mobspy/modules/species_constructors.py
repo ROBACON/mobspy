@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import linecache
 import sys
+from typing import overload
 
 from mobspy.constants import (
     END_FLAG_SPECIES_NAME,
@@ -47,11 +48,13 @@ def compile_species_number_line(code_line: str) -> tuple[int, list[str]]:
         ValidationError: If names cannot be inferred from the source.
     """
     if "=" not in code_line:
-        raise ValidationError(
-            "Could not infer species names from source.\n"
-            "Pass names explicitly: "
-            "A, B = BaseSpecies(['A', 'B'])"
-        )
+        hint = "Pass names explicitly: A, B = BaseSpecies(['A', 'B'])"
+        if hasattr(sys, "ps1") or "ipykernel" in sys.modules:
+            hint += (
+                "\nNote: In interactive sessions (REPL/notebook), "
+                "name inference from source is not always available."
+            )
+        raise ValidationError("Could not infer species names from source.\n" + hint)
 
     before_eq, after_eq = (
         code_line.split("=", maxsplit=1)[0],
@@ -96,7 +99,9 @@ def _resolve_names(
     number_of_properties, compiled_names = compile_species_number_line(code_line)
     if number_or_names is not None and number_of_properties != number_or_names:
         raise ValidationError(
-            "The number of properties is not equal to the number of variables"
+            f"The number of properties ({number_or_names}) is not equal to "
+            f"the number of variables ({number_of_properties}): "
+            f"inferred names {compiled_names}"
         )
     return number_of_properties, compiled_names
 
@@ -132,6 +137,18 @@ def _Create_Species(  # noqa: N802
     return tuple(to_return)
 
 
+@overload
+def BaseSpecies() -> Species: ...
+
+
+@overload
+def BaseSpecies(number_or_names: list[str]) -> tuple[Species, ...]: ...
+
+
+@overload
+def BaseSpecies(number_or_names: int) -> tuple[Species, ...]: ...
+
+
 def BaseSpecies(  # noqa: N802
     number_or_names: int | list[str] | None = None,
 ) -> Species | tuple[Species, ...]:
@@ -155,6 +172,18 @@ def BaseSpecies(  # noqa: N802
     asgi_Assign.reset_context()
     code_line = _read_caller_source_line(stack_depth=2)
     return _Create_Species(None, code_line, number_or_names)
+
+
+@overload
+def New(species: Species) -> Species: ...
+
+
+@overload
+def New(species: Species, number_or_names: list[str]) -> tuple[Species, ...]: ...
+
+
+@overload
+def New(species: Species, number_or_names: int) -> tuple[Species, ...]: ...
 
 
 def New(  # noqa: N802

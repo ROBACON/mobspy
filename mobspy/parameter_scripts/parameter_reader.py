@@ -33,7 +33,9 @@ def read_json(json_file_name: str) -> Any:
         try:
             json_data = json.load(file)
         except json.decoder.JSONDecodeError as e:
-            raise ParameterError("Error reading file") from e
+            raise ParameterError(
+                f"Error parsing JSON file '{json_file_name}': {e}"
+            ) from e
 
     return json_data
 
@@ -60,7 +62,11 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
     if "seeds" in params and params["seeds"] is not None:
         try:
             if params["repetitions"] != len(params["seeds"]):
-                raise ParameterError("Seeds must be equal to the number of repetitions")
+                raise ParameterError(
+                    f"Seeds must be equal to the number of repetitions: "
+                    f"got {len(params['seeds'])} seeds but "
+                    f"{params['repetitions']} repetitions"
+                )
         except TypeError as e:
             raise ParameterError("Parameter seeds must be a list") from e
 
@@ -80,7 +86,8 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:  # noqa: N802
             and p.dimensionality != "[time]"
         ):
             raise ParameterError(
-                "The duration of the simulation is not in units of time"
+                f"The duration of the simulation is not in units of time: "
+                f"got {p} with dimensionality '{p.dimensionality}'"
             )
 
         if (

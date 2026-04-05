@@ -153,6 +153,45 @@ class RatedProduct:
             )
         return NotImplemented  # type: ignore[return-value]
 
+    def _adjust_rate(self, other: Any, op: str) -> RatedProduct:
+        """Apply an arithmetic operation to the rate.
+
+        Handles the Python precedence issue where ``B @ 0.01 / u.hour``
+        parses as ``(B @ 0.01) / u.hour``. By supporting arithmetic on
+        RatedProduct, both ``B @ (0.01 / u.hour)`` and
+        ``B @ 0.01 / u.hour`` produce the same result.
+        """
+        if op == "mul":
+            new_rate: Any = self.rate * other  # type: ignore[operator]
+        elif op == "truediv":
+            new_rate = self.rate / other  # type: ignore[operator]
+        else:
+            return NotImplemented  # type: ignore[return-value,no-any-return]
+        rev = self.reverse_rate
+        if rev is not None:
+            if op == "mul":
+                rev = rev * other  # type: ignore[operator]
+            elif op == "truediv":
+                rev = rev / other  # type: ignore[operator]
+        return RatedProduct(
+            products=self.products,
+            rate=new_rate,
+            is_reversible=self.is_reversible,
+            reverse_rate=rev,
+        )
+
+    def __mul__(self, other: Any) -> RatedProduct:
+        """Support ``(B @ rate) * scalar``."""
+        return self._adjust_rate(other, "mul")
+
+    def __rmul__(self, other: Any) -> RatedProduct:
+        """Support ``scalar * (B @ rate)``."""
+        return self._adjust_rate(other, "mul")
+
+    def __truediv__(self, other: Any) -> RatedProduct:
+        """Support ``(B @ rate) / unit``."""
+        return self._adjust_rate(other, "truediv")
+
 
 # ---------------------------------------------------------------------------
 # Model registry (thread-local accumulator)

@@ -699,6 +699,7 @@ def _generate_model_string(  # noqa: PLR0913
     reactions_for_sbml: ReactionsForSbml,
     events_for_sbml: dict[str, Any],
     assignments_for_sbml: dict[str, Any],
+    parameters_used: ParametersUsed | None = None,
 ) -> str:
     """Generate a human-readable model string for verbose output."""
     model_str = "\n"
@@ -715,7 +716,13 @@ def _generate_model_string(  # noqa: PLR0913
 
     model_str += "\nParameters\n"
     for par in sorted(parameters_for_sbml):
-        model_str += par + "," + str(parameters_for_sbml[par][0]) + "\n"
+        value = parameters_for_sbml[par][0]
+        model_str += par + "," + str(value)
+        if parameters_used and par in parameters_used:
+            vals = parameters_used[par].values
+            if isinstance(vals, list) and len(vals) > 1:
+                model_str += f" (sweep: {vals})"
+        model_str += "\n"
 
     model_str += "\nReactions\n"
     visible_reactions = {
@@ -932,6 +939,7 @@ def compile_model(  # noqa: PLR0913
             reactions_for_sbml,
             events_for_sbml,
             assignments_for_sbml,
+            parameters_used,
         )
 
     # --- Assemble ConcreteModel (the backend-agnostic IR) ---

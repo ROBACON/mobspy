@@ -12,12 +12,15 @@ from pint import Quantity
 
 from mobspy.constants import ALL_CHAR
 from mobspy.exceptions import ValidationError
+from mobspy.mobspy_logging import get_logger
 from mobspy.modules.list_species import List_Species
 from mobspy.modules.mobspy_parameters import (
     Internal_Parameter_Constructor as mp_Mobspy_Parameter,
 )
 from mobspy.modules.reactions import Reacting_Species
 from mobspy.modules.species import Species
+
+_logger = get_logger(__name__)
 
 
 def set_counts(count_dic: dict[Any, Any]) -> List_Species:
@@ -80,7 +83,9 @@ def _find_species_in_stack() -> set[Species]:
                     if isinstance(obj, Species) and type(obj) != type:  # noqa: E721
                         found_species.add(obj)
                 except AttributeError:
-                    pass
+                    _logger.debug(
+                        "AttributeError while checking stack object for Species type"
+                    )
         frame = frame.f_back
     return found_species
 

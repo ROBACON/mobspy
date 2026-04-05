@@ -7,8 +7,28 @@ MobsPy package for structured, type-safe data access.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_checkable
+
+from pint import Quantity
+
+if TYPE_CHECKING:
+    from mobspy.modules.expression_nodes import ExprNode
+
+RateValue: TypeAlias = "int | float | Quantity | str | Callable[..., Any] | ExprNode"
+
+SimulationMethod = Literal[
+    "deterministic",
+    "stochastic",
+    "hybrid",
+    "hybridode45",
+    "hybridlsoda",
+    "tauleap",
+    "directmethod",
+    "sde",
+    "lsoda",
+]
 
 # --- Simulation backend protocol ---
 
@@ -37,6 +57,34 @@ class SimulationBackend(Protocol):
     ) -> list[Any]:
         """Execute simulations and return raw results."""
         ...
+
+
+# --- Species dict with dot-notation support ---
+
+
+class SpeciesDict(dict[str, int | float]):
+    """Dict subclass that normalizes ``.`` to ``_dot_`` on lookup.
+
+    Allows user-facing dot notation (``"A.alive"``) when accessing
+    species by name while the internal keys remain in ``_dot_`` format.
+    """
+
+    @staticmethod
+    def _normalize_str(key: str) -> str:
+        if "." in key:
+            return key.replace(".", "_dot_")
+        return key
+
+    def __contains__(self, key: object) -> bool:
+        if isinstance(key, str):
+            return super().__contains__(self._normalize_str(key))
+        return super().__contains__(key)
+
+    def __getitem__(self, key: str) -> int | float:
+        return super().__getitem__(self._normalize_str(key))
+
+    def get(self, key: str, default: int | float | None = None) -> int | float | None:  # type: ignore[override]
+        return super().get(self._normalize_str(key), default)
 
 
 # --- SBML data structures (compiler -> builder -> sbml_writer) ---
@@ -150,7 +198,7 @@ class CompiledModel:
         {}
     """
 
-    species_for_sbml: dict[str, int | float] = field(default_factory=dict)
+    species_for_sbml: dict[str, int | float] = field(default_factory=SpeciesDict)
     parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
         default_factory=dict
     )
@@ -161,6 +209,10 @@ class CompiledModel:
     mappings: dict[str, list[str]] = field(default_factory=dict)
     assigned_species: list[str] = field(default_factory=list)
     model_context: Any = None  # ModelUnitContext | None (avoid circular import)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.species_for_sbml, SpeciesDict):
+            self.species_for_sbml = SpeciesDict(self.species_for_sbml)
 
     # Deprecated: use attribute access instead
     def __getitem__(self, key: str) -> Any:
@@ -276,6 +328,18 @@ SBMLModelDict = SBMLModelData
 CompiledModelDict = CompiledModel
 
 
+@dataclass(frozen=True)
+class Delta:
+    """Additive event assignment.
+
+    Usage:
+        S.at(10, {A: Delta(100)})   # A += 100 at t=10
+        S.at(10, {A: Delta(-50)})   # A -= 50 at t=10
+    """
+
+    value: int | float
+
+
 # --- Compiler result ---
 
 
@@ -286,7 +350,7 @@ class CompilerResult:
     Immutable: the compiler produces it once, consumers only read.
     """
 
-    species_for_sbml: dict[str, int | float] = field(default_factory=dict)
+    species_for_sbml: dict[str, int | float] = field(default_factory=SpeciesDict)
     reactions_for_sbml: dict[str, ReactionData] = field(default_factory=dict)
     parameters_for_sbml: dict[str, tuple[float | int, str]] = field(
         default_factory=dict
@@ -300,6 +364,12 @@ class CompilerResult:
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
     has_mole: bool = False
     model_context: Any = None  # ModelUnitContext | None (avoid circular import)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.species_for_sbml, SpeciesDict):
+            object.__setattr__(
+                self, "species_for_sbml", SpeciesDict(self.species_for_sbml)
+            )
 
     def to_compiled_model(
         self,
@@ -345,7 +415,7 @@ class ConcreteModel:
     free of backend-specific terminology (no ``_for_sbml``).
     """
 
-    species: dict[str, int | float] = field(default_factory=dict)
+    species: dict[str, int | float] = field(default_factory=SpeciesDict)
     reactions: dict[str, ReactionData] = field(default_factory=dict)
     parameters: dict[str, tuple[float | int, str]] = field(default_factory=dict)
     events: dict[str, EventData] = field(default_factory=dict)
@@ -357,6 +427,10 @@ class ConcreteModel:
     model_string: str = ""
     has_mole: bool = False
     unit_context: Any = None  # ModelUnitContext | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.species, SpeciesDict):
+            object.__setattr__(self, "species", SpeciesDict(self.species))
 
     def to_compiler_result(self) -> CompilerResult:
         """Bridge to CompilerResult for backward compatibility."""
@@ -426,6 +500,10 @@ class SpeciesSetupResult:
     species: dict[str, int | float]
     mappings: dict[str, list[str]]
     names_used: frozenset[str]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.species, SpeciesDict):
+            object.__setattr__(self, "species", SpeciesDict(self.species))
 
 
 @dataclass(frozen=True)

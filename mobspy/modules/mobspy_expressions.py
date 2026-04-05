@@ -35,6 +35,7 @@ from mobspy.constants import (
     NULL_SPECIES,
 )
 from mobspy.exceptions import CompilationError, UnitError
+from mobspy.mobspy_logging import get_logger
 from mobspy.modules.expression_nodes import (
     BinaryOpNode,
     ExprNode,
@@ -48,6 +49,8 @@ from mobspy.modules.species_operators import (
     _ms_active_ctx,
 )
 from mobspy.types import RenderContext
+
+_logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from numpy import ufunc as np_ufunc
@@ -204,7 +207,11 @@ class ExpressionDefiner:
                         else result
                     )
                 except (DimensionalityError, TypeError, ValueError):
-                    pass
+                    _logger.debug(
+                        "Could not convert [substance] unit for value %s; "
+                        "returning as-is",
+                        value,
+                    )
         return value
 
     def execute_quantity_op(self, other: Any, operation: str) -> tuple[Any, Any]:
@@ -385,17 +392,25 @@ class ExpressionDefiner:
             if self.__dict__[attribute]:
                 to_return = True
         except KeyError:
-            pass
+            _logger.debug(
+                "Attribute '%s' not found in self.__dict__ during combine", attribute
+            )
         except AttributeError:
-            pass
+            _logger.debug(
+                "Self has no __dict__ when combining attribute '%s'", attribute
+            )
 
         try:
             if other.__dict__[attribute]:
                 to_return = True
         except KeyError:
-            pass
+            _logger.debug(
+                "Attribute '%s' not found in other.__dict__ during combine", attribute
+            )
         except AttributeError:
-            pass
+            _logger.debug(
+                "Other has no __dict__ when combining attribute '%s'", attribute
+            )
 
         return to_return
 
@@ -488,7 +503,7 @@ class ExpressionDefiner:
                 if spe not in new_species_list_operation_order:
                     new_species_list_operation_order.append(spe)
         except AttributeError:
-            pass
+            _logger.debug("Other operand has no species_list_operation_order attribute")
 
         _count_in_model = self.combine_binary_attributes(other, "_count_in_model")
         _concentration_in_model = self.combine_binary_attributes(
@@ -544,7 +559,7 @@ def _check_either_has_units(self_obj: Any, other: Any) -> bool:
         if other._has_units:
             _has_units = True
     except AttributeError:
-        pass
+        _logger.debug("One of the operands lacks _has_units attribute in unit check")
     return _has_units
 
 
