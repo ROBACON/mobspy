@@ -452,6 +452,110 @@ class ModelUnitContext:
         rate_id = f"per_{time_id}"
         _create_rate_unit_def(model, rate_id, self.time_unit)
 
+    # ------------------------------------------------------------------
+    # Dimension extraction (static, no instance needed)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def check_dimension(
+        dimension: int | None,
+        value: int | float | str,
+        error_context: bool | str = False,
+    ) -> int:
+        """Check for dimension consistency.
+
+        Stores the first dimension it receives by returning it.
+        Raises on mismatch.
+
+        Args:
+            dimension: Current model dimension (None if unset).
+            value: Dimension value being analysed.
+            error_context: Extra message on mismatch.
+
+        Returns:
+            Resolved dimension.
+
+        Raises:
+            UnitError: If dimensions are inconsistent.
+        """
+        if dimension is None:
+            dimension = int(value)
+        elif dimension != int(value):
+            message = (
+                "The dimensions are not consistent. "
+                "There are at least two units given "
+                "for different dimension models."
+            )
+            if error_context:
+                message = message + "\n " + str(error_context)
+            raise UnitError(message)
+        return dimension
+
+    @staticmethod
+    def extract_length_dimension(
+        unit_string: str,
+        dimension: int | None,
+        reaction_order: int | None = None,
+        context: bool | str = False,
+    ) -> int | bool:
+        """Extract the volume dimension from a Pint dimensionality.
+
+        Uses Pint's dimensionality dict API instead of string parsing
+        for robustness across Pint versions.
+
+        Args:
+            unit_string: Unit dimensionality string.
+            dimension: Current model dimension.
+            reaction_order: Number of reactants (for rate consistency).
+            context: Error context on mismatch.
+
+        Returns:
+            Resolved dimension, or False if no length dimension.
+        """
+        length_power = ModelUnitContext._extract_length_power(unit_string)
+
+        if length_power is None:
+            return False
+
+        if reaction_order is None:
+            dimension = ModelUnitContext.check_dimension(
+                dimension, length_power, context
+            )
+        elif reaction_order == 1:
+            if length_power != 0:
+                raise UnitError(
+                    "Unimolecular reaction (order 1) should not have "
+                    f"[length] in rate units, but got exponent {length_power}"
+                )
+            dimension = ModelUnitContext.check_dimension(dimension, 0, context)
+        else:
+            volume_dim = int(length_power / (reaction_order - 1))
+            dimension = ModelUnitContext.check_dimension(dimension, volume_dim, context)
+
+        return dimension
+
+    @staticmethod
+    def _extract_length_power(unit_string: str) -> int | None:
+        """Extract the [length] exponent from a Pint dimensionality string."""
+        try:
+            ur = _mobspy_u.unit_registry_object
+            dim_container = ur.parse_expression(unit_string).dimensionality
+            length_exp = dim_container.get("[length]", 0)
+            if length_exp == 0:
+                return None
+            return int(length_exp)
+        except (DimensionalityError, TypeError, ValueError, AttributeError):
+            if "[length]" not in unit_string:
+                return None
+            parts = unit_string.split()
+            try:
+                pos = parts.index("[length]")
+                if pos + 1 < len(parts) and parts[pos + 1] == "**":
+                    return int(parts[pos + 2])
+                return 1
+            except (ValueError, IndexError):
+                return None
+
 
 # ---------------------------------------------------------------------------
 # Helper functions

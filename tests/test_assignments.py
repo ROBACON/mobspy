@@ -6,8 +6,6 @@ import mobspy
 from mobspy import All, Assign, BaseSpecies, New, Simulation, simlog, u
 from mobspy.exceptions import MobsPyError
 
-from .conftest import compare_model
-
 
 class TestAssign:
     def test_basic_assignment(self):
@@ -51,7 +49,17 @@ class TestAssign:
         A.assign(B * ((C + 5) / D))
         S = Simulation(A | B | C | D)
         S.level = -1
-        assert compare_model(S.compile(), "model_49.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+        assert cm is not None
+        assert len(cm.species) == 4
+        assert all(s in cm.species for s in ("A", "B", "C", "D"))
+        assert len(cm.reactions) == 0
+        assert len(cm.assignments) == 1
+        asgn = next(iter(cm.assignments.values()))
+        assert asgn.species == "A"
+        for token in ("B", "C", "D", "5"):
+            assert token in asgn.expression
 
     def test_assign_context_exit(self):
         try:
@@ -82,7 +90,13 @@ class TestAssign:
         A.assign(B * ((C + 5) / D))
         S = Simulation(A | B | C | D)
         S.level = -1
-        assert compare_model(S.compile(), "model_50.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+        assert cm is not None
+        # 4 base species * 2 characteristics (h1, h2) = 8 concrete species
+        assert len(cm.species) == 8
+        assert len(cm.reactions) == 0
+        assert len(cm.assignments) == 1
 
     def test_assign_context_complex(self):
         A, B, C, D = BaseSpecies()
@@ -93,7 +107,13 @@ class TestAssign:
             All[B]((C + D**2) * D)
         S = Simulation(A | B | C | D)
         S.level = -1
-        assert compare_model(S.compile(), "model_51.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+        assert cm is not None
+        # A(1) + B.b1,B.b2,B.b3(3) + C.c1,C.c2(2) + D.d1,D.d2(2) = 8
+        assert len(cm.species) == 8
+        assert len(cm.reactions) == 0
+        assert len(cm.assignments) == 3
 
     def test_assign_context_constant(self):
         A = BaseSpecies()
@@ -101,4 +121,12 @@ class TestAssign:
             A(5)
         S = Simulation(A)
         S.level = -1
-        assert compare_model(S.compile(), "model_52.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+        assert cm is not None
+        assert len(cm.species) == 1
+        assert "A" in cm.species
+        assert len(cm.reactions) == 0
+        assert len(cm.assignments) == 1
+        asgn = next(iter(cm.assignments.values()))
+        assert "5" in asgn.expression

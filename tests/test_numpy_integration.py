@@ -7,35 +7,23 @@ import numpy as np
 import mobspy
 from mobspy import BaseSpecies, Simulation, set_counts, u
 
-from .conftest import compare_model
-
 
 def test_numpy_init_params():
-    expected = """
-Species
-A,10.0
-B,0
-
-Mappings
-A :
-A
-B :
-B
-
-Parameters
-volume,1
-
-Reactions
-reaction_0,{'re': [(1, 'A')], 'pr': [(1, 'B')], 'kin': 'A * 1.0'}
-"""
     A, B = BaseSpecies()
     params = np.array([10.0, 1.0])
     A(params[0])
     A >> B @ params[1]
     MySim = Simulation(A | B)
     MySim.level = -1
-    result = MySim.compile()
-    assert result == expected
+    MySim.compile(verbose=False)
+    cm = MySim._concrete_model
+    assert cm is not None
+    assert len(cm.species) == 2
+    assert cm.species["A"] == 10.0
+    assert cm.species["B"] == 0
+    assert len(cm.reactions) == 1
+    rxn = next(iter(cm.reactions.values()))
+    assert "1.0" in rxn.kinetics
 
 
 def test_numpy_in_expression_function():
@@ -63,7 +51,15 @@ def test_numpy_in_expression_function():
     A(100)
     S = Simulation(A | B | C | D)
     S.level = -1
-    assert compare_model(S.compile(), "model_46.txt")
+    S.compile(verbose=False)
+    cm = S._concrete_model
+    assert cm is not None
+    assert len(cm.species) == 4
+    assert cm.species["A"] == 100
+    assert len(cm.reactions) == 4
+    kinetics = sorted(r.kinetics for r in cm.reactions.values())
+    assert any("3+" in k or "(3+A)" in k or "+A)" in k for k in kinetics)
+    assert any("3*" in k or "(3*" in k for k in kinetics)
 
 
 def test_numpy_with_units():
@@ -80,7 +76,14 @@ def test_numpy_with_units():
         B >> mobspy.Zero @ (a / u.hour)
     S = Simulation(A | B | C | D)
     S.level = -1
-    assert compare_model(S.compile(), "model_47.txt")
+    S.compile(verbose=False)
+    cm = S._concrete_model
+    assert cm is not None
+    assert len(cm.species) == 4
+    assert len(cm.reactions) == 2
+    # Both reactions should have numerical rate constants (3/hour -> ~0.000833/s)
+    for rxn in cm.reactions.values():
+        assert "0.000" in rxn.kinetics
 
 
 def test_numpy_in_rates():

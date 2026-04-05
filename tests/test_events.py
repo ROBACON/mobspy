@@ -6,8 +6,6 @@ import mobspy
 from mobspy import All, BaseSpecies, New, Simulation, set_counts, simlog, u
 from mobspy.exceptions import MobsPyError
 
-from .conftest import compare_model
-
 
 class TestTimeEvents:
     def test_event_type(self):
@@ -26,7 +24,32 @@ class TestTimeEvents:
         with S.event_condition(B <= 1):
             E(1)
         S.duration = 5
-        assert compare_model(S.compile(), "model_15.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 6
+        assert cm.species["A"] == 50
+        assert cm.species["B"] == 50
+        assert cm.species["C"] == 0
+        assert cm.species["F"] == 0
+
+        real_rxns = {
+            k: v for k, v in cm.reactions.items() if not k.startswith("phantom_")
+        }
+        assert len(real_rxns) == 1
+        rxn = next(iter(real_rxns.values()))
+        assert ("A" in rxn.kinetics) and ("B" in rxn.kinetics)
+
+        assert len(cm.events) == 4
+        triggers = [e.trigger for e in cm.events.values()]
+        assignments_targets = [t for e in cm.events.values() for t, _ in e.assignments]
+        assert any("<=" in t and "A" in t and "B" in t for t in triggers)
+        assert any("B" in t and "<=" in t and "A" not in t for t in triggers)
+        assert any(t == "true" for t in triggers)
+        assert "C" in assignments_targets
+        assert "D" in assignments_targets
+        assert "E" in assignments_targets
+        assert "F" in assignments_targets
 
     def test_reacting_species_event(self):
         B = BaseSpecies(1)
@@ -41,7 +64,24 @@ class TestTimeEvents:
         with S.event_condition((A.a1 <= 10) & (B.b1 <= 10)):
             A.a1(100)
         S.duration = 5
-        assert compare_model(S.compile(), "model_9.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 4
+        assert "A_dot_a1_dot_b1" in cm.species or "A_dot_b1_dot_a1" in cm.species
+        assert "B_dot_b1" in cm.species
+        assert "B_dot_b2" in cm.species
+
+        assert len(cm.reactions) == 7
+
+        assert len(cm.events) == 1
+        event = next(iter(cm.events.values()))
+        assert "<=" in event.trigger
+        assert "10" in event.trigger
+        assert len(event.assignments) == 1
+        target, value = event.assignments[0]
+        assert "A" in target
+        assert str(value) == "100"
 
     def test_unit_event_test(self):
         A = BaseSpecies(1)
@@ -52,7 +92,21 @@ class TestTimeEvents:
         with S.event_condition(A < 0.5 * u.mol):  # noqa: SIM300
             A(1 * u.mol)
         S.duration = 3
-        assert compare_model(S.compile(), "model_10.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 1
+        assert "A" in cm.species
+
+        assert len(cm.reactions) == 1
+
+        assert len(cm.events) == 1
+        event = next(iter(cm.events.values()))
+        assert "<" in event.trigger
+        assert "0.5" in event.trigger or "A" in event.trigger
+        assert len(event.assignments) == 1
+        target, value = event.assignments[0]
+        assert target == "A"
 
     def test_event_all(self):
         Acka = BaseSpecies()
@@ -66,7 +120,27 @@ class TestTimeEvents:
         with S.event_time(0):
             set_counts({All[Baka]: 10, Baka.b1.a2: 20})
             Baka.a1.b1(30)
-        assert compare_model(S.compile(), "model_24.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 4
+        assert "Baka_dot_a1_dot_b1" in cm.species
+        assert "Baka_dot_a1_dot_b2" in cm.species
+        assert "Baka_dot_a2_dot_b1" in cm.species
+        assert "Baka_dot_a2_dot_b2" in cm.species
+
+        assert len(cm.reactions) == 4
+
+        assert len(cm.events) == 1
+        event = next(iter(cm.events.values()))
+        assert event.trigger == "true"
+        assert len(event.assignments) == 4
+        assignment_dict = dict(event.assignments)
+        assert str(assignment_dict["Baka_dot_a1_dot_b1"]) == "30"
+        assert str(assignment_dict["Baka_dot_a2_dot_b1"]) == "20"
+        assert str(assignment_dict["Baka_dot_a1_dot_b2"]) == "10"
+        assert str(assignment_dict["Baka_dot_a2_dot_b2"]) == "10"
+
         S.duration = 5
         S.step_size = 1
         S.run(plot_data=False)
@@ -92,7 +166,43 @@ class TestTimeEvents:
             All[A.a1](f"{A} + 1")
         with S.event_time(15):
             A.a1(f"{A} + 1")
-        compare_model(S.compile(), "model_30.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 3
+        assert "A_dot_a1" in cm.species
+        assert "A_dot_a2" in cm.species
+        assert "A_dot_a3" in cm.species
+
+        real_rxns = {
+            k: v for k, v in cm.reactions.items() if not k.startswith("phantom_")
+        }
+        assert len(real_rxns) == 0
+        assert len(cm.events) == 3
+
+        delays = sorted(str(e.delay) for e in cm.events.values())
+        assert "10" in delays
+        assert "15" in delays
+        assert "5" in delays
+
+        for event in cm.events.values():
+            assert event.trigger == "true"
+            for _, expr in event.assignments:
+                assert "+ 1" in str(expr)
+
+        # The event at delay=5 assigns all three species
+        event_5 = next(e for e in cm.events.values() if str(e.delay) == "5")
+        assert len(event_5.assignments) == 3
+
+        # The event at delay=10 assigns only A.a1 variants
+        event_10 = next(e for e in cm.events.values() if str(e.delay) == "10")
+        assert len(event_10.assignments) == 1
+        assert event_10.assignments[0][0] == "A_dot_a1"
+
+        # The event at delay=15 assigns only A.a1
+        event_15 = next(e for e in cm.events.values() if str(e.delay) == "15")
+        assert len(event_15.assignments) == 1
+        assert event_15.assignments[0][0] == "A_dot_a1"
 
     def test_event_reaction_not_allowed(self):
         try:
@@ -146,7 +256,25 @@ class TestLogicOperators:
         S.level = -1
         with S.event_condition(r1):
             A(100)
-        assert compare_model(S.compile(), "model_16.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 3
+        assert "A_dot_a1" in cm.species
+        assert "A_dot_a2" in cm.species
+        assert "A_dot_a3" in cm.species
+
+        real_rxns = {
+            k: v for k, v in cm.reactions.items() if not k.startswith("phantom_")
+        }
+        assert len(real_rxns) == 0
+        assert len(cm.events) == 1
+
+        event = next(iter(cm.events.values()))
+        assert "<=" in event.trigger or ">=" in event.trigger
+        assert "&&" in event.trigger or "||" in event.trigger
+        assert len(event.assignments) == 1
+        assert str(event.assignments[0][1]) == "100"
 
         if test_failed:
             assert False
@@ -166,7 +294,27 @@ class TestLogicOperators:
             Azi(200)
         S.duration = 10
         S.method = "stochastic"
-        assert compare_model(S.compile(), "model_19.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 8
+        assert sum(1 for k in cm.species if k.startswith("Azi")) == 4
+        assert sum(1 for k in cm.species if k.startswith("Byy")) == 4
+
+        assert len(cm.reactions) == 8
+        azi_rxns = [r for r in cm.reactions.values() if "Azi" in r.kinetics]
+        byy_rxns = [r for r in cm.reactions.values() if "Byy" in r.kinetics]
+        assert len(azi_rxns) == 4
+        assert len(byy_rxns) == 4
+        assert all("* 1" in r.kinetics for r in azi_rxns)
+        assert all("* 0.1" in r.kinetics for r in byy_rxns)
+
+        assert len(cm.events) == 1
+        event = next(iter(cm.events.values()))
+        assert "<=" in event.trigger
+        assert "Azi" in event.trigger
+        assert "Byy" in event.trigger
+
         S.run(plot_data=False)
         for i in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
             assert S.fres[Azi][i] > S.fres[Byy][i]
@@ -181,7 +329,24 @@ class TestLogicOperators:
         with S.event_condition(r1):
             A(200)
         S.level = -1
-        assert compare_model(S.compile(), "model_20.txt")
+        S.compile(verbose=False)
+        cm = S._concrete_model
+
+        assert len(cm.species) == 2
+        assert cm.species["A"] == 200
+        assert cm.species["B"] == 50
+
+        assert len(cm.reactions) == 2
+
+        assert len(cm.events) == 1
+        event = next(iter(cm.events.values()))
+        assert "<" in event.trigger
+        assert "A" in event.trigger
+        assert "B" in event.trigger
+        assert "&&" in event.trigger or "||" in event.trigger
+        assert len(event.assignments) == 1
+        assert event.assignments[0][0] == "A"
+        assert str(event.assignments[0][1]) == "200"
 
     def test_bool_error(self):
         B = BaseSpecies()

@@ -1,7 +1,19 @@
 """Resolve meta-species inheritance and expand meta-reactions.
 
 The primary entry point is :func:`compile_model`, a standalone pure
-function that orchestrates the full compilation pipeline.
+function that orchestrates a typed phased pipeline:
+
+1. **Species setup** -- validate names, enumerate concrete species
+2. **Volume resolution** -- resolve volume/dimension from user input
+3. **Count assignment** -- assign initial counts to species
+4. **Reaction expansion** -- expand meta-reactions to concrete
+5. **Duplicate detection** -- warn on duplicate reactions (O(n))
+6. **Event building** -- compile events and phantom reactions
+7. **Parameter validation** -- check uniqueness and collisions
+8. **Assignment building** -- compile ODE assignment rules
+9. **Model string** -- generate human-readable output
+
+Each phase is a standalone function returning a typed result.
 """
 
 from __future__ import annotations
@@ -56,11 +68,17 @@ from mobspy.modules.unit_handler import (
 from mobspy.types import (
     CompilationContext,
     CompilerResult,
+    ConcreteModel,
     ConcreteSpeciesId,
     CountAccumulator,
+    CountAssignmentResult,
+    EventBuildResult,
     EventData,
     ParameterUsedInfo,
     ReactionData,
+    ReactionExpansionResult,
+    SpeciesSetupResult,
+    VolumeResolutionResult,
 )
 
 if TYPE_CHECKING:
@@ -78,7 +96,261 @@ _logger = get_logger(__name__)
 
 
 # ------------------------------------------------------------------
-# Private helpers: each handles one phase of compilation
+# Phase 1: Species setup -- validate and enumerate
+# ------------------------------------------------------------------
+
+
+def phase_species_setup(
+    meta_species_to_simulate: List_Species,
+    orthogonal_vector_structure: dict[str, Any],
+) -> SpeciesSetupResult:
+    """Validate species names and enumerate all concrete species.
+
+    Args:
+        meta_species_to_simulate: Deduplicated list of meta-species.
+        orthogonal_vector_structure: Characteristic-to-species mapping.
+
+    Returns:
+        SpeciesSetupResult with species dict, mappings, and validated names.
+
+    Raises:
+        CompilationError: If species names are invalid or duplicated.
+    """
+    names_used = _validate_species_names(meta_species_to_simulate)
+    species, mappings = _build_species_and_mappings(
+        meta_species_to_simulate, orthogonal_vector_structure
+    )
+    return SpeciesSetupResult(
+        species=species,
+        mappings=mappings,
+        names_used=frozenset(names_used),
+    )
+
+
+# ------------------------------------------------------------------
+# Phase 2: Volume resolution
+# ------------------------------------------------------------------
+
+
+def phase_volume_resolution(
+    volume: int | float | Quantity,
+    dimension: int | None,
+    species_counts: list[dict[str, Any]],
+    model_context: ModelUnitContext | None = None,
+) -> VolumeResolutionResult:
+    """Resolve volume and spatial dimension from user input.
+
+    Args:
+        volume: System volume (possibly with units).
+        dimension: Spatial dimension (None for auto-detect).
+        species_counts: Count assignments (may contain Pint quantities).
+        model_context: Unit context for conversion.
+
+    Returns:
+        VolumeResolutionResult with resolved volume, dimension, and
+        the volume parameter entry.
+    """
+    resolved_volume, resolved_dimension, params = _resolve_volume_and_dimension(
+        volume, dimension, species_counts, model_context
+    )
+    vol_unit_id = params["volume"][1]
+    return VolumeResolutionResult(
+        volume=resolved_volume,
+        dimension=resolved_dimension,
+        volume_parameter=(resolved_volume, vol_unit_id),
+    )
+
+
+# ------------------------------------------------------------------
+# Phase 3: Count assignment
+# ------------------------------------------------------------------
+
+
+def phase_count_assignment(
+    species_counts: list[dict[str, Any]],
+    species: dict[str, int | float],
+    orthogonal_vector_structure: dict[str, Any],
+    parameters_used: ParametersUsed,
+    ctx: CompilationContext,
+) -> CountAssignmentResult:
+    """Assign initial counts to concrete species.
+
+    Mutates ``species`` and ``parameters_used`` in place.
+
+    Args:
+        species_counts: Raw count declarations.
+        species: Species dict to update with counts.
+        orthogonal_vector_structure: Characteristic mapping.
+        parameters_used: Parameter tracking dict (mutated).
+        ctx: Compilation context.
+
+    Returns:
+        CountAssignmentResult with assigned species and parameter ids.
+    """
+    assigned, params_in_counts = _assign_initial_counts(
+        species_counts, species, orthogonal_vector_structure, parameters_used, ctx
+    )
+    return CountAssignmentResult(
+        assigned_species=tuple(assigned),
+        parameters_in_counts=frozenset(params_in_counts),
+    )
+
+
+# ------------------------------------------------------------------
+# Phase 4: Reaction expansion
+# ------------------------------------------------------------------
+
+
+def phase_reaction_expansion(
+    reactions_set: set[Any],
+    meta_species_to_simulate: List_Species,
+    orthogonal_vector_structure: dict[str, Any],
+    ctx: CompilationContext,
+) -> ReactionExpansionResult:
+    """Expand meta-reactions into concrete SBML-ready reactions.
+
+    Args:
+        reactions_set: Set of meta-reactions.
+        meta_species_to_simulate: Species in the model.
+        orthogonal_vector_structure: Characteristic mapping.
+        ctx: Compilation context.
+
+    Returns:
+        ReactionExpansionResult with concrete reactions and parameter ids.
+    """
+    reactions, params = _build_reactions(
+        reactions_set, meta_species_to_simulate, orthogonal_vector_structure, ctx
+    )
+    return ReactionExpansionResult(
+        reactions=reactions,
+        parameters_in_reactions=frozenset(params),
+    )
+
+
+# ------------------------------------------------------------------
+# Phase 5: Duplicate detection (O(n) via hashing)
+# ------------------------------------------------------------------
+
+
+def phase_duplicate_detection(
+    reactions: ReactionsForSbml,
+) -> None:
+    """Warn about duplicate reactions.
+
+    Uses hash-based comparison for O(n) performance.
+
+    Args:
+        reactions: Concrete reactions dict.
+    """
+    seen: dict[tuple[tuple[Any, ...], tuple[Any, ...], str], str] = {}
+    for name, rxn in reactions.items():
+        key = (tuple(rxn.reactants), tuple(rxn.products), rxn.kinetics)
+        if key in seen:
+            _logger.warning(
+                "The following reaction: \n"
+                + f"{rxn} \n"
+                + "Is doubled. Was that intentional? \n"
+            )
+        else:
+            seen[key] = name
+
+
+# ------------------------------------------------------------------
+# Phase 6: Event building
+# ------------------------------------------------------------------
+
+
+def phase_event_building(
+    species: SpeciesForSbml,
+    reactions: ReactionsForSbml,
+    orthogonal_vector_structure: dict[str, Any],
+    meta_species_to_simulate: List_Species,
+    ctx: CompilationContext,
+) -> EventBuildResult:
+    """Compile events and add phantom reactions for event-only species.
+
+    Mutates ``reactions`` by adding phantom reactions.
+
+    Args:
+        species: Species dict.
+        reactions: Reactions dict (mutated with phantom reactions).
+        orthogonal_vector_structure: Characteristic mapping.
+        meta_species_to_simulate: Species in the model.
+        ctx: Compilation context.
+
+    Returns:
+        EventBuildResult with events and parameter ids.
+    """
+    events, params = _build_events(
+        species, reactions, orthogonal_vector_structure, meta_species_to_simulate, ctx
+    )
+    return EventBuildResult(
+        events=events,
+        parameters_in_events=frozenset(params),
+    )
+
+
+# ------------------------------------------------------------------
+# Phase 7: Parameter validation
+# ------------------------------------------------------------------
+
+
+def phase_parameter_validation(
+    parameters: ParametersForSbml,
+    names_used: frozenset[str],
+    all_param_objects: set[mp_Mobspy_Parameter],
+) -> None:
+    """Validate parameter names for uniqueness and species collision.
+
+    Args:
+        parameters: Parameters dict.
+        names_used: Set of species names already in use.
+        all_param_objects: All parameter objects from counts, reactions, events.
+
+    Raises:
+        CompilationError: On name collision or duplicate parameter names.
+    """
+    mutable_names = set(names_used)
+    for p in parameters:
+        if p in mutable_names:
+            raise CompilationError(
+                "Parameters names must be unique"
+                " and they must not share a"
+                " name with a species"
+            )
+        mutable_names.add(p)
+
+    for p1 in all_param_objects:
+        for p2 in all_param_objects:
+            if p1 is not p2 and p1.name == p2.name:
+                raise CompilationError(
+                    "There are two different Parameter Objects with the same name"
+                )
+
+
+# ------------------------------------------------------------------
+# Phase 8: Assignment building
+# ------------------------------------------------------------------
+
+
+def phase_assignments(
+    meta_species_to_simulate: List_Species,
+    orthogonal_vector_structure: dict[str, Any],
+) -> dict[str, Any]:
+    """Compile species assignment rules for SBML.
+
+    Args:
+        meta_species_to_simulate: Species in the model.
+        orthogonal_vector_structure: Characteristic mapping.
+
+    Returns:
+        Dict of compiled assignments.
+    """
+    return _build_assignments(meta_species_to_simulate, orthogonal_vector_structure)
+
+
+# ------------------------------------------------------------------
+# Private helpers (unchanged logic, used by phases)
 # ------------------------------------------------------------------
 
 
@@ -349,27 +621,6 @@ def _build_reactions(
     return reactions_for_sbml, parameters_in_reaction
 
 
-def _check_duplicate_reactions(
-    reactions_for_sbml: ReactionsForSbml,
-) -> None:
-    """Warn about duplicate reactions (O(n^2) check)."""
-    keys = list(reactions_for_sbml)
-    for i, r1 in enumerate(keys):
-        for j, r2 in enumerate(keys):
-            if i >= j:
-                continue
-            if (
-                reactions_for_sbml[r1].reactants == reactions_for_sbml[r2].reactants
-                and reactions_for_sbml[r1].products == reactions_for_sbml[r2].products
-                and reactions_for_sbml[r1].kinetics == reactions_for_sbml[r2].kinetics
-            ):
-                _logger.warning(
-                    "The following reaction: \n"
-                    + f"{reactions_for_sbml[r1]} \n"
-                    + "Is doubled. Was that intentional? \n"
-                )
-
-
 def _build_events(
     species_for_sbml: SpeciesForSbml,
     reactions_for_sbml: ReactionsForSbml,
@@ -417,37 +668,6 @@ def _build_events(
         events_for_sbml["end_event"] = end_event
 
     return events_for_sbml, parameters_in_events
-
-
-def _validate_parameters(
-    parameters_for_sbml: ParametersForSbml,
-    names_used: set[str],
-    parameters_in_counts: set[mp_Mobspy_Parameter],
-    parameters_in_reaction: set[mp_Mobspy_Parameter],
-    parameters_in_events: set[mp_Mobspy_Parameter],
-) -> None:
-    """Check parameter names are unique and don't collide with species."""
-    for p in parameters_for_sbml:
-        if p in names_used:
-            raise CompilationError(
-                "Parameters names must be unique"
-                " and they must not share a"
-                " name with a species"
-            )
-        names_used.add(p)
-
-    all_params = (
-        set()
-        .union(parameters_in_counts)
-        .union(parameters_in_reaction)
-        .union(parameters_in_events)
-    )
-    for p1 in all_params:
-        for p2 in all_params:
-            if p1 is not p2 and p1.name == p2.name:
-                raise CompilationError(
-                    "There are two different Parameter Objects with the same name"
-                )
 
 
 def _build_assignments(
@@ -551,9 +771,14 @@ def compile_model(  # noqa: PLR0913
     parameter_context: dict[str, mp_Mobspy_Parameter] | None = None,
     model_context: ModelUnitContext | None = None,
 ) -> CompilerResult:
-    """Compile a MobsPy model into SBML-ready data structures.
+    """Compile a MobsPy model into a backend-agnostic IR.
 
-    Pure-function entry point: takes data in, returns data out.
+    Orchestrates a typed phased pipeline, building a
+    :class:`~mobspy.types.ConcreteModel` internally and returning
+    a :class:`~mobspy.types.CompilerResult` for backward compatibility.
+
+    The ``ConcreteModel`` can be obtained from the result via
+    ``result.to_concrete_model()``.
 
     Args:
         meta_species_to_simulate: Species in the model.
@@ -572,34 +797,40 @@ def compile_model(  # noqa: PLR0913
         model_context: Unit context for SBML generation.
 
     Returns:
-        CompilerResult with all SBML-ready data structures.
+        CompilerResult with all compiled data. Use
+        ``result.to_concrete_model()`` for the backend-agnostic IR.
     """
-    # Phase 1: Validate species names
+    # --- Phase 0: Freeze inheritance ---
+    # All characteristics have been added by this point.
+    # Eagerly compute ordered references for every species so
+    # the lazy cache is never hit during compilation.
     meta_species_to_simulate = meta_species_to_simulate.remove_repeated_elements()
-    names_used = _validate_species_names(meta_species_to_simulate)
+    for spe in meta_species_to_simulate:
+        spe.freeze_references()
 
-    # Phase 2: Initialize parameters
-    parameters_used: ParametersUsed = {}
+    # --- Phase 1: Species setup ---
+    setup = phase_species_setup(meta_species_to_simulate, orthogonal_vector_structure)
+    species_for_sbml = setup.species
+    mappings_for_sbml = setup.mappings
+
+    # --- Phase 2: Volume resolution ---
+    vol_result = phase_volume_resolution(
+        volume, dimension, species_counts, model_context
+    )
+    parameters_for_sbml: ParametersForSbml = {
+        "volume": vol_result.volume_parameter,
+    }
+
+    # Build shared compilation context
     parameter_exist: dict[str, mp_Mobspy_Parameter]
     if parameter_context is None:
         parameter_exist = dict(mp_Mobspy_Parameter.parameter_stack)
     else:
         parameter_exist = parameter_context
 
-    # Phase 3: Build species and mappings
-    species_for_sbml, mappings_for_sbml = _build_species_and_mappings(
-        meta_species_to_simulate, orthogonal_vector_structure
-    )
-
-    # Phase 4: Resolve volume and dimension
-    resolved_volume, resolved_dimension, parameters_for_sbml = (
-        _resolve_volume_and_dimension(volume, dimension, species_counts, model_context)
-    )
-
-    # Build shared compilation context
     ctx = CompilationContext(
-        volume=resolved_volume,
-        dimension=resolved_dimension,
+        volume=vol_result.volume,
+        dimension=vol_result.dimension,
         type_of_model=type_of_model,
         model_context=model_context,
         parameter_exist=parameter_exist,
@@ -620,8 +851,9 @@ def compile_model(  # noqa: PLR0913
         for count in species_counts
     )
 
-    # Phase 5: Assign initial counts
-    assigned_species, parameters_in_counts = _assign_initial_counts(
+    # --- Phase 3: Count assignment ---
+    parameters_used: ParametersUsed = {}
+    count_result = phase_count_assignment(
         species_counts,
         species_for_sbml,
         orthogonal_vector_structure,
@@ -631,60 +863,66 @@ def compile_model(  # noqa: PLR0913
     _add_to_parameters_to_sbml(
         parameters_used,
         parameters_for_sbml,
-        parameters_in_counts,
+        count_result.parameters_in_counts,  # type: ignore[arg-type]
         model_context=model_context,
     )
 
-    # Phase 6: Build reactions
-    reactions_for_sbml, parameters_in_reaction = _build_reactions(
+    # --- Phase 4: Reaction expansion ---
+    rxn_result = phase_reaction_expansion(
         reactions_set,
         meta_species_to_simulate,
         orthogonal_vector_structure,
         ctx,
     )
+    reactions_for_sbml = rxn_result.reactions
     _add_to_parameters_to_sbml(
         parameters_used,
         parameters_for_sbml,
-        parameters_in_reaction,
+        rxn_result.parameters_in_reactions,  # type: ignore[arg-type]
         model_context=model_context,
     )
 
-    # Phase 7: Check for duplicate reactions
-    _check_duplicate_reactions(reactions_for_sbml)
+    # --- Phase 5: Duplicate detection (O(n)) ---
+    phase_duplicate_detection(reactions_for_sbml)
 
-    # Phase 8: Build events
-    events_for_sbml, parameters_in_events = _build_events(
+    # --- Phase 6: Event building ---
+    evt_result = phase_event_building(
         species_for_sbml,
         reactions_for_sbml,
         orthogonal_vector_structure,
         meta_species_to_simulate,
         ctx,
     )
+    events_for_sbml = evt_result.events
     _add_to_parameters_to_sbml(
         parameters_used,
         parameters_for_sbml,
-        parameters_in_events,
+        evt_result.parameters_in_events,  # type: ignore[arg-type]
         model_context=model_context,
     )
 
-    # Phase 9: Validate parameters
-    _validate_parameters(
+    # --- Phase 7: Parameter validation ---
+    all_params = (
+        count_result.parameters_in_counts
+        | rxn_result.parameters_in_reactions
+        | evt_result.parameters_in_events
+    )
+    phase_parameter_validation(
         parameters_for_sbml,
-        names_used,
-        parameters_in_counts,
-        parameters_in_reaction,
-        parameters_in_events,
+        setup.names_used,
+        all_params,  # type: ignore[arg-type]
     )
 
-    # Phase 10: Store parameter objects
+    # --- Phase 8: Assignments ---
+    assignments_for_sbml = phase_assignments(
+        meta_species_to_simulate,
+        orthogonal_vector_structure,
+    )
+
+    # --- Build parameter object dict ---
     parameter_object_dict = {key: parameter_exist[key] for key in parameters_used}
 
-    # Phase 11: Build assignments
-    assignments_for_sbml = _build_assignments(
-        meta_species_to_simulate, orthogonal_vector_structure
-    )
-
-    # Phase 12: Generate model string
+    # --- Phase 9: Model string ---
     model_str = ""
     if verbose:
         model_str = _generate_model_string(
@@ -696,17 +934,21 @@ def compile_model(  # noqa: PLR0913
             assignments_for_sbml,
         )
 
-    return CompilerResult(
-        species_for_sbml=species_for_sbml,
-        reactions_for_sbml=reactions_for_sbml,
-        parameters_for_sbml=parameters_for_sbml,
-        mappings_for_sbml=mappings_for_sbml,
-        model_str=model_str,
-        events_for_sbml=events_for_sbml,
-        assigned_species=assigned_species,
+    # --- Assemble ConcreteModel (the backend-agnostic IR) ---
+    concrete = ConcreteModel(
+        species=species_for_sbml,
+        reactions=reactions_for_sbml,
+        parameters=parameters_for_sbml,
+        events=events_for_sbml,
+        assignments=assignments_for_sbml,
+        mappings=mappings_for_sbml,
+        assigned_species=tuple(count_result.assigned_species),
         parameters_used=parameters_used,
-        parameter_object_dict=parameter_object_dict,
-        assignments_for_sbml=assignments_for_sbml,
+        parameter_objects=parameter_object_dict,
+        model_string=model_str,
         has_mole=has_mole,
-        model_context=model_context,
+        unit_context=model_context,
     )
+
+    # Return CompilerResult for backward compatibility
+    return concrete.to_compiler_result()

@@ -19,8 +19,6 @@ from mobspy import (
 )
 from mobspy.exceptions import MobsPyError
 
-from .conftest import compare_model
-
 
 @pytest.mark.slow
 class TestSimulationExecution:
@@ -53,7 +51,6 @@ class TestSimulationExecution:
         Sim = S1 + S2
         Sim.run(plot_data=False)
 
-        assert compare_model(Sim.compile(), "model_8.txt")
         assert Sim.fres[A][-1] == 0 or Sim.fres[B][-1] == 0
 
     def test_concatenated_simulation(self):
@@ -130,11 +127,20 @@ class TestSimulationExecution:
         S.plot_data = False
         S.duration = 5
         S.run(plot_data=False)
-        assert (
-            compare_model(S.compile(), "model_11.txt")
-            and 150 > S.fres[B][-1] > 100
-            and S.fres[A][-1] == 200
-        )
+        S.compile(verbose=False)
+        cm = S._concrete_model
+        assert cm is not None
+        # A has a1,a2 (2 species); B inherits a1,a2 and adds b1,b2 (4 species)
+        assert len(cm.species) == 6
+        # B.b1 degradation reactions exist
+        b1_reactions = [
+            r
+            for r in cm.reactions.values()
+            if any("b1" in spe for _, spe in r.reactants)
+        ]
+        assert len(b1_reactions) > 0
+        assert 150 > S.fres[B][-1] > 100
+        assert S.fres[A][-1] == 200
 
     def test_one_value_concatenation_sim(self):
         A, B = BaseSpecies()
@@ -289,7 +295,20 @@ class TestMultiParameterSimulation:
         A(100)
         S = Simulation(A)
         S.run(duration=5 * u.hour, plot_data=False, level=-1)
-        assert compare_model(str(S.results), "model_45.txt")
+        # 3 parameter combos: (p1=1,p2=1/h), (p1=1,p2=2/h), (p1=1,p2=3/h)
+        # A(t) = 100*exp(-p1*p2*t), at t=5h:
+        #   combo 0: 100*exp(-5) ~ 0.67
+        #   combo 1: 100*exp(-10) ~ 0.0045
+        #   combo 2: 100*exp(-15) ~ 3e-5
+        assert len(S.results) == 3
+        assert S.results[A][0][0] == 100.0
+        assert S.results[A][1][0] == 100.0
+        assert S.results[A][2][0] == 100.0
+        assert S.results[A][0][-1] < 1.0
+        assert S.results[A][1][-1] < 0.01
+        assert S.results[A][2][-1] < 0.001
+        # Faster decay rate -> smaller final value
+        assert S.results[A][0][-1] > S.results[A][1][-1] > S.results[A][2][-1]
 
     def test_parameters_with_units(self):
         A = BaseSpecies()

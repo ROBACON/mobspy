@@ -622,18 +622,37 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return f"_Mul_{_Last_rate_storage.get_entity_counter()}"
 
     def _mul_impl(self, other: Species, name: str) -> Species:
-        """Core logic for species multiplication (shared by __mul__ and named)."""
+        """Core logic for species multiplication (shared by __mul__ and named).
+
+        Orthogonality is checked eagerly at definition time.
+        Ordered references are computed lazily (characteristics
+        may be added to parents after multiplication).
+        """
         _Last_rate_storage.increment_entity_counter()
         counter = _Last_rate_storage.get_entity_counter()
         new_entity = Species(f"Mul{counter}")
         new_entity._bypass_name(name)
-        new_entity.set_references(mcu_combine_references(self, other))
-        new_entity.add_reference(new_entity)
+
+        combined = mcu_combine_references(self, other)
+        combined.add(new_entity)
+        new_entity._references = combined
         new_entity._from_mul = True  # type: ignore[attr-defined]
 
-        mcu_check_orthogonality_between_references(new_entity.get_references())
+        # Fail fast: check orthogonality at definition time
+        mcu_check_orthogonality_between_references(combined)
 
         return new_entity
+
+    def freeze_references(self) -> None:
+        """Eagerly compute and freeze ordered references.
+
+        Called during compilation, after all characteristics have
+        been added. After this call, the ordered references and
+        index dict are immutable.
+        """
+        ordered, index_dict = mcu_compute_ordered_references(self)
+        self._ordered_references = ordered
+        self._reference_index_dictionary = index_dict
 
     def named(self, name: str) -> Species:
         """Set or rename this species.
@@ -810,7 +829,12 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         return get_session().meta_any_ctx
 
     def _ensure_ordered_references(self) -> None:
-        """Lazily compute ordered references and index map."""
+        """Compute ordered references and index map if not already frozen.
+
+        Normally called lazily on first access. After
+        ``freeze_references()`` (called during compilation), this
+        is a no-op.
+        """
         if self._ordered_references is None:
             ordered, index_dict = mcu_compute_ordered_references(self)
             self._ordered_references = ordered

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from mobspy.execution import generate_sbml_from_compiled, run_sbml
-from mobspy.types import CompilerResult
+from mobspy.types import CompilerResult, ConcreteModel
 
 
 class SBMLBackend:
@@ -17,13 +17,26 @@ class SBMLBackend:
 
     Wraps the existing standalone functions ``generate_sbml_from_compiled``
     and ``run_sbml`` behind the ``SimulationBackend`` protocol.
+
+    Accepts both ``ConcreteModel`` (preferred) and ``CompilerResult``
+    (backward compatibility).
     """
 
     def generate_model(
-        self, compiled: CompilerResult, model_context: Any = None
+        self, model: ConcreteModel | CompilerResult, model_context: Any = None
     ) -> str:
-        """Generate SBML XML from compiled model data."""
-        return generate_sbml_from_compiled(compiled, model_context)
+        """Generate SBML XML from compiled model data.
+
+        Args:
+            model: A ConcreteModel or CompilerResult.
+            model_context: Override unit context (used only with
+                CompilerResult; ConcreteModel carries its own).
+        """
+        if isinstance(model, ConcreteModel):
+            return generate_sbml_from_compiled(
+                model.to_compiler_result(), model.unit_context
+            )
+        return generate_sbml_from_compiled(model, model_context)
 
     def run(
         self,

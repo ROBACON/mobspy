@@ -53,3 +53,4 @@ CLAUDE.md
 # Docs build output
 docs/_build/
 docs/_autosummary/
+.hypothesis/

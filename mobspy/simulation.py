@@ -111,7 +111,7 @@ from mobspy.simulation_config import PlotConfig, SimulationConfig
 from mobspy.simulator_object.utils import (
     sim_remove_reaction as sof_sim_remove_reaction,
 )
-from mobspy.types import SimulationEventData, TimeSeriesDataDict
+from mobspy.types import ConcreteModel, SimulationEventData, TimeSeriesDataDict
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -344,6 +344,7 @@ class Simulation(
 
     def _init_sbml_state(self) -> None:
         """Initialize SBML compilation output slots."""
+        self._concrete_model: ConcreteModel | None = None
         self._species_for_sbml: SpeciesForSbml | None = None
         self._reactions_for_sbml: ReactionsForSbml | None = None
         self._parameters_for_sbml: ParametersForSbml | None = None
@@ -609,6 +610,10 @@ class Simulation(
         except (TypeError, ValueError, KeyError, AttributeError) as e:
             raise CompilationError(f"Model compilation failed: {e!s}") from e
 
+        # Store the backend-agnostic IR
+        self._concrete_model = _result.to_concrete_model()
+
+        # Extract fields for backward compatibility
         self._species_for_sbml = _result.species_for_sbml
         self._reactions_for_sbml = _result.reactions_for_sbml
         self._parameters_for_sbml = _result.parameters_for_sbml
@@ -632,7 +637,7 @@ class Simulation(
                 self._species_for_sbml[key]
             )
 
-        compiled_model = _result.to_compiled_model_dict(
+        compiled_model = self._concrete_model.to_compiled_model(
             species_not_mapped=self.all_species_not_mapped,
             mappings=self.mappings,
         )
@@ -1019,6 +1024,7 @@ class Simulation(
             "_model_context",
             "_declarations",
             "_backend",
+            "_concrete_model",
         }
     )
 

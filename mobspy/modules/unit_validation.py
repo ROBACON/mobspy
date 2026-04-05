@@ -33,7 +33,6 @@ def validate_rate_units(
     Args:
         rate: The reaction rate value.
         num_reactants: Number of distinct reactant species.
-        volume_dimension: Spatial dimension (0, 1, 2, or 3).
 
     Raises:
         UnitError: If the rate has incompatible dimensions.
@@ -41,10 +40,17 @@ def validate_rate_units(
     if not isinstance(rate, Quantity):
         return
 
-    dim = str(rate.dimensionality)
+    dim = dict(rate.dimensionality)
 
     if "[time]" not in dim:
         raise UnitError(
             f"Rate {rate} has no time dimension. "
             "Reaction rates must include a time component (e.g., 1/s, mol/L/s)."
+        )
+
+    time_exp = dim.get("[time]", 0)
+    if time_exp >= 0:
+        raise UnitError(
+            f"Rate {rate} has a non-negative time exponent ({time_exp}). "
+            "Rates must be inversely proportional to time (e.g., 1/s)."
         )

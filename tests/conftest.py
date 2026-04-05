@@ -2,68 +2,23 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 import pytest
 
-# Root of the repository
-ROOT = Path(__file__).resolve().parent.parent
-TEST_TOOLS = ROOT / "tests" / "expected_output"
-
-
-def compare_model(comp_results: str, file_name: str) -> bool:
-    """Compare compiled model output against an expected output file.
-
-    Normalises whitespace before comparing line-by-line.
-    """
-    path = (
-        TEST_TOOLS / file_name if not Path(file_name).is_absolute() else Path(file_name)
-    )
-    expected_lines = path.read_text(encoding="utf-8").splitlines()
-    result_lines = comp_results.splitlines()
-
-    def _normalise(text: str) -> str:
-        return re.sub(r"\s+", " ", text.strip())
-
-    for result_line, expected_line in zip(result_lines, expected_lines, strict=False):
-        if _normalise(result_line) != _normalise(expected_line):
-            return False
-    return True
-
-
-def compare_model_ignore_order(comp_results: str, file_name: str) -> bool:
-    """Compare compiled model output ignoring line order."""
-    path = (
-        TEST_TOOLS / file_name if not Path(file_name).is_absolute() else Path(file_name)
-    )
-    expected_lines = {
-        line.strip()
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    }
-    result_lines = {line.strip() for line in comp_results.splitlines() if line.strip()}
-    return expected_lines == result_lines
-
-
-@pytest.fixture()
-def test_tools_dir() -> Path:
-    """Return the path to the test_tools directory."""
-    return TEST_TOOLS
-
 
 @pytest.fixture(autouse=True)
-def _clear_session() -> Generator[None, None, None]:
-    """Reset the full session context between tests.
+def _clear_registry() -> Generator[None, None, None]:
+    """Clear the thread-local registry between tests.
 
-    Prevents reaction/count declarations and other DSL state
-    from leaking across tests.
+    Not required for correctness -- see test_model_isolation.py
+    for proof that models in separate functions are independent
+    even with a dirty registry. This fixture just prevents
+    unbounded memory growth across the test suite.
     """
     from mobspy.modules.session_context import reset_session
 
-    reset_session()
     yield
     reset_session()
 

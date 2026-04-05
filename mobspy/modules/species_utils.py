@@ -37,39 +37,32 @@ def combine_references(species1: Any, species2: Any) -> set[Any]:
 
 
 def check_orthogonality_between_references(references: set[Any]) -> None:
-    """Check if meta-species objects inside a reference do
-    not have characteristics in common. The sets of
-    characteristics directly added to species must be
-    independent.
+    """Check that no two references share a characteristic.
+
+    Uses a single-pass dict to achieve O(n*k) where k is the average
+    number of characteristics per reference, instead of O(n^2).
 
     Args:
         references: Set of meta-species objects to check for independence.
-    """
-    for i, reference1 in enumerate(references):
-        for j, reference2 in enumerate(references):
-            if i == j:
-                continue
 
-            if (
-                len(
-                    reference1.get_characteristics().intersection(
-                        reference2.get_characteristics()
-                    )
-                )
-                != 0
-            ):
+    Raises:
+        ValidationError: If two references share a characteristic.
+    """
+    seen: dict[str, Any] = {}
+    for reference in references:
+        for char in reference.get_characteristics():
+            if char in seen and seen[char] is not reference:
                 raise ValidationError(
                     "The same characteristic can only be "
-                    "shared through inheritance. " + "There are two characteristics "
+                    "shared through inheritance. "
+                    "There are two characteristics "
                     "directly added to two "
                     "meta-species \n"
-                    "Repetition in: "
-                    f"{reference1}, {reference2}"
-                    "Characteristics: "
-                    f"{reference1.get_characteristics()}"
-                    ", "
-                    f"{reference2.get_characteristics()}"
+                    f"Repetition in: {seen[char]}, {reference}"
+                    f"Characteristics: {seen[char].get_characteristics()}"
+                    f", {reference.get_characteristics()}"
                 )
+            seen[char] = reference
 
 
 def unite_characteristics(species: list[Any] | None) -> set[str]:

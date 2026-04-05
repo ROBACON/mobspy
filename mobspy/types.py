@@ -20,12 +20,13 @@ class SimulationBackend(Protocol):
     The default backend is ``SBMLBackend`` which generates SBML
     and runs simulations via BasiCO/COPASI. Custom backends can
     be passed to ``Simulation(model, backend=my_backend)``.
+
+    Backends receive a :class:`ConcreteModel` (the backend-agnostic
+    IR produced by the compiler).
     """
 
-    def generate_model(
-        self, compiled: CompilerResult, model_context: Any = None
-    ) -> str:
-        """Generate a model string from compiled data."""
+    def generate_model(self, model: ConcreteModel, model_context: Any = None) -> str:
+        """Generate a model string from the backend-agnostic IR."""
         ...
 
     def run(
@@ -326,6 +327,138 @@ class CompilerResult:
     ) -> CompiledModel:
         """Backward compat alias for to_compiled_model."""
         return self.to_compiled_model(species_not_mapped, mappings)
+
+    def to_concrete_model(self) -> ConcreteModel:
+        """Convert to the backend-agnostic ConcreteModel IR."""
+        return ConcreteModel.from_compiler_result(self)
+
+
+# --- Backend-agnostic intermediate representation ---
+
+
+@dataclass(frozen=True)
+class ConcreteModel:
+    """Backend-agnostic IR of a fully compiled MobsPy model.
+
+    Produced by ``compile_model()``, consumed by backends.
+    Immutable and serializable. Field names are intentionally
+    free of backend-specific terminology (no ``_for_sbml``).
+    """
+
+    species: dict[str, int | float] = field(default_factory=dict)
+    reactions: dict[str, ReactionData] = field(default_factory=dict)
+    parameters: dict[str, tuple[float | int, str]] = field(default_factory=dict)
+    events: dict[str, EventData] = field(default_factory=dict)
+    assignments: dict[str, AssignmentData] = field(default_factory=dict)
+    mappings: dict[str, list[str]] = field(default_factory=dict)
+    assigned_species: tuple[str, ...] = ()
+    parameters_used: dict[str, ParameterUsedInfo] = field(default_factory=dict)
+    parameter_objects: dict[str, Any] = field(default_factory=dict)
+    model_string: str = ""
+    has_mole: bool = False
+    unit_context: Any = None  # ModelUnitContext | None
+
+    def to_compiler_result(self) -> CompilerResult:
+        """Bridge to CompilerResult for backward compatibility."""
+        return CompilerResult(
+            species_for_sbml=dict(self.species),
+            reactions_for_sbml=dict(self.reactions),
+            parameters_for_sbml=dict(self.parameters),
+            mappings_for_sbml=dict(self.mappings),
+            events_for_sbml=dict(self.events),
+            assignments_for_sbml=dict(self.assignments),
+            assigned_species=list(self.assigned_species),
+            parameters_used=dict(self.parameters_used),
+            parameter_object_dict=dict(self.parameter_objects),
+            model_str=self.model_string,
+            has_mole=self.has_mole,
+            model_context=self.unit_context,
+        )
+
+    def to_compiled_model(
+        self,
+        species_not_mapped: dict[str, int | float],
+        mappings: dict[str, list[str]],
+    ) -> CompiledModel:
+        """Create a CompiledModel for downstream consumption."""
+        return CompiledModel(
+            species_for_sbml=dict(self.species),
+            parameters_for_sbml=dict(self.parameters),
+            reactions_for_sbml=dict(self.reactions),
+            events_for_sbml=dict(self.events),
+            assignments_for_sbml=dict(self.assignments),
+            species_not_mapped=species_not_mapped,
+            mappings=mappings,
+            assigned_species=list(self.assigned_species),
+            model_context=self.unit_context,
+        )
+
+    @classmethod
+    def from_compiler_result(cls, result: CompilerResult) -> ConcreteModel:
+        """Construct from a legacy CompilerResult."""
+        return cls(
+            species=dict(result.species_for_sbml),
+            reactions=dict(result.reactions_for_sbml),
+            parameters=dict(result.parameters_for_sbml),
+            events=dict(result.events_for_sbml),
+            assignments=dict(result.assignments_for_sbml),
+            mappings=dict(result.mappings_for_sbml),
+            assigned_species=tuple(result.assigned_species),
+            parameters_used=dict(result.parameters_used),
+            parameter_objects=dict(result.parameter_object_dict),
+            model_string=result.model_str,
+            has_mole=result.has_mole,
+            unit_context=result.model_context,
+        )
+
+
+# --- Compiler phase result types ---
+#
+# Each phase of the compilation pipeline returns a typed, frozen
+# result. This makes the data flow explicit and each phase
+# independently testable.
+
+
+@dataclass(frozen=True)
+class SpeciesSetupResult:
+    """Phase result: validated meta-species enumerated into concrete species."""
+
+    species: dict[str, int | float]
+    mappings: dict[str, list[str]]
+    names_used: frozenset[str]
+
+
+@dataclass(frozen=True)
+class VolumeResolutionResult:
+    """Phase result: resolved volume, dimension, and volume parameter."""
+
+    volume: int | float
+    dimension: int
+    volume_parameter: tuple[float | int, str]
+
+
+@dataclass(frozen=True)
+class CountAssignmentResult:
+    """Phase result: initial counts assigned to concrete species."""
+
+    assigned_species: tuple[str, ...]
+    parameters_in_counts: frozenset[Any]
+
+
+@dataclass(frozen=True)
+class ReactionExpansionResult:
+    """Phase result: meta-reactions expanded into concrete reactions."""
+
+    reactions: dict[str, ReactionData]
+    parameters_in_reactions: frozenset[Any]
+
+
+@dataclass(frozen=True)
+class EventBuildResult:
+    """Phase result: events compiled with phantom reactions added."""
+
+    events: dict[str, EventData]
+    parameters_in_events: frozenset[Any]
 
 
 @dataclass
