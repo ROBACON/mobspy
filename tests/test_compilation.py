@@ -38,7 +38,7 @@ class TestBasicModels:
         rxn = next(iter(rxns.values()))
         assert rxn.reactants == [(1, "A"), (1, "B")]
         assert rxn.products == [(1, "C")]
-        assert "A * B * 1 * volume^-1" in rxn.kinetics
+        assert "A * B * 1 * c1" in rxn.kinetics
 
     def test_model_2(self):
         Carnivore, Herbivore = BaseSpecies()
@@ -149,7 +149,7 @@ class TestBasicModels:
         assert len(rxns) == 4
         for rxn in rxns.values():
             assert rxn.reactants == []
-            assert "volume" in rxn.kinetics
+            assert "c1" in rxn.kinetics
 
     def test_model_7(self):
         def oscillator(
@@ -187,7 +187,7 @@ class TestBasicModels:
         assert len(rxns) == 13
         kinetics = [r.kinetics for r in rxns.values()]
         assert any("5/(1 + (Protein_dot_x" in k for k in kinetics)
-        assert any("0.0001 * volume" in k for k in kinetics)
+        assert any("0.0001 * c1" in k for k in kinetics)
         assert any("* 10" in k for k in kinetics)
         assert any("* 0.01" in k for k in kinetics)
         assert any("* 1" in k for k in kinetics)
@@ -237,7 +237,7 @@ class TestInheritanceAndQueries:
         kinetics = {r.kinetics for r in rxns.values()}
         assert any("0.25" in k for k in kinetics)
         assert any("0.5" in k for k in kinetics)
-        assert any(" 1 * volume^-1" in k for k in kinetics)
+        assert any(" 1 * c1" in k for k in kinetics)
 
     def test_single_rate(self):
         A, B = BaseSpecies(2)
@@ -257,7 +257,7 @@ class TestInheritanceAndQueries:
         assert len(rxns) == 4
         kinetics = sorted(r.kinetics for r in rxns.values())
         assert any("0.5" in k for k in kinetics)
-        assert any(" 1 * volume^-1" in k for k in kinetics)
+        assert any(" 1 * c1" in k for k in kinetics)
 
     def test_triple_rate(self):
         A, B = BaseSpecies(2)
@@ -477,7 +477,7 @@ class TestDimensions:
 
         assert len(cm.species) == 1
         assert cm.species["A"] == pytest.approx(10.0)
-        assert cm.parameters["volume"][0] == pytest.approx(200.0, rel=1e-6)
+        assert cm.parameters["volume"][0] == pytest.approx(2.0, rel=1e-6)
 
     def test_bi_dimensional_rates(self):
         Ball, Child, Bacteria = BaseSpecies(3)
@@ -598,7 +598,7 @@ class TestEmptyArgAndExpressions:
         rxn = next(iter(rxns.values()))
         assert rxn.reactants == []
         assert rxn.products == [(1, "A")]
-        assert "20 * volume" in rxn.kinetics
+        assert "20 * c1" in rxn.kinetics
 
     def test_conversion_outside(self):
         n_0 = 10
@@ -641,7 +641,7 @@ class TestEmptyArgAndExpressions:
         assert len(rxns) == 3
         for rxn in rxns.values():
             assert rxn.reactants == []
-            assert "volume" in rxn.kinetics
+            assert "c1" in rxn.kinetics
 
 
 @pytest.mark.compilation
@@ -659,7 +659,7 @@ class TestReversibleReactions:
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 4
         kinetics = [r.kinetics for r in rxns.values()]
-        assert any("volume^-4" in k for k in kinetics)
+        assert any("c1" in k for k in kinetics)
         assert any("(100-A)" in k and "(100-B)" in k for k in kinetics)
         assert any("C^3" in k for k in kinetics)
         assert any("C * 2" in k for k in kinetics)
@@ -684,7 +684,7 @@ class TestReversibleReactions:
         kinetics = [r.kinetics for r in rxns.values()]
         assert any("10" in k for k in kinetics)
         assert any("1/(k1+k2)" in k for k in kinetics)
-        assert any("k1 * volume" in k for k in kinetics)
+        assert any("k1 * c1" in k for k in kinetics)
         reverse_rxns = [r for r in rxns.values() if r.reactants == []]
         assert len(reverse_rxns) == 2
 
@@ -1077,6 +1077,6 @@ class TestParameters:
             "Something.red.there",
         ]:
             assert name in cm.species
-        assert cm.parameters["volume"][0] == pytest.approx(100.0, rel=1e-6)
+        assert cm.parameters["volume"][0] == pytest.approx(1.0, rel=1e-6)
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 16

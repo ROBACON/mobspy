@@ -367,24 +367,52 @@ def _add_to_parameters_to_sbml(
         param_unit = rate_unit_id
 
     for parameter in parameters_to_add:
+        # Reconvert time-dimensioned parameter values to model time unit
+        vals = parameter.value
+        if (
+            model_context is not None
+            and hasattr(parameter, "original_unit")
+            and parameter.original_unit is not None
+        ):
+            from pint import Quantity as PintQuantity  # noqa: PLC0415
+
+            ou = parameter.original_unit
+            # Only reconvert if the parameter has time dimension
+            test_q = PintQuantity(1, ou)
+            has_time = "[time]" in dict(test_q.dimensionality)
+            if has_time and parameter.conversion_factor != 0:
+                target = 1 / model_context.time_unit
+                if isinstance(vals, list):
+                    vals = [
+                        float(
+                            PintQuantity(v / parameter.conversion_factor, ou)
+                            .to(target)
+                            .magnitude
+                        )
+                        for v in vals
+                    ]
+                else:
+                    orig_q = PintQuantity(vals / parameter.conversion_factor, ou)
+                    vals = float(orig_q.to(target).magnitude)
+
         if parameter.name in parameters_used:
             parameters_used[parameter.name].used_in.add(SBML_LOCATION)
         else:
             parameters_used[parameter.name] = ParameterUsedInfo(
                 name=parameter.name,
-                values=parameter.value,
+                values=vals,
                 used_in={SBML_LOCATION},
                 object=parameter,
             )
 
         try:
             parameters_for_sbml[parameter.name] = (
-                parameter.value[0],
+                vals[0] if isinstance(vals, list) else vals,
                 param_unit,
             )
         except (IndexError, TypeError):
             parameters_for_sbml[parameter.name] = (  # pyright: ignore[reportArgumentType]
-                parameter.value,
+                vals,
                 param_unit,
             )
 

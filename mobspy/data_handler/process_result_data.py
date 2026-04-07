@@ -104,7 +104,8 @@ def convert_data_to_desired_unit(  # noqa: PLR0913
     converted_data = deepcopy(data)
 
     if unit_x is not None:
-        time_unit = model_context.time_unit if model_context is not None else ur.seconds
+        # BasiCO returns time in the SBML model's time unit
+        time_unit = model_context.time_unit if model_context is not None else ur.second
         converted_data["Time"] = [
             (time * time_unit).to(unit_x).magnitude  # pyright: ignore[reportAttributeAccessIssue]
             for time in data["Time"]

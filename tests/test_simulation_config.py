@@ -14,7 +14,7 @@ class TestDefaults:
         assert config.volume == 1
         assert config.repetitions == 1
         assert config.simulation_method == "deterministic"
-        assert config.level == 3
+        assert config.level == 2
         assert config.jobs == -1
         assert config.save_data is False
         assert config.plot_data is True

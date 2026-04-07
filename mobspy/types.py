@@ -14,9 +14,69 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_che
 from pint import Quantity
 
 if TYPE_CHECKING:
+    from mobspy.data_handler.time_series_object import MobsPyList_of_TS
     from mobspy.modules.expression_nodes import ExprNode
 
 RateValue: TypeAlias = "int | float | Quantity | str | Callable[..., Any] | ExprNode"
+
+# Forward reference -- actual class is MobsPyList_of_TS in data_handler
+SimulationResults: TypeAlias = "MobsPyList_of_TS"
+
+
+class SpeciesArg(Protocol):
+    """Type of arguments passed to rate functions.
+
+    Rate function arguments support:
+    - Characteristic checks: ``if r.alive:``
+    - Identity checks: ``if r.is_a(ChildSpecies):``
+    - Arithmetic (builds expression tree): ``r * 0.5``, ``r ** 2``
+
+    Examples::
+
+        def death_rate(r: SpeciesArg) -> RateValue:
+            if r.is_a(FastCell):
+                return 0.1
+            return 0.01
+
+        A >> Zero @ (lambda r: 0.5 * r if r.alive else 0.1 * r)
+    """
+
+    def is_a(self, reference: Any) -> bool:
+        """Check if this species inherits from reference."""
+        ...
+
+    def __bool__(self) -> bool:
+        """True if the species has all queried characteristics."""
+        ...
+
+    def __getattr__(self, name: str) -> SpeciesArg:
+        """Query a characteristic (e.g. ``r.alive``)."""
+        ...
+
+    def __mul__(self, other: Any) -> Any:
+        """Multiply (builds rate expression)."""
+        ...
+
+    def __rmul__(self, other: Any) -> Any:
+        """Right multiply (builds rate expression)."""
+        ...
+
+    def __truediv__(self, other: Any) -> Any:
+        """Divide (builds rate expression)."""
+        ...
+
+    def __add__(self, other: Any) -> Any:
+        """Add (builds rate expression)."""
+        ...
+
+    def __sub__(self, other: Any) -> Any:
+        """Subtract (builds rate expression)."""
+        ...
+
+    def __pow__(self, other: Any) -> Any:
+        """Power (builds rate expression)."""
+        ...
+
 
 SimulationMethod = Literal[
     "deterministic",

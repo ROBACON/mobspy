@@ -110,7 +110,15 @@ def create_model(  # noqa: PLR0913
     check(model.setExtentUnits(substance_id), "set model units of extent")
     check(model.setSubstanceUnits(substance_id), "set model substance units")
 
-    _create_compartment(model, spatial_dim)
+    # Extract volume from parameters for compartment (remove from SBML params)
+    vol_size = 1.0
+    vol_units = "dimensionless"
+    if "volume" in parameters:
+        vol_size = float(parameters["volume"][0])
+        vol_units = parameters["volume"][1]
+        parameters = {k: v for k, v in parameters.items() if k != "volume"}
+
+    _create_compartment(model, spatial_dim, vol_size, vol_units)
     _create_species(model, species, substance_id)
     _create_parameters(model, parameters)
     _create_reactions(model, reactions)
@@ -145,15 +153,20 @@ def _setup_units(
     return "second", "item", 3
 
 
-def _create_compartment(model: Any, spatial_dim: int) -> None:
-    """Create the default compartment."""
+def _create_compartment(
+    model: Any,
+    spatial_dim: int,
+    size: float = 1.0,
+    units: str = "dimensionless",
+) -> None:
+    """Create the compartment with the model's real volume."""
     c1 = model.createCompartment()
     check(c1, "create compartment")
     check(c1.setId("c1"), "set compartment id")
     check(c1.setConstant(True), 'set compartment "constant"')
-    check(c1.setSize(1), 'set compartment "size"')
+    check(c1.setSize(size), 'set compartment "size"')
     check(c1.setSpatialDimensions(spatial_dim), "set compartment dimensions")
-    check(c1.setUnits("dimensionless"), "set compartment size units")
+    check(c1.setUnits(units), "set compartment size units")
 
 
 def _create_species(

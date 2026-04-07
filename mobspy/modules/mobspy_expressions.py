@@ -687,12 +687,22 @@ class QuantityConverter:
         quantity: Quantity | OverrideQuantity,
         model_context: ModelUnitContext | None = None,
     ) -> Quantity | OverrideQuantity:
-        """
-        Converts a received quantity to L-s-counts, standard MobsPy units
+        """Convert a received quantity to the model's unit system.
+
+        Uses model_context if provided, otherwise reads it from the
+        compilation session context, otherwise falls back to defaults.
 
         Args:
             quantity: Received quantity to convert.
+            model_context: Explicit model context (optional).
         """
+        if model_context is None:
+            from mobspy.modules.expression_context import (  # noqa: PLC0415
+                get_compilation_model_context,
+            )
+
+            model_context = get_compilation_model_context()
+
         is_override = isinstance(quantity, OverrideQuantity)
         copied_quantity = deepcopy(quantity.q_object if is_override else quantity)
 
@@ -720,21 +730,45 @@ class QuantityConverter:
         cls,
         model_context: ModelUnitContext | None,
     ) -> tuple[str, str, bool]:
-        """Extract base unit replacement strings from model context."""
+        """Extract base unit replacement strings from model context.
+
+        Returns (length_repl, time_repl, has_model_substance).
+        ``length_repl`` is the base length unit derived from the volume
+        unit (e.g. 'decimeter' for liters, 'centimeter' for mL).
+        """
         ur = u.unit_registry_object
-        length_repl = "dm"
-        time_repl = "s"
+        length_repl = "decimeter"
+        time_repl = "second"
         has_model_substance = False
 
         if model_context is not None:
-            vol_q = ur.Quantity(1, str(model_context.volume_unit))
-            vol_dim = dict(vol_q.dimensionality)
-            length_exp = int(vol_dim.get("[length]", 3))
-            if length_exp != 0:
-                base_length_q = vol_q ** (1.0 / length_exp)
-                length_repl = str(base_length_q.units)
             time_repl = str(model_context.time_unit)
             has_model_substance = model_context.substance_is_molar
+            # Derive base length from volume unit
+            vol_q = ur.Quantity(1, str(model_context.volume_unit))
+            dim = model_context.dimension
+            vol_dim = dict(vol_q.dimensionality)
+            length_exp = int(vol_dim.get("[length]", dim))
+            if length_exp == 0:
+                length_exp = dim
+            vol_in_m_n = vol_q.to(f"meter**{length_exp}").magnitude
+            if vol_in_m_n > 0:
+                side = vol_in_m_n ** (1.0 / length_exp)
+                length_q = side * ur.meter
+                _candidates = [
+                    "meter",
+                    "decimeter",
+                    "centimeter",
+                    "millimeter",
+                    "micrometer",
+                ]
+                _tolerance = 1e-9
+                for cand in _candidates:
+                    conv = length_q.to(cand)
+                    delta = abs(conv.magnitude - round(conv.magnitude))
+                    if delta < _tolerance:
+                        length_repl = cand
+                        break
 
         return length_repl, time_repl, has_model_substance
 
@@ -1043,6 +1077,12 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             self._count_in_expression = True
 
         _ctx = model_context or getattr(self, "_model_context", None)
+        if _ctx is None:
+            from mobspy.modules.expression_context import (  # noqa: PLC0415
+                get_compilation_model_context,
+            )
+
+            _ctx = get_compilation_model_context()
         _time_u, _vol_u = _resolve_validation_units(_ctx)
 
         early = self._check_constant_expression_units(
@@ -1064,7 +1104,7 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
         self,
         operation: str,
         reaction_order: int | None,
-        dimension: int,
+        dimension: int,  # noqa: ARG002
         _time_u: Any,
         _vol_u: Any,
     ) -> tuple[str, bool] | None:
@@ -1077,17 +1117,18 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             and self._expression_variables == set()
             and reaction_order is not None
         ):
-            if self._unit_count_op.units == (1 / _time_u).units:  # pyright: ignore[reportAttributeAccessIssue]
+            ur = u.unit_registry_object
+            count_target = ur.Quantity(1, 1 / _time_u)
+            conc_target = ur.Quantity(1, _vol_u ** (reaction_order - 1) / _time_u)
+            if self._unit_count_op.is_compatible_with(count_target):  # pyright: ignore[reportAttributeAccessIssue]
                 return operation, True
-            if self._unit_conc_op.units == (  # pyright: ignore[reportAttributeAccessIssue]
-                _vol_u ** (dimension * (reaction_order - 1)) / _time_u
-            ):
+            if self._unit_conc_op.is_compatible_with(conc_target):  # pyright: ignore[reportAttributeAccessIssue]
                 return operation, False
         return None
 
     def _resolve_expression_mode(
         self,
-        dimension: int,
+        dimension: int,  # noqa: ARG002
         _time_u: Any,
         _vol_u: Any,
     ) -> None:
@@ -1105,15 +1146,19 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 "Verify that all arithmetic operations have compatible dimensions."
             )
 
+        ur = u.unit_registry_object
         if c1 and not c3:
-            conc_units = self._unit_conc_op.units
-            is_vol_rate = conc_units == (1 / (_time_u * _vol_u**dimension))
-            is_time_rate = conc_units == (1 / _time_u)
-            if is_vol_rate or is_time_rate:
+            vol_rate_target = ur.Quantity(1, 1 / (_time_u * _vol_u))
+            time_rate_target = ur.Quantity(1, 1 / _time_u)
+            is_vol = self._unit_conc_op.is_compatible_with(vol_rate_target)
+            is_time = self._unit_conc_op.is_compatible_with(time_rate_target)
+            if is_vol or is_time:
                 self._concentration_in_expression = True
 
-        if c1 and not c2 and self._unit_count_op.units == (1 / _time_u):
-            self._count_in_expression = True
+        if c1 and not c2:
+            count_target = ur.Quantity(1, 1 / _time_u)
+            if self._unit_count_op.is_compatible_with(count_target):
+                self._count_in_expression = True
 
         if (
             self._has_units
@@ -1162,14 +1207,14 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             and not self._count_in_expression
         ):
             for _ in range(max(n_vars, 1)):
-                convert_operation = "(" + convert_operation + ")" + "*volume"
+                convert_operation = "(" + convert_operation + ")" + "*c1"
         elif (
             self._concentration_in_model
             and self._count_in_expression
             and not self._concentration_in_expression
         ):
             for _ in range(max(n_vars, 1)):
-                convert_operation = "(" + convert_operation + ")" + "/volume"
+                convert_operation = "(" + convert_operation + ")" + "/c1"
         return convert_operation
 
     def _convert_legacy_string_path(self) -> str:
@@ -1192,19 +1237,13 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
 def _resolve_validation_units(
     ctx: ModelUnitContext | None,
 ) -> tuple[Any, Any]:
-    """Return (time_unit, volume_base_unit) from a model context or defaults."""
+    """Return (time_unit, volume_unit) from a model context or defaults."""
     ur = u.unit_registry_object
     _time_u = ur.second
-    _vol_u = ur.decimeter
+    _vol_u = ur.liter
     if ctx is not None:
         _time_u = ur.Quantity(1, str(ctx.time_unit)).units  # type: ignore[assignment]
-        vol_q = ur.Quantity(1, str(ctx.volume_unit))
-        vol_dim = dict(vol_q.dimensionality)
-        length_exp = int(vol_dim.get("[length]", 3))
-        if length_exp != 0:
-            _vol_u = (vol_q ** (1.0 / length_exp)).units
-        else:
-            _vol_u = ur.decimeter
+        _vol_u = ur.Quantity(1, str(ctx.volume_unit)).units  # type: ignore[assignment]
     return _time_u, _vol_u
 
 
@@ -1232,7 +1271,7 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913
         convert_operation = replace_spe_in_expr(
             convert_operation,
             concentration_name,
-            "(" + replace_name + "/volume)",
+            "(" + replace_name + "/c1)",
         )
         if count_in_expression:
             pass
@@ -1240,9 +1279,9 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913
             convert_operation = replace_spe_in_expr(
                 convert_operation,
                 default_name,
-                "(" + replace_name + "/volume)",
+                "(" + replace_name + "/c1)",
             )
-            convert_operation = "(" + convert_operation + ")" + "*volume"
+            convert_operation = "(" + convert_operation + ")" + "*c1"
         else:
             raise ValueError(
                 "The expression did not resolve for "
@@ -1254,23 +1293,23 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913
             convert_operation, concentration_name, replace_name
         )
         convert_operation = convert_operation.replace(
-            count_name, "(" + replace_name + "*volume)"
+            count_name, "(" + replace_name + "*c1)"
         )
         convert_operation = replace_spe_in_expr(
             convert_operation,
             count_name,
-            "(" + replace_name + "*volume)",
+            "(" + replace_name + "*c1)",
         )
         if count_in_expression:
             convert_operation = convert_operation.replace(
-                default_name, "(" + replace_name + "*volume)"
+                default_name, "(" + replace_name + "*c1)"
             )
             convert_operation = replace_spe_in_expr(
                 convert_operation,
                 default_name,
-                "(" + replace_name + "*volume)",
+                "(" + replace_name + "*c1)",
             )
-            convert_operation = "(" + convert_operation + ")" + "/volume"
+            convert_operation = "(" + convert_operation + ")" + "/c1"
         elif concentration_in_expression:
             pass
         else:
@@ -1292,11 +1331,11 @@ def check_if_non_expression_operated(other: Any) -> Any:
         and not isinstance(other, Quantity)
         and not isinstance(other, (np_int_, np_float_))
     ):
-        asg_node = SpeciesRefNode(str(other), mode="assignment")
+        ref_node = SpeciesRefNode(str(other), mode="default")
         other = MobsPyExpression(
-            str(asg_node),
+            str(ref_node),
             None,
-            operation=asg_node,
+            operation=ref_node,
             dimension=None,
             count_in_model=True,
             concentration_in_model=False,

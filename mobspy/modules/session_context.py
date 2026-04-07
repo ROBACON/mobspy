@@ -53,6 +53,9 @@ class SessionContext:
     # Expression building mode (was _ms_active_ctx in species_operators.py)
     ms_active: bool = False
 
+    # Model unit context for expression unit conversion during compilation
+    model_context: Any = None
+
     # Parameter registry (was class-level parameter_stack with threading.Lock)
     parameter_stack: dict[str, Any] = field(default_factory=dict)
 

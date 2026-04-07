@@ -87,7 +87,7 @@ class TestUnitRateFunctions:
         kin = _kinetics_from_compiled(result)
         assert len(kin) == 1
         rate_str = next(iter(kin.values()))
-        assert "volume" in rate_str
+        assert "c1" in rate_str
 
     def test_zero_order_unit_rate(self):
         A = BaseSpecies()
@@ -612,8 +612,8 @@ class TestVolumeAndDimension:
         S.volume = 500 * u.mL
         S.level = -1
         result = S.compile()
-        # 500 mL = 0.5 L = 0.5 dm^3
-        assert "0.5" in result
+        # 500 mL stored as 500 in model (volume unit is mL)
+        assert "500" in result
 
 
 # ===========================================================================

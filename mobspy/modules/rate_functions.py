@@ -77,13 +77,11 @@ def extract_reaction_rate(  # noqa: PLR0913
         The reaction kinetics as a string for SBML.
     """
     dimension = ctx.dimension
-    type_of_model = ctx.type_of_model
     model_context = ctx.model_context
     parameter_exist = ctx.parameter_exist
 
-    is_count = False
     if isinstance(reaction_rate_function, (int, float, Quantity)):
-        reaction_rate_function, dimension, is_count = uh_convert_rate(
+        reaction_rate_function, dimension, _is_count = uh_convert_rate(
             reaction_rate_function,
             len(reactant_string_list),
             dimension,
@@ -95,8 +93,6 @@ def extract_reaction_rate(  # noqa: PLR0913
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
             reaction_rate_function,  # pyright: ignore[reportArgumentType]
-            type_of_model,
-            is_count,
         )
 
     elif isinstance(reaction_rate_function, mbe_ExpressionDefiner) and parameter_exist:
@@ -106,8 +102,6 @@ def extract_reaction_rate(  # noqa: PLR0913
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
             reaction_rate_function,
-            type_of_model,
-            is_count,
         )
 
     elif function_rate_arguments is not None:
@@ -165,7 +159,6 @@ def _process_callable_rate(  # noqa: PLR0913
 ) -> tuple[str | int, set[mp_Mobspy_Parameter]]:
     """Process a callable rate function and return (rate_string, parameters)."""
     dimension = ctx.dimension
-    type_of_model = ctx.type_of_model
     model_context = ctx.model_context
     skip_check = ctx.skip_expression_check
 
@@ -179,9 +172,17 @@ def _process_callable_rate(  # noqa: PLR0913
         )
         rate = reaction_rate_function(**arguments)  # type: ignore[operator, misc]
     else:
-        rate = reaction_rate_function()  # type: ignore[operator, misc]
+        # Zero-arg lambda: activate expression mode so bare Species
+        # inside the lambda body get wrapped as MobsPyExpressions
+        import mobspy.modules.expression_context as _ec  # noqa: PLC0415
 
-    rate, dimension, is_count = uh_convert_rate(
+        _ec.expression_compilation_initiation()
+        try:
+            rate = reaction_rate_function()  # type: ignore[operator, misc]
+        finally:
+            _ec.expression_compilation_finish()
+
+    rate, dimension, _is_count = uh_convert_rate(
         rate,
         len(reactant_string_list),
         dimension,
@@ -195,8 +196,6 @@ def _process_callable_rate(  # noqa: PLR0913
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
             rate,
-            type_of_model,
-            is_count,
         )
     elif isinstance(rate, str):
         reaction_rate_string = rate.replace("$", "")
@@ -205,7 +204,6 @@ def _process_callable_rate(  # noqa: PLR0913
             rate,
             reactant_string_list,
             parameters_in_reaction,
-            type_of_model,
             dimension,
             skip_check,
         )
@@ -214,7 +212,6 @@ def _process_callable_rate(  # noqa: PLR0913
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
             str(rate),
-            type_of_model,
         )
     elif isinstance(rate, ExprNode):
         reaction_rate_string = rate.render()
@@ -233,11 +230,10 @@ def _process_callable_rate(  # noqa: PLR0913
     return reaction_rate_string, parameters_in_reaction
 
 
-def _process_expression_rate(  # noqa: PLR0913
+def _process_expression_rate(
     rate: mbe_MobsPyExpression,
     reactant_string_list: list[str],
     parameters_in_reaction: set[mp_Mobspy_Parameter],
-    type_of_model: str,
     dimension: int | None,
     skip_check: bool,
 ) -> tuple[str, set[mp_Mobspy_Parameter]]:
@@ -249,7 +245,7 @@ def _process_expression_rate(  # noqa: PLR0913
         )
         parameters_in_reaction = parameters_in_reaction.union(rate._parameter_set)
     else:
-        rate_for_mass_action, is_count = rate.generate_string_operation(
+        rate_for_mass_action, _is_count = rate.generate_string_operation(
             reaction_order=len(reactant_string_list),
             dimension=dimension,
             skip_check=skip_check,
@@ -258,8 +254,6 @@ def _process_expression_rate(  # noqa: PLR0913
         reaction_rate_string = basic_kinetics_string(
             reactant_string_list,
             rate_for_mass_action,
-            type_of_model,
-            is_count,
         )
     return reaction_rate_string, parameters_in_reaction
 
@@ -267,19 +261,16 @@ def _process_expression_rate(  # noqa: PLR0913
 def basic_kinetics_string(
     reactants: list[str],
     reaction_rate: int | float | str | mbe_ExpressionDefiner,
-    type_of_model: str,
-    is_count: bool = False,
 ) -> str:
     """Construct mass-action kinetics string.
 
-    Both for stochastic and deterministic depending on the
-    type of model.
+    Species symbols are concentrations (SBML hasOnlySubstanceUnits=False).
+    The kinetic law must produce extent/time, so we always multiply by
+    compartment volume ``c1``. COPASI auto-corrects for stochastic runs.
 
     Args:
         reactants: List of reactants in MobsPy str format.
         reaction_rate: Reaction constant.
-        type_of_model: Stochastic or deterministic, rate
-            expressions differ depending on each case.
 
     Returns:
         Mass action kinetics expression for the reaction.
@@ -288,25 +279,10 @@ def basic_kinetics_string(
 
     kinetics_string = ""
     for name, number in counts.items():
-        if type_of_model.lower() == "stochastic":
-            kinetics_string += stochastic_string(name, int(number))
-        elif type_of_model.lower() == "deterministic":
-            kinetics_string += deterministic_string(name, int(number))
+        kinetics_string += deterministic_string(name, int(number))
         kinetics_string += " * "
 
-    kinetics_string += str(reaction_rate)
-
-    n: int = 0
-    for item in counts.values():
-        n += int(item)
-    n = n - 1
-
-    if n > 0 and not is_count:
-        kinetics_string += f" * volume^{-n}"
-    elif n < 0 and not is_count:
-        kinetics_string += " * volume"
-    else:
-        pass
+    kinetics_string += str(reaction_rate) + " * c1"
 
     return kinetics_string
 

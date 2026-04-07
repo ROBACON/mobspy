@@ -59,14 +59,13 @@ def example_3_explicit_events() -> None:
 
 def example_4_rate_builder() -> None:
     """Programmatic rate construction with the builder API."""
-    from mobspy import BaseSpecies, Simulation
-    from mobspy.modules.rate_builder import param_ref, species_ref
+    from mobspy import BaseSpecies, ModelParameters, Simulation, hill
 
     A, B, C = BaseSpecies(["A", "B", "C"])
+    k = ModelParameters(0.1)
 
-    # Build a rate expression as an AST (no lambda needed)
-    rate = param_ref("k") * species_ref(A) * species_ref(B)
-    A + B >> C @ rate
+    # Use a lambda to reference species -- bare species work directly
+    A + B >> C @ (lambda a, b: a * b * k)
 
     A(50)
     B(30)
@@ -103,12 +102,12 @@ def example_5_hill_function() -> None:
 def example_6_conditional_rate() -> None:
     """Conditional rate using where()."""
     from mobspy import BaseSpecies, Simulation
-    from mobspy.modules.rate_builder import literal, where
+    from mobspy.modules.rate_builder import where
 
     A, B = BaseSpecies(["A", "B"])
 
     # Different rate depending on condition
-    rate = where("A > 50", literal(0.1), literal(0.01))
+    rate = where("A > 50", 0.1, 0.01)
     A >> B @ rate
 
     A(100)

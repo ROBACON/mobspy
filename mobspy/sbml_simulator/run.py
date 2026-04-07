@@ -168,6 +168,14 @@ def __sbml_new_initial_values(
 ) -> str:
     species_for_sbml = model.species_for_sbml
 
+    # BasiCO returns concentrations (amount/volume) when
+    # hasOnlySubstanceUnits=False. Multiply by compartment volume
+    # to recover amounts for species_for_sbml (used as initialAmount).
+    _vol = 1.0
+    _mc = getattr(model, "model_context", None)
+    if _mc is not None:
+        _vol = getattr(_mc, "resolved_volume_magnitude", 1.0)
+
     check_list = ["stochastic", "directmethod"]
     for key in data:
         parts = key.split(".")
@@ -180,11 +188,11 @@ def __sbml_new_initial_values(
         if key == "Time":
             continue
         try:
-            # Case of species set
+            final_val = list(data[key])[-1] * _vol
             if sim_para["simulation_method"].lower() in check_list:
-                species_for_sbml[sbml_key] = int(list(data[key])[-1])
+                species_for_sbml[sbml_key] = int(final_val)
             else:
-                species_for_sbml[sbml_key] = list(data[key])[-1]
+                species_for_sbml[sbml_key] = final_val
         except KeyError:
             _logger.debug(
                 "Species '%s' not found in species_for_sbml during "

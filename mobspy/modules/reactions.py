@@ -378,7 +378,7 @@ class Assignment_Opp_Imp:  # noqa: N801
         op_func: Callable[..., MobsPyExpression],
         error_verb: str,
     ) -> MobsPyExpression:
-        """Dispatch an arithmetic operator to the assignment context.
+        """Dispatch an arithmetic operator to the assignment or expression context.
 
         Args:
             first: left operand (already ordered by caller)
@@ -388,9 +388,54 @@ class Assignment_Opp_Imp:  # noqa: N801
         """
         if asgi_Assign.check_context():
             return op_func(first, second)
-        raise ValidationError(
-            f"{error_verb} not implemented for meta-species in this context"
+        # Outside assignment context: wrap as rate expressions.
+        # This enables both lambda replay (expression mode) and
+        # standalone rate building (e.g. Protein ** 2 / (Km + Protein))
+        from mobspy.modules.mobspy_expressions import (  # noqa: PLC0415
+            check_if_non_expression_operated,
         )
+        from mobspy.modules.species_operators import _ms_active_ctx  # noqa: PLC0415
+
+        if _ms_active_ctx.get():
+            # Inside lambda replay: wrap as MobsPyExpression
+            wrapped_first = check_if_non_expression_operated(first)
+            wrapped_second = check_if_non_expression_operated(second)
+            op_map = {
+                "Addition": "__add__",
+                "Subtraction": "__sub__",
+                "Multiplication": "__mul__",
+                "Division": "__truediv__",
+                "Exponentiation": "__pow__",
+            }
+            py_op = op_map.get(error_verb, "__mul__")
+            return getattr(wrapped_first, py_op)(wrapped_second)  # type: ignore[no-any-return]
+
+        # Outside any context: wrap as RateExpression for rate builder use
+        from mobspy.modules.expression_nodes import (  # noqa: PLC0415
+            BinaryOpNode,
+            LiteralNode,
+            SpeciesRefNode,
+        )
+        from mobspy.modules.rate_builder import RateExpression  # noqa: PLC0415
+        from mobspy.modules.species import Species as _Spe  # noqa: PLC0415
+
+        def _to_node(x: Any) -> Any:
+            if isinstance(x, _Spe):
+                return SpeciesRefNode(x.get_name())
+            if isinstance(x, RateExpression):
+                return x.node
+            if isinstance(x, (int, float)):
+                return LiteralNode(x)
+            return x
+
+        sbml_op = {
+            "Addition": "+",
+            "Subtraction": "-",
+            "Multiplication": "*",
+            "Division": "/",
+            "Exponentiation": "^",
+        }.get(error_verb, "*")
+        return RateExpression(BinaryOpNode(_to_node(first), sbml_op, _to_node(second)))  # type: ignore[return-value]
 
     def __add__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.add, "Addition")
@@ -737,6 +782,14 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
                 ) from e
         else:
             return self  # pyright: ignore[reportReturnType]
+
+    @property
+    def ref(self) -> Any:
+        """Return a rate expression referencing this species state's concentration."""
+        from mobspy.modules.expression_nodes import SpeciesRefNode  # noqa: PLC0415
+        from mobspy.modules.rate_builder import RateExpression  # noqa: PLC0415
+
+        return RateExpression(SpeciesRefNode(str(self)))
 
     def __getattr__(self, characteristic: str) -> Any:
         """Implementation of the .dot operation.

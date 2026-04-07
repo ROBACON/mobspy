@@ -733,6 +733,24 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """Return the species name."""
         return self._name
 
+    @property
+    def ref(self) -> Any:
+        """Return a rate expression referencing this species' concentration.
+
+        Use in rate builder expressions to reference species that are
+        not reactants in the current reaction::
+
+            P = Protein.ref
+            rate = 0.01 * P ** 2 / (100 + P ** 2)
+            Gene >> Zero @ rate
+        """
+        from mobspy.modules.expression_nodes import (  # noqa: PLC0415
+            SpeciesRefNode,
+        )
+        from mobspy.modules.rate_builder import RateExpression  # noqa: PLC0415
+
+        return RateExpression(SpeciesRefNode(self.get_name()))
+
     def get_characteristics(self) -> set[str]:
         """Return the set of characteristics for this species."""
         return self._characteristics

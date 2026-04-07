@@ -151,11 +151,14 @@ class PlottingMixin:
         return dp_parametric_plot(spe_strings, results, params)
 
     def plot(self, *species: str | Species | Reacting_Species) -> Any:
-        """Generate a deterministic plot (alias for plot_deterministic).
+        """Plot simulation results, auto-detecting the method.
 
-        Args:
-            *species: Variable number of species to plot.
+        Dispatches to ``plot_stochastic`` or ``plot_deterministic``
+        based on the simulation method used.
         """
+        method = self.plot_parameters.get("simulation_method", "deterministic")
+        if method == "stochastic":
+            return self.plot_stochastic(*species)
         return self.plot_deterministic(*species)
 
     def plot_raw(

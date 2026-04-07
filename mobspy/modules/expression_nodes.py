@@ -169,8 +169,8 @@ def _render_resolved(
 
     Handles the mode on each SpeciesRefNode:
       - 'count' in count_in_model -> bare name;
-        in concentration_in_model -> (name*volume)
-      - 'concentration' in count_in_model -> (name/volume);
+        in concentration_in_model -> (name*c1)
+      - 'concentration' in count_in_model -> (name/c1);
         in concentration_in_model -> bare
       - 'default' resolved based on count_in_expression/concentration_in_expression
       - 'assignment' -> rendered as-is (for ODE references)
@@ -194,11 +194,11 @@ def _render_resolved(
                 if count_in_model:
                     return name
                 if concentration_in_model:
-                    return "(" + name + "*volume)"
+                    return "(" + name + "*c1)"
                 return name
             if n.mode == "concentration":
                 if count_in_model:
-                    return "(" + name + "/volume)"
+                    return "(" + name + "/c1)"
                 if concentration_in_model:
                     return name
                 return name
@@ -209,13 +209,13 @@ def _render_resolved(
                 and concentration_in_expression
                 and not count_in_expression
             ):
-                return "(" + name + "/volume)"
+                return "(" + name + "/c1)"
             if (
                 concentration_in_model
                 and count_in_expression
                 and not concentration_in_expression
             ):
-                return "(" + name + "*volume)"
+                return "(" + name + "*c1)"
             return name
 
         if isinstance(n, BinaryOpNode):

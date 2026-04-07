@@ -39,7 +39,7 @@ class SimulationConfig:
     # Model parameters
     volume: int | float = 1
     repetitions: int = 1
-    level: int = 3
+    level: int = 2
     rate_type: str | None = None
 
     # Simulation engine parameters

@@ -87,7 +87,7 @@ class MobsPyLogger:
 
     def set_log_level(self, level: int | str) -> None:
         """
-        Set the logging level for all handlers.
+        Set the logging level for all MobsPy loggers.
 
         Args:
             level: Logging level constant (logging.DEBUG, logging.INFO, etc.),
@@ -95,8 +95,12 @@ class MobsPyLogger:
         """
         if isinstance(level, str):
             level = getattr(logging, level.upper())
-        for handler in self.logger.handlers:
-            handler.setLevel(level)
+        # Set on ALL mobspy loggers (propagate=False prevents inheritance)
+        for name, logger in logging.Logger.manager.loggerDict.items():
+            if isinstance(logger, logging.Logger) and name.startswith("mobspy"):
+                logger.setLevel(level)
+                for handler in logger.handlers:
+                    handler.setLevel(level)
 
     def add_file_handler(self, filename: str, level: int = logging.DEBUG) -> None:
         """

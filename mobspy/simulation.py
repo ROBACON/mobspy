@@ -69,7 +69,6 @@ from mobspy.modules.order_operators import (
 from mobspy.modules.rate_builder import (
     RateExpression,
     hill,
-    literal,
     param_ref,
     species_ref,
     where,
@@ -122,6 +121,8 @@ from mobspy.types import (
     RateValue,
     SimulationEventData,
     SimulationMethod,
+    SimulationResults,
+    SpeciesArg,
     TimeSeriesDataDict,
 )
 
@@ -154,12 +155,13 @@ __all__ = [
     "Simulation",
     "SimulationComposition",
     "SimulationMethod",
+    "SimulationResults",
+    "SpeciesArg",
     "Zero",
     "basiCO_parameter_estimation",
     "compile_model",
     "generate_sbml_from_compiled",
     "hill",
-    "literal",
     "param_ref",
     "plot_results",
     "run_sbml",
@@ -586,7 +588,16 @@ class Simulation(
             log_level = _LEVEL_MAP.get(mobspy_level, logging.INFO)
             _logger.set_log_level(log_level)
 
-            pr_parameter_process(self.parameters)  # type: ignore[arg-type]
+            # Resolve model unit context BEFORE parameter processing
+            # (parameter_process strips units from duration/volume)
+            _model_context = ModelUnitContext.from_simulation(
+                volume=self.parameters["volume"],
+                duration=self.parameters["duration"],
+                species_counts=self._species_counts,
+                dimension=self.dimension,
+            )
+
+            pr_parameter_process(self.parameters, model_context=_model_context)  # type: ignore[arg-type]
             if self.parameters["method"] is not None:
                 self.parameters["simulation_method"] = self.parameters["method"]
 
@@ -601,19 +612,7 @@ class Simulation(
                     "Must be 'deterministic' or 'stochastic'"
                 )
 
-            # Pass end condition to dict parameters
-            # It is stored outside of parameters to keep
-            # the parameters serializable. However, it is
-            # necessary for compilation so it is passed here.
-
             self.parameters["_end_condition"] = self._end_condition
-
-            _model_context = ModelUnitContext.from_simulation(
-                volume=self.parameters["volume"],
-                duration=self.parameters["duration"],
-                species_counts=self._species_counts,
-                dimension=self.dimension,
-            )
 
             _result = compile_model(
                 self.model,
@@ -833,7 +832,7 @@ class Simulation(
         output_file: str | None = None,
         save_data: bool | None = None,
         plot_data: bool | None = None,
-    ) -> None:
+    ) -> SimulationResults:
         """
         Execute the simulation with specified parameters.
 
@@ -910,13 +909,11 @@ class Simulation(
 
             if len(self._parameter_list_of_dic) > 1:
                 self.plot_parametric()
-                return
-
-            if "stochastic" in methods_list:
+            elif "stochastic" in methods_list:
                 self.plot_stochastic()
             else:
                 self.plot_deterministic()
-        return
+        return self.results  # type: ignore[return-value]
 
     def save_data(self, file: str | None = None) -> None:
         """

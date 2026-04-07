@@ -71,14 +71,20 @@ def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
             raise ParameterError("Parameter seeds must be a list") from e
 
 
-def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:  # noqa: N802
-    """
-    Converts parameters units to MobsPy standard units
-    (basiCO needs seconds for simulation duration)
+def convert_parameters_for_COPASI(  # noqa: N802
+    params: dict[str, Any],
+    model_context: Any = None,
+) -> None:
+    """Convert time-dimensioned parameters to the model's time unit.
 
     Args:
         params: Dictionary with simulation parameters.
+        model_context: ModelUnitContext for unit inference.
     """
+    target_unit = "second"
+    if model_context is not None:
+        target_unit = str(model_context.time_unit)
+
     for key, p in params.items():
         if (
             key == "duration"
@@ -95,7 +101,7 @@ def convert_parameters_for_COPASI(params: dict[str, Any]) -> None:  # noqa: N802
             and (key not in {"unit_x", "unit_y"})
             and str(p.dimensionality) == "[time]"
         ):
-            params[key] = p.convert("second").magnitude
+            params[key] = p.convert(target_unit).magnitude
             continue
 
 
@@ -225,13 +231,16 @@ def check_duration_unit(params: dict[str, Any]) -> None:
         params["unit_x"] = 1 * params["duration"].units
 
 
-def parameter_process(params: dict[str, Any]) -> None:
+def parameter_process(
+    params: dict[str, Any],
+    model_context: Any = None,
+) -> None:
     """Run all parameter validation and conversion steps."""
     check_duration_unit(params)
     convert_unit_parameters(params)
     name_output_file(params)
     check_stochastic_repetitions_seeds(params)
-    convert_parameters_for_COPASI(params)
+    convert_parameters_for_COPASI(params, model_context=model_context)
     check_method_parameter(params)
 
 

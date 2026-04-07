@@ -88,13 +88,14 @@ class ModelUnitContext:
 
     time_unit: Unit = field(default_factory=lambda: _ur.second)  # type: ignore[assignment]
     substance_unit: Unit | None = field(default=None)  # None = counts (item)
-    volume_unit: Unit = field(default_factory=lambda: _ur.decimeter**3)  # type: ignore[assignment]
+    volume_unit: Unit = field(default_factory=lambda: _ur.liter)  # type: ignore[assignment]
     dimension: int = 3
 
     # ---- internal cache set by from_simulation ----
     _time_set: bool = field(default=False, repr=False)
     _substance_set: bool = field(default=False, repr=False)
     _volume_set: bool = field(default=False, repr=False)
+    resolved_volume_magnitude: float = field(default=1.0, repr=False)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -148,11 +149,7 @@ class ModelUnitContext:
         """Scan user-provided inputs and resolve the model unit system.
 
         Implements first-unit-wins with volume/duration priority.
-
-        Non-default volume/time units are only activated when species counts
-        include substance units (e.g. moles, molar). This prevents changing
-        the numerical behavior of models where volume is provided with units
-        but rates/counts are dimensionless.
+        User-provided volume/duration units are always respected.
         """
         ctx = cls()
 
@@ -164,18 +161,22 @@ class ModelUnitContext:
 
         _time_unit_from_input = cls._resolve_duration_input(duration)
 
-        has_substance_units = cls._scan_species_counts(ctx, species_counts)
+        cls._scan_species_counts(ctx, species_counts)
 
-        if not ctx._volume_set:
-            ctx.volume_unit = _ur.decimeter**ctx.dimension  # type: ignore[assignment]
+        # Always respect user-provided volume/duration units
+        if _vol_unit_from_input is not None and not ctx._volume_set:
+            ctx.volume_unit = _vol_unit_from_input  # type: ignore[assignment]
+            ctx._volume_set = True
+        if _time_unit_from_input is not None and not ctx._time_set:
+            ctx.time_unit = _time_unit_from_input  # type: ignore[assignment]
+            ctx._time_set = True
 
-        if has_substance_units:
-            if _vol_unit_from_input is not None and not ctx._volume_set:
-                ctx.volume_unit = _vol_unit_from_input  # type: ignore[assignment]
-                ctx._volume_set = True
-            if _time_unit_from_input is not None and not ctx._time_set:
-                ctx.time_unit = _time_unit_from_input  # type: ignore[assignment]
-                ctx._time_set = True
+        # Resolve volume magnitude in inferred units
+        if isinstance(volume, Quantity):
+            vol_q = cls._to_plain_quantity(volume)
+            ctx.resolved_volume_magnitude = float(vol_q.to(ctx.volume_unit).magnitude)
+        else:
+            ctx.resolved_volume_magnitude = float(volume)
 
         return ctx
 
@@ -431,10 +432,9 @@ class ModelUnitContext:
 
     def create_sbml_unit_definitions(self, model: Any) -> None:
         """Create UnitDefinition elements on an SBML model object."""
-        # Time unit
+        # Time unit (always create, even for "second")
         time_id = self.get_sbml_time_units_id()
-        if time_id != "second":
-            _create_unit_def(model, time_id, self.time_unit)
+        _create_unit_def(model, time_id, self.time_unit)
 
         # Substance unit
         if self.substance_is_molar:
@@ -443,10 +443,9 @@ class ModelUnitContext:
             sub_id = self.get_sbml_substance_units_id()
             _create_unit_def(model, sub_id, self.substance_unit)
 
-        # Volume unit
+        # Volume unit (always create)
         vol_id = self.get_sbml_volume_units_id()
-        if vol_id != "dimensionless":
-            _create_unit_def(model, vol_id, self.volume_unit)
+        _create_unit_def(model, vol_id, self.volume_unit)
 
         # Rate unit (per model time) - always useful
         rate_id = f"per_{time_id}"

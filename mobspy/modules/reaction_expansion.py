@@ -383,7 +383,7 @@ def create_all_reactions(
     check_for_invalid_reactions(reactions, ref_characteristics_to_object)
 
     # Initiate expressions
-    with crs_Unit_Context_Setter():
+    with crs_Unit_Context_Setter(model_context=ctx.model_context):
         for reaction in reactions:
             base_species_order, reactant_species_combination_list = (
                 get_involved_species(reaction, meta_species_in_model)

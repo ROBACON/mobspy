@@ -579,24 +579,24 @@ class TestRateBuilder:
         m.kinetics_contains("k")
 
     def test_where_conditional(self) -> None:
-        from mobspy.modules.rate_builder import literal, where
+        from mobspy.modules.rate_builder import where
 
-        rate = where("A > 5", literal(0.5), literal(1.0))
+        rate = where("A > 5", 0.5, 1.0)
         assert "piecewise" in str(rate)
         assert "0.5" in str(rate)
         assert "1.0" in str(rate)
 
     def test_where_method(self) -> None:
-        from mobspy.modules.rate_builder import literal
+        from mobspy.modules.rate_builder import species_ref
 
-        rate = literal(0.5).where("A > 5", 1.0)
+        rate = species_ref("A").where("A > 5", 1.0)
         assert "piecewise" in str(rate)
 
     def test_conditional_in_reaction(self) -> None:
-        from mobspy.modules.rate_builder import literal, where
+        from mobspy.modules.rate_builder import where
 
         A, B = BaseSpecies(["A", "B"])
-        rate = where("A > 5", literal(0.5), literal(1.0))
+        rate = where("A > 5", 0.5, 1.0)
         A >> B @ rate
         A(10)
         S = Simulation(A | B)

@@ -71,11 +71,16 @@ class RateExpression:
             return LiteralNode(other)
         if isinstance(other, str):
             return ParamRefNode(other)
-        # Allow bare Species objects in rate arithmetic
+        # Allow bare Species and ModelParameters in rate arithmetic
+        from mobspy.modules.mobspy_parameters import (  # noqa: PLC0415
+            Internal_Parameter_Constructor as _Param,
+        )
         from mobspy.modules.species import Species as _Species  # noqa: PLC0415
 
         if isinstance(other, _Species):
             return SpeciesRefNode(other.get_name())
+        if isinstance(other, _Param):
+            return ParamRefNode(other.get_name())
         msg = f"Unsupported operand type: {type(other)}"
         raise TypeError(msg)
 
@@ -147,8 +152,8 @@ class RateExpression:
             if_false: Value when condition is false.
 
         Examples:
-            >>> from mobspy.modules.rate_builder import literal
-            >>> rate = literal(0.5).where("A_dot_alive > 0", 1.0)
+            >>> from mobspy.modules.rate_builder import species_ref
+            >>> rate = species_ref("A").where("A > 0", 1.0)
             >>> "piecewise" in str(rate)
             True
         """
@@ -207,17 +212,6 @@ def param_ref(name: str) -> RateExpression:
     return RateExpression(ParamRefNode(name))
 
 
-def literal(value: int | float) -> RateExpression:
-    """Create a numeric literal in a rate expression.
-
-    Examples:
-        >>> from mobspy.modules.rate_builder import literal
-        >>> str(literal(2.5))
-        '2.5'
-    """
-    return RateExpression(LiteralNode(value))
-
-
 def where(
     condition: str,
     if_true: RateExpression | int | float,
@@ -233,8 +227,8 @@ def where(
         if_false: Value when condition is false.
 
     Examples:
-        >>> from mobspy.modules.rate_builder import where, literal
-        >>> rate = where("A_dot_alive > 0", literal(0.5), literal(1.0))
+        >>> from mobspy.modules.rate_builder import where
+        >>> rate = where("A > 0", 0.5, 1.0)
         >>> "piecewise" in str(rate)
         True
     """
@@ -282,9 +276,9 @@ def hill(
         repression: If True, use repression form.
     """
     s = species_ref(species)
-    v = literal(vmax) if isinstance(vmax, (int, float)) else param_ref(vmax)
+    v = vmax if isinstance(vmax, (int, float)) else param_ref(vmax)
     s_n = s**n
-    k_n = literal(km) ** n if isinstance(km, (int, float)) else param_ref(km) ** n
+    k_n = km**n if isinstance(km, (int, float)) else param_ref(km) ** n
     if repression:
         return v * k_n / (k_n + s_n)
     return v * s_n / (k_n + s_n)

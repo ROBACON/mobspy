@@ -115,7 +115,7 @@ def test_ode_compartments():
         if r.reactants == [] and r.products == [(1, "A_dot_c1")]
     ]
     assert len(creation_rxns) == 1
-    assert "volume" in creation_rxns[0].kinetics
+    assert "c1" in creation_rxns[0].kinetics
 
     # Transition reaction: A.c1 >> A.c2
     transition_rxns = [

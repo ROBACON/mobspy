@@ -75,30 +75,19 @@ S = Simulation(A | B, backend=SBMLBackend())
 # - run(model_strings, parameters, jobs=-1) -> list
 ```
 
-## Rate Builder: programmatic rate construction
+## Non-reactant species in rates
 
-The rate builder produces AST nodes directly, without lambda replay:
+Any species can be referenced directly inside lambda rate functions, even if it is not a reactant:
 
 ```python
-from mobspy.modules.rate_builder import species_ref, param_ref, literal, where, hill
+# Protein represses Gene (Protein is not a reactant in this reaction)
+Gene >> Zero @ (lambda gene: 0.01 * gene * Protein ** 2 / (100 ** 2 + Protein ** 2))
 
-# Simple mass-action
-rate = param_ref("k") * species_ref(A) * species_ref(B)
-A + B >> C @ rate
+# Or use the hill() convenience function:
+Gene >> Zero @ hill(Protein, vmax=0.01, km=100, n=2, repression=True)
 
-# Conditional (equivalent to lambda r: 0.5 if ... else 1.0)
-rate = where("A_dot_alive > 0", literal(0.5), literal(1.0))
-A >> B @ rate
-
-# Method syntax
-rate = literal(0.5).where("A_dot_alive > 0", 1.0)
-
-# Hill function
-rate = hill("S", "Vmax", "Km", n=2)  # Vmax * S^n / (Km^n + S^n)
-
-# Math functions
-from mobspy.modules.rate_builder import rate_log, rate_exp, rate_sqrt
-rate = rate_exp(-param_ref("k") * species_ref(A))
+# Conditional rate
+A >> B @ where("A > 50", 0.5, 1.0)
 ```
 
 ## Standalone Functions: use without Simulation
