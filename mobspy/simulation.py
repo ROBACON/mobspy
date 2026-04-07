@@ -218,6 +218,12 @@ class Simulation(
             ValidationError: If model contains invalid species types
             ParameterError: If required parameters are missing
         """
+        if isinstance(reactions, (Species, List_Species)):
+            raise ValidationError(
+                "Pass species using the | operator: "
+                "Simulation(A | B), not Simulation(A, B)"
+            )
+
         if backend is None:
             from mobspy.sbml.backend import SBMLBackend  # noqa: PLC0415
 

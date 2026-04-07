@@ -65,7 +65,7 @@ Thing = (Color * Size).named("Thing")
 ## Simulation Backend: pluggable via `backend` parameter
 
 ```python
-from mobspy.backends import SBMLBackend
+from mobspy.sbml.backend import SBMLBackend
 
 # Default (SBML/COPASI) -- same as omitting backend
 S = Simulation(A | B, backend=SBMLBackend())
@@ -95,8 +95,8 @@ A >> B @ where("A > 50", 0.5, 1.0)
 ```python
 from mobspy import compile_model, generate_sbml_from_compiled, run_sbml, plot_results
 from mobspy.model_generation import generate_sbml_strings, generate_antimony_strings
-from mobspy.modules.list_species import List_Species
-from mobspy.modules.species_utils import create_orthogonal_vector_structure
+from mobspy.dsl.list_species import List_Species
+from mobspy.dsl.species_utils import create_orthogonal_vector_structure
 
 # Build model
 A, B = BaseSpecies(['A', 'B'])
