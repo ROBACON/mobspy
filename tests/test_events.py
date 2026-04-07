@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import mobspy
-from mobspy import All, BaseSpecies, New, Simulation, set_counts, simlog, u
+from mobspy import All, BaseSpecies, New, Simulation, logger, set_counts, u
 from mobspy.exceptions import MobsPyError
 
 
@@ -219,7 +219,7 @@ class TestTimeEvents:
 class TestLogicOperators:
     def test_logic_operator_syntax(self):
         test_failed = False
-        simlog.global_simlog_level = -1
+        logger.global_logger_level = -1
         A, B = BaseSpecies(2)
         A.a1, A.a2, A.a3
 
@@ -353,7 +353,7 @@ class TestLogicOperators:
         B >> mobspy.Zero @ 1
         B(100)
         S = Simulation(B)
-        simlog.global_simlog_level = -1
+        logger.global_logger_level = -1
         try:
             with S.event_condition(B == 0):
                 B(100)

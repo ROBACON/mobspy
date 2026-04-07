@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 if TYPE_CHECKING:
-    from mobspy.data_handler.time_series_object import MobsPyList_of_TS
+    from mobspy.data_handler.time_series_object import SimulationResults
 
 
 def plot_results(
@@ -44,7 +44,7 @@ def plot_results(
     Standalone function for composition-friendly workflows.
 
     Args:
-        results: MobsPyList_of_TS or similar result object.
+        results: SimulationResults or similar result object.
         plot_parameters: Plot configuration dictionary.
         species_strings: Species to plot (None for all).
         method: ``"deterministic"`` or ``"stochastic"``.
@@ -63,7 +63,7 @@ class PlottingMixin:
 
     # These attributes are provided by the Simulation class
     _list_of_models: list[CompiledModelDict]
-    results: MobsPyList_of_TS | dict[str, Any]
+    results: SimulationResults | dict[str, Any]
     plot_parameters: dict[str, Any]
 
     def extract_plot_essentials(

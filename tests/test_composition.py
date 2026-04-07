@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 
 import mobspy
-from mobspy import BaseSpecies, Simulation, SimulationComposition, simlog
+from mobspy import BaseSpecies, Simulation, SimulationComposition, logger
 from mobspy.exceptions import SimulationError
 
-simlog.global_simlog_level = -1
+logger.global_logger_level = -1
 
 
 class TestBasicComposition:

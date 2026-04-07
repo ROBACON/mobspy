@@ -13,8 +13,8 @@ from mobspy import (
     ModelParameters,
     New,
     Simulation,
+    logger,
     set_counts,
-    simlog,
     u,
 )
 from mobspy.exceptions import MobsPyError
@@ -388,7 +388,7 @@ class TestErrorHandling:
         try:
             D = BaseSpecies(1)
             A, B, C = D * BaseSpecies(3)
-            simlog.global_simlog_level = -1
+            logger.global_logger_level = -1
             assert False
         except (SystemExit, MobsPyError):
             assert True

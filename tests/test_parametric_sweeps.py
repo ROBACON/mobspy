@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import mobspy
-from mobspy import BaseSpecies, ModelParameters, Simulation, set_counts, simlog, u
+from mobspy import BaseSpecies, ModelParameters, Simulation, logger, set_counts, u
 
-simlog.global_simlog_level = -1
+logger.global_logger_level = -1
 
 
 class TestParameterInReactions:

@@ -14,13 +14,9 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_che
 from pint import Quantity
 
 if TYPE_CHECKING:
-    from mobspy.data_handler.time_series_object import MobsPyList_of_TS
     from mobspy.modules.expression_nodes import ExprNode
 
 RateValue: TypeAlias = "int | float | Quantity | str | Callable[..., Any] | ExprNode"
-
-# Forward reference -- actual class is MobsPyList_of_TS in data_handler
-SimulationResults: TypeAlias = "MobsPyList_of_TS"
 
 
 class SpeciesArg(Protocol):

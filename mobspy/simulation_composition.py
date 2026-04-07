@@ -8,7 +8,7 @@ from typing import Any as TypingAny
 
 from pint import Quantity
 
-from mobspy.data_handler.time_series_object import MobsPyList_of_TS
+from mobspy.data_handler.time_series_object import SimulationResults
 from mobspy.exceptions import SimulationError
 from mobspy.modules.reactions import Reacting_Species
 from mobspy.modules.species import Species
@@ -89,8 +89,8 @@ class SimulationComposition:
             raise SimulationError(
                 "Simulation compositions can only be performed with other simulations"
             )
-        self.results: MobsPyList_of_TS | dict[str, TypingAny] | None = None
-        self.fres: MobsPyList_of_TS | dict[str, TypingAny] | None = None
+        self.results: SimulationResults | dict[str, TypingAny] | None = None
+        self.fres: SimulationResults | dict[str, TypingAny] | None = None
         self.base_sim = self.list_of_simulations[0]
 
     def __add__(

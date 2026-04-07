@@ -47,7 +47,7 @@ class MobsPyTimeSeries:
             self.ts_model_parameters = model_parameters
 
 
-class MobsPyList_of_TS:  # noqa: N801
+class SimulationResults:
     """Collection of time-series results across multiple simulation runs.
 
     Supports indexing by run number, species name, or meta-species object.

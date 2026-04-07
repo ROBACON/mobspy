@@ -27,8 +27,8 @@ from mobspy.data_handler.process_result_data import (
     extract_time_and_volume_list as dh_extract_time_and_volume_list,
 )
 from mobspy.data_handler.time_series_object import (
-    MobsPyList_of_TS,
     MobsPyTimeSeries,
+    SimulationResults,
 )
 from mobspy.event_handling import EventHandlingMixin
 from mobspy.exceptions import (
@@ -67,10 +67,7 @@ from mobspy.modules.order_operators import (
     Set,
 )
 from mobspy.modules.rate_builder import (
-    RateExpression,
     hill,
-    param_ref,
-    species_ref,
     where,
 )
 from mobspy.modules.set_counts_module import set_counts
@@ -121,7 +118,6 @@ from mobspy.types import (
     RateValue,
     SimulationEventData,
     SimulationMethod,
-    SimulationResults,
     SpeciesArg,
     TimeSeriesDataDict,
 )
@@ -148,7 +144,6 @@ __all__ = [
     "ListSpecies",
     "ModelParameters",
     "New",
-    "RateExpression",
     "RateValue",
     "Rev",
     "Set",
@@ -162,18 +157,16 @@ __all__ = [
     "compile_model",
     "generate_sbml_from_compiled",
     "hill",
-    "param_ref",
+    "logger",
     "plot_results",
     "run_sbml",
     "set_counts",
-    "simlog",
-    "species_ref",
     "u",
     "where",
 ]
 
 _logger = get_logger(__name__)
-simlog = _logger
+logger = _logger
 
 
 class Simulation(
@@ -359,8 +352,8 @@ class Simulation(
         else:
             self.plot_parameters = PlotConfig(plot_parameters)
 
-        self.results: MobsPyList_of_TS | dict[str, TypingAny] = {}
-        self.fres: MobsPyList_of_TS | dict[str, TypingAny] = {}
+        self.results: SimulationResults | dict[str, TypingAny] = {}
+        self.fres: SimulationResults | dict[str, TypingAny] = {}
         self.default_order = Default
 
     def _init_sbml_state(self) -> None:
@@ -386,16 +379,12 @@ class Simulation(
         """Store experimental data for parameter estimation.
 
         Args:
-            data: List of dicts or a MobsPyList_of_TS result.
+            data: List of dicts or a SimulationResults result.
 
         Raises:
             ValidationError: If the data format is invalid.
         """
-        from mobspy.data_handler.time_series_object import (  # noqa: PLC0415
-            MobsPyList_of_TS as _TS,
-        )
-
-        flag_jump_checks = isinstance(data, _TS)
+        flag_jump_checks = isinstance(data, SimulationResults)
         if not isinstance(data, list) and not flag_jump_checks:
             raise ValidationError(
                 "Data added must be in the format of list with"
@@ -803,11 +792,11 @@ class Simulation(
                 for ts, params in flatt_ts
             )
 
-        self.results = MobsPyList_of_TS(
+        self.results = SimulationResults(
             all_processed_data,  # pyright: ignore[reportArgumentType]
             self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
         )
-        self.fres = MobsPyList_of_TS([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
+        self.fres = SimulationResults([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
 
     def run(  # noqa: PLR0913
         self,

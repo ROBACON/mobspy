@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import mobspy
-from mobspy import All, Assign, BaseSpecies, New, Simulation, simlog, u
+from mobspy import All, Assign, BaseSpecies, New, Simulation, logger, u
 from mobspy.exceptions import MobsPyError
 
 
@@ -63,13 +63,13 @@ class TestAssign:
 
     def test_assign_context_exit(self):
         try:
-            simlog.global_simlog_level = -1
+            logger.global_logger_level = -1
             A, B = BaseSpecies()
             A.assign(5 * B * (u.l / u.s) + 10 * B * (1 / u.s))
         except (SystemExit, MobsPyError):
             pass
         try:
-            simlog.global_simlog_level = -1
+            logger.global_logger_level = -1
             A >> mobspy.Zero @ 1
         except (SystemExit, MobsPyError):
             pass
