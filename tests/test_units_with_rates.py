@@ -13,8 +13,8 @@ import pytest
 
 import mobspy
 from mobspy import BaseSpecies, New, Simulation, u
-from mobspy.modules.functions import ms_abs, ms_exp, ms_logn, ms_sqrt
-from mobspy.modules.ode_operator import dt
+from mobspy.dsl.functions import ms_abs, ms_exp, ms_logn, ms_sqrt
+from mobspy.dsl.ode_operator import dt
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,6 +1,6 @@
 """Tests for individual compiler phases.
 
-Each phase function in mobspy.modules.compiler is independently
+Each phase function in mobspy.compiler.compiler is independently
 testable. These tests verify phase contracts without going through
 the full compile_model() pipeline.
 """
@@ -9,15 +9,15 @@ from __future__ import annotations
 
 import pytest
 
-from mobspy import BaseSpecies, New, Simulation
-from mobspy.modules.compiler import (
+from mobspy import BaseSpecies, MobsPyError, New, Simulation
+from mobspy.compiler.compiler import (
     phase_duplicate_detection,
     phase_parameter_validation,
     phase_species_setup,
     phase_volume_resolution,
 )
-from mobspy.modules.list_species import List_Species
-from mobspy.modules.species_utils import create_orthogonal_vector_structure
+from mobspy.dsl.list_species import List_Species
+from mobspy.dsl.species_utils import create_orthogonal_vector_structure
 from mobspy.types import (
     ReactionData,
     SpeciesSetupResult,
@@ -74,7 +74,7 @@ class TestPhaseSpeciesSetup:
         B = BaseSpecies(["A"])  # Same name
         model = List_Species([A, B])
         ovs = _make_ovs(A, B)
-        with pytest.raises(Exception, match="unique"):
+        with pytest.raises(MobsPyError, match="unique"):
             phase_species_setup(model, ovs)
 
 
@@ -136,7 +136,7 @@ class TestPhaseParameterValidation:
     def test_collision_with_species(self) -> None:
         params = {"A": (1.0, "per_min")}
         names = frozenset({"A", "B"})
-        with pytest.raises(Exception, match="unique"):
+        with pytest.raises(MobsPyError, match="unique"):
             phase_parameter_validation(params, names, set())
 
 

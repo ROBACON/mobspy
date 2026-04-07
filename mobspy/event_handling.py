@@ -10,16 +10,16 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
+from pint import Quantity
+
 from mobspy.constants import STD_CHAR
+from mobspy.dsl.reactions import Reacting_Species
+from mobspy.dsl.species import Species
 from mobspy.exceptions import EventError, ValidationError
-from mobspy.modules.reactions import Reacting_Species
-from mobspy.modules.species import Species
 from mobspy.types import SimulationEventData
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-
-    from pint import Quantity
 
 
 class EventHandlingMixin:
@@ -69,7 +69,7 @@ class EventHandlingMixin:
         self.pre_number_of_context_comparisons = self.number_of_context_comparisons
         self.number_of_context_comparisons = 0
 
-        if len(event_data.event_counts) != 0:
+        if event_data.event_counts:
             self.total_packed_events.append(event_data)
 
         self.event_context_finish()
@@ -120,7 +120,8 @@ class EventHandlingMixin:
             yield 0
         finally:
             self._conditional_event = False
-            self.event_context_add(delay, trigger)  # type: ignore[arg-type]
+            delay_val = delay.magnitude if isinstance(delay, Quantity) else delay
+            self.event_context_add(delay_val, trigger)
 
     @contextmanager
     def event_time(self, time: float | int | Quantity) -> Generator[int, None, None]:

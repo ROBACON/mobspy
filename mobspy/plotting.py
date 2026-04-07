@@ -9,19 +9,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from mobspy.dsl.reactions import Reacting_Species
+from mobspy.dsl.species import Species
 from mobspy.exceptions import SimulationError, ValidationError
-from mobspy.modules.reactions import Reacting_Species
-from mobspy.modules.species import Species
-from mobspy.plot_scripts.default_plots import (
+from mobspy.plot.default_plots import (
     deterministic_plot as dp_deterministic_plot,
 )
-from mobspy.plot_scripts.default_plots import (
+from mobspy.plot.default_plots import (
     parametric_plot as dp_parametric_plot,
 )
-from mobspy.plot_scripts.default_plots import (
+from mobspy.plot.default_plots import (
     raw_plot as dp_raw_plot,
 )
-from mobspy.plot_scripts.default_plots import (
+from mobspy.plot.default_plots import (
     stochastic_plot as dp_stochastic_plot,
 )
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 if TYPE_CHECKING:
-    from mobspy.data_handler.time_series_object import SimulationResults
+    from mobspy.results.time_series import SimulationResults
 
 
 def plot_results(

@@ -17,8 +17,8 @@ DOCTEST_MODULES = [
     "mobspy/exceptions.py",
     "mobspy/simulation_config.py",
     "mobspy/types.py",
-    "mobspy/modules/species.py",
-    "mobspy/modules/species_constructors.py",
+    "mobspy/dsl/species.py",
+    "mobspy/dsl/species_constructors.py",
     "mobspy/simulation.py",
 ]
 

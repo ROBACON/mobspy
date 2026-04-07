@@ -52,7 +52,7 @@ include = ["mobspy", "mobspy.*"]
 mobspy = ["py.typed"]
 
 [tool.setuptools.exclude-package-data]
-"mobspy.import_manager" = ["profiler_import_time_test.py"]
+mobspy = ["lazy_import.py"]
 
 [tool.ruff]
 target-version = "py311"
@@ -84,30 +84,36 @@ select = [
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["F403", "F405", "F841", "B018", "B011", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "E731", "N", "A001", "RUF059"]
+"tests/**" = ["F403", "F405", "B018", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "E731", "N", "A001", "RUF059"]
 "docs/**" = ["F403", "F405", "F401", "E501", "E731", "E741", "I001", "B018", "S", "ARG", "ERA", "T20", "N", "A001", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "SIM117", "RUF005"]
 
 [tool.mypy]
+strict = true
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
+disallow_any_generics = true
 ignore_missing_imports = true
+warn_unused_ignores = true
 
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
+reportPrivateUsage = false
+# pint, matplotlib, numpy stubs are incomplete
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
 reportUnknownLambdaType = false
 reportUnknownParameterType = false
-reportPrivateUsage = false
+# DSL uses runtime isinstance guards for dynamically-typed user input
 reportUnnecessaryIsInstance = false
 reportUnnecessaryComparison = false
+# OverrideQuantity inherits pint.Quantity with mismatched __new__/__init__
 reportInconsistentConstructor = false
 
 [tool.pytest.ini_options]

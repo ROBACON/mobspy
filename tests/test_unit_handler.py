@@ -7,8 +7,8 @@ import warnings
 import pytest
 
 from mobspy.exceptions import UnitError
-from mobspy.modules.mobspy_expressions import u
-from mobspy.modules.unit_handler import (
+from mobspy.expressions.evaluation import u
+from mobspy.units.handler import (
     check_dimension,
     convert_counts,
     convert_rate,

@@ -17,7 +17,7 @@ def _clear_registry() -> Generator[None, None, None]:
     even with a dirty registry. This fixture just prevents
     unbounded memory growth across the test suite.
     """
-    from mobspy.modules.session_context import reset_session
+    from mobspy.dsl.session_context import reset_session
 
     yield
     reset_session()

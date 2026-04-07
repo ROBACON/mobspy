@@ -8,16 +8,16 @@ from typing import Any as TypingAny
 
 from pint import Quantity
 
-from mobspy.data_handler.time_series_object import SimulationResults
+from mobspy.dsl.reactions import Reacting_Species
+from mobspy.dsl.species import Species
 from mobspy.exceptions import SimulationError
-from mobspy.modules.reactions import Reacting_Species
-from mobspy.modules.species import Species
-from mobspy.parameter_scripts.parameter_reader import (
+from mobspy.params.parameter_reader import (
     manually_process_each_parameter as pr_manually_process_each_parameter,
 )
-from mobspy.parameter_scripts.parametric_sweeps import (
+from mobspy.params.parametric_sweeps import (
     unite_parameter_dictionaries as ps_unite_parameter_dictionaries,
 )
+from mobspy.results.time_series import SimulationResults
 from mobspy.simulation_config import PlotConfig
 
 if TYPE_CHECKING:
@@ -70,10 +70,10 @@ class SimulationComposition:
 
     def __init__(
         self,
-        S1: Simulation | SimulationComposition,  # noqa: N803
-        S2: Simulation | SimulationComposition,  # noqa: N803
+        S1: Simulation | SimulationComposition,  # noqa: N803  # legacy name
+        S2: Simulation | SimulationComposition,  # noqa: N803  # legacy name
     ) -> None:
-        from mobspy.simulation import Simulation  # noqa: PLC0415
+        from mobspy.simulation import Simulation  # noqa: PLC0415  # circular import
 
         if isinstance(S1, Simulation) and isinstance(S2, Simulation):
             self.list_of_simulations = [S1, S2]
@@ -189,7 +189,7 @@ class SimulationComposition:
             if sim._species_for_sbml is None:
                 sim.compile(verbose=False)
 
-    def run(  # noqa: PLR0913
+    def run(  # noqa: PLR0913  # complex function signature
         self,
         duration: TypingAny = None,
         volume: TypingAny = None,
@@ -315,7 +315,7 @@ class SimulationComposition:
                 for par in a:
                     self.base_sim.plot_parameters[par] = a[par]
 
-        for key in kwargs:  # noqa: PLC0206
+        for key in kwargs:  # noqa: PLC0206  # iterating dict keys directly
             self.base_sim.plot_parameters[key] = deepcopy(kwargs[key])
 
     def generate_sbml(self, compose: bool = False) -> list[str]:

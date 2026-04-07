@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 import mobspy
 from mobspy import All, BaseSpecies, New, Simulation, logger, set_counts, u
 from mobspy.exceptions import MobsPyError
@@ -211,7 +213,7 @@ class TestTimeEvents:
             S = Simulation(A)
             with S.event_time(0):
                 mobspy.Zero >> A @ 1
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -277,7 +279,7 @@ class TestLogicOperators:
         assert str(event.assignments[0][1]) == "100"
 
         if test_failed:
-            assert False
+            pytest.fail("Expected error was not raised")
 
     def test_conditional_between_meta_species(self):
         Cu = BaseSpecies()
@@ -357,12 +359,12 @@ class TestLogicOperators:
         try:
             with S.event_condition(B == 0):
                 B(100)
-            assert False
+            pytest.fail("Expected error was not raised")
         except Exception:
             pass
         try:
             S.duration = True
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             pass
         assert True

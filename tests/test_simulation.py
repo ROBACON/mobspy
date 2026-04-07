@@ -369,7 +369,7 @@ class TestErrorHandling:
             MySim = Simulation(A | C)
             MySim.level = -1
             MySim.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -380,7 +380,7 @@ class TestErrorHandling:
             MySim = Simulation(A | B | C)
             MySim.level = -1
             MySim.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -389,7 +389,7 @@ class TestErrorHandling:
             D = BaseSpecies(1)
             A, B, C = D * BaseSpecies(3)
             logger.global_logger_level = -1
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -404,7 +404,7 @@ class TestErrorHandling:
             S = S1 + S2
             S.level = -1
             S.run(plot_data=False)
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -424,7 +424,7 @@ class TestErrorHandling:
             S = Simulation(A)
             S.level = -1
             S.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -434,7 +434,7 @@ class TestErrorHandling:
             Ara >> 2 * Ara @ aTc
             S = Simulation(aTc | Ara)
             S.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -450,7 +450,7 @@ class TestErrorHandling:
             S.level = -1
             S.plot_data = False
             S.run(plot_data=False)
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, Exception):
             assert True
 
@@ -475,7 +475,7 @@ class TestErrorHandling:
             S.plot_data = False
             S.level = -1
             S.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
@@ -504,7 +504,7 @@ class TestErrorHandling:
             S = Simulation(Res | Bact | ATP)
             S.level = -1
             S.compile()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, Exception):
             pass
 

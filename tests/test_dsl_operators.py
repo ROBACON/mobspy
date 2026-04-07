@@ -7,9 +7,8 @@ import warnings
 import pytest
 
 from mobspy import BaseSpecies, New, Simulation, Zero
-from mobspy.execution import generate_sbml_from_compiled
-from mobspy.modules.compiler import compile_model as compile_model_direct
-from mobspy.modules.declarations import (
+from mobspy.compiler.compiler import compile_model as compile_model_direct
+from mobspy.dsl.declarations import (
     CountAssignment,
     ModelRegistry,
     RatedProduct,
@@ -17,10 +16,11 @@ from mobspy.modules.declarations import (
     get_registry,
     snapshot_and_clear_registry,
 )
-from mobspy.modules.list_species import List_Species
-from mobspy.modules.species_utils import (
+from mobspy.dsl.list_species import List_Species
+from mobspy.dsl.species_utils import (
     create_orthogonal_vector_structure,
 )
+from mobspy.execution import generate_sbml_from_compiled
 from mobspy.types import CharacteristicQuery, ConcreteSpeciesId
 from tests.conftest import CompiledModelAssertions
 
@@ -522,26 +522,26 @@ class TestRateBuilder:
     """Tests for the RateExpression builder API."""
 
     def test_basic_expression(self) -> None:
-        from mobspy.modules.rate_builder import param_ref, species_ref
+        from mobspy.expressions.rate_builder import param_ref, species_ref
 
         rate = param_ref("k") * species_ref("A")
         assert str(rate) == "(k*A)"
 
     def test_compound_expression(self) -> None:
-        from mobspy.modules.rate_builder import species_ref
+        from mobspy.expressions.rate_builder import species_ref
 
         rate = 0.5 * species_ref("A") / (1 + species_ref("A"))
         assert "0.5" in str(rate)
         assert "A" in str(rate)
 
     def test_power_expression(self) -> None:
-        from mobspy.modules.rate_builder import species_ref
+        from mobspy.expressions.rate_builder import species_ref
 
         rate = species_ref("A") ** 2
         assert str(rate) == "(A^2)"
 
     def test_hill_function(self) -> None:
-        from mobspy.modules.rate_builder import hill
+        from mobspy.expressions.rate_builder import hill
 
         h = hill("S", "Vmax", "Km", n=2)
         rendered = str(h)
@@ -550,7 +550,7 @@ class TestRateBuilder:
         assert "S" in rendered
 
     def test_builder_rate_in_reaction(self) -> None:
-        from mobspy.modules.rate_builder import species_ref
+        from mobspy.expressions.rate_builder import species_ref
 
         A, B = BaseSpecies(["A", "B"])
         rate = 0.5 * species_ref(A)
@@ -565,7 +565,7 @@ class TestRateBuilder:
         m.kinetics_contains("A")
 
     def test_builder_with_param_ref(self) -> None:
-        from mobspy.modules.rate_builder import param_ref, species_ref
+        from mobspy.expressions.rate_builder import param_ref, species_ref
 
         A, B = BaseSpecies(["A", "B"])
         rate = param_ref("k") * species_ref(A)
@@ -579,7 +579,7 @@ class TestRateBuilder:
         m.kinetics_contains("k")
 
     def test_where_conditional(self) -> None:
-        from mobspy.modules.rate_builder import where
+        from mobspy.expressions.rate_builder import where
 
         rate = where("A > 5", 0.5, 1.0)
         assert "piecewise" in str(rate)
@@ -587,13 +587,13 @@ class TestRateBuilder:
         assert "1.0" in str(rate)
 
     def test_where_method(self) -> None:
-        from mobspy.modules.rate_builder import species_ref
+        from mobspy.expressions.rate_builder import species_ref
 
         rate = species_ref("A").where("A > 5", 1.0)
         assert "piecewise" in str(rate)
 
     def test_conditional_in_reaction(self) -> None:
-        from mobspy.modules.rate_builder import where
+        from mobspy.expressions.rate_builder import where
 
         A, B = BaseSpecies(["A", "B"])
         rate = where("A > 5", 0.5, 1.0)

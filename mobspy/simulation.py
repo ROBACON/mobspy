@@ -19,16 +19,41 @@ from typing import Any as TypingAny
 import joblib
 from pint import Quantity
 
+from mobspy.compiler.compiler import compile_model
 from mobspy.constants import DOT_SEPARATOR
-from mobspy.data_handler.process_result_data import (
-    convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
+from mobspy.dsl.any_species import (
+    Any,
 )
-from mobspy.data_handler.process_result_data import (
-    extract_time_and_volume_list as dh_extract_time_and_volume_list,
+from mobspy.dsl.assignments_implementation import (
+    Assign,
 )
-from mobspy.data_handler.time_series_object import (
-    MobsPyTimeSeries,
-    SimulationResults,
+from mobspy.dsl.declarations import snapshot_registry
+from mobspy.dsl.list_species import List_Species
+from mobspy.dsl.logic_operators import (
+    MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
+)
+from mobspy.dsl.mobspy_parameters import (
+    Internal_Parameter_Constructor as _ParameterConstructor,
+)
+from mobspy.dsl.mobspy_parameters import (
+    ModelParameters,
+)
+from mobspy.dsl.order_operators import (
+    All,
+    Default,
+    Rev,
+    Set,
+)
+from mobspy.dsl.set_counts_module import set_counts
+from mobspy.dsl.species import Species
+from mobspy.dsl.species_constructors import (
+    BaseSpecies,
+    ListSpecies,
+    New,
+    Zero,
+)
+from mobspy.dsl.species_utils import (
+    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
 )
 from mobspy.event_handling import EventHandlingMixin
 from mobspy.exceptions import (
@@ -39,79 +64,46 @@ from mobspy.exceptions import (
     ValidationError,
 )
 from mobspy.execution import generate_sbml_from_compiled, run_sbml
-from mobspy.mobspy_logging import get_logger
-from mobspy.model_generation import ModelGenerationMixin
-from mobspy.modules.any_species import (
-    Any,
-)
-from mobspy.modules.assignments_implementation import (
-    Assign,
-)
-from mobspy.modules.compiler import compile_model
-from mobspy.modules.declarations import snapshot_registry
-from mobspy.modules.list_species import List_Species
-from mobspy.modules.logic_operators import (
-    MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
-)
-from mobspy.modules.mobspy_parameters import (
-    Internal_Parameter_Constructor as _ParameterConstructor,
-)
-from mobspy.modules.mobspy_parameters import (
-    ModelParameters,
-)
-from mobspy.modules.model_unit_context import ModelUnitContext
-from mobspy.modules.order_operators import (
-    All,
-    Default,
-    Rev,
-    Set,
-)
-from mobspy.modules.rate_builder import (
+from mobspy.expressions.rate_builder import (
     hill,
     where,
 )
-from mobspy.modules.set_counts_module import set_counts
-from mobspy.modules.species import Species
-from mobspy.modules.species_constructors import (
-    BaseSpecies,
-    ListSpecies,
-    New,
-    Zero,
+from mobspy.mobspy_logging import get_logger
+from mobspy.model_generation import ModelGenerationMixin
+from mobspy.params.parameter_reader import (
+    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,  # noqa: E501  # long import path
 )
-from mobspy.modules.species_utils import (
-    create_orthogonal_vector_structure as mcu_create_orthogonal_vector_structure,
-)
-from mobspy.modules.unit_handler import (
-    extract_length_dimension as uh_extract_length_dimension,
-)
-from mobspy.modules.unit_registry import u
-from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
-    basiCO_parameter_estimation,
-)
-from mobspy.parameter_scripts.parameter_reader import (
-    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,  # noqa: E501
-)
-from mobspy.parameter_scripts.parameter_reader import (
+from mobspy.params.parameter_reader import (
     convert_volume_after_compilation as pr_convert_volume_after_compilation,
 )
-from mobspy.parameter_scripts.parameter_reader import (
+from mobspy.params.parameter_reader import (
     manually_process_each_parameter as pr_manually_process_each_parameter,
 )
-from mobspy.parameter_scripts.parameter_reader import (
+from mobspy.params.parameter_reader import (
     parameter_process as pr_parameter_process,
 )
-from mobspy.parameter_scripts.parameter_reader import (
+from mobspy.params.parameter_reader import (
     read_json as pr_read_json,
 )
-from mobspy.parameter_scripts.parametric_sweeps import (
+from mobspy.params.parametric_sweeps import (
     generate_all_sbml_models as ps_generate_all_sbml_models,
 )
 from mobspy.plotting import PlottingMixin, plot_results
+from mobspy.results.estimation import (
+    basiCO_parameter_estimation,
+)
+from mobspy.results.process_data import (
+    convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
+)
+from mobspy.results.process_data import (
+    extract_time_and_volume_list as dh_extract_time_and_volume_list,
+)
+from mobspy.results.time_series import (
+    MobsPyTimeSeries,
+    SimulationResults,
+)
 from mobspy.simulation_composition import SimulationComposition
 from mobspy.simulation_config import PlotConfig, SimulationConfig
-from mobspy.simulator_object.utils import (
-    sim_remove_reaction as sof_sim_remove_reaction,
-)
 from mobspy.types import (
     ConcreteModel,
     Delta,
@@ -121,9 +113,14 @@ from mobspy.types import (
     SpeciesArg,
     TimeSeriesDataDict,
 )
+from mobspy.units.handler import (
+    extract_length_dimension as uh_extract_length_dimension,
+)
+from mobspy.units.model_context import ModelUnitContext
+from mobspy.units.registry import u
 
 if TYPE_CHECKING:
-    from mobspy.modules.reactions import Reactions
+    from mobspy.dsl.reactions import Reactions
     from mobspy.types import (
         CompiledModelDict,
         EventsForSbml,
@@ -194,7 +191,7 @@ class Simulation(
         True
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913  # complex function signature
         self,
         model: Species | List_Species,
         reactions: set[Reactions] | None = None,
@@ -222,7 +219,7 @@ class Simulation(
             ParameterError: If required parameters are missing
         """
         if backend is None:
-            from mobspy.backends import SBMLBackend  # noqa: PLC0415
+            from mobspy.sbml.backend import SBMLBackend  # noqa: PLC0415
 
             self._backend = SBMLBackend()
         else:
@@ -247,6 +244,7 @@ class Simulation(
         self._list_of_models: list[CompiledModelDict] = []
         self._list_of_parameters: list[TypingAny] = []
         self._context_not_active = True
+        self.packed_data: list[TypingAny] = []
         self._assigned_species_list: list[str] = []
         self._conditional_event = False
         self._end_condition = None
@@ -277,7 +275,7 @@ class Simulation(
             model_pos_link = model_pos_link.union(spe._linked_species)
         self.model = List_Species(model_pos_link)
         self.names = names
-        self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]
+        self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]  # DSL flexibility
 
     def _init_reactions(self, reactions: set[Reactions] | None) -> None:
         """Collect reactions from explicit set or from the model registry.
@@ -341,11 +339,11 @@ class Simulation(
     ) -> None:
         """Set simulation and plot configuration."""
         if not parameters:
-            self.parameters = SimulationConfig()  # type: ignore[assignment]
+            self.parameters = SimulationConfig()
         else:
             config = SimulationConfig()
             config.update(parameters)
-            self.parameters = config  # type: ignore[assignment]
+            self.parameters = config
 
         if not plot_parameters:
             self.plot_parameters: dict[str, TypingAny] = PlotConfig()
@@ -384,21 +382,20 @@ class Simulation(
         Raises:
             ValidationError: If the data format is invalid.
         """
-        flag_jump_checks = isinstance(data, SimulationResults)
-        if not isinstance(data, list) and not flag_jump_checks:
+        if isinstance(data, SimulationResults):
+            self.experimental_data = data
+            return
+        if not isinstance(data, list):
             raise ValidationError(
-                "Data added must be in the format of list with"
-                " each element being a dictionary "
-                "with species names and time as keys"
-                " or a MobsPy results object"
+                "Data added must be a list of dicts "
+                "(with species names and time as keys) "
+                "or a MobsPy SimulationResults object"
             )
         for e in data:
-            if not isinstance(e, dict) and not flag_jump_checks:
+            if not isinstance(e, dict):
                 raise ValidationError(
-                    "Data added must be in the format of list"
-                    " with each element being a dictionary "
+                    "Each element in experimental data must be a dict "
                     "with species names and time as keys"
-                    " or a MobsPy results object"
                 )
         self.experimental_data = data
 
@@ -423,7 +420,7 @@ class Simulation(
                 " method is reserved for simulations that "
                 "have already been compiled"
             )
-        _NAME_VALUE_PAIR_LEN = 2  # noqa: N806
+        _NAME_VALUE_PAIR_LEN = 2  # noqa: N806  # legacy DSL variable convention
         for arg in args:
             if len(arg) != _NAME_VALUE_PAIR_LEN:
                 raise SimulationError(
@@ -436,10 +433,12 @@ class Simulation(
 
     def _update_from_compiler(self, arg: TypingAny) -> None:
         """Dispatch a (name, value) update to either parameters or species."""
-        from mobspy.modules.mobspy_parameters import (  # noqa: PLC0415
+        from mobspy.dsl.mobspy_parameters import (  # noqa: PLC0415  # circular import
             Internal_Parameter_Constructor,
         )
-        from mobspy.types import ConcreteSpeciesId as _CID  # noqa: PLC0415, N814
+        from mobspy.types import (  # noqa: PLC0415  # circular import
+            ConcreteSpeciesId as _CID,  # noqa: N814  # alias
+        )
 
         try:
             is_species = arg[0].is_spe_or_reac()
@@ -450,15 +449,15 @@ class Simulation(
             self._update_parameter(arg)
         elif isinstance(arg[0], str):
             test_model = self._list_of_models[0]
-            not_parameter = arg[0] not in test_model.parameters_for_sbml
+            is_parameter = arg[0] in test_model.parameters_for_sbml
             display_key = _CID.from_sbml_id(arg[0]).to_display()
-            not_species = display_key not in test_model.species_for_sbml
+            is_species = display_key in test_model.species_for_sbml
 
-            if not not_parameter:
+            if is_parameter:
                 self._update_parameter(arg)
-            if not not_species:
+            elif is_species:
                 self._update_species(arg)
-            if not_species and not_parameter:
+            else:
                 raise SimulationError(
                     f"The string {arg[0]} was not found either in parameters or species"
                 )
@@ -469,12 +468,8 @@ class Simulation(
 
     def _update_parameter(self, arg: TypingAny) -> None:
         """Update a parameter value across all compiled models."""
-        try:
-            iterable = iter(arg[1])
-        except TypeError:
-            iterable = False  # type: ignore[assignment]
-
-        value_to_update = arg[1][0] if iterable else arg[1]
+        is_sequence = isinstance(arg[1], (list, tuple))
+        value_to_update = arg[1][0] if is_sequence else arg[1]
         parameter_str = arg[0] if isinstance(arg[0], str) else arg[0].get_name()
 
         for model in self._list_of_models:
@@ -488,11 +483,16 @@ class Simulation(
                     f"The parameter named {parameter_str} was not found in the model"
                 ) from e
 
-        parameter_object = self.model_parameters[parameter_str].object
+        try:
+            parameter_object = self.model_parameters[parameter_str].object
+        except KeyError as e:
+            raise SimulationError(
+                f"The parameter named {parameter_str} was not found in the model"
+            ) from e
         parameter_object.update_value(arg[1])
 
         try:
-            if not iterable:
+            if not is_sequence:
                 self.model_parameters[parameter_str].values = [parameter_object.value]
             else:
                 self.model_parameters[parameter_str].values = parameter_object.value
@@ -503,14 +503,14 @@ class Simulation(
 
     def _update_species(self, arg: TypingAny) -> None:
         """Update species counts in the compiled model."""
-        from mobspy.constants import ALL_CHAR as _ALL  # noqa: PLC0415
-        from mobspy.modules.species_string_generator import (  # noqa: PLC0415
+        from mobspy.compiler.species_strings import (  # noqa: PLC0415
             construct_all_species_ids as sp_construct_all_species_ids,
         )
-        from mobspy.modules.species_string_generator import (  # noqa: PLC0415
+        from mobspy.compiler.species_strings import (  # noqa: PLC0415
             construct_species_id as sp_construct_species_id,
         )
-        from mobspy.modules.unit_handler import (  # noqa: PLC0415
+        from mobspy.constants import ALL_CHAR as _ALL  # noqa: PLC0415
+        from mobspy.units.handler import (  # noqa: PLC0415  # circular import avoidance
             convert_counts as uh_convert_counts_fn,
         )
 
@@ -567,7 +567,7 @@ class Simulation(
                     self.dimension = 3
 
             # MobsPy level: 0=errors, 1=+warnings, 2=+info, 3=+debug
-            _LEVEL_MAP = {  # noqa: N806
+            _LEVEL_MAP = {  # noqa: N806  # legacy DSL variable convention
                 0: logging.ERROR,
                 1: logging.WARNING,
                 2: logging.INFO,
@@ -586,20 +586,18 @@ class Simulation(
                 dimension=self.dimension,
             )
 
-            pr_parameter_process(self.parameters, model_context=_model_context)  # type: ignore[arg-type]
+            pr_parameter_process(self.parameters, model_context=_model_context)  # type: ignore[arg-type]  # DSL flexibility
             if self.parameters["method"] is not None:
                 self.parameters["simulation_method"] = self.parameters["method"]
 
-            if self.parameters["simulation_method"].lower() == "deterministic":
-                self.plot_parameters["simulation_method"] = "deterministic"
-            elif self.parameters["simulation_method"].lower() == "stochastic":
-                self.plot_parameters["simulation_method"] = "stochastic"
-            else:
+            method_lower = self.parameters["simulation_method"].lower()
+            if method_lower not in ("deterministic", "stochastic"):
                 raise ParameterError(
                     "Invalid simulation method: "
                     f"{self.parameters['simulation_method']}. "
                     "Must be 'deterministic' or 'stochastic'"
                 )
+            self.plot_parameters["simulation_method"] = method_lower
 
             self.parameters["_end_condition"] = self._end_condition
 
@@ -728,9 +726,7 @@ class Simulation(
             self._list_of_parameters
         )
         _unit_y = self.parameters["unit_y"]
-        tcb = (
-            _unit_y is not None and "[length]" not in _unit_y.dimensionality  # type: ignore[union-attr,attr-defined]
-        )
+        tcb = _unit_y is not None and "[length]" not in _unit_y.dimensionality
         if not flag_concentration or tcb:
             self.parameters["output_concentration"] = False
 
@@ -766,7 +762,7 @@ class Simulation(
             flatt_ts = [
                 (ts, params)
                 for r, params in zip(
-                    raw_results, self._parameter_list_of_dic, strict=False
+                    raw_results, self._parameter_list_of_dic, strict=True
                 )
                 for ts in r  # pyright: ignore[reportOptionalIterable]
             ]
@@ -777,28 +773,29 @@ class Simulation(
                 for ts in r  # pyright: ignore[reportOptionalIterable]
             ]
 
-        ta = self.parameters["unit_x"] is not None
-        tb = self.parameters["unit_y"] is not None
-        tc = self.parameters["output_concentration"] if flag_concentration else False
-
-        if ta or tb or tc:
-            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, True)
+        needs_conversion = (
+            self.parameters["unit_x"] is not None
+            or self.parameters["unit_y"] is not None
+            or (flag_concentration and self.parameters["output_concentration"])
+        )
+        all_processed_data: list[TypingAny] = list(
+            joblib.Parallel(n_jobs=jobs, prefer="threads")(
+                joblib.delayed(convert_all_ts_to_correct_format)(
+                    ts, params, needs_conversion
+                )
                 for ts, params in flatt_ts
             )
-        else:
-            all_processed_data = joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(convert_all_ts_to_correct_format)(ts, params, False)
-                for ts, params in flatt_ts
-            )
+            or []
+        )
 
         self.results = SimulationResults(
             all_processed_data,  # pyright: ignore[reportArgumentType]
             self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
         )
-        self.fres = SimulationResults([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType, reportIndexIssue]
+        if all_processed_data:
+            self.fres = SimulationResults([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType]  # DSL flexibility
 
-    def run(  # noqa: PLR0913
+    def run(  # noqa: PLR0913  # complex function signature
         self,
         duration: float | Quantity | None = None,
         volume: float | Quantity | None = None,
@@ -902,7 +899,7 @@ class Simulation(
                 self.plot_stochastic()
             else:
                 self.plot_deterministic()
-        return self.results  # type: ignore[return-value]
+        return self.results  # type: ignore[return-value]  # pint Unit subtype
 
     def save_data(self, file: str | None = None) -> None:
         """
@@ -943,13 +940,13 @@ class Simulation(
                     )
                 out_path = self.parameters["absolute_output_file"]
                 with Path(out_path).open("w", encoding="utf-8") as f:
-                    json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]
+                    json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]  # guarded at runtime
             else:
                 # Add .json extension if not present
                 if not file.endswith(".json"):
                     file += ".json"
                 with Path(file).open("w", encoding="utf-8") as jf:
-                    json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]
+                    json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]  # guarded at runtime
                     _logger.info(f"Successfully saved simulation results to {file}")
         except OSError as e:
             raise SimulationError(f"Error saving data to file: {e!s}") from e
@@ -1039,6 +1036,7 @@ class Simulation(
             "_declarations",
             "_backend",
             "_concrete_model",
+            "packed_data",
         }
     )
 
@@ -1088,20 +1086,15 @@ class Simulation(
             self._set_parameter(name, value)
             return
 
-        if name in self._INTERNAL_ATTRS:
-            return
-
         raise ParameterError(f"Parameter {name} is not supported")
 
     def __getattribute__(self, item: str) -> TypingAny:
-        if item == "results" and self.__dict__["results"] == {}:
-            raise SimulationError(
-                "The results were accessed before the execution of the simulation"
-            )
-        if item == "fres" and self.__dict__["fres"] == {}:
-            raise SimulationError(
-                "The results were accessed before the execution of the simulation"
-            )
+        if item in ("results", "fres"):
+            val = self.__dict__.get(item)
+            if isinstance(val, dict) and not val:
+                raise SimulationError(
+                    "The results were accessed before the execution of the simulation"
+                )
         return super().__getattribute__(item)
 
     @property
@@ -1129,7 +1122,7 @@ class Simulation(
         config_dict = self.__config_parameters(config)
         new_config = SimulationConfig()
         new_config.update(config_dict)
-        self.parameters = new_config  # type: ignore[assignment]
+        self.parameters = new_config
 
     def configure_plot_parameters(self, config: str | dict[str, TypingAny]) -> None:
         """
@@ -1158,10 +1151,10 @@ class Simulation(
         for a in args:
             if isinstance(a, dict):
                 for par in a:
-                    self.base_sim.plot_parameters[par] = a[par]
+                    self.plot_parameters[par] = a[par]
 
-        for key in kwargs:  # noqa: PLC0206
-            self.plot_parameters[key] = deepcopy(kwargs[key])
+        for key, value in kwargs.items():
+            self.plot_parameters[key] = deepcopy(value)
 
     def __add__(self, other: Simulation) -> SimulationComposition:
         """
@@ -1180,7 +1173,7 @@ class Simulation(
             SimulationError: If no results are available
             ImportError: If pandas is not available
         """
-        if not hasattr(self, "results") or self.results is None:
+        if not hasattr(self, "results") or not self.results:
             raise SimulationError(
                 "Simulation results were accessed before a simulation was executed"
             )
@@ -1205,7 +1198,12 @@ class Simulation(
         return int(jobs)
 
     def __sub__(self, other: TypingAny) -> Simulation:
-        return sof_sim_remove_reaction(self, other, Simulation)  # type: ignore[no-any-return,return-value]
+        new_sim = Simulation(self.model)
+        try:
+            new_sim._reactions_set.remove(other)
+        except KeyError:
+            raise SimulationError(f"Reaction {other} not found in simulation") from None
+        return new_sim
 
     def __rsub__(self, other: TypingAny) -> Simulation:
-        return sof_sim_remove_reaction(other, self, Simulation)  # type: ignore[no-any-return,return-value]
+        return NotImplemented

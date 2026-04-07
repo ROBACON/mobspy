@@ -733,14 +733,14 @@ class TestSpeciesNaming:
         try:
             _S0 = BaseSpecies()
             _S0 >> mobspy.Zero @ 1
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             assert True
 
     def test_blocked_names_2(self):
         try:
             _S1 = BaseSpecies()
-            assert False
+            pytest.fail("Expected error was not raised")
         except (SystemExit, MobsPyError):
             pass
 

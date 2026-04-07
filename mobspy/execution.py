@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from mobspy.sbml_simulator.builder import build as sbml_build
-from mobspy.sbml_simulator.run import simulate as sbml_simulate
+from mobspy.sbml.builder import build as sbml_build
+from mobspy.sbml.runner import simulate as sbml_simulate
 from mobspy.types import ConcreteModel, SBMLModelData
 
 if TYPE_CHECKING:
@@ -70,7 +70,7 @@ def run_sbml(
     Returns:
         List of raw simulation results.
     """
-    import joblib  # noqa: PLC0415
+    import joblib  # noqa: PLC0415  # circular import avoidance
 
     def _sim_one(x: list[CompiledModel]) -> Any:
         return sbml_simulate(jobs, parameters, x)

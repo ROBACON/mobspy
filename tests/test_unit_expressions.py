@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 from scipy.constants import N_A
 
-from mobspy.modules.mobspy_expressions import (
+from mobspy.expressions.evaluation import (
     MobsPyExpression,
     OverrideQuantity,
     QuantityConverter,
@@ -94,7 +94,7 @@ class TestHasUnitsBoolean:
             concentration_in_expression=False,
         )
         # Trigger expression mode for the operation
-        from mobspy.modules.mobspy_expressions import _ms_active_ctx
+        from mobspy.expressions.evaluation import _ms_active_ctx
 
         token = _ms_active_ctx.set(True)
         try:
@@ -110,7 +110,7 @@ class TestSubstanceNormalization:
 
     def test_mol_per_liter_plus_dimensionless_conc_path(self) -> None:
         """mol/L + 1/L should succeed on the concentration path."""
-        from mobspy.modules.mobspy_expressions import _ms_active_ctx
+        from mobspy.expressions.evaluation import _ms_active_ctx
 
         K_m = OverrideQuantity(100.0 * ur.moles / ur.liters)
         expr = MobsPyExpression(
@@ -137,7 +137,7 @@ class TestSubstanceNormalization:
 
     def test_michaelis_menten_compiles(self) -> None:
         """Full Michaelis-Menten with concentration K_m should compile."""
-        from mobspy.modules.mobspy_expressions import _ms_active_ctx
+        from mobspy.expressions.evaluation import _ms_active_ctx
 
         k = OverrideQuantity(1.0 / ur.seconds)
         K_m = OverrideQuantity(100.0 * ur.moles / ur.liters)
@@ -162,7 +162,7 @@ class TestSubstanceNormalization:
 
     def test_hill_function_compiles(self) -> None:
         """Hill function with concentration K should compile."""
-        from mobspy.modules.mobspy_expressions import _ms_active_ctx
+        from mobspy.expressions.evaluation import _ms_active_ctx
 
         k = OverrideQuantity(1.0 / ur.seconds)
         K = OverrideQuantity(50.0 * ur.moles / ur.liters)
@@ -185,7 +185,7 @@ class TestSubstanceNormalization:
 
     def test_incompatible_units_still_fail(self) -> None:
         """Adding meters to seconds should still fail both paths."""
-        from mobspy.modules.mobspy_expressions import _ms_active_ctx
+        from mobspy.expressions.evaluation import _ms_active_ctx
 
         q_meters = OverrideQuantity(1.0 * ur.meters)
         q_seconds = OverrideQuantity(1.0 * ur.seconds)

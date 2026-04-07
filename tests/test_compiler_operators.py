@@ -7,13 +7,13 @@ from typing import Any
 import pytest
 
 from mobspy import BaseSpecies
-from mobspy.constants import NOT_CHAR
-from mobspy.modules.compiler_operators import (
+from mobspy.compiler.operators import (
     create_all_not_reactions,
     get_all_non_listed_characteristics,
     new_reaction_with_new_characteristics,
 )
-from mobspy.modules.reactions import Reacting_Species, Reactions
+from mobspy.constants import NOT_CHAR
+from mobspy.dsl.reactions import Reacting_Species, Reactions
 
 # ---------------------------------------------------------------
 # Helpers

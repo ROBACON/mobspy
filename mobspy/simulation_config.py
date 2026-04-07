@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, fields
 from typing import TYPE_CHECKING, Any
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mobspy.types import SimulationMethod
@@ -90,7 +93,7 @@ class SimulationConfig:
         if self.simulation_method not in _valid_methods:
             msg = (
                 f"Invalid simulation_method: {self.simulation_method!r}. "
-                "Must be 'deterministic', 'stochastic', or a valid BasiCO method."
+                f"Must be one of: {', '.join(sorted(_valid_methods))}."
             )
             raise ValueError(msg)
         if self.repetitions < 1:
@@ -156,11 +159,14 @@ class SimulationConfig:
 
     def update(self, other: dict[str, Any]) -> None:
         """Merge values from a dict, skipping comment keys."""
+        valid_keys = {f.name for f in fields(self)}
         for key, value in other.items():
             if key.startswith("__comment"):
                 continue
-            if hasattr(self, key):
+            if key in valid_keys:
                 object.__setattr__(self, key, value)
+            else:
+                _logger.warning("Unknown simulation parameter '%s' ignored", key)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> SimulationConfig:
@@ -194,7 +200,9 @@ class PlotConfig(dict[str, Any]):
         try:
             return self[name]
         except KeyError:
-            return None
+            raise AttributeError(
+                f"'{type(self).__name__}' has no attribute '{name}'"
+            ) from None
 
     def __setattr__(self, name: str, value: Any) -> None:
         self[name] = value

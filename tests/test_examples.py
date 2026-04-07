@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 from mobspy import *
-from mobspy.modules.meta_class import ListSpecies
+from mobspy.dsl.meta_class import ListSpecies
 
 # ---------------------------------------------------------------------------
 # Application models
@@ -147,7 +147,7 @@ class TestCRISPROscillator:
         Promoter, dCas, CasBinding = BaseSpecies()
         Promoter.active, Promoter.inactive, CasBinding.no_cas, CasBinding.cas
 
-        DNAPro = New(Promoter)
+        DNAPro = New(Promoter)  # noqa: F841
         gRNA = New(CasBinding)
 
         G = ListSpecies(3, gRNA)

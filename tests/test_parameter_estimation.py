@@ -1,7 +1,7 @@
 """Tests for parameter estimation helper functions.
 
 Tests the pure validation/helper functions in
-``mobspy.parameter_estimation_data_loader.parameter_estimation_scripts``
+``mobspy.results.estimation``
 without requiring BasiCO/COPASI.
 """
 
@@ -14,7 +14,7 @@ import pandas as pd
 import pytest
 
 from mobspy.exceptions import ParameterError
-from mobspy.parameter_estimation_data_loader.parameter_estimation_scripts import (
+from mobspy.results.estimation import (
     _extract_results,
     _resolve_experimental_data,
     _validate_bound,

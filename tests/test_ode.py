@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from mobspy import BaseSpecies, New, Simulation, Zero
-from mobspy.modules.functions import ms_exp
-from mobspy.modules.ode_operator import dt
+from mobspy.dsl.functions import ms_exp
+from mobspy.dsl.ode_operator import dt
 
 
 def test_ode_syntax_basic():

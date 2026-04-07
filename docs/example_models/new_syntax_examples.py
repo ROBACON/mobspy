@@ -81,7 +81,7 @@ def example_4_rate_builder() -> None:
 def example_5_hill_function() -> None:
     """Hill function rate using the builder."""
     from mobspy import BaseSpecies, Simulation, Zero
-    from mobspy.modules.rate_builder import hill
+    from mobspy.expressions.rate_builder import hill
 
     S_species, P = BaseSpecies(["S", "P"])
 
@@ -102,7 +102,7 @@ def example_5_hill_function() -> None:
 def example_6_conditional_rate() -> None:
     """Conditional rate using where()."""
     from mobspy import BaseSpecies, Simulation
-    from mobspy.modules.rate_builder import where
+    from mobspy.expressions.rate_builder import where
 
     A, B = BaseSpecies(["A", "B"])
 
@@ -144,8 +144,8 @@ def example_8_standalone_compilation() -> None:
     """Compile and generate SBML without a Simulation instance."""
     from mobspy import BaseSpecies, compile_model
     from mobspy.execution import generate_sbml_from_compiled
-    from mobspy.modules.list_species import List_Species
-    from mobspy.modules.species_utils import create_orthogonal_vector_structure
+    from mobspy.dsl.list_species import List_Species
+    from mobspy.dsl.species_utils import create_orthogonal_vector_structure
 
     A, B = BaseSpecies(["A", "B"])
     A >> B @ 1.0

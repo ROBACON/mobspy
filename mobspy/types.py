@@ -14,7 +14,11 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_che
 from pint import Quantity
 
 if TYPE_CHECKING:
-    from mobspy.modules.expression_nodes import ExprNode
+    from mobspy.dsl.mobspy_parameters import Internal_Parameter_Constructor
+    from mobspy.expressions.nodes import ExprNode
+    from mobspy.units.model_context import ModelUnitContext
+
+ParameterObject: TypeAlias = "Internal_Parameter_Constructor"
 
 RateValue: TypeAlias = "int | float | Quantity | str | Callable[..., Any] | ExprNode"
 
@@ -139,7 +143,7 @@ class SpeciesDict(dict[str, int | float]):
     def __getitem__(self, key: str) -> int | float:
         return super().__getitem__(self._normalize_str(key))
 
-    def get(self, key: str, default: int | float | None = None) -> int | float | None:  # type: ignore[override]
+    def get(self, key: str, default: int | float | None = None) -> int | float | None:  # type: ignore[override]  # DSL overload
         return super().get(self._normalize_str(key), default)
 
 
@@ -264,7 +268,7 @@ class CompiledModel:
     species_not_mapped: dict[str, int | float] = field(default_factory=dict)
     mappings: dict[str, list[str]] = field(default_factory=dict)
     assigned_species: list[str] = field(default_factory=list)
-    model_context: Any = None  # ModelUnitContext | None (avoid circular import)
+    model_context: ModelUnitContext | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.species_for_sbml, SpeciesDict):
@@ -302,7 +306,7 @@ class SimulationEventData:
     """Internal event data collected during event context."""
 
     event_time: Any = 0.0
-    event_counts: list[Any] = field(default_factory=list)
+    event_counts: list[dict[str, Any]] | dict[str, Any] = field(default_factory=list)
     trigger: str = ""
 
 
@@ -330,7 +334,7 @@ class TimeSeriesDataDict:
 # Kept as TypedDict because it's used as a loose config bag with
 # optional keys, comment keys, and dict-spread patterns.
 
-from typing import TypedDict  # noqa: E402
+from typing import TypedDict  # noqa: E402  # deferred import after lazy setup
 
 
 class SimulationParameters(TypedDict):
@@ -419,13 +423,7 @@ class CompilerResult:
     parameter_object_dict: dict[str, Any] = field(default_factory=dict)
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
     has_mole: bool = False
-    model_context: Any = None  # ModelUnitContext | None (avoid circular import)
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.species_for_sbml, SpeciesDict):
-            object.__setattr__(
-                self, "species_for_sbml", SpeciesDict(self.species_for_sbml)
-            )
+    model_context: ModelUnitContext | None = None
 
     def to_compiled_model(
         self,
@@ -482,16 +480,12 @@ class ConcreteModel:
     parameter_objects: dict[str, Any] = field(default_factory=dict)
     model_string: str = ""
     has_mole: bool = False
-    unit_context: Any = None  # ModelUnitContext | None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.species, SpeciesDict):
-            object.__setattr__(self, "species", SpeciesDict(self.species))
+    unit_context: ModelUnitContext | None = None
 
     def to_compiler_result(self) -> CompilerResult:
         """Bridge to CompilerResult for backward compatibility."""
         return CompilerResult(
-            species_for_sbml=dict(self.species),
+            species_for_sbml=SpeciesDict(self.species),
             reactions_for_sbml=dict(self.reactions),
             parameters_for_sbml=dict(self.parameters),
             mappings_for_sbml=dict(self.mappings),
@@ -527,7 +521,7 @@ class ConcreteModel:
     def from_compiler_result(cls, result: CompilerResult) -> ConcreteModel:
         """Construct from a legacy CompilerResult."""
         return cls(
-            species=dict(result.species_for_sbml),
+            species=SpeciesDict(result.species_for_sbml),
             reactions=dict(result.reactions_for_sbml),
             parameters=dict(result.parameters_for_sbml),
             events=dict(result.events_for_sbml),
@@ -576,7 +570,7 @@ class CountAssignmentResult:
     """Phase result: initial counts assigned to concrete species."""
 
     assigned_species: tuple[str, ...]
-    parameters_in_counts: frozenset[Any]
+    parameters_in_counts: frozenset[ParameterObject]
 
 
 @dataclass(frozen=True)
@@ -584,7 +578,7 @@ class ReactionExpansionResult:
     """Phase result: meta-reactions expanded into concrete reactions."""
 
     reactions: dict[str, ReactionData]
-    parameters_in_reactions: frozenset[Any]
+    parameters_in_reactions: frozenset[ParameterObject]
 
 
 @dataclass(frozen=True)
@@ -592,7 +586,7 @@ class EventBuildResult:
     """Phase result: events compiled with phantom reactions added."""
 
     events: dict[str, EventData]
-    parameters_in_events: frozenset[Any]
+    parameters_in_events: frozenset[ParameterObject]
 
 
 @dataclass
@@ -712,7 +706,11 @@ class CharacteristicQuery:
 
         Interprets ``all$``, ``not$``, and ``std$`` markers.
         """
-        from mobspy.constants import ALL_CHAR, NOT_CHAR, STD_CHAR  # noqa: PLC0415
+        from mobspy.constants import (  # noqa: PLC0415  # circular import avoidance
+            ALL_CHAR,
+            NOT_CHAR,
+            STD_CHAR,
+        )
 
         if isinstance(chars, str):
             if chars == STD_CHAR:

@@ -64,7 +64,7 @@ def _define_model_with_inheritance() -> dict[str, Any]:
 
 def _define_model_with_at_syntax() -> dict[str, Any]:
     """Define a model using @ rate syntax and registry."""
-    from mobspy.modules.declarations import get_registry
+    from mobspy.dsl.declarations import get_registry
 
     A, B = BaseSpecies(["A", "B"])
     A >> B @ 0.5

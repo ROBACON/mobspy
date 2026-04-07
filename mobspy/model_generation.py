@@ -12,8 +12,14 @@ from typing import TYPE_CHECKING, Any
 
 from mobspy.exceptions import SBMLError
 from mobspy.mobspy_logging import get_logger
-from mobspy.sbml_simulator.builder import build as sbml_build
-from mobspy.types import ConcreteModel, EventData, ReactionData, SBMLModelData
+from mobspy.sbml.builder import build as sbml_build
+from mobspy.types import (
+    ConcreteModel,
+    EventData,
+    ReactionData,
+    SBMLModelData,
+    SpeciesDict,
+)
 
 if TYPE_CHECKING:
     from mobspy.types import (
@@ -200,7 +206,7 @@ def generate_antimony_strings(
     for parameter_sweep in sbml_data_list:
         for sbml_data in parameter_sweep:
             if model_name is None:
-                antimony_model = f"model mobspy_{rd_randint(0, 100000)} \n"  # noqa: S311
+                antimony_model = f"model mobspy_{rd_randint(0, 100000)} \n"  # noqa: S311  # non-crypto random
             else:
                 antimony_model = f"model {model_name} \n"
 
@@ -219,7 +225,7 @@ def _compiled_model_to_concrete(
 ) -> ConcreteModel:
     """Convert a CompiledModel or SBMLModelData to a ConcreteModel."""
     return ConcreteModel(
-        species=dict(model_data.species_for_sbml),
+        species=SpeciesDict(model_data.species_for_sbml),
         parameters=dict(model_data.parameters_for_sbml),
         reactions=dict(model_data.reactions_for_sbml),
         events=dict(model_data.events_for_sbml),
@@ -316,7 +322,7 @@ class ModelGenerationMixin:
             )
             new_sbml_file.events_for_sbml[event_name] = event
 
-    def _compose_a_sim(  # noqa: PLR0913
+    def _compose_a_sim(  # noqa: PLR0913  # complex function signature
         self,
         new_sbml_file: SBMLModelDict,
         i: int,
@@ -360,7 +366,7 @@ class ModelGenerationMixin:
             else:
                 cul_duration = cul_duration + self._list_of_parameters[i]["duration"]
 
-            if sim_sbml.assignments_for_sbml != {}:
+            if sim_sbml.assignments_for_sbml:
                 _logger.warning("Assignments beyond the initial simulation are ignored")
 
             pre_spe = "_SFS_" + str(i)

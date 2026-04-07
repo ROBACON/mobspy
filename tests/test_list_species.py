@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from mobspy import BaseSpecies
+from mobspy.dsl.list_species import List_Species
 from mobspy.exceptions import ValidationError
-from mobspy.modules.list_species import List_Species
 
 
 @pytest.fixture()

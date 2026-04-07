@@ -7,7 +7,6 @@ import pytest
 import mobspy
 from mobspy import BaseSpecies, ModelParameters, Simulation
 from mobspy.exceptions import SimulationError
-from mobspy.simulator_object.utils import sim_remove_reaction
 
 
 class TestUpdateModelErrors:
@@ -146,7 +145,7 @@ class TestSimRemoveReaction:
         A(10)
         S = Simulation(A | B)
 
-        new_sim = sim_remove_reaction(S, rxn, Simulation)
+        new_sim = S - rxn
 
         assert new_sim is not S
         assert rxn not in new_sim._reactions_set
@@ -164,7 +163,7 @@ class TestSimRemoveReaction:
         assert rxn1 not in new_sim._reactions_set
 
     def test_remove_nonexistent_reaction_raises(self) -> None:
-        """Removing a reaction that isn't in the set should raise KeyError."""
+        """Removing a reaction that isn't in the set should raise SimulationError."""
         A, B, C = BaseSpecies()
         _ = A >> B @ 1
         orphan_rxn = B >> C @ 0.5
@@ -172,5 +171,5 @@ class TestSimRemoveReaction:
 
         S = Simulation(A)
 
-        with pytest.raises(KeyError):
-            sim_remove_reaction(S, orphan_rxn, Simulation)
+        with pytest.raises(SimulationError):
+            S - orphan_rxn
