@@ -140,7 +140,8 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            self.event_context_add(time, "true")
+            time_val = time.magnitude if isinstance(time, Quantity) else time
+            self.event_context_add(time_val, "true")
 
     def at(
         self,
@@ -160,9 +161,10 @@ class EventHandlingMixin:
             assignments: ``{species_or_reacting: count}`` pairs.
         """
         self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
+        time_val = time.magnitude if isinstance(time, Quantity) else time
         event_counts = _resolve_event_assignments(assignments)
         event_data = SimulationEventData(
-            event_time=time,
+            event_time=time_val,
             event_counts=event_counts,
             trigger="true",
         )
@@ -193,9 +195,10 @@ class EventHandlingMixin:
                 "Do not use == for event conditions."
             )
         self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
+        delay_val = delay.magnitude if isinstance(delay, Quantity) else delay
         event_counts = _resolve_event_assignments(assignments)
         event_data = SimulationEventData(
-            event_time=delay,
+            event_time=delay_val,
             event_counts=event_counts,
             trigger=condition,
         )

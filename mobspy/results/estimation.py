@@ -195,7 +195,7 @@ def _build_fit_list(
         ).to_dict()
         try:
             basico_parameter_name = next(iter(basico_reaction_dict["reaction"].keys()))
-        except IndexError as e:
+        except (StopIteration, KeyError) as e:
             raise ParameterError(
                 f"Parameter {par} was not found in the "
                 "Simulation model. \n "
@@ -250,7 +250,10 @@ def find_parameters_in_basico_dataframe(
         basico_reaction_name: str, mobspy_parameter_name: str
     ) -> bool:
         """Check if a BasiCO reaction name contains the parameter."""
-        parameter_name = basico_reaction_name.split(".")[1]
+        parts = basico_reaction_name.split(".")
+        if len(parts) < 2:  # noqa: PLR2004  # BasiCO names are "reaction.parameter"
+            return False
+        parameter_name = parts[1]
         return parameter_name == mobspy_parameter_name
 
     def find_common_substrings(df: str) -> bool:

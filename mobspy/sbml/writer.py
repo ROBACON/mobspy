@@ -143,7 +143,7 @@ def _setup_units(
 
     per_second = model.createUnitDefinition()
     check(per_second, "create unit definition")
-    check(per_second.setId("per_min"), "set unit definition id")
+    check(per_second.setId("per_second"), "set unit definition id")
     unit = per_second.createUnit()
     check(unit, "create unit")
     check(unit.setKind(sbml.UNIT_KIND_SECOND), "set unit kind")
@@ -211,14 +211,14 @@ def _create_reactions(model: Any, reactions: ReactionsForSbml) -> None:
             species_ref = r.createReactant()
             check(species_ref, "create reactant")
             check(species_ref.setSpecies(re_str), "assign reactant species")
-            check(species_ref.setStoichiometry(re_val), "set set stoichiometry")
+            check(species_ref.setStoichiometry(re_val), "set stoichiometry")
             check(species_ref.setConstant(True), 'set "constant" on species')
 
         for pr_val, pr_str in reactions[r_str].products:
             species_ref = r.createProduct()
             check(species_ref, "create product")
             check(species_ref.setSpecies(pr_str), "assign product species")
-            check(species_ref.setStoichiometry(pr_val), "set set stoichiometry")
+            check(species_ref.setStoichiometry(pr_val), "set stoichiometry")
             check(species_ref.setConstant(True), 'set "constant" on species')
 
         math_ast = sbml.parseL3Formula(reactions[r_str].kinetics)
@@ -234,9 +234,9 @@ def _create_events(model: Any, events: EventsForSbml) -> None:
         e = model.createEvent()
         check(e, "create event")
         check(e.setId(e_str), "set id")
-        check(e.setUseValuesFromTriggerTime(False), "?")
+        check(e.setUseValuesFromTriggerTime(False), "set use values from trigger time")
 
-        t = model.createTrigger()
+        t = e.createTrigger()
         check(t, "create trigger")
         check(
             t.setMath(sbml.parseL3Formula(events[e_str].trigger)),
@@ -248,14 +248,13 @@ def _create_events(model: Any, events: EventsForSbml) -> None:
             e.getTrigger().getMath(),
             "Problem when creating the trigger condition. The trigger will not work.",
         )
-        d = model.createDelay()
+        d = e.createDelay()
         check(d, "create delay")
         check(d.setMath(sbml.parseL3Formula(str(events[e_str].delay))), "set math")
-        check(e.setDelay(d), "set delay")
 
         for ass in events[e_str].assignments:
-            ea = model.createEventAssignment()
-            check(ea, "check event assignment")
+            ea = e.createEventAssignment()
+            check(ea, "create event assignment")
             check(ea.setVariable(str(ass[0])), "set variable")
             check(ea.setMath(sbml.parseL3Formula(str(ass[1]))), "set math")
 

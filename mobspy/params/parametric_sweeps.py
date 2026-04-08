@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import contextlib
 import itertools
+import logging
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from mobspy.constants import DOT_SEPARATOR, SBML_LOCATION
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mobspy.types import CompiledModelDict, ParameterSweepList, ParameterUsedInfo
@@ -24,9 +27,11 @@ def assign_values_to_model(
         if location == SBML_LOCATION:
             for model in models:
                 with contextlib.suppress(KeyError):
+                    existing = model.parameters_for_sbml.get(parameter_name)
+                    unit_str = existing[1] if existing else "dimensionless"
                     model.parameters_for_sbml[parameter_name] = (
                         parameter_value,
-                        "dimensionless",
+                        unit_str,
                     )
         else:
             for model in models:
@@ -67,12 +72,13 @@ def generate_all_sbml_models(
     parameter_list_of_dic: list[dict[str, int | float]] = []
     for v in itertools.product(*values):
         parameter_dic: dict[str, int | float] = {}
+        models_copy = deepcopy(list_of_models)
         for i, name in enumerate(names):
-            assign_values_to_model(name, v[i], list_of_models, used_in[i])
+            assign_values_to_model(name, v[i], models_copy, used_in[i])
             parameter_dic[name] = v[i]
 
         parameter_list_of_dic.append(parameter_dic)
-        to_return.append(deepcopy(list_of_models))
+        to_return.append(models_copy)
 
     return to_return, parameter_list_of_dic
 
@@ -86,6 +92,14 @@ def unite_parameter_dictionaries(
         if key not in dict_1:
             dict_1[key] = dict_2[key]
         else:
+            if dict_1[key].values != dict_2[key].values:
+                _logger.warning(
+                    "Parameter '%s' has different values in composed simulations "
+                    "(%s vs %s). Using the first value.",
+                    key,
+                    dict_1[key].values,
+                    dict_2[key].values,
+                )
             new_used_in = dict_1[key].used_in.union(dict_2[key].used_in)
             dict_1[key].used_in = new_used_in
 

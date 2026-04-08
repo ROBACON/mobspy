@@ -101,6 +101,8 @@ def standard_deviation(
         add: float = 0
         size = 0
         for series in mobspy_ts:
+            if species_string not in series:
+                continue
             try:
                 add = add + (average_series[j] - series[species_string][j]) ** 2
                 size += 1

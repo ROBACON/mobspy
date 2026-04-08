@@ -239,7 +239,7 @@ class SimulationResults:
         """Retrieve data for a Species key."""
         if series_index is None:
             return [ts[item.get_name()] for ts in self.ts_data]
-        return [self._sum_reacting_species_data(item, series_index)]
+        return [self._sum_reacting_species_data(item.get_name(), series_index)]
 
     def _resolve_reacting_species_item(
         self, item: Reacting_Species, series_index: int | None
@@ -308,8 +308,8 @@ class SimulationResults:
         max_length: int = 0
         max_ts: dict[str, Any] | None = None
         for ts in self.ts_data:
-            if species in ts and len(ts) > max_length:
-                max_length = len(ts)
+            if species in ts and len(ts["Time"]) > max_length:
+                max_length = len(ts["Time"])
                 max_ts = ts
         if max_ts is None:
             msg = "Could not find maximal time series."

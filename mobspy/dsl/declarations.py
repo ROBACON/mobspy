@@ -268,7 +268,7 @@ class ModelRegistry:
         # Filter both parallel lists together
         new_reactions: list[ReactionDecl] = []
         new_objects: list[Reactions] = []
-        for decl, obj in zip(self.reactions, self.reaction_objects, strict=False):
+        for decl, obj in zip(self.reactions, self.reaction_objects, strict=True):
             if id(obj) not in to_remove_ids:
                 new_reactions.append(decl)
                 new_objects.append(obj)

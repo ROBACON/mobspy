@@ -153,7 +153,7 @@ def _apply_unit_y_conversion(
         if not _substance_is_molar:
             _multiply_data_by_factor(converted_data, N_A**-1)
         if output_concentration:
-            if _substance_is_molar:
+            if _substance_is_molar and model_context is not None:
                 source = 1 * model_context.substance_unit / model_context.volume_unit
             else:
                 source = 1 * ur.molar
@@ -162,7 +162,7 @@ def _apply_unit_y_conversion(
                 source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]  # pint method
             )
         else:
-            if _substance_is_molar:
+            if _substance_is_molar and model_context is not None:
                 source = 1 * model_context.substance_unit
             else:
                 source = 1 * ur.moles
@@ -171,7 +171,11 @@ def _apply_unit_y_conversion(
                 source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]  # pint method
             )
     elif output_concentration:
-        source = 1 / model_context.volume_unit if _substance_is_molar else 1 / ur.l
+        source = (
+            1 / model_context.volume_unit
+            if (_substance_is_molar and model_context is not None)
+            else 1 / ur.l
+        )
         _multiply_data_by_factor(
             converted_data,
             source.to(unit_y).magnitude,  # pyright: ignore[reportAttributeAccessIssue]

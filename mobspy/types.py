@@ -432,14 +432,14 @@ class CompilerResult:
     ) -> CompiledModel:
         """Create a CompiledModel from compiler output."""
         return CompiledModel(
-            species_for_sbml=self.species_for_sbml,
-            parameters_for_sbml=self.parameters_for_sbml,
-            reactions_for_sbml=self.reactions_for_sbml,
-            events_for_sbml=self.events_for_sbml,
-            assignments_for_sbml=self.assignments_for_sbml,
-            species_not_mapped=species_not_mapped,
-            mappings=mappings,
-            assigned_species=self.assigned_species,
+            species_for_sbml=dict(self.species_for_sbml),
+            parameters_for_sbml=dict(self.parameters_for_sbml),
+            reactions_for_sbml=dict(self.reactions_for_sbml),
+            events_for_sbml=dict(self.events_for_sbml),
+            assignments_for_sbml=dict(self.assignments_for_sbml),
+            species_not_mapped=dict(species_not_mapped),
+            mappings=dict(mappings),
+            assigned_species=list(self.assigned_species),
             model_context=self.model_context,
         )
 

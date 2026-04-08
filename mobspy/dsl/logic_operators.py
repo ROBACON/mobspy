@@ -273,27 +273,24 @@ class MetaSpeciesLogicResolver:
             ")",
             ")",
         ]
-        self.operation = new_operation
-        return self
+        return MetaSpeciesLogicResolver(new_operation, self.simulation_context)
 
     def __lt__(self, number: _ScalarNum) -> MetaSpeciesLogicResolver:
-        self.add_double_symbol("<", number)
-        return self
+        return self._add_comparison("<", number)
 
     def __le__(self, number: _ScalarNum) -> MetaSpeciesLogicResolver:
-        self.add_double_symbol("<=", number)
-        return self
+        return self._add_comparison("<=", number)
 
     def __gt__(self, number: _ScalarNum) -> MetaSpeciesLogicResolver:
-        self.add_double_symbol(">", number)
-        return self
+        return self._add_comparison(">", number)
 
     def __ge__(self, number: _ScalarNum) -> MetaSpeciesLogicResolver:
-        self.add_double_symbol(">=", number)
-        return self
+        return self._add_comparison(">=", number)
 
-    def add_double_symbol(self, symbol: str, number: _ScalarNum) -> None:
-        """Prepend a comparison operator and value to the expression.
+    def _add_comparison(
+        self, symbol: str, number: _ScalarNum
+    ) -> MetaSpeciesLogicResolver:
+        """Create a new resolver with a comparison operator prepended.
 
         Raises:
             EventError: If a comparison operator already exists.
@@ -307,7 +304,8 @@ class MetaSpeciesLogicResolver:
                 "Chained comparisons are not supported in MobsPy events.\n"
                 "Use logical operators instead: (A >= 10) & (A <= 20)"
             )
-        self.operation = [number, symbol, *self.operation]
+        new_operation = [number, symbol, *list(self.operation)]
+        return MetaSpeciesLogicResolver(new_operation, self.simulation_context)
 
     @classmethod
     def find_all_species_strings(

@@ -495,6 +495,7 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
             label: Label value for matching.
         """
         super().__init__()
+        self._old_context: set[str] | None = None
         is_zero = object_reference.get_name() == ZERO_SPECIES_NAME
         if is_zero and characteristics == set():
             self.list_of_reactants: list[dict[str, Any]] = []
@@ -633,6 +634,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """
         if not asgi_Assign.check_context():
             if isinstance(stoichiometry, (int, float)):
+                if not self.list_of_reactants:
+                    return self
                 self.list_of_reactants[0]["stoichiometry"] = stoichiometry
             else:
                 raise ReactionError(
@@ -858,7 +861,8 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """Remove the ending context and update."""
         from mobspy.dsl.species import Species  # noqa: PLC0415  # circular import
 
-        Species.update_meta_specie_named_any_context(self._old_context)
+        if self._old_context is not None:
+            Species.update_meta_specie_named_any_context(self._old_context)
 
 
 _methods_Reacting_Species = set(dir(Reacting_Species))  # noqa: N816  # legacy name

@@ -182,7 +182,7 @@ def _render_resolved(
     count_in_expression = render_ctx.count_in_expression
     concentration_in_expression = render_ctx.concentration_in_expression
 
-    def _resolve(n: ExprNode) -> str:  # noqa: PLR0911  # many returns
+    def _resolve(n: ExprNode) -> str:  # noqa: PLR0911, PLR0912  # one branch per AST node type
         """Resolve an expression node to its SBML string.
 
         Applies count/concentration conversion as needed.
@@ -223,6 +223,12 @@ def _render_resolved(
             return "(" + _resolve(n.left) + n.op + _resolve(n.right) + ")"
         if isinstance(n, FunctionCallNode):
             return n.name + "(" + _resolve(n.arg) + ")"
+        if isinstance(n, ConditionalNode):
+            return (
+                f"piecewise({_resolve(n.if_true)}, "
+                f"{n.condition}, "
+                f"{_resolve(n.if_false)})"
+            )
         return n.render()
 
     return _resolve(_to_expr_node(node))

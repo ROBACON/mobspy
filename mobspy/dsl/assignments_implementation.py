@@ -329,8 +329,6 @@ class Asg:
     Stores species and characteristics.
     """
 
-    assignments: dict[tuple[object, tuple[object, ...]], object] = {}  # noqa: RUF012
-
     def __init__(
         self, meta_spe: _Species | _Reacting_Species, species_or_reacting: bool
     ) -> None:

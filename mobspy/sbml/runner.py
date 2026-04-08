@@ -126,7 +126,7 @@ def __run_time_course(
 
     if "step_size" in params and params["step_size"] is not None:
         kargs["automatic"] = False
-        kargs["step_number"] = int(params["duration"] / params["step_size"])
+        kargs["step_number"] = int(duration / params["step_size"])
 
     return basico.run_time_course(duration, **kargs)
 
@@ -178,14 +178,13 @@ def __sbml_new_initial_values(
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
+        if key == "Time":
+            continue
         parts = key.split(".")
         sbml_key = ConcreteSpeciesId(
             base=parts[0], characteristics=tuple(parts[1:])
         ).to_sbml_id()
         if sbml_key not in species_for_sbml:
-            continue
-
-        if key == "Time":
             continue
         try:
             final_val = list(data[key])[-1] * _vol
@@ -223,7 +222,7 @@ def __add_simulations_data(
     added_data: dict[str, list[float]],
     reformatted_data: dict[str, list[float]],
 ) -> dict[str, list[float]]:
-    time_to_add = added_data["Time"][-1] if added_data else 0
+    time_to_add = added_data["Time"][-1] if added_data.get("Time") else 0
     new_data: dict[str, list[float]] = {}
 
     for key in added_data:  # noqa: PLC0206  # iterating dict keys directly
@@ -271,7 +270,7 @@ def __merge_existing_keys(
             already_added_keys.add(key)
         except KeyError:
             dummy = added_data[key][-1]
-            new_data[key] += [dummy for _ in reformatted_data["Time"]]
+            new_data[key] = added_data[key] + [dummy for _ in reformatted_data["Time"]]
     return already_added_keys
 
 
@@ -313,7 +312,7 @@ def __remap_species(
     # 1st pass with sum mappings
     for group in mapping:  # noqa: PLC0206  # iterating dict keys directly
         the_mapping = mapping[group]
-        mapped_data[group] = {"runs": []}
+        mapped_data[group] = []
 
         try:
             # check if is a list -> sum
@@ -337,10 +336,7 @@ def __remap_species(
                                 ]
                     this_run.append(mapping_sum)
                 for spe in runs_not_returned_by_basico:  # noqa: PLC0206
-                    try:
-                        mapped_data[spe] = runs_not_returned_by_basico[spe]
-                    except KeyError:
-                        mapped_data[spe] = [runs_not_returned_by_basico[spe]]
+                    mapped_data[spe] = runs_not_returned_by_basico[spe]
                 mapped_data[group] = this_run
 
         except IndexError as e:

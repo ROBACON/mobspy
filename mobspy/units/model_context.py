@@ -582,7 +582,7 @@ def _extract_substance_unit(quantity: Quantity) -> Unit:
         if dim_name == "[substance]":
             continue
         if dim_name == "[length]":
-            complement = complement * _ur.liter ** (-int(power) // 3)
+            complement = complement * _ur.liter ** (-int(power) / 3)
         elif dim_name == "[time]":
             complement = complement * _ur.second ** (-int(power))
         elif dim_name == "[mass]":
@@ -638,7 +638,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:
                 continue
 
     # For compound units (e.g. millimolar = mmol/L), convert to base units
-    q.to_base_units()
+    q = q.to_base_units()  # type: ignore[assignment]  # pint narrows Quantity to PlainQuantity; still compatible
 
     if abs_power == dimension:
         # It's a volume: figure out which standard volume from the base magnitude

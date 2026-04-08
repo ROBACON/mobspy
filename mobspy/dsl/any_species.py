@@ -104,7 +104,7 @@ class Context_specie_named_any(Species):  # noqa: N801  # legacy DSL public API 
         previous_chars = stack.pop()
         session = get_session()
         if len(stack) > 0:
-            session.any_chars = stack[-1]
+            session.any_chars = set(stack[-1])
         else:
             session.any_chars = set()
         Species.update_meta_specie_named_any_context(

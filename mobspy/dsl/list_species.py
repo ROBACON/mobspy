@@ -118,11 +118,8 @@ class List_Species:  # noqa: N801  # legacy DSL public API name
         Returns:
             The number of instances removed.
         """
-        indexes = []
-        for i, e in enumerate(self._list_species):
-            if e == value or str(e) == str(value):
-                indexes.append(-len(self._list_species) + i)
-
-        for i in indexes:
-            del self._list_species[i]
-        return len(indexes)
+        original_len = len(self._list_species)
+        self._list_species = [
+            e for e in self._list_species if not (e == value or str(e) == str(value))
+        ]
+        return original_len - len(self._list_species)

@@ -219,10 +219,11 @@ def check_method_parameter(params: dict[str, Any]) -> None:
         if params["rate_type"] is None:
             params["rate_type"] = "stochastic"
 
-        if params["plot_type"] is None and params["repetitions"] == 1:
-            params["plot_type"] = "deterministic"
-        else:
-            params["plot_type"] = "stochastic"
+        if params["plot_type"] is None:
+            if params["repetitions"] == 1:
+                params["plot_type"] = "deterministic"
+            else:
+                params["plot_type"] = "stochastic"
 
 
 def check_duration_unit(params: dict[str, Any]) -> None:

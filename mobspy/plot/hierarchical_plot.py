@@ -114,6 +114,8 @@ def figure_hash(current_figure: int, axis_matrix: np.ndarray[Any, Any]) -> Any:
 
     # Get the number of lines
     max_lines = len(axis_matrix)
+    if max_lines == 0:
+        raise ValueError("axis_matrix is empty; cannot resolve figure hash")
     total_figure_number = get_total_figure_number(axis_matrix)
 
     col = math.floor(current_figure / max_lines)

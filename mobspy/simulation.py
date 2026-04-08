@@ -659,7 +659,7 @@ class Simulation(
             species_not_mapped=self.all_species_not_mapped,
             mappings=self.mappings,
         )
-        self._list_of_models += [compiled_model]
+        self._list_of_models = [compiled_model]
 
         self._list_of_parameters = [self.parameters]
 
@@ -1205,6 +1205,7 @@ class Simulation(
 
     def __sub__(self, other: TypingAny) -> Simulation:
         new_sim = Simulation(self.model)
+        new_sim._reactions_set = set(self._reactions_set)
         try:
             new_sim._reactions_set.remove(other)
         except KeyError:

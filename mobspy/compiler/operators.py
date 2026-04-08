@@ -19,17 +19,19 @@ def create_all_not_reactions(reactions: set[Any]) -> set[Any]:
         ignore_flag = True
         for x in getattr(r, attribute_to_get):
             if NOT_CHAR in x["characteristics"]:
-                new_reactions_set.remove(r)
+                new_reactions_set.discard(r)
                 ignore_flag = False
                 combinations = get_all_non_listed_characteristics(
                     x["object"],
                     x["characteristics"] - {NOT_CHAR},
                 )
 
+                original_chars = x["characteristics"]
                 for comb in combinations:
                     x["characteristics"] = comb
                     new_r = new_reaction_with_new_characteristics(r, x["object"], comb)
                     new_reactions_set.add(new_r)
+                x["characteristics"] = original_chars
 
         return ignore_flag
 

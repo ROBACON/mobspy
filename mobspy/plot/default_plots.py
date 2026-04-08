@@ -77,7 +77,7 @@ def set_plot_units(new_plot_params: dict[str, Any]) -> None:
                 new_plot_params["ylabel"] += f" ({new_plot_params['unit_y'].units})"
 
 
-def stochastic_plot(
+def stochastic_plot(  # noqa: PLR0915  # each species needs stats, labels, and color setup
     species: set[str] | list[str],
     data: Any,
     plot_params: dict[str, Any],
@@ -98,6 +98,9 @@ def stochastic_plot(
     # Data Handling - Copy data object to not interfere with simulation data
     species, data = ppd.query_plot_data(species, data)
     ppd.check_plot_parameters(species, plot_params)
+
+    if not data.ts_data:
+        raise ValidationError("No simulation data available for plotting")
 
     data_to_plot = data
 
@@ -253,6 +256,8 @@ def parametric_plot(
     new_plot_params["figures"] = []
     new_plot_params["pad"] = 1.5
 
+    if not data.ts_model_parameters:
+        raise ValidationError("No model parameters available for parametric plot")
     previous_parameter = data.ts_model_parameters[0]
 
     # Update plot to add new curve
@@ -348,7 +353,7 @@ def raw_plot(
         parameters_or_file: Dictionary originated from a JSON or JSON file name.
         return_fig: Return figure instead of plotting.
     """
-    if isinstance(parameters_or_file, str) and parameters_or_file[-5:] == ".json":
+    if isinstance(parameters_or_file, str) and parameters_or_file.endswith(".json"):
         plot_params = read_plot_json(parameters_or_file)
     elif isinstance(parameters_or_file, dict):
         plot_params = parameters_or_file
@@ -357,6 +362,8 @@ def raw_plot(
             "Raw plot only takes json files or parameters for configuration"
         )
 
+    if not data.ts_data:
+        raise ValidationError("No simulation data available for plotting")
     species = list(data.ts_data[0].keys())
     ppd.check_plot_parameters(species, plot_params)
 

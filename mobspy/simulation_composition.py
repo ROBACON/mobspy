@@ -148,7 +148,7 @@ class SimulationComposition:
                 f"the number of simulations ({len(self)})."
             )
 
-        for par, sim in zip(value, self, strict=False):
+        for par, sim in zip(value, self, strict=True):
             if name == "volume":
                 sim.volume = par
             elif name == "duration":
@@ -361,7 +361,7 @@ class SimulationComposition:
 
     def to_dataframe(self) -> TypingAny:
         """Convert composition results to a pandas DataFrame."""
-        self.base_sim.to_dataframe()
+        return self.base_sim.to_dataframe()
 
     @classmethod
     def is_simulation(cls) -> bool:

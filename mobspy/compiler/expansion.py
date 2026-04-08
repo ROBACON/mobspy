@@ -130,7 +130,7 @@ def check_for_invalid_reactions(
                         " query."
                     )
                 except KeyError:
-                    if "$" not in cha:
+                    if "$" not in cha and cha in ref_characteristics_to_object:
                         check_for_duplicates[ref_characteristics_to_object[cha]] = cha
 
 

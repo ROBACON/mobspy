@@ -41,6 +41,7 @@ from mobspy.dsl.species_operators import (
 from mobspy.exceptions import CompilationError, UnitError
 from mobspy.expressions.nodes import (
     BinaryOpNode,
+    ConditionalNode,
     ExprNode,
     FunctionCallNode,
     SpeciesRefNode,
@@ -751,7 +752,10 @@ class QuantityConverter:
             length_exp = int(vol_dim.get("[length]", dim))
             if length_exp == 0:
                 length_exp = dim
-            vol_in_m_n = vol_q.to(f"meter**{length_exp}").magnitude
+            if length_exp > 0:
+                vol_in_m_n = vol_q.to(f"meter**{length_exp}").magnitude
+            else:
+                vol_in_m_n = 0
             if vol_in_m_n > 0:
                 side = vol_in_m_n ** (1.0 / length_exp)
                 length_q = side * ur.meter
@@ -944,6 +948,13 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         self._expression_variables: set[Any] = set()
         self._parameter_set: set[Any] = set()
         self._has_units: bool = True
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> OverrideQuantity:
+        """Support deepcopy by rebuilding from a plain Quantity copy."""
+        plain_q = Quantity(self.q_object.magnitude, self.q_object.units)
+        result = OverrideQuantity(plain_q)
+        memo[id(self)] = result
+        return result  # pyright: ignore[reportReturnType]  # OverrideQuantity is a Quantity subclass; pint generic confuses pyright
 
     def __str__(self) -> str:
         # Always return the full quantity with units for user-facing output
@@ -1198,30 +1209,28 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
             ),
         )
 
-        expr_vars = self._expression_variables
-        n_vars = len(expr_vars) if expr_vars else 0
         if (
             self._count_in_model
             and self._concentration_in_expression
             and not self._count_in_expression
         ):
-            for _ in range(max(n_vars, 1)):
-                convert_operation = "(" + convert_operation + ")" + "*c1"
+            convert_operation = "(" + convert_operation + ")" + "*c1"
         elif (
             self._concentration_in_model
             and self._count_in_expression
             and not self._concentration_in_expression
         ):
-            for _ in range(max(n_vars, 1)):
-                convert_operation = "(" + convert_operation + ")" + "/c1"
+            convert_operation = "(" + convert_operation + ")" + "/c1"
         return convert_operation
 
     def _convert_legacy_string_path(self) -> str:
         """Resolve expression via legacy string replacement."""
         convert_operation = str(self._operation)
 
+        needs_c1_mul = False
+        needs_c1_div = False
         for variable in self._expression_variables:
-            convert_operation = _apply_legacy_variable_conversion(
+            convert_operation, _mul, _div = _apply_legacy_variable_conversion(
                 convert_operation,
                 variable,
                 self._count_in_model,
@@ -1229,6 +1238,13 @@ class MobsPyExpression(Specific_Species_Operator, ExpressionDefiner):
                 self._count_in_expression,
                 self._concentration_in_expression,
             )
+            needs_c1_mul = needs_c1_mul or _mul
+            needs_c1_div = needs_c1_div or _div
+
+        if needs_c1_mul:
+            convert_operation = "(" + convert_operation + ")" + "*c1"
+        elif needs_c1_div:
+            convert_operation = "(" + convert_operation + ")" + "/c1"
 
         return convert_operation
 
@@ -1253,15 +1269,20 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913  # complex function sign
     concentration_in_model: bool,
     count_in_expression: bool,
     concentration_in_expression: bool,
-) -> str:
+) -> tuple[str, bool, bool]:
     """Apply count/concentration name substitutions for one variable.
 
     Used in the legacy string-based expression resolution mode.
+
+    Returns:
+        Tuple of (converted_operation, needs_c1_multiply, needs_c1_divide).
     """
     count_name = COUNT_PREFIX + variable.species_string
     concentration_name = CONCENTRATION_PREFIX + variable.species_string
     default_name = variable.species_string
     replace_name = variable.species_string
+    needs_c1_mul = False
+    needs_c1_div = False
 
     if count_in_model:
         convert_operation = replace_spe_in_expr(
@@ -1280,7 +1301,7 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913  # complex function sign
                 default_name,
                 "(" + replace_name + "/c1)",
             )
-            convert_operation = "(" + convert_operation + ")" + "*c1"
+            needs_c1_mul = True
         else:
             raise ValueError(
                 "The expression did not resolve for "
@@ -1308,7 +1329,7 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913  # complex function sign
                 default_name,
                 "(" + replace_name + "*c1)",
             )
-            convert_operation = "(" + convert_operation + ")" + "/c1"
+            needs_c1_div = True
         elif concentration_in_expression:
             pass
         else:
@@ -1318,7 +1339,7 @@ def _apply_legacy_variable_conversion(  # noqa: PLR0913  # complex function sign
                 "specifications"
             )
 
-    return convert_operation
+    return convert_operation, needs_c1_mul, needs_c1_div
 
 
 def check_if_non_expression_operated(other: Any) -> Any:
@@ -1358,37 +1379,58 @@ def replace_spe_in_expr(string: str, to_replace: str, replacement: str) -> str:
     return pattern.sub(replacement, string)
 
 
-def _set_species_mode_in_tree(operation: Any, species_string: str, mode: str) -> Any:
-    """Walk an expression tree/string and set the mode on matching SpeciesRefNodes."""
+def _set_species_mode_in_tree(  # noqa: PLR0911  # one return per AST node type
+    operation: Any,
+    species_string: str,
+    mode: str,
+) -> Any:
+    """Return a new tree with mode set on matching nodes."""
     if isinstance(operation, SpeciesRefNode):
         if operation.species_string == species_string:
-            operation.mode = mode
-    elif isinstance(operation, BinaryOpNode):
-        _set_species_mode_in_tree(operation.left, species_string, mode)
-        _set_species_mode_in_tree(operation.right, species_string, mode)
-    elif isinstance(operation, FunctionCallNode):
-        _set_species_mode_in_tree(operation.arg, species_string, mode)
-    elif isinstance(operation, str):
-        # Fallback for legacy string operations
-        operation = operation.replace(species_string, f"${mode}${species_string}")
+            return SpeciesRefNode(species_string, mode)
+        return operation
+    if isinstance(operation, BinaryOpNode):
+        new_left = _set_species_mode_in_tree(operation.left, species_string, mode)
+        new_right = _set_species_mode_in_tree(operation.right, species_string, mode)
+        if new_left is operation.left and new_right is operation.right:
+            return operation
+        return BinaryOpNode(new_left, operation.op, new_right)
+    if isinstance(operation, FunctionCallNode):
+        new_arg = _set_species_mode_in_tree(operation.arg, species_string, mode)
+        if new_arg is operation.arg:
+            return operation
+        return FunctionCallNode(operation.name, new_arg)
+    if isinstance(operation, ConditionalNode):
+        new_if_true = _set_species_mode_in_tree(operation.if_true, species_string, mode)
+        new_if_false = _set_species_mode_in_tree(
+            operation.if_false, species_string, mode
+        )
+        if new_if_true is operation.if_true and new_if_false is operation.if_false:
+            return operation
+        return ConditionalNode(operation.condition, new_if_true, new_if_false)
+    if isinstance(operation, str):
+        return operation.replace(species_string, f"${mode}${species_string}")
     return operation
 
 
 class _Count_Base:  # noqa: N801  # legacy DSL public API name
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression:
+        import copy as _copy  # noqa: PLC0415  # local import; only needed in this operator
+
         try:
-            for v in item._expression_variables:
-                if isinstance(item._operation, ExprNode):
-                    _set_species_mode_in_tree(
-                        item._operation,
+            result = _copy.copy(item)
+            for v in result._expression_variables:
+                if isinstance(result._operation, ExprNode):
+                    result._operation = _set_species_mode_in_tree(
+                        result._operation,
                         v.species_string,
                         "count",
                     )
                 else:
-                    item._operation = str(item._operation).replace(  # type: ignore[assignment]  # narrowing
+                    result._operation = str(result._operation).replace(  # type: ignore[assignment]  # legacy string path: _operation can be str at runtime
                         v.species_string, COUNT_PREFIX + v.species_string
                     )
-            return item
+            return result
         except AttributeError as e:
             raise CompilationError(
                 "Count[] operator can only be used in MobsPy expressions"
@@ -1400,17 +1442,20 @@ Count = _Count_Base()
 
 class _Conc_Base:  # noqa: N801  # legacy DSL public API name
     def __getitem__(self, item: MobsPyExpression) -> MobsPyExpression:
+        import copy as _copy  # noqa: PLC0415  # local import; only needed in this operator
+
         try:
-            for v in item._expression_variables:
-                if isinstance(item._operation, ExprNode):
-                    _set_species_mode_in_tree(
-                        item._operation, v.species_string, "concentration"
+            result = _copy.copy(item)
+            for v in result._expression_variables:
+                if isinstance(result._operation, ExprNode):
+                    result._operation = _set_species_mode_in_tree(
+                        result._operation, v.species_string, "concentration"
                     )
                 else:
-                    item._operation = str(item._operation).replace(  # type: ignore[assignment]  # narrowing
+                    result._operation = str(result._operation).replace(  # type: ignore[assignment]  # legacy string path: _operation can be str at runtime
                         v.species_string, CONCENTRATION_PREFIX + v.species_string
                     )
-            return item
+            return result
         except AttributeError as e:
             raise CompilationError(
                 "Concentration[] operator can only be used in MobsPy expressions"

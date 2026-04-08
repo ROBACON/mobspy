@@ -281,11 +281,25 @@ class ModelGenerationMixin:
         new_sbml_file: SBMLModelDict = SBMLModelData()
         initial_sim = multi_sims[0]
 
-        new_sbml_file.species_for_sbml = initial_sim.species_for_sbml
+        new_sbml_file.species_for_sbml = dict(initial_sim.species_for_sbml)
         _compose_parameters(new_sbml_file, 0, initial_sim)
-        new_sbml_file.assignments_for_sbml = initial_sim.assignments_for_sbml
+        new_sbml_file.assignments_for_sbml = dict(initial_sim.assignments_for_sbml)
         _compose_reactions(new_sbml_file, 0, "_SFS_0", initial_sim.reactions_for_sbml)
-        self._compose_event(new_sbml_file, "_SFS_1", 0, 0, initial_sim)
+        self._compose_event(new_sbml_file, "_SFS_0", "_SFS_1", 0, 0, initial_sim)
+
+        # Carry over user-defined events from the initial simulation,
+        # gated by _SFS_0
+        for ev_name, ev_data in initial_sim.events_for_sbml.items():
+            if ev_name == "end_event":
+                continue
+            gate = f"(({ev_data.trigger}) && (_SFS_0 > 0))"
+            gated_event = EventData(
+                trigger=gate,
+                delay=ev_data.delay,
+                assignments=list(ev_data.assignments),
+            )
+            event_number = len(new_sbml_file.events_for_sbml)
+            new_sbml_file.events_for_sbml["e" + str(event_number)] = gated_event
 
         self._compose_subsequent_sims(new_sbml_file, multi_sims)
 
@@ -295,30 +309,40 @@ class ModelGenerationMixin:
 
         return new_sbml_file
 
-    def _compose_event(
+    def _compose_event(  # noqa: PLR0913  # each param identifies a distinct composition element
         self,
         new_sbml_file: SBMLModelDict,
+        pre_spe: str,
         next_spe: str,
         simulation_index: int,
         cul_duration: float | int,
         sim_sbml: CompiledModelDict,
     ) -> None:
         """Create a time- or condition-triggered event for the next simulation phase."""
+        transition_assignments: list[tuple[str, str | int | float]] = [
+            (pre_spe, 0),
+            (next_spe, 1),
+        ]
         if self._list_of_parameters[simulation_index]["_end_condition"] is None:
             event_name = "e" + str(len(new_sbml_file.events_for_sbml))
             event = EventData(
                 trigger="true",
                 delay=cul_duration,
-                assignments=[(next_spe, 1)],
+                assignments=transition_assignments,
             )
             new_sbml_file.events_for_sbml[event_name] = event
         else:
-            end_trigger = sim_sbml.events_for_sbml["end_event"].trigger
+            end_event = sim_sbml.events_for_sbml.get("end_event")
+            if end_event is None:
+                raise SBMLError(
+                    "Expected 'end_event' not found in simulation "
+                    f"with end condition at index {simulation_index}"
+                )
             event_name = "e" + str(len(new_sbml_file.events_for_sbml))
             event = EventData(
-                trigger=end_trigger,
+                trigger=end_event.trigger,
                 delay=0,
-                assignments=[(next_spe, 1)],
+                assignments=transition_assignments,
             )
             new_sbml_file.events_for_sbml[event_name] = event
 
@@ -336,18 +360,37 @@ class ModelGenerationMixin:
         _compose_parameters(new_sbml_file, i, sim_sbml)
         _compose_reactions(new_sbml_file, i, pre_spe, sim_sbml.reactions_for_sbml)
         if not skip_end_event:
-            self._compose_event(new_sbml_file, next_spe, i, cul_duration, sim_sbml)
+            self._compose_event(
+                new_sbml_file, pre_spe, next_spe, i, cul_duration, sim_sbml
+            )
 
         for spe in sim_sbml.species_for_sbml:
-            if spe not in new_sbml_file.species_for_sbml and spe[0] != "_":
-                event_number = len(new_sbml_file.events_for_sbml)
-                spe_event = EventData(
-                    trigger=f"_SFS_{i!s} > 0",
-                    delay=0,
-                    assignments=[(spe, sim_sbml.species_for_sbml[spe])],
-                )
-                new_sbml_file.events_for_sbml["e" + str(event_number)] = spe_event
+            if spe[0] == "_":
+                continue
+            new_count = sim_sbml.species_for_sbml[spe]
+            if spe not in new_sbml_file.species_for_sbml:
                 new_sbml_file.species_for_sbml[spe] = 0
+            event_number = len(new_sbml_file.events_for_sbml)
+            spe_event = EventData(
+                trigger=f"_SFS_{i!s} > 0",
+                delay=0,
+                assignments=[(spe, new_count)],
+            )
+            new_sbml_file.events_for_sbml["e" + str(event_number)] = spe_event
+
+        # Carry over user-defined events from subsequent simulations,
+        # gated by the simulation's flag species
+        for ev_name, ev_data in sim_sbml.events_for_sbml.items():
+            if ev_name == "end_event":
+                continue
+            gate = f"(({ev_data.trigger}) && (_SFS_{i!s} > 0))"
+            gated_event = EventData(
+                trigger=gate,
+                delay=ev_data.delay,
+                assignments=list(ev_data.assignments),
+            )
+            event_number = len(new_sbml_file.events_for_sbml)
+            new_sbml_file.events_for_sbml["e" + str(event_number)] = gated_event
 
     def _compose_subsequent_sims(
         self,
@@ -361,10 +404,9 @@ class ModelGenerationMixin:
             if i == 0:
                 cul_duration = self._list_of_parameters[i]["duration"]
                 continue
+            cul_duration = cul_duration + self._list_of_parameters[i]["duration"]
             if i == len(multi_sims) - 1:
                 skip_end_event = True
-            else:
-                cul_duration = cul_duration + self._list_of_parameters[i]["duration"]
 
             if sim_sbml.assignments_for_sbml:
                 _logger.warning("Assignments beyond the initial simulation are ignored")
