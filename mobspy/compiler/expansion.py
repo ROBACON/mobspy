@@ -318,22 +318,7 @@ def construct_rate_function_arguments(
     reaction: Reactions,
 ) -> list[str]:
     """Extract and validate parameter names from a rate function signature."""
-    import warnings  # noqa: PLC0415  # circular import avoidance
-
     sig = inspect_signature(rate_function)
-
-    for param in sig.parameters.values():
-        if isinstance(param.annotation, str):
-            warnings.warn(
-                f"Rate function '{rate_function.__qualname__}' has "
-                "stringified type annotations (possibly from "
-                "'from __future__ import annotations'). MobsPy "
-                "extracts parameter names only, so this is harmless, "
-                "but if you encounter issues, remove the __future__ "
-                "import from the file defining your rate functions.",
-                stacklevel=4,
-            )
-            break
 
     for param in sig.parameters.values():
         if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
