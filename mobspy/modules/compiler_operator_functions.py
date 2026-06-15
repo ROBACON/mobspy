@@ -45,7 +45,7 @@ def create_all_not_reactions(reactions):
 
 def get_all_non_listed_characteristics(species, characteristics):
     """
-    This function gets all characteristics related to a species except the ones listed bellow.
+    This function gets all characteristics related to a species except the ones listed below.
     It uses inheritance to find all charactersitcs linked to a species
     """
     operator_characteristics = {c for c in characteristics if "$" in c}

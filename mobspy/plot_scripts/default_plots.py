@@ -93,7 +93,7 @@ def stochastic_plot(species, data, plot_params):
     new_plot_params["pad"] = 1.5
     color_cycler = hp.Color_cycle()
     for spe in species:
-        # We define new 'mappings' with the resulting runs for the statics for the plot structure
+        # We define new 'mappings' with the resulting runs for the statistics for the plot structure
         try:
             plots_for_spe_i = []
             plots_for_spe_i_sta = []

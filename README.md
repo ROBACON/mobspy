@@ -56,7 +56,7 @@ The reaction above is a death reaction where the meta-species Mortal is dying. `
 
 In the code above, one can visualize the inheritance mechanism. Here both Replicator and Triplicator inherit from Mortal. Therefore, they also receive a death reaction. Multiplicator inherits from Replicator and Triplicator, and therefore from Mortal too. So Multiplicator now has three reactions, the death reaction, the duplication reaction, and the triplication reaction. 
 
-## Indepedent State Spaces
+## Independent State Spaces
 
 Each meta-species has a set of states. One can add states to species by using the dot command (`.state`) or by inheritance. A meta-species that inherits from another gains access to its states. 
 For instance:

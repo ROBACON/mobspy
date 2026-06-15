@@ -402,7 +402,7 @@ class ExpressionDefiner:
         This function was implemented as a replacement for innit for classes that inherit from multiple
         Pint objects. This gives the object all the necessary attributes to execute create_from_new_operation.
         I've done this instead of overrinding the __init__ because it had some compatibility issue with Pint
-        __init__ at the time of writting this
+        __init__ at the time of writing this
         """
         # Operation variables
         self._operation = None

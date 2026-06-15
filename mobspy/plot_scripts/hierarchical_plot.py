@@ -70,7 +70,7 @@ def get_total_figure_number(axis_matrix):
 # Hash for converting linear figure number into index
 def figure_hash(current_figure, axis_matrix):
     """
-    This function allows one to acess the figure grid with a linear input
+    This function allows one to access the figure grid with a linear input
     For instance one can access a 2x2 grid using 0, 1, 2, 3
     0 becomes 0,0
     1 becomes 1,0
@@ -222,7 +222,7 @@ def annotation_handling(axs, figure_index, plot_index, plot_params):
             return 0
 
 
-####################### PLOTING FUNCTIONS
+####################### PLOTTING FUNCTIONS
 def plot_curves(data, axs, figure_index, plot_params):
     """
     This function plots the programmed curves in the assigned figure

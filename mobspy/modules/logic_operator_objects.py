@@ -343,7 +343,7 @@ class MetaSpeciesLogicResolver:
             all individual states
 
         :param characteristics_to_object: orthogonal characteristic space
-        :param to_sort: sort strings or not - so the sum will always apear in the same order
+        :param to_sort: sort strings or not - so the sum will always appear in the same order
         """
         copasi_str = ""
         for i, e in enumerate(self.operation):

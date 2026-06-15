@@ -1908,7 +1908,7 @@ def save_experiments_to_dict(**kwargs):
     - | `return_relative`: to indicate that relative experiment filenames should
       | be returned (default: True)
 
-    :return: the parameter estimation experimetns as list of dictionary
+    :return: the parameter estimation experiments as list of dictionary
     :rtype: [{}]
     """
     experiments = []

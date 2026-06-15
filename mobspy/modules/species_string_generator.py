@@ -23,7 +23,7 @@ def construct_species_char_list(
     spe_or_reactiong_object, characteristics, characteristics_to_object, symbol=None
 ):
     """
-    This function constructs a list in the format ['species_name', 'char1', 'char2', ...]. It generetes this list
+    This function constructs a list in the format ['species_name', 'char1', 'char2', ...]. It generates this list
     for a given meta-species and the specified characteristics. Values of characteristics not specified in a
     particular position are replaced by their default value. If a symbol is given it generates a string from
     the list using the symbol to join it.

@@ -130,7 +130,7 @@ class Compiler:
         :param species_counts: (dict) All counts assigned to species in the model
             before the simulation object was constructed
         :param orthogonal_vector_structure: (dict) ref_characteristics_to_objects in other modules. Dictionary
-            with the characteristics as keys and the objects as values. Characteritics pointing to their coordinate
+            with the characteristics as keys and the objects as values. Characteristics pointing to their coordinate
             in the vector space
         :param volume: (int, flot) Simulation volume
         :param type_of_model: (str) deterministic or stochastic
