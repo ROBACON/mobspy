@@ -37,7 +37,7 @@ class Color_cycle:
 def find_species_time_series(spe, data):
     """
     There can be different time-series in MobsPy data (even experimental data, as long as it is in MobPy format)
-    This function finds all the time-series the species is present in and returns it for looping thorugh all of
+    This function finds all the time-series the species is present in and returns it for looping through all of
     them
     This function is implemented to allow for the comparison of models with experimental data or other models
 

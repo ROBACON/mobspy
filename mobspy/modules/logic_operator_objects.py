@@ -35,7 +35,7 @@ class SpeciesComparator:
         :param code_line: (str) line of code to be compiled
         :param line_number: (str) number of the code line currently being compiled
         :param pos: (int) position of the '>' or '<' operator
-        :param symbol: '(' or ')', indicates in which direction the string analysis should proceded
+        :param symbol: '(' or ')', indicates in which direction the string analysis should proceed
         :param number_of_comp: for distinction the default case where only one operator is present
 
         :raise simlog.error: if the code line is not properly written isolating the clauses with parenthesis
