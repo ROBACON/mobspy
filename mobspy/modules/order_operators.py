@@ -253,7 +253,7 @@ class __Round_Robin_Base(__Operator_Base):
     This is a cycle (round robin) between the reactants to be assigned positions in the product
     The products will keep the characteristics of the reactants except if stated otherwise with .
     For completely new species (no reactant of the same species) we use ALL possible combinations
-    For only the default option see the code bellow
+    For only the default option see the code below
     """
 
     def __call__(

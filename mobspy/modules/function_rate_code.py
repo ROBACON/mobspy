@@ -49,7 +49,7 @@ def extract_reaction_rate(
 
     :param  function_rate_arguments: list of strings of the function rate argument ex:['r1', 'r2', ....]
     :param  combination_of_reactant_species: (list of Species) Meta-species currently being used in this reaction
-    :param  reactant_string_list: (list of strings) list of species strings in order they apear in the reaction
+    :param  reactant_string_list: (list of strings) list of species strings in order they appear in the reaction
     :param  reaction_rate_function: (float, callable, Quantity) rate stored in the reaction object
     :param  dimension: (int) system dimension (for the rate conversion)
 

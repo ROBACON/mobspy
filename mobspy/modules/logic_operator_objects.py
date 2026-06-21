@@ -35,7 +35,7 @@ class SpeciesComparator:
         :param code_line: (str) line of code to be compiled
         :param line_number: (str) number of the code line currently being compiled
         :param pos: (int) position of the '>' or '<' operator
-        :param symbol: '(' or ')', indicates in which direction the string analysis should proceded
+        :param symbol: '(' or ')', indicates in which direction the string analysis should proceed
         :param number_of_comp: for distinction the default case where only one operator is present
 
         :raise simlog.error: if the code line is not properly written isolating the clauses with parenthesis
@@ -343,7 +343,7 @@ class MetaSpeciesLogicResolver:
             all individual states
 
         :param characteristics_to_object: orthogonal characteristic space
-        :param to_sort: sort strings or not - so the sum will always apear in the same order
+        :param to_sort: sort strings or not - so the sum will always appear in the same order
         """
         copasi_str = ""
         for i, e in enumerate(self.operation):

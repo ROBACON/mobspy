@@ -97,7 +97,7 @@ def job_execution(params, models, jobs):
     if not parallel_data:
         simlog.error(
             "Error: The parallel model has not produced an output."
-            + "Try addding ('sequential': True) to parameters"
+            + "Try adding ('sequential': True) to parameters"
         )
 
     return parallel_data

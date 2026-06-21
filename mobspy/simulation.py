@@ -1590,7 +1590,7 @@ class SimulationComposition:
 
         :param duration: (iterable) duration of a simulation
         :param volume: (iterable) volume of the simulation - if none given 1 - liter is used
-        :param repetitions: (int) number of times to reapeat a simulation
+        :param repetitions: (int) number of times to repeat a simulation
         :param level: (int) 0 - only error messages, 3 - errors, warnings, compilation info
         :param simulation_method: (iterable) stochastic, deterministic, direct_method - simulation method
         :param start_time: (float) the simulation will only display data after the start time

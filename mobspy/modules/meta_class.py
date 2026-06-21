@@ -219,7 +219,7 @@ class Reactions:
     @staticmethod
     def __create_reactants_string(list_of_reactants) -> str:
         """
-        Just a simple way to simlog.debug reactions for debbuging
+        Just a simple way to simlog.debug reactions for debugging
         Not relevant for simulation
         Important: here reactants are used interchangeably with products, this works for a list_of_products too
 
@@ -1028,7 +1028,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         else:
             _logger.error("Only Species and List_Species can be concatenated")
 
-    # Both are defined bellow to be consistent with List_Species behavior
+    # Both are defined below to be consistent with List_Species behavior
     def __iter__(self):
         """
         iter defined to be consistent with List_Species behavior
