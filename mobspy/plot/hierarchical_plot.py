@@ -90,7 +90,7 @@ def get_total_figure_number(axis_matrix: np.ndarray[Any, Any]) -> int:
         total_figure_number = axis_matrix.shape[0] * axis_matrix.shape[1]
     except IndexError:
         total_figure_number = axis_matrix.shape[0]
-    return total_figure_number
+    return int(total_figure_number)
 
 
 # Hash for converting linear figure number into index

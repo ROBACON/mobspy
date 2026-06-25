@@ -27,6 +27,7 @@ from numpy import (
     subtract as np_subtract,
 )
 from pint import DimensionalityError, Quantity
+from pint.facets.plain import PlainQuantity
 from scipy.constants import N_A
 
 from mobspy.constants import (
@@ -846,14 +847,14 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
         # Implement all numpy operations
         if ufunc == np_add:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) + self.q_object)  # pyright: ignore[reportReturnType]  # pint Quantity subtype
+                return OverrideQuantity(float(inputs[0]) + self.q_object)  # pyright: ignore[reportReturnType, reportArgumentType]  # pint Quantity subtype; stubs add spurious datetime to __radd__
             raise CompilationError(
                 "MobsPy does not yet support array-wise "
                 "numpy operations, only element-wise"
             )
         if ufunc == np_subtract:
             if isinstance(inputs[0], (np_int_, np_float_)):
-                return OverrideQuantity(float(inputs[0]) - self.q_object)  # pyright: ignore[reportReturnType]  # pint Quantity subtype
+                return OverrideQuantity(float(inputs[0]) - self.q_object)  # pyright: ignore[reportReturnType, reportArgumentType]  # pint Quantity subtype; stubs add spurious datetime to __rsub__
             raise CompilationError(
                 "MobsPy does not yet support array-wise "
                 "numpy operations, only element-wise"
@@ -934,9 +935,19 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def non_expression_rpow(self, other: Any) -> OverrideQuantity:
         return self._q_binop(other, "rpow")
 
-    def __init__(self, quantity_object: Quantity) -> None:
+    def non_expression_neg(self) -> OverrideQuantity:
+        return OverrideQuantity(-self.q_object)  # pyright: ignore[reportReturnType]
+
+    def __new__(cls, quantity_object: PlainQuantity[Any]) -> OverrideQuantity:
+        # Delegates to pint's Quantity.__new__ (the implicit path), but pins the
+        # return type so callers see OverrideQuantity instead of PlainQuantity.
+        return super().__new__(cls, quantity_object)  # type: ignore[return-value]  # pyright: ignore[reportReturnType]  # pint __new__ is typed to return PlainQuantity
+
+    def __init__(self, quantity_object: PlainQuantity[Any]) -> None:
         self._generate_necessary_attributes()
-        self.q_object = quantity_object
+        # Runtime value is always a registry Quantity; pint stubs type pure
+        # arithmetic results as the PlainQuantity base, hence the annotation.
+        self.q_object: Quantity = quantity_object  # type: ignore[assignment]
 
         self._unit_count_op = quantity_object
         self._unit_conc_op = quantity_object

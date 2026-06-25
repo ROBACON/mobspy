@@ -105,6 +105,54 @@ class TestHasUnitsBoolean:
             _ms_active_ctx.reset(token)
 
 
+class TestUnaryNegation:
+    """Issue #16: unary minus on a unit quantity raised NotImplementedError."""
+
+    def test_neg_unit_quantity(self) -> None:
+        """`- u("1 per second")` should negate the magnitude (issue #16)."""
+        result = -u("1 per second")
+        assert isinstance(result, OverrideQuantity)
+        assert result.q_object.magnitude == -1.0
+        assert "second" in str(result.q_object.units)
+
+    def test_neg_preserves_units(self) -> None:
+        q = OverrideQuantity(2.0 * ur.moles / ur.liters)
+        result = -q
+        assert result.q_object.magnitude == -2.0
+        assert result.q_object.dimensionality == q.q_object.dimensionality
+
+    def test_double_neg_is_identity(self) -> None:
+        q = OverrideQuantity(3.0 / ur.seconds)
+        once = -q
+        twice = -once
+        assert twice.q_object.magnitude == 3.0
+
+    def test_neg_does_not_mutate_original(self) -> None:
+        q = OverrideQuantity(5.0 / ur.seconds)
+        _ = -q
+        assert q.q_object.magnitude == 5.0
+
+    def test_neg_in_expression_mode(self) -> None:
+        """Negated quantity still combines into a rate expression."""
+        from mobspy.expressions.evaluation import _ms_active_ctx
+
+        k = OverrideQuantity(0.5 / ur.seconds)
+        expr = MobsPyExpression(
+            "A",
+            None,
+            count_in_model=True,
+            concentration_in_model=False,
+            count_in_expression=False,
+            concentration_in_expression=False,
+        )
+        token = _ms_active_ctx.set(True)
+        try:
+            result = expr * (-k)
+            assert isinstance(result, MobsPyExpression)
+        finally:
+            _ms_active_ctx.reset(token)
+
+
 class TestSubstanceNormalization:
     """Bug 1: execute_quantity_op normalizes [substance] on retry."""
 

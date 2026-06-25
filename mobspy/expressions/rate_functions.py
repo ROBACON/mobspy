@@ -162,25 +162,18 @@ def _process_callable_rate(  # noqa: PLR0913  # complex function signature
     model_context = ctx.model_context
     skip_check = ctx.skip_expression_check
 
-    if function_rate_arguments != [""]:
-        arguments = prepare_arguments_for_callable(
-            combination_of_reactant_species,
-            reactant_string_list,
-            function_rate_arguments,
-            dimension,
-            model_context=model_context,
-        )
-        rate = reaction_rate_function(**arguments)  # type: ignore[operator, misc]
-    else:
-        # Zero-arg lambda: activate expression mode so bare Species
-        # inside the lambda body get wrapped as MobsPyExpressions
-        import mobspy.expressions.context as _ec  # noqa: PLC0415  # circular import
-
-        _ec.expression_compilation_initiation()
-        try:
-            rate = reaction_rate_function()  # type: ignore[operator, misc]
-        finally:
-            _ec.expression_compilation_finish()
+    # Expression mode is already active here via the surrounding
+    # ``Unit_Context_Setter`` in reaction expansion, so bare Species inside the
+    # lambda body get wrapped as MobsPyExpressions. A zero-arg lambda yields an
+    # empty argument list and is simply called with no arguments.
+    arguments = prepare_arguments_for_callable(
+        combination_of_reactant_species,
+        reactant_string_list,
+        function_rate_arguments,
+        dimension,
+        model_context=model_context,
+    )
+    rate = reaction_rate_function(**arguments)  # type: ignore[operator, misc]
 
     rate, dimension, _is_count = uh_convert_rate(
         rate,

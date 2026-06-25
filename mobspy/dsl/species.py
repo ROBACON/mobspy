@@ -338,16 +338,16 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Returns:
             Reacting_Species with stoichiometry.
         """
-        if not asgi_Assign.check_context():
-            if isinstance(stoichiometry, (int, float)):
-                r = Reacting_Species(self, set(), stoichiometry)
-            else:
-                raise ReactionError(
-                    "Stoichiometry can only be an int or "
-                    f"float - Received {stoichiometry}"
-                )
-            return r
-        return asgi_Assign.mul(stoichiometry, self)
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(stoichiometry, self)
+        if self._rate_lambda_active():
+            # Inside a rate lambda: ``number * species`` is rate arithmetic.
+            return self._rate_expression_op(stoichiometry, self, "Multiplication")
+        if isinstance(stoichiometry, (int, float)):
+            return Reacting_Species(self, set(), stoichiometry)
+        raise ReactionError(
+            f"Stoichiometry can only be an int or float - Received {stoichiometry}"
+        )
 
     def __add__(  # type: ignore[override]  # DSL overloads have non-standard signatures
         self,
@@ -365,34 +365,31 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         Returns:
             Reacting Species from the sum, or RatedProduct if other is rated.
         """
-        if not asgi_Assign.check_context():
-            r1 = Reacting_Species(self, set())
-            if isinstance(other, RatedProduct):
-                return r1 + other
-            if isinstance(other, Reacting_Species):
-                r2 = other
-            else:
-                r2 = Reacting_Species(other, set())
-            return r1 + r2
-        return asgi_Assign.add(self, other)
+        if asgi_Assign.check_context():
+            return asgi_Assign.add(self, other)
+        if self._rate_lambda_active():
+            return self._rate_expression_op(self, other, "Addition")
+        r1 = Reacting_Species(self, set())
+        if isinstance(other, RatedProduct):
+            return r1 + other
+        if isinstance(other, Reacting_Species):
+            r2 = other
+        else:
+            r2 = Reacting_Species(other, set())
+        return r1 + r2
 
     def __radd__(  # type: ignore[override]  # DSL overload
         self, other: Species | Reacting_Species | RatedProduct
     ) -> Reacting_Species | RatedProduct | MobsPyExpression:
         """Making addition symmetric, see __add__."""
-        if not asgi_Assign.check_context():
-            return Species.__add__(self, other)
-        return asgi_Assign.add(other, self)
+        if asgi_Assign.check_context():
+            return asgi_Assign.add(other, self)
+        if self._rate_lambda_active():
+            return self._rate_expression_op(other, self, "Addition")
+        return Species.__add__(self, other)
 
     def __invert__(self) -> Reacting_Species:
         return self.c(NOT_CHAR)
-
-    def __neg__(self) -> MobsPyExpression:
-        if asgi_Assign.check_context():
-            return asgi_Assign.mul(-1, self)
-        raise ValidationError(
-            "The negative operator was applied to a Species in the wrong context"
-        )
 
     def __rshift__(self, other: Species | Reacting_Species | RatedProduct) -> Reactions:
         """Reaction definition (``>>`` operator).
@@ -620,6 +617,10 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         """
         if asgi_Assign.check_context():
             return asgi_Assign.mul(self, other)
+
+        if self._rate_lambda_active():
+            # Inside a rate lambda: ``species * x`` is rate arithmetic.
+            return self._rate_expression_op(self, other, "Multiplication")
 
         if not isinstance(other, Species):
             raise ReactionError(

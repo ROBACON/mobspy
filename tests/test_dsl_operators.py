@@ -706,3 +706,208 @@ class TestNamedMethod:
         m = CompiledModelAssertions(S)
         m.has_species("Widget.big.blue")
         m.has_n_reactions(2)
+
+
+class TestUnaryNegation:
+    """Issue #16: unary minus in rate expressions.
+
+    A negated species/quantity must build a valid rate term instead of
+    raising ``ValidationError``.
+    """
+
+    @staticmethod
+    def _kinetics(sim: Simulation) -> str:
+        reactions = sim._reactions_for_sbml
+        assert reactions is not None
+        assert len(reactions) == 1
+        return next(iter(reactions.values())).kinetics
+
+    def test_neg_reactant_ref(self) -> None:
+        """``-a`` on a reactant ref inside a lambda (the original report)."""
+        A, T = BaseSpecies(["A", "T"])
+        A + T >> 2 * A + T @ (lambda a, t: -a + 2.0 * t)
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        assert "-1" in self._kinetics(S)
+
+    def test_neg_bare_species_in_lambda(self) -> None:
+        """``-T`` on a non-reactant bare species inside a lambda."""
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: -T + a)
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        kin = self._kinetics(S)
+        assert "T" in kin
+        assert "-1" in kin
+
+    def test_neg_added_after(self) -> None:
+        """``a + (-T)`` negation as the right operand."""
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: a + (-T))
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        assert "-1" in self._kinetics(S)
+
+    def test_neg_whole_rate(self) -> None:
+        """A lambda whose entire body is ``-T`` still compiles and runs."""
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: -T)
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.run(duration=1, plot_data=False, output_concentration=False)
+
+    def test_neg_bare_species_standalone(self) -> None:
+        """``-T`` outside a lambda (standalone rate building)."""
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (-T)
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        assert "-1" in self._kinetics(S)
+
+    def test_neg_queried_species_standalone(self) -> None:
+        """``-T.x`` (a queried Reacting_Species) outside a lambda.
+
+        Regression: this previously built a malformed AST node containing a
+        raw Reacting_Species, crashing at render time.
+        """
+        A, T = BaseSpecies(["A", "T"])
+        T.x
+        A >> 2 * A @ (-T.x)
+        A(100)
+        T.x(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        kin = self._kinetics(S)
+        assert "-1" in kin
+        assert "T.x" in kin
+
+    def test_double_negation(self) -> None:
+        """Negating a negated species resolves to a positive contribution."""
+        A, T = BaseSpecies(["A", "T"])
+
+        def rate(a: object) -> object:
+            neg_t = -T
+            return -neg_t + a
+
+        A >> 2 * A @ rate
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        assert "T" in self._kinetics(S)
+
+
+class TestBareSpeciesRateArithmetic:
+    """A bare non-reactant species may lead arithmetic inside a rate lambda.
+
+    Previously a leading species (or number) raised errors such as
+    ``'int' object has no attribute 'get_name'`` because the operator
+    overloads fell through to reaction-construction logic instead of
+    building a rate expression.
+    """
+
+    @staticmethod
+    def _kinetics(sim: Simulation) -> str:
+        reactions = sim._reactions_for_sbml
+        assert reactions is not None
+        assert len(reactions) == 1
+        return next(iter(reactions.values())).kinetics
+
+    def _compile(self, a_species: object, t_species: object) -> str:
+        a_species(100)  # type: ignore[operator]
+        t_species(50)  # type: ignore[operator]
+        S = Simulation(a_species | t_species)  # type: ignore[operator]
+        S.compile(verbose=False)
+        return self._kinetics(S)
+
+    def test_species_leads_addition(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: T + a)
+        kin = self._compile(A, T)
+        assert "T" in kin and "A" in kin
+
+    def test_species_leads_multiplication(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: T * a)
+        kin = self._compile(A, T)
+        assert "T" in kin and "A" in kin
+
+    def test_number_times_species(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: 2 * T + a)
+        assert "2" in self._compile(A, T)
+
+    def test_number_plus_species_in_division(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: a + 1 / (1 + T))
+        kin = self._compile(A, T)
+        assert "1" in kin and "T" in kin
+
+    def test_species_first_division(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: T / (T + 1) + a)
+        assert "T" in self._compile(A, T)
+
+    def test_hill_like_species_first(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda _a: T**2 / (100 + T**2))
+        kin = self._compile(A, T)
+        assert "T" in kin and "100" in kin
+
+    def test_species_squared(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        A >> 2 * A @ (lambda a: T * T + a)
+        assert self._compile(A, T).count("T") == 2
+
+    def test_species_minus_parameter_standalone(self) -> None:
+        """A species leading a standalone expression with a parameter.
+
+        Regression: ``_operand_to_node`` left the parameter unwrapped, crashing
+        with ``'Internal_Parameter_Constructor' object has no attribute 'render'``.
+        """
+        from mobspy import ModelParameters
+
+        A, T = BaseSpecies(["A", "T"])
+        k = ModelParameters(0.5)
+        A >> 2 * A @ (T - k)
+        kin = self._compile(A, T)
+        assert "T" in kin
+        assert "k" in kin
+
+
+class TestReactionStoichiometryStillWorks:
+    """Guard: number*species outside a lambda must remain stoichiometry."""
+
+    def test_stoichiometry_preserved(self) -> None:
+        A, T = BaseSpecies(["A", "T"])
+        2 * A + T >> 3 * A @ 0.1
+        A(100)
+        T(50)
+        S = Simulation(A | T)
+        S.compile(verbose=False)
+        reactions = S._reactions_for_sbml
+        assert reactions is not None
+        rxn = next(iter(reactions.values()))
+        assert (2, "A") in rxn.reactants
+        assert (3, "A") in rxn.products
+
+    def test_negated_species_as_reactant_errors_clearly(self) -> None:
+        """A negated species used as a reactant raises a clear ReactionError.
+
+        Previously this leaked an internal
+        ``'RateExpression' object has no attribute 'get_name'``.
+        """
+        from mobspy.exceptions import ReactionError
+
+        A, B, C = BaseSpecies(["A", "B", "C"])
+        with pytest.raises(ReactionError, match="rate expression"):
+            A + (-B) >> C @ 1

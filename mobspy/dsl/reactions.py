@@ -36,7 +36,7 @@ from mobspy.dsl.mobspy_parameters import (
 from mobspy.dsl.species_utils import (
     unite_characteristics as mcu_unite_characteristics,
 )
-from mobspy.exceptions import ReactionError, ValidationError
+from mobspy.exceptions import ReactionError
 from mobspy.expressions.evaluation import (
     ExpressionDefiner as me_ExpressionDefiner,
 )
@@ -366,8 +366,55 @@ class Reactions:
         self.rate = rate
 
 
+# Forward/reflected dunder pairs per arithmetic verb, used to build rate
+# expressions during lambda replay. The reflected member handles the case
+# where the left operand is a plain number (``number.__op__(expr)`` returns
+# ``NotImplemented``), e.g. ``1 + T`` or ``2 * T``.
+_RATE_OP_DUNDERS: dict[str, tuple[str, str]] = {
+    "Addition": ("__add__", "__radd__"),
+    "Subtraction": ("__sub__", "__rsub__"),
+    "Multiplication": ("__mul__", "__rmul__"),
+    "Division": ("__truediv__", "__rtruediv__"),
+    "Exponentiation": ("__pow__", "__rpow__"),
+}
+
+
 class Assignment_Opp_Imp:  # noqa: N801  # legacy DSL public API name
     """Mixin that routes arithmetic operators to the assignment context when active."""
+
+    @staticmethod
+    def _rate_expression_op(
+        first: Any, second: Any, error_verb: str
+    ) -> MobsPyExpression:
+        """Build the rate-expression term for ``first <op> second``.
+
+        Wraps bare species as ``MobsPyExpression`` and applies the operator.
+        When the left operand is a plain number, the forward dunder yields
+        ``NotImplemented``; the reflected dunder is then used, which preserves
+        operand order for non-commutative operators.
+        """
+        from mobspy.expressions.evaluation import (  # noqa: PLC0415  # circular import
+            check_if_non_expression_operated,
+        )
+
+        wrapped_first = check_if_non_expression_operated(first)
+        wrapped_second = check_if_non_expression_operated(second)
+        forward, reflected = _RATE_OP_DUNDERS.get(error_verb, ("__mul__", "__rmul__"))
+        result = getattr(wrapped_first, forward)(wrapped_second)
+        if result is NotImplemented:
+            result = getattr(wrapped_second, reflected)(wrapped_first)
+        return result  # type: ignore[no-any-return]  # dynamic dispatch
+
+    @staticmethod
+    def _rate_lambda_active() -> bool:
+        """True when a rate-function lambda is being replayed (expression mode).
+
+        In this mode the species/reaction operator overloads must build rate
+        expressions instead of constructing reactions.
+        """
+        from mobspy.dsl.species_operators import _ms_active_ctx  # noqa: PLC0415
+
+        return bool(_ms_active_ctx.get())
 
     @staticmethod
     def _dispatch_assign_op(
@@ -390,41 +437,14 @@ class Assignment_Opp_Imp:  # noqa: N801  # legacy DSL public API name
         # This enables both lambda replay (expression mode) and
         # standalone rate building (e.g. Protein ** 2 / (Km + Protein))
         from mobspy.dsl.species_operators import _ms_active_ctx  # noqa: PLC0415
-        from mobspy.expressions.evaluation import (  # noqa: PLC0415  # circular import
-            check_if_non_expression_operated,
-        )
 
         if _ms_active_ctx.get():
             # Inside lambda replay: wrap as MobsPyExpression
-            wrapped_first = check_if_non_expression_operated(first)
-            wrapped_second = check_if_non_expression_operated(second)
-            op_map = {
-                "Addition": "__add__",
-                "Subtraction": "__sub__",
-                "Multiplication": "__mul__",
-                "Division": "__truediv__",
-                "Exponentiation": "__pow__",
-            }
-            py_op = op_map.get(error_verb, "__mul__")
-            return getattr(wrapped_first, py_op)(wrapped_second)  # type: ignore[no-any-return]  # dynamic dispatch
+            return Assignment_Opp_Imp._rate_expression_op(first, second, error_verb)
 
         # Outside any context: wrap as RateExpression for rate builder use
-        from mobspy.dsl.species import Species as _Spe  # noqa: PLC0415
-        from mobspy.expressions.nodes import (  # noqa: PLC0415  # circular import
-            BinaryOpNode,
-            LiteralNode,
-            SpeciesRefNode,
-        )
+        from mobspy.expressions.nodes import BinaryOpNode  # noqa: PLC0415
         from mobspy.expressions.rate_builder import RateExpression  # noqa: PLC0415
-
-        def _to_node(x: Any) -> Any:
-            if isinstance(x, _Spe):
-                return SpeciesRefNode(x.get_name())
-            if isinstance(x, RateExpression):
-                return x.node
-            if isinstance(x, (int, float)):
-                return LiteralNode(x)
-            return x
 
         sbml_op = {
             "Addition": "+",
@@ -433,7 +453,65 @@ class Assignment_Opp_Imp:  # noqa: N801  # legacy DSL public API name
             "Division": "/",
             "Exponentiation": "^",
         }.get(error_verb, "*")
-        return RateExpression(BinaryOpNode(_to_node(first), sbml_op, _to_node(second)))  # type: ignore[return-value]  # pint Unit subtype
+        return RateExpression(  # type: ignore[return-value]  # pint Unit subtype
+            BinaryOpNode(
+                Assignment_Opp_Imp._operand_to_node(first),
+                sbml_op,
+                Assignment_Opp_Imp._operand_to_node(second),
+            )
+        )
+
+    @staticmethod
+    def _operand_to_node(x: Any) -> Any:
+        """Convert an operand to a rate-expression AST node for standalone building."""
+        from mobspy.dsl.species import Species as _Spe  # noqa: PLC0415
+        from mobspy.expressions.nodes import (  # noqa: PLC0415  # circular import
+            LiteralNode,
+            ParamRefNode,
+            SpeciesRefNode,
+        )
+        from mobspy.expressions.rate_builder import RateExpression  # noqa: PLC0415
+
+        if isinstance(x, _Spe):
+            return SpeciesRefNode(x.get_name())
+        if isinstance(x, Reacting_Species):
+            # A queried species (e.g. ``T.x``) renders via its dot string,
+            # matching the lambda-replay path's check_if_non_expression_operated.
+            return SpeciesRefNode(str(x))
+        if isinstance(x, RateExpression):
+            return x.node
+        if isinstance(x, mp_Mobspy_Parameter):
+            return ParamRefNode(x.get_name())
+        if isinstance(x, (int, float)):
+            return LiteralNode(x)
+        return x
+
+    def __neg__(self) -> MobsPyExpression:
+        """Unary minus.
+
+        Negation is valid in three contexts: assignment rules, rate-function
+        lambdas (expression mode), and standalone rate building. Each routes
+        ``-x`` to ``-1 * x`` in the appropriate representation.
+        """
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(-1, self)
+
+        from mobspy.dsl.species_operators import _ms_active_ctx  # noqa: PLC0415
+        from mobspy.expressions.evaluation import (  # noqa: PLC0415  # circular import
+            check_if_non_expression_operated,
+        )
+
+        if _ms_active_ctx.get():
+            # Lambda replay: wrap as a MobsPyExpression and negate it.
+            return -check_if_non_expression_operated(self)  # type: ignore[no-any-return]  # dynamic dispatch
+
+        # Standalone rate building: build -1 * self as a RateExpression.
+        from mobspy.expressions.nodes import BinaryOpNode, LiteralNode  # noqa: PLC0415
+        from mobspy.expressions.rate_builder import RateExpression  # noqa: PLC0415
+
+        return RateExpression(  # type: ignore[return-value]  # pint Unit subtype
+            BinaryOpNode(LiteralNode(-1), "*", self._operand_to_node(self))
+        )
 
     def __add__(self, other: object) -> Any:
         return self._dispatch_assign_op(self, other, asgi_Assign.add, "Addition")
@@ -496,6 +574,15 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """
         super().__init__()
         self._old_context: set[str] | None = None
+        from mobspy.expressions.rate_builder import RateExpression  # noqa: PLC0415
+
+        if isinstance(object_reference, RateExpression):
+            raise ReactionError(
+                "A rate expression (e.g. from negating or doing arithmetic on a "
+                "species, like '-A' or '2 - A') cannot be used as a reactant or "
+                "product. Such expressions are only valid as reaction rates, "
+                "after the '@' operator."
+            )
         is_zero = object_reference.get_name() == ZERO_SPECIES_NAME
         if is_zero and characteristics == set():
             self.list_of_reactants: list[dict[str, Any]] = []
@@ -632,18 +719,22 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         Args:
             stoichiometry: Stoichiometry value.
         """
-        if not asgi_Assign.check_context():
-            if isinstance(stoichiometry, (int, float)):
-                if not self.list_of_reactants:
-                    return self
-                self.list_of_reactants[0]["stoichiometry"] = stoichiometry
-            else:
-                raise ReactionError(
-                    "Stoichiometry can only be an int or "
-                    f"float - Received {stoichiometry}"
-                )
-            return self
-        return asgi_Assign.mul(stoichiometry, self)
+        if asgi_Assign.check_context():
+            return asgi_Assign.mul(stoichiometry, self)
+        if Assignment_Opp_Imp._rate_lambda_active():
+            # Inside a rate lambda: ``number * species`` is rate arithmetic.
+            return Assignment_Opp_Imp._rate_expression_op(
+                stoichiometry, self, "Multiplication"
+            )
+        if isinstance(stoichiometry, (int, float)):
+            if not self.list_of_reactants:
+                return self
+            self.list_of_reactants[0]["stoichiometry"] = stoichiometry
+        else:
+            raise ReactionError(
+                f"Stoichiometry can only be an int or float - Received {stoichiometry}"
+            )
+        return self
 
     def __add__(
         self,
@@ -660,42 +751,38 @@ class Reacting_Species(lop_ReactingSpeciesComparator, Assignment_Opp_Imp):  # no
         """
         from mobspy.dsl.species import Species  # noqa: PLC0415  # circular import
 
-        if not asgi_Assign.check_context():
-            if isinstance(other, RatedProduct):
-                merged = list(self.list_of_reactants) + other.products
-                return RatedProduct(
-                    products=merged,
-                    rate=other.rate,
-                    is_reversible=other.is_reversible,
-                    reverse_rate=other.reverse_rate,
-                )
-            if isinstance(other, Species):
-                other = Reacting_Species(other, set())
-            try:
-                self.list_of_reactants += other.list_of_reactants
-            except AttributeError as e:
-                raise ReactionError(
-                    "Addition between meta-species and "
-                    f"types {type(other)} is not supported"
-                ) from e
-            return self
-        return asgi_Assign.add(self, other)
+        if asgi_Assign.check_context():
+            return asgi_Assign.add(self, other)
+        if Assignment_Opp_Imp._rate_lambda_active():
+            return Assignment_Opp_Imp._rate_expression_op(self, other, "Addition")
+        if isinstance(other, RatedProduct):
+            merged = list(self.list_of_reactants) + other.products
+            return RatedProduct(
+                products=merged,
+                rate=other.rate,
+                is_reversible=other.is_reversible,
+                reverse_rate=other.reverse_rate,
+            )
+        if isinstance(other, Species):
+            other = Reacting_Species(other, set())
+        try:
+            self.list_of_reactants += other.list_of_reactants
+        except AttributeError as e:
+            raise ReactionError(
+                "Addition between meta-species and "
+                f"types {type(other)} is not supported"
+            ) from e
+        return self
 
     def __radd__(self, other: Any) -> Self | RatedProduct | MobsPyExpression:
-        if not asgi_Assign.check_context():
-            return Reacting_Species.__add__(self, other)  # pyright: ignore[reportReturnType]  # pint Quantity subtype
-        return asgi_Assign.add(other, self)
+        if asgi_Assign.check_context():
+            return asgi_Assign.add(other, self)
+        if Assignment_Opp_Imp._rate_lambda_active():
+            return Assignment_Opp_Imp._rate_expression_op(other, self, "Addition")
+        return Reacting_Species.__add__(self, other)  # pyright: ignore[reportReturnType]  # pint Quantity subtype
 
     def __invert__(self) -> Reacting_Species:
         return self.c(NOT_CHAR)
-
-    def __neg__(self) -> MobsPyExpression:
-        if asgi_Assign.check_context():
-            return asgi_Assign.mul(-1, self)
-        raise ValidationError(
-            "The negative operator was applied to a "
-            "Reacting Species in the wrong context"
-        )
 
     def __rshift__(self, other: Species | Reacting_Species | RatedProduct) -> Reactions:
         """The ``>>`` operator for defining reactions.
