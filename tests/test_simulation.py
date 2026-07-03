@@ -258,8 +258,15 @@ class TestRunArguments:
         S.plot_data = False
         S.output_concentration = True
         S.run(plot_data=False)
-        assert S.fres[A][-1] < 10
-        assert S.fres[B][-1] < 10
+        # The volume jumps from 5 (S1) to 100 (S2) between the two segments,
+        # so the *amount* (not the concentration) must be conserved at the
+        # handoff: amount = concentration_end_of_S1 * volume_S1, then
+        # concentration_start_of_S2 = amount / volume_S2. That 20x dilution
+        # drops both species' concentration sharply once S2 starts, well
+        # below the loose "< 10" bound used before the volume conservation
+        # was verified.
+        assert S.fres[A][-1] == pytest.approx(0.8187, rel=0.01)
+        assert S.fres[B][-1] == pytest.approx(1.8187, rel=0.01)
 
     def test_unit_x_conversion(self):
         A = BaseSpecies()

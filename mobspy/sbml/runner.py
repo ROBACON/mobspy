@@ -47,8 +47,18 @@ def job_execution(
         for j, (sim_par, model) in enumerate(zip(params, models, strict=True)):
             # Generate SBML here
             if j > 0:
+                prev_mc = getattr(models[j - 1], "model_context", None)
+                prev_vol = (
+                    getattr(prev_mc, "resolved_volume_magnitude", None)
+                    if prev_mc is not None
+                    else None
+                )
                 sbml_str = __sbml_new_initial_values(
-                    reformatted_data, model, sim_par, new_model=True
+                    reformatted_data,
+                    model,
+                    sim_par,
+                    new_model=True,
+                    source_volume_magnitude=prev_vol,
                 )
             else:
                 sbml_str = __sbml_new_initial_values({}, model, sim_par)
@@ -165,16 +175,24 @@ def __sbml_new_initial_values(
     model: CompiledModelDict,
     sim_para: SimParams,
     new_model: bool = False,
+    source_volume_magnitude: float | None = None,
 ) -> str:
     species_for_sbml = model.species_for_sbml
 
     # BasiCO returns concentrations (amount/volume) when
     # hasOnlySubstanceUnits=False. Multiply by compartment volume
     # to recover amounts for species_for_sbml (used as initialAmount).
+    # `data` comes from whichever model last produced it, which may differ
+    # from `model` (the one being seeded) when concatenating simulations
+    # with different volumes -- `source_volume_magnitude` lets the caller
+    # supply that model's volume explicitly instead of assuming `model`'s.
     _vol = 1.0
-    _mc = getattr(model, "model_context", None)
-    if _mc is not None:
-        _vol = getattr(_mc, "resolved_volume_magnitude", 1.0)
+    if source_volume_magnitude is not None:
+        _vol = source_volume_magnitude
+    else:
+        _mc = getattr(model, "model_context", None)
+        if _mc is not None:
+            _vol = getattr(_mc, "resolved_volume_magnitude", 1.0)
 
     check_list = ["stochastic", "directmethod"]
     for key in data:
