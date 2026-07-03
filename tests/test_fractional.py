@@ -16,7 +16,7 @@ def test_deterministic():
     Sim.method = "deterministic"
     Sim.volume = 1 * u.mL
     Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    assert Sim.results["C"][0][-1] == pytest.approx(2.44e-4, rel=0.05)
+    assert Sim.results["C"][0][-1] == pytest.approx(2.44e-1, rel=0.05)
 
 
 def test_deterministic_variable():
@@ -29,7 +29,7 @@ def test_deterministic_variable():
     Sim.method = "deterministic"
     Sim.volume = 1 * u.mL
     Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    assert Sim.results["C"][0][-1] == pytest.approx(2.44e-4, rel=0.05)
+    assert Sim.results["C"][0][-1] == pytest.approx(2.44e-1, rel=0.05)
 
 
 def test_stochastic():
@@ -41,8 +41,9 @@ def test_stochastic():
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL
     Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    # With compartment-based rates the reaction is slow; C stays near zero
-    assert Sim.results["C"][0][-1] < 0.01
+    # The reaction is slow (rate=0.005) with a small A count (10), so C
+    # stays well below its theoretical ceiling (5, from 10 A * 0.5 yield)
+    assert Sim.results["C"][0][-1] < 3
 
 
 def test_stochastic_variable():
@@ -55,5 +56,6 @@ def test_stochastic_variable():
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL
     Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    # With compartment-based rates the reaction is slow; C stays near zero
-    assert Sim.results["C"][0][-1] < 0.01
+    # The reaction is slow (rate=0.005) with a small A count (10), so C
+    # stays well below its theoretical ceiling (5, from 10 A * 0.5 yield)
+    assert Sim.results["C"][0][-1] < 3

@@ -111,8 +111,11 @@ def convert_data_to_desired_unit(  # noqa: PLR0913  # complex function signature
             for time in data["Time"]
         ]
 
-    if output_concentration:
-        converted_data = convert_to_concentration(
+    if not output_concentration:
+        # BasiCO/COPASI always reports species trajectories as a concentration
+        # (amount / declared compartment volume), never as raw counts. Recover
+        # counts by multiplying back by the volume at each point in time.
+        converted_data = convert_concentration_to_counts(
             data, converted_data, volume_list, time_list
         )
 
@@ -172,9 +175,7 @@ def _apply_unit_y_conversion(
             )
     elif output_concentration:
         source = (
-            1 / model_context.volume_unit
-            if (_substance_is_molar and model_context is not None)
-            else 1 / ur.l
+            1 / model_context.volume_unit if model_context is not None else 1 / ur.l
         )
         _multiply_data_by_factor(
             converted_data,
@@ -182,17 +183,18 @@ def _apply_unit_y_conversion(
         )
 
 
-def convert_to_concentration(
+def convert_concentration_to_counts(
     data: dict[str, list[float]],
     converted_data: dict[str, list[float]],
     volume_list: list[float],
     time_list: list[float],
 ) -> dict[str, Any]:
     """
-    Converts output data from counts to concentration according to simulation volume
+    Converts output data from concentration (as reported by BasiCO/COPASI) back to
+    raw counts, according to the simulation volume.
 
     Args:
-        data: Simulation data.
+        data: Simulation data, expressed as concentration (amount / declared volume).
         converted_data: Data converted to requested units.
         volume_list: List of volumes of all simulations (more than one if concatenated).
         time_list: List of durations of each simulation (to check for respective volume
@@ -216,7 +218,7 @@ def convert_to_concentration(
         for key in data:
             if key == "Time":
                 continue
-            new_data[key].append(data[key][i] / current_volume)
+            new_data[key].append(data[key][i] * current_volume)
 
     new_data["Time"] = converted_data["Time"]
 

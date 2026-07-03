@@ -782,7 +782,7 @@ class Simulation(
         needs_conversion = (
             self.parameters["unit_x"] is not None
             or self.parameters["unit_y"] is not None
-            or (flag_concentration and self.parameters["output_concentration"])
+            or flag_concentration
         )
         all_processed_data: list[TypingAny] = list(
             joblib.Parallel(n_jobs=jobs, prefer="threads")(
