@@ -256,6 +256,43 @@ def phase_duplicate_detection(
             seen[key] = name
 
 
+def _reaction_semantic_key(item: tuple[str, ReactionData]) -> tuple[Any, ...]:
+    """Return a stable key for semantically equivalent reactions."""
+    name, reaction = item
+    return (
+        tuple(reaction.reactants),
+        tuple(reaction.products),
+        reaction.kinetics,
+        name,
+    )
+
+
+def _normalize_reaction_order(
+    reactions: ReactionsForSbml,
+) -> ReactionsForSbml:
+    """Make reaction IDs deterministic across equivalent model builds."""
+    normal_reactions: list[tuple[str, ReactionData]] = []
+    phantom_reactions: list[tuple[str, ReactionData]] = []
+
+    for item in reactions.items():
+        name, _reaction = item
+        if "phantom" in name:
+            phantom_reactions.append(item)
+        else:
+            normal_reactions.append(item)
+
+    normalized: ReactionsForSbml = {}
+    for i, (_name, reaction) in enumerate(
+        sorted(normal_reactions, key=_reaction_semantic_key)
+    ):
+        normalized[f"reaction_{i}"] = reaction
+
+    for name, reaction in sorted(phantom_reactions, key=_reaction_semantic_key):
+        normalized[name] = reaction
+
+    return normalized
+
+
 # ------------------------------------------------------------------
 # Phase 6: Event building
 # ------------------------------------------------------------------
@@ -424,7 +461,7 @@ def _add_phantom_reactions(
     reaction for each such species with a coefficient
     of 1e-100.
     """
-    for i, spe in enumerate(species_to_add_phantom_reaction):
+    for i, spe in enumerate(sorted(species_to_add_phantom_reaction)):
         reactions_for_sbml["phantom_reaction_" + str(i)] = ReactionData(
             reactants=[(1, spe)],
             products=[],
@@ -925,6 +962,7 @@ def compile_model(  # noqa: PLR0913  # complex function signature
         ctx,
     )
     events_for_sbml = evt_result.events
+    reactions_for_sbml = _normalize_reaction_order(reactions_for_sbml)
     _add_to_parameters_to_sbml(
         parameters_used,
         parameters_for_sbml,

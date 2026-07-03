@@ -71,7 +71,12 @@ def job_execution(
 
             while end_condition_not_satisfied:
                 basico_model = basico.model_io.load_model_from_string(sbml_str)
-                data = __run_time_course(basico_model, duration, sim_par, i)
+                try:
+                    data = __run_time_course(basico_model, duration, sim_par, i)
+                finally:
+                    if basico_model is not None:
+                        with contextlib.suppress(Exception):
+                            basico.model_io.remove_datamodel(basico_model)
 
                 reformatted_data = reformat_time_series(data)
 

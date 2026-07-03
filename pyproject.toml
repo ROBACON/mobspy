@@ -16,7 +16,6 @@ keywords = ["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "s
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -38,7 +37,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pyyaml"]
+test = ["pytest", "pytest-cov", "pyyaml", "hypothesis"]
 docs = ["sphinx>=7.0", "myst-parser", "sphinx-rtd-theme", "nbsphinx", "pygments"]
 
 [project.urls]

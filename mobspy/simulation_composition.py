@@ -37,6 +37,13 @@ class SimulationComposition:
         """Delegate model updates to the base simulation."""
         self.base_sim.update_model(*args)
 
+    def delete(self) -> None:
+        """Release state held by all simulations in the composition."""
+        for sim in self.list_of_simulations:
+            sim.delete()
+        self.results = {}
+        self.fres = {}
+
     def _compile_multi_simulation(self) -> None:
         """Validate shared species across simulations.
 

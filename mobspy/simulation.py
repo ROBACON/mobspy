@@ -27,7 +27,7 @@ from mobspy.dsl.any_species import (
 from mobspy.dsl.assignments_implementation import (
     Assign,
 )
-from mobspy.dsl.declarations import snapshot_registry
+from mobspy.dsl.declarations import get_registry, snapshot_registry
 from mobspy.dsl.list_species import List_Species
 from mobspy.dsl.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
@@ -238,6 +238,27 @@ class Simulation(
         self._init_counts()
         self._init_config(parameters, plot_parameters)
         self._init_sbml_state()
+
+    @staticmethod
+    def _is_integer_stoichiometry(value: int | float) -> bool:
+        """Return whether a stoichiometric coefficient is discrete-compatible."""
+        return float(value).is_integer()
+
+    def _validate_discrete_stoichiometry(self, method_lower: str) -> None:
+        """Reject fractional stoichiometry for discrete stochastic methods."""
+        discrete_methods = {"stochastic", "directmethod", "tauleap"}
+        if method_lower not in discrete_methods or self._reactions_for_sbml is None:
+            return
+
+        for reaction_name, reaction in self._reactions_for_sbml.items():
+            for stoichiometry, species_name in reaction.reactants + reaction.products:
+                if not self._is_integer_stoichiometry(stoichiometry):
+                    raise SimulationError(
+                        "Fractional stoichiometry is not supported for "
+                        f"{method_lower!r} simulations. "
+                        f"Reaction {reaction_name!r} uses coefficient "
+                        f"{stoichiometry!r} for species {species_name!r}."
+                    )
 
     def _init_event_state(self) -> None:
         """Initialize event tracking and compilation state."""
@@ -644,6 +665,7 @@ class Simulation(
         self._assignments_for_sbml = _result.assignments_for_sbml
         self._has_mole = _result.has_mole
         self._model_context = _result.model_context
+        self._validate_discrete_stoichiometry(method_lower)
 
         # The volume is converted to the proper unit at the compiler level
         self.parameters["volume"] = self._parameters_for_sbml["volume"][0]
@@ -906,6 +928,43 @@ class Simulation(
             else:
                 self.plot_deterministic()
         return self.results  # type: ignore[return-value]  # pint Unit subtype
+
+    def delete(self) -> None:
+        """Release MobsPy state associated with this simulation.
+
+        This removes declarations for the simulation's species from the active
+        DSL registry and clears compiled models/results held by this object.
+        After calling this method, create a new ``Simulation`` if you want to
+        run the model again.
+        """
+        registry = get_registry()
+        species_to_remove: set[Species] = set()
+        for spe_object in self.model:
+            species_to_remove.add(spe_object)
+            species_to_remove.update(spe_object.get_references())
+
+        for spe_object in species_to_remove:
+            registry.remove_reactions_for(spe_object)
+            registry.remove_counts_for(spe_object)
+
+        self._declarations.clear()
+        self._reactions_set.clear()
+        self._species_counts = []
+        self._list_of_models = []
+        self._list_of_parameters = []
+        self.sbml_data_list = []
+        self._parameter_list_of_dic = []
+        self._concrete_model = None
+        self._species_for_sbml = None
+        self._reactions_for_sbml = None
+        self._parameters_for_sbml = None
+        self._mappings_for_sbml = None
+        self._events_for_sbml = None
+        self._assignments_for_sbml = {}
+        self.model_string = ""
+        self.results = {}
+        self.fres = {}
+        self._is_compiled = False
 
     def save_data(self, file: str | None = None) -> None:
         """

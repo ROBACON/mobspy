@@ -1,7 +1,6 @@
 """Rule-based AND gate using promoter logic with Hill function dynamics."""
 
 import matplotlib.pyplot as plt
-import seaborn
 
 from mobspy import *
 
@@ -40,6 +39,10 @@ for i in range(len(S.results)):
         matrix.append(line)
         line = []
 
-ax = seaborn.heatmap(matrix)
+_, ax = plt.subplots()
+image = ax.imshow(matrix, origin="lower", aspect="auto")
+ax.set_xticks(range(len(x)), labels=x)
+ax.set_yticks(range(len(x)), labels=x)
 ax.set(xlabel="A", ylabel="B")
+plt.colorbar(image, ax=ax)
 plt.show()

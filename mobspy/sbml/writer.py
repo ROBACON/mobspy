@@ -175,7 +175,8 @@ def _create_species(
     substance_id: str,
 ) -> None:
     """Add species to the SBML model."""
-    for s_str, s_val in species.items():
+    for s_str in sorted(species):
+        s_val = species[s_str]
         s = model.createSpecies()
         check(s, "create species")
         check(s.setId(s_str), "set species id")
@@ -189,7 +190,7 @@ def _create_species(
 
 def _create_parameters(model: Any, parameters: ParametersForSbml) -> None:
     """Add parameters to the SBML model."""
-    for k_str in parameters:
+    for k_str in sorted(parameters):
         k = model.createParameter()
         check(k, "create parameter k")
         check(k.setId(k_str), "set parameter id")
@@ -200,7 +201,7 @@ def _create_parameters(model: Any, parameters: ParametersForSbml) -> None:
 
 def _create_reactions(model: Any, reactions: ReactionsForSbml) -> None:
     """Add reactions to the SBML model."""
-    for r_str in reactions:
+    for r_str in sorted(reactions):
         r = model.createReaction()
         check(r, "create reaction")
         check(r.setId(r_str), "set reaction id")
@@ -230,7 +231,7 @@ def _create_reactions(model: Any, reactions: ReactionsForSbml) -> None:
 
 def _create_events(model: Any, events: EventsForSbml) -> None:
     """Add events to the SBML model."""
-    for e_str in events:
+    for e_str in sorted(events):
         e = model.createEvent()
         check(e, "create event")
         check(e.setId(e_str), "set id")
@@ -261,7 +262,7 @@ def _create_events(model: Any, events: EventsForSbml) -> None:
 
 def _create_assignments(model: Any, assignments: AssignmentsForSbml) -> None:
     """Add assignment rules to the SBML model."""
-    for asg in assignments.values():
+    for asg in (assignments[key] for key in sorted(assignments)):
         assignment_rule = model.createAssignmentRule()
         check(assignment_rule, "create assignment rule")
         check(assignment_rule.setVariable(asg.species), "set assignment variable")

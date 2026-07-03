@@ -6,6 +6,8 @@ The results must be correct regardless of what other functions did before.
 
 from __future__ import annotations
 
+import pytest
+
 from mobspy import BaseSpecies, New, Simulation, Zero
 
 
@@ -194,3 +196,59 @@ class TestFunctionIsolation:
         S2.run(plot_data=False)
         assert S1.fres["B"][-1] > 90
         assert S2.fres["C"][-1] > 90
+
+    def test_delete_removes_simulation_declarations(self) -> None:
+        from mobspy.dsl.declarations import get_registry
+
+        A = BaseSpecies(["A"])
+        A >> (Zero @ 1.0)
+        A(100)
+        S = Simulation(A)
+
+        registry = get_registry()
+        assert len(registry.reactions) == 1
+        assert len(registry.counts) == 1
+
+        S.delete()
+
+        assert len(registry.reactions) == 0
+        assert len(registry.counts) == 0
+        assert S._list_of_models == []
+        assert S.__dict__["results"] == {}
+
+    def test_equivalent_models_generate_identical_sbml(self) -> None:
+        def build_sbml() -> str:
+            species = BaseSpecies([f"A{i}" for i in range(8)])
+            model = species[0]
+            for spe in species[1:]:
+                model = model | spe
+            for i, spe in enumerate(species):
+                spe(10)
+                spe >> (Zero @ 0.01)
+                if i + 1 < len(species):
+                    spe >> (species[i + 1] @ 0.02)
+            S = Simulation(model)
+            S.duration = 0.01
+            S.step_size = 0.01
+            sbml = S.generate_sbml()[0]
+            S.delete()
+            return sbml
+
+        assert build_sbml() == build_sbml()
+
+    @pytest.mark.slow
+    def test_run_does_not_leave_loaded_basico_models(self) -> None:
+        import basico.model_io as model_io
+
+        model_io.remove_loaded_models()
+
+        A = BaseSpecies(["A"])
+        A >> (Zero @ 1.0)
+        A(10)
+        S = Simulation(A)
+        S.duration = 0.01
+        S.step_size = 0.01
+        S.jobs = 1
+        S.run(plot_data=False)
+
+        assert model_io.get_num_loaded_models() == 0

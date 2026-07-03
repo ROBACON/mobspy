@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from mobspy import BaseSpecies, Simulation, u
+from mobspy.exceptions import SimulationError
 
 
 def test_deterministic():
@@ -40,10 +41,8 @@ def test_stochastic():
     Sim = Simulation(A | B | C)
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL
-    Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    # The reaction is slow (rate=0.005) with a small A count (10), so C
-    # stays well below its theoretical ceiling (5, from 10 A * 0.5 yield)
-    assert Sim.results["C"][0][-1] < 3
+    with pytest.raises(SimulationError, match="Fractional stoichiometry"):
+        Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
 
 
 def test_stochastic_variable():
@@ -55,7 +54,5 @@ def test_stochastic_variable():
     Sim = Simulation(A | B | C)
     Sim.method = "stochastic"
     Sim.volume = 1 * u.mL
-    Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
-    # The reaction is slow (rate=0.005) with a small A count (10), so C
-    # stays well below its theoretical ceiling (5, from 10 A * 0.5 yield)
-    assert Sim.results["C"][0][-1] < 3
+    with pytest.raises(SimulationError, match="Fractional stoichiometry"):
+        Sim.run(duration=10, unit_x=u.s, unit_y=1 / u.mL, plot_data=False)
