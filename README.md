@@ -1,4 +1,4 @@
-<img src="_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
+<img src="https://raw.githubusercontent.com/ROBACON/mobspy/main/_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
 
 # MobsPy
 
@@ -15,7 +15,9 @@ To get started, you only need to pip install:
 	pip install mobspy 
 
 And check out the [Read the Docs for MobsPy](https://mobspy-doc.readthedocs.io/en/latest/).
-Some example tutorial models are available in the docs/example_model folder.
+Tutorial notebooks and example models are available in the `docs/example_models/` directory.
+Install `mobspy[examples]` for their plotting and notebook dependencies.
+See [example and notebook verification](docs/verification.md) for test commands and CI coverage.
 
 
 # How it works
@@ -24,34 +26,34 @@ Meta-species are sets of species. Using them allows users to assign reactions to
 
 ## Basic syntax
 
-To create species from scratch, use the `BaseSpecies` constructor that takes as an optional argument the number of species one wants to create. To assign rates, one can define reactions using the `>>` operator and the brackets `[]`. To assign counts, use the call operator. An elementary example is the following:
+To create species from scratch, use the `BaseSpecies` constructor that takes as an optional argument the number of species one wants to create. To assign rates, use the `>>` operator and `@` for the rate. To assign counts, use the call operator. An elementary example is the following:
 
 	from mobspy import *
 
 	A, B, C, D = BaseSpecies()
-	A(200) + B(100) >> 2*C + D [420]
+	A(200) + B(100) >> 2*C + D @ 420
 
 	MySim = Simulation(A | B | C | D)
 	MySim.run()
 
 ## Reversible Reactions
 
-Reactions can be reversible, denoted via the `Rev` operator. Forward and a backward rates are provided within brackets:
+Reactions can be reversible by providing a tuple of (forward, reverse) rates:
 
-	Rev[A(200) + B(100) >> 2*C + D][420, 10]
+	A(200) + B(100) >> 2*C + D @ (420, 10)
 
 ## Inheritance
 
 For instance:
 
 	Mortal = BaseSpecies()
-	Mortal >> Zero [1]
+	Mortal >> Zero @ 1
 
 The reaction above is a death reaction where the meta-species Mortal is dying. `Zero` is the MobsPy variable for representing nothing. We can design new meta-species from other meta-species using either the multiplication or the `New()` constructor. 
 
 	Replicator, Triplicator = New(Mortal, 2)
-	Replicator >> 2*Replicator [1]
-	Triplicator  >> 3*Triplicator [1]
+	Replicator >> 2*Replicator @ 1
+	Triplicator  >> 3*Triplicator @ 1
 	Multiplicator = Replicator*Triplicator 
 
 In the code above, one can visualize the inheritance mechanism. Here both Replicator and Triplicator inherit from Mortal. Therefore, they also receive a death reaction. Multiplicator inherits from Replicator and Triplicator, and therefore from Mortal too. So Multiplicator now has three reactions, the death reaction, the duplication reaction, and the triplication reaction. 
@@ -62,10 +64,10 @@ Each meta-species has a set of states. One can add states to species by using th
 For instance:
 
 	Horned, Color = BaseSpecies()
-	Horned.small_horn >> Horned.big_horn [1]
-	Color.white >> Color.rainbow [1]
+	Horned.small_horn >> Horned.big_horn @ 1
+	Color.white >> Color.rainbow @ 1
 	Unicorn = Horned*Color
-	Unicorn.rainbow >> 2*Unicorn.white [1]
+	Unicorn.rainbow >> 2*Unicorn.white @ 1
 
 Unicorn has the states of both Horned and color in the code above and their reactions. Unicorn species will be formed by the name followed by a dot and a state for each species inheritors for all possible combinations. So here we have the species - `Unicorn.small_horn.white`, `Unicorn.big_horn.white`, `Unicorn.small_horn.rainbow`, `Unicorn.big_horn.rainbow`. 
 
@@ -80,8 +82,8 @@ Just use the Simulation constructor and the run command to execute a simulation.
 
 # Parameter definition
 
-The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the `.plot.parameter` model.
-See [here for a list of parameters](https://github.com/ROBACON/mobspy/blob/main/mobspy/parameters/README.md).
+The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the `.plot_config.parameter` notation.
+See [here for a list of parameters](https://mobspy-doc.readthedocs.io/en/latest/configuration.html).
 Standard parameters can also be configured using a JSON file with the `.set_from_json` method. As an example, we have the code below:
 
 	MySim.save_data = False
@@ -91,14 +93,14 @@ Standard parameters can also be configured using a JSON file with the `.set_from
 	MySim.plot_config.xlim = [0,1]
 	MySim.plot_config.ylim = [0, 1e3]
 
-For a list of parameters, check the read_me in the parameter directory. The standard parameters can be found in the `get_default_parameters()` script in the `default_reader()` script.
+For a full list of parameters, see the [parameters README](https://mobspy-doc.readthedocs.io/en/latest/configuration.html).
 
 # Units
 	
 The variable u from the pint Python module for unit handling is used to assign units to values in MobsPy. Just add `u.name_of_the_unit`, and MobsPy will handle it. As a code example, we have:
 
 	A(100*u.molar)
-	A >> Zero [10/u.nanosecond]
+	A >> Zero @ (10 / u.nanosecond)
 
 # Compiling
 
@@ -112,28 +114,25 @@ For the rates, MobsPy considers mass action kinetics as default. For different, 
 
 # Compatibility
 
-For now MobsPy is not thread-safe and it's not compatible with numpy and deepcopy
+MobsPy supports defining and compiling models from multiple threads concurrently. Each thread gets isolated DSL state via `ContextVar`. However, do not share a single `Simulation` instance across threads.
 
-# Release info
-Version 2.8.0 - Added initial ODE syntax - Not documented as it not compatible with all features
+# API Stability
 
-Version 2.5.0 -  Added generate antimony function that translates a MobsPy model to antimony. Thank you Hebert Sauro and Lucian Smith for the discussions and help.
+MobsPy follows [Semantic Versioning](https://semver.org/). The public API is
+everything exported from `mobspy.__init__` (listed in `__all__`):
 
-Version 2.4.4 - Assignments completely added (both notations)
+- **Patch** releases (3.0.x) contain bug fixes only.
+- **Minor** releases (3.x.0) may add new features but will not break existing
+  code.
+- **Major** releases (x.0.0) may contain breaking changes. These will be
+  documented in the changelog with migration instructions.
 
-Version 2.3 - MobsPy standard output is now always concentration.
+Experimental features (such as ODE syntax) are explicitly marked and may change
+in any release.
 
-Version 2.2 - Added MobsPy expressions
-
-Version 2.1 - Added model parameters. Now MySim.results returns a list of all resulting time series no matter the number of repetitions. However, now a `MySim.fres` attribute was released that returns only the first time series in each simulation (thus, it is equal to MySim results with only one repetition in the previous version).
-
-Version 2.0.1 added events, ability to concatenate simulations, and changed the structure of output data to be more 
-user-friendly. Now MySim.results["data"]["runs"]["MetaSpeciesName"] has been deprecated. It has been replaced by 
-MySim.results["MetaSpeciesName"] or MySim.results[MetaSpeciesObject]. It will return only one run if there are no 
-repetitions and multiple runs with several repetitions.
-
-Version 1.1 added automated testing to git pushes with test_script.py
-
+See [CHANGELOG.md](CHANGELOG.md) for the full release history, the
+[migration guide](docs/migration_guide.md) for the 3.0 transition, and
+[release instructions](docs/releasing.md) for publishing.
 
 
 

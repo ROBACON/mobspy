@@ -1,14 +1,15 @@
-import matplotlib.pyplot as plt
-from mobspy import *
 import time
 
+import matplotlib.pyplot as plt
+
+from mobspy import *
 
 """
     This is a geometry-based model
     Here the Meta-Species Mesh is used to represent the positions in a grid
     And their transitions using a CRN
     Here we have a bacteria and a phage that move through a Mesh and once they encounter the bacteria becomes infected
-    Although the movement is not realistic, it shows MobsPy geometry capabilities 
+    Although the movement is not realistic, it shows MobsPy geometry capabilities
     In future work we hope to implement different type movements or grids
 """
 
@@ -21,18 +22,18 @@ for i in range(n):
         coordinate = "p_" + str(i) + "_" + str(j)
 
         if i + 1 < n:
-            Mesh.c(coordinate) >> Mesh.c(f"p_{i + 1}_{j}")[0.1]
+            Mesh.c(coordinate) >> Mesh.c(f"p_{i + 1}_{j}") @ 0.1
         if i - 1 > -1:
-            Mesh.c(coordinate) >> Mesh.c(f"p_{i - 1}_{j}")[0.1]
+            Mesh.c(coordinate) >> Mesh.c(f"p_{i - 1}_{j}") @ 0.1
         if j - 1 > -1:
-            Mesh.c(coordinate) >> Mesh.c(f"p_{i}_{j - 1}")[0.1]
+            Mesh.c(coordinate) >> Mesh.c(f"p_{i}_{j - 1}") @ 0.1
         if j + 1 < n:
-            Mesh.c(coordinate) >> Mesh.c(f"p_{i}_{j + 1}")[0.1]
+            Mesh.c(coordinate) >> Mesh.c(f"p_{i}_{j + 1}") @ 0.1
 
 Bacteria, Phage = New(Mesh)
 (
     Bacteria.not_infected + Phage
-    >> Bacteria.infected[lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0]
+    >> Bacteria.infected @ (lambda r1, r2: 1000000 if Mesh(r1) == Mesh(r2) else 0)
 )
 Bacteria.p_0_0(1)
 Phage.c(f"p_{n - 1}_{n - 1}")(1)
@@ -70,7 +71,7 @@ for t in range(len(data["Time"])):
     for key in data:
         if key == "Time" or key == "Bacteria" or key == "Phage":
             continue
-        species_string = deepcopy(key)
+        species_string = key
 
         if data[key][t] == 1:
             split_key = species_string.split(".")

@@ -1,6 +1,26 @@
+"""Custom exceptions for MobsPy to provide better error handling and debugging.
+
+Examples:
+    >>> from mobspy.exceptions import CompilationError, MobsPyError
+    >>> issubclass(CompilationError, MobsPyError)
+    True
 """
-Custom exceptions for MobsPy to provide better error handling and debugging.
-"""
+
+from __future__ import annotations
+
+__all__ = [
+    "AntimonyError",
+    "CompilationError",
+    "EventError",
+    "ImportError",
+    "MobsPyError",
+    "ParameterError",
+    "ReactionError",
+    "SBMLError",
+    "SimulationError",
+    "UnitError",
+    "ValidationError",
+]
 
 
 class MobsPyError(Exception):
@@ -45,7 +65,7 @@ class ValidationError(MobsPyError):
     pass
 
 
-class ImportError(MobsPyError):
+class ImportError(MobsPyError):  # noqa: A001
     """Errors related to module imports and dependencies."""
 
     pass

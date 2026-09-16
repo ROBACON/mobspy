@@ -1,0 +1,8 @@
+include LICENSE README.md CHANGELOG.md pyproject.toml
+recursive-include mobspy *.py py.typed
+recursive-include tests *.py *.yaml
+recursive-include docs *.py *.rst *.md *.ipynb *.png *.pdf *.bngl
+recursive-include scripts *.py
+global-exclude __pycache__ *.py[cod]
+prune docs/_build
+prune docs/_autosummary

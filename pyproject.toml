@@ -1,0 +1,140 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mobspy"
+version = "3.0.0rc1"
+description = "A Query-Based Language for Chemical Reaction Networks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    {name = "MobsPy Team"},
+]
+keywords = ["CRN", "microbiology", "synthetic biology", "simulation", "SBML", "specification language"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Typing :: Typed",
+]
+dependencies = [
+    "matplotlib>=3,<4",
+    "numpy>=1.20,<3",
+    "python-copasi~=4.44",
+    "python-libsbml>=5,<6",
+    "scipy>=1,<2",
+    "pandas>=1,<3",
+    "joblib>=1,<2",
+    "tqdm>=4,<5",
+    "copasi-basico~=0.75",
+    "pint>=0.23,<1",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov", "pyyaml", "hypothesis", "mobspy[examples]"]
+examples = [
+    "nbclient>=0.10,<1",
+    "nbformat>=5,<6",
+    "ipykernel>=6,<8",
+    "plotly>=6,<8",
+    "seaborn>=0.13,<1",
+]
+comparisons = ["pysb==1.17.0", "biocrnpyler==1.3.4", "bionetgen==0.8.7"]
+dev = ["ruff==0.15.8", "mypy==2.3.1", "pyright==1.1.414", "build", "twine"]
+docs = ["sphinx>=7.0", "myst-parser", "sphinx-rtd-theme", "nbsphinx", "pygments"]
+
+[project.urls]
+Repository = "https://github.com/ROBACON/mobspy"
+Documentation = "https://mobspy-doc.readthedocs.io/en/latest/"
+
+[tool.setuptools.packages.find]
+include = ["mobspy", "mobspy.*"]
+
+[tool.setuptools.package-data]
+mobspy = ["py.typed"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E", "W",       # pycodestyle
+    "F",             # pyflakes
+    "I",             # isort
+    "N",             # pep8-naming
+    "UP",            # pyupgrade
+    "B",             # flake8-bugbear
+    "A",             # flake8-builtins
+    "SIM",           # flake8-simplify
+    # TCH (flake8-type-checking) disabled: codebase uses re-export patterns
+    # and circular imports that TCH cannot safely handle
+    "RUF",           # ruff-specific
+    "S",             # flake8-bandit (security)
+    "C4",            # flake8-comprehensions
+    "PT",            # flake8-pytest-style
+    "RET",           # flake8-return
+    "ARG",           # flake8-unused-arguments
+    "PTH",           # flake8-use-pathlib
+    "ERA",           # eradicate (commented-out code)
+    "PL",            # pylint subset
+    "PERF",          # perflint
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["F403", "F405", "B018", "B015", "S", "ARG", "ERA", "PLR", "PT", "PLC0415", "E501", "E731", "N", "A001", "RUF059"]
+"docs/**" = ["F403", "F405", "F401", "E501", "E731", "E741", "I001", "B018", "S", "ARG", "ERA", "T20", "N", "A001", "PLR", "PLC0415", "PLC0206", "F821", "W291", "B007", "C408", "SIM108", "SIM117", "RUF005"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportPrivateUsage = false
+# pint, matplotlib, numpy stubs are incomplete
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownParameterType = false
+# DSL uses runtime isinstance guards for dynamically-typed user input
+reportUnnecessaryIsInstance = false
+reportUnnecessaryComparison = false
+# OverrideQuantity inherits pint.Quantity with mismatched __new__/__init__
+reportInconsistentConstructor = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers --strict-config"
+doctest_optionflags = ["ELLIPSIS", "NORMALIZE_WHITESPACE"]
+markers = [
+    "slow: tests that run simulations (may take a while)",
+    "compilation: tests that only compile models (fast)",
+]
+
+[tool.coverage.run]
+source_pkgs = ["mobspy"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80

@@ -1,5 +1,6 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 # n_0 = 10 - dimensionless
 # lysis_0 = 2
@@ -54,35 +55,29 @@ import os
 Cell, Lysis, AHL, LuxI = BaseSpecies()
 
 # Cell related reactions
-Cell >> 2 * Cell[lambda cell: mu_g * cell * (n_0 - cell)]
+Cell >> 2 * Cell @ (lambda cell: mu_g * cell * (n_0 - cell))
 # Lysis enzyme encounters the cell membrane through the inside of the cell and kills it
-Lysis + Cell >> Zero[lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2)]
+Lysis + Cell >> Zero @ (lambda lysis, cell: k * cell / (1 + (lysis_0 / lysis) ** 2))
 
 # AHL related reactions
-Cell + LuxI >> AHL + Cell + LuxI[b]
-AHL + Cell >> Cell[lambda ahl, cell: mu * ahl / (1 + cell / n_0)]
+Cell + LuxI >> (AHL + Cell + LuxI) @ b
+AHL + Cell >> Cell @ (lambda ahl, cell: mu * ahl / (1 + cell / n_0))
 
 # Lysis related reactions
-(
-    AHL
-    >> AHL
-    + Lysis[
-        lambda ahl: c_l
-        * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
-    ]
+AHL >> (AHL + Lysis) @ (
+    lambda ahl: (
+        c_l * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+    )
 )
-Lysis >> Zero[gamma_l + mu_g]
+Lysis >> Zero @ (gamma_l + mu_g)
 
 # LuxI related reactions
-(
-    AHL
-    >> AHL
-    + LuxI[
-        lambda ahl: c_i
-        * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
-    ]
+AHL >> (AHL + LuxI) @ (
+    lambda ahl: (
+        c_i * (alpha_0 + alpha_h * (ahl / AHL_0) ** 4 / (1 + (ahl / AHL_0) ** 4))
+    )
 )
-LuxI >> Zero[gamma_i + mu_g + gamma_c]
+LuxI >> Zero @ (gamma_i + mu_g + gamma_c)
 
 Cell(5 / u.l), Lysis(0 / u.l), AHL(1e-5 / u.l), LuxI(1e-5 / u.l)
 
@@ -97,7 +92,7 @@ MySim.plot_config.title, MySim.plot_config.title_fontsize = (
 MySim.plot_config.xlabel_fontsize, MySim.plot_config.ylabel_fontsize = 14, 14
 MySim.plot_config.ylabel = r"Conc. (mL$^{-1}$)"
 MySim.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Lysis_Clock/Lysis_Clock.pdf"
 )
 MySim.run()

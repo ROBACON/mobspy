@@ -5,10 +5,10 @@ from mobspy import *
     Here we declare four species and the single reaction A + B >> 2*C + D
     It enunciates the basics of MobsPy, like declaring a species using the BaseSpecies constructor
     Species counts are assigned using the call method
-    Rates are assigned using the getitem brackets []
+    Rates are assigned using the @ operator
 """
 A, B, C, D = BaseSpecies()
-A(200) + B(100) >> 2 * C + D[0.1]
+A(200) + B(100) >> 2 * C + D @ 0.1
 
 My_Sim = Simulation(A | B | C | D)
 My_Sim.save_data = False

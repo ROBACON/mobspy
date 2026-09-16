@@ -1,11 +1,12 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 A, B = BaseSpecies()
 
 # Replication reactions
-A >> 2 * A[1.05 / u.h]
-B >> 2 * B[1 / u.h]
+A >> 2 * A @ (1.05 / u.h)
+B >> 2 * B @ (1 / u.h)
 
 # Initial counts
 A(1 / u.ml), B(1 / u.ml)
@@ -15,7 +16,7 @@ S1 = Simulation(A | B)
 S1.duration = 3 * u.h
 S1.volume = 1 * u.ml
 
-A + B >> Zero[0.1 / u.h]
+A + B >> Zero @ (0.1 / u.h)
 
 S2 = Simulation(A | B)
 S2.duration = (A <= 0) | (B <= 0)
@@ -35,7 +36,7 @@ S.add_plot_params(
     suptitle_fontsize=18,
 )
 S.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Mutual_Annihilation/Mutual_Annihilation.pdf"
 )
 S.repetitions = 10

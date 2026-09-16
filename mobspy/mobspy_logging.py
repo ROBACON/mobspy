@@ -1,20 +1,27 @@
 """
 Centralized logging system for MobsPy.
 
-This module provides a consistent logging interface throughout the MobsPy codebase,
-allowing for better control over log levels, formatting, and output destinations.
+This module provides a consistent logging interface
+throughout the MobsPy codebase, allowing for better
+control over log levels, formatting, and output
+destinations.
 """
+
+from __future__ import annotations
 
 import logging
 import sys
 import traceback
-from typing import Optional, Any
+from typing import Any
+
+from mobspy.constants import DOT_SEPARATOR
+from mobspy.exceptions import MobsPyError
 
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds color to warning and error messages."""
 
-    COLORS: dict[str, str] = {
+    COLORS: dict[str, str] = {  # noqa: RUF012  # mutable class var is intentional
         "WARNING": "\033[93m",  # Yellow
         "ERROR": "\033[91m",  # Red
         "CRITICAL": "\033[91m",  # Red
@@ -22,6 +29,7 @@ class ColoredFormatter(logging.Formatter):
     }
 
     def format(self, record: logging.LogRecord) -> str:
+        """Apply ANSI color codes based on log level."""
         log_message = super().format(record)
         if record.levelname in self.COLORS:
             return f"{self.COLORS[record.levelname]}{log_message}{self.COLORS['RESET']}"
@@ -75,11 +83,11 @@ class MobsPyLogger:
         Returns:
             Formatted message
         """
-        return str(message).replace("_dot_", ".")
+        return str(message).replace(DOT_SEPARATOR, ".")
 
     def set_log_level(self, level: int | str) -> None:
         """
-        Set the logging level for all handlers.
+        Set the logging level for all MobsPy loggers.
 
         Args:
             level: Logging level constant (logging.DEBUG, logging.INFO, etc.),
@@ -87,8 +95,12 @@ class MobsPyLogger:
         """
         if isinstance(level, str):
             level = getattr(logging, level.upper())
-        for handler in self.logger.handlers:
-            handler.setLevel(level)
+        # Set on ALL mobspy loggers (propagate=False prevents inheritance)
+        for name, logger in logging.Logger.manager.loggerDict.items():
+            if isinstance(logger, logging.Logger) and name.startswith("mobspy"):
+                logger.setLevel(level)
+                for handler in logger.handlers:
+                    handler.setLevel(level)
 
     def add_file_handler(self, filename: str, level: int = logging.DEBUG) -> None:
         """
@@ -126,16 +138,17 @@ class MobsPyLogger:
     def error(
         self, message: str, *args: Any, full_exception_log: bool = False, **kwargs: Any
     ) -> None:
-        """
-        Log an error message and exit the program.
+        """Log an error message and raise MobsPyError.
 
         Args:
             message: The error message to log
             full_exception_log: If True, include full traceback
+
+        Raises:
+            MobsPyError: Always raised after logging the error.
         """
         formatted_message = self._format_message(message)
 
-        # Include full traceback if requested
         if full_exception_log:
             traceback_details: str = "".join(traceback.format_stack())
             formatted_message = (
@@ -143,7 +156,7 @@ class MobsPyLogger:
             )
 
         self.logger.error(formatted_message, *args, stacklevel=2, **kwargs)
-        sys.exit(1)
+        raise MobsPyError(formatted_message)
 
     def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log a critical message."""
@@ -160,7 +173,7 @@ class MobsPyLogger:
 logger = MobsPyLogger()
 
 
-def get_logger(name: Optional[str] = None) -> MobsPyLogger:
+def get_logger(name: str | None = None) -> MobsPyLogger:
     """
     Get a logger instance.
 

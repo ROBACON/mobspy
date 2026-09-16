@@ -1,9 +1,9 @@
 import plotly.express as px
+
 from mobspy import *
 
-
 """
-    Here we have a NOR_GATE 
+    Here we have a NOR_GATE
     There are two possible repressors for the Promoter A and B
     If any of them bind to the Promoter the protein can no longer be expressed
 """
@@ -13,10 +13,10 @@ def NOR_GATE(A_conc, B_conc):
     # Here we define the Protein to be produced, the Promoter that will act as the gate
     # A and B are the inputs any of them can inactivate the Promoter so they inherit from Repressor
     Repressor, Promoter, Protein = BaseSpecies()
-    Repressor + Promoter.active >> Promoter.inactive[0.5]
+    Repressor + Promoter.active >> Promoter.inactive @ 0.5
     A, B = New(Repressor)
-    Promoter >> Promoter + Protein[lambda promoter: 1 if promoter.active else 0]
-    Protein >> Zero[2]
+    Promoter >> Promoter + Protein @ (lambda promoter: 1 if promoter.active else 0)
+    Protein >> Zero @ 2
 
     Promoter(100)
     A(A_conc), B(B_conc)

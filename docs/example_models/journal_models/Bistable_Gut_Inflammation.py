@@ -1,5 +1,6 @@
-from mobspy import *
 import os
+
+from mobspy import *
 
 # Conversion taking to much time - why?
 
@@ -11,26 +12,26 @@ Pcro, PcI = New(Promoter)
 Promoter.bound, Promoter.unbound, Phosphorable.dephospho, Phosphorable.phospho
 
 # TtrS triggers the state transition, TTR indicates the presence of gut inflammation
-TtrS.dephospho + TTR >> TtrS.phospho + TTR[1 / u.min]
-TtrS.phospho + TtrR.dephospho >> TtrR.phospho + TtrS.dephospho[1 / u.min]
-TtrR.phospho >> TtrR.dephospho[5 * 1e-3 * 1 / u.second]
-TtrR.phospho >> Cro + TtrR.phospho[50 * 0.02 * 1 / u.min]
+TtrS.dephospho + TTR >> (TtrS.phospho + TTR) @ (1 / u.min)
+TtrS.phospho + TtrR.dephospho >> (TtrR.phospho + TtrS.dephospho) @ (1 / u.min)
+TtrR.phospho >> TtrR.dephospho @ (5 * 1e-3 * 1 / u.second)
+TtrR.phospho >> (Cro + TtrR.phospho) @ (50 * 0.02 * 1 / u.min)
 
 # Dummy represents the introduction of a constant flow of CI in the system
-Dummy >> CI + Dummy[30 * 0.02 * 1 / u.min]
+Dummy >> (CI + Dummy) @ (30 * 0.02 * 1 / u.min)
 
 # Dilution and degradation
-Dilutable >> Zero[0.02 / u.min]
-TF >> Zero[lambda r1: 0 if r1.is_a(CI) else 1.6e-2 * 1 / u.min]
+Dilutable >> Zero @ (0.02 / u.min)
+TF >> Zero @ (lambda r1: 0 if r1.is_a(CI) else 1.6e-2 * 1 / u.min)
 
 
 def Expression(P, Pdt, rate_expression, rate_leaky):
-    P >> P + Pdt[lambda r1: rate_expression if r1.unbound else rate_leaky]
+    P >> (P + Pdt) @ (lambda r1: rate_expression if r1.unbound else rate_leaky)
 
 
 def Repression(Prom, Rep, rate_binding, rate_unbinding):
-    Prom.unbound + 2 * Rep >> Prom.bound[rate_binding]
-    Prom.bound >> Prom.unbound + 2 * Rep[rate_unbinding]
+    Prom.unbound + 2 * Rep >> Prom.bound @ rate_binding
+    Prom.bound >> (Prom.unbound + 2 * Rep) @ rate_unbinding
 
 
 # Pcro produces Cro, and PcI produces CI
@@ -65,7 +66,7 @@ S.plot_config.figsize = (6.5, 4)
 S.plot_config.vertical_lines = [25, 60, 90, 130]
 S.plot_config.ylabel = r"Conc. (mL$^{-1}$)"
 S.plot_config.save_to = (
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
     + "/images/Toggle_Switch/Toggle_Switch.pdf"
 )
 S.run()

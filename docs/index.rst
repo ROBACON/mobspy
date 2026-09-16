@@ -7,6 +7,12 @@ Welcome to the MobsPy's documentation!
    readme
    tutorial
    application
+   journal
+   migration_guide
+   configuration
+   architecture
+   verification
+   releasing
 
 API
 ===

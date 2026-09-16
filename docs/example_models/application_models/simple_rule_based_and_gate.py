@@ -1,15 +1,17 @@
-from mobspy import *
-import seaborn
+"""Rule-based AND gate using promoter logic with Hill function dynamics."""
+
 import matplotlib.pyplot as plt
 
+from mobspy import *
+
 A, B, C, Pa, Pb = BaseSpecies()
-C >> Zero[1]
+C >> Zero @ 1
 
 
 def Promoter_Rule(Promoter, Ligand, Protein, K):
     (
         Promoter + Ligand
-        >> Promoter + Ligand + Protein[lambda p, l: (p / u.h) * l**4 / (K**4 + l**4)]
+        >> Promoter + Ligand + Protein @ (lambda p, l: (p / u.h) * l**4 / (K**4 + l**4))
     )
 
 
@@ -37,6 +39,10 @@ for i in range(len(S.results)):
         matrix.append(line)
         line = []
 
-ax = seaborn.heatmap(matrix)
+_, ax = plt.subplots()
+image = ax.imshow(matrix, origin="lower", aspect="auto")
+ax.set_xticks(range(len(x)), labels=x)
+ax.set_yticks(range(len(x)), labels=x)
 ax.set(xlabel="A", ylabel="B")
+plt.colorbar(image, ax=ax)
 plt.show()

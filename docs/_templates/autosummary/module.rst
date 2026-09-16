@@ -2,6 +2,7 @@
 
 .. automodule:: {{ fullname }}
    :members:
+   :no-index:
 
    {% block attributes %}
    {% if attributes %}
