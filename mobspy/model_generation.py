@@ -7,6 +7,7 @@ and compose_sbml() capabilities to the Simulation class.
 
 from __future__ import annotations
 
+import re
 from random import randint as rd_randint
 from typing import TYPE_CHECKING, Any
 
@@ -127,7 +128,7 @@ def _compose_reactions(
             reactants=reaction.reactants,
             products=reaction.products,
             kinetics="("
-            + reaction.kinetics.replace("volume", f"_vol{i}")
+            + re.sub(r"\bvolume\b", f"_vol{i}", reaction.kinetics)
             + ") * "
             + str(flag_species_name),
         )
@@ -238,10 +239,15 @@ class ModelGenerationMixin:
     """Mixin providing SBML and Antimony model generation for Simulation."""
 
     # Attributes provided by Simulation
-    _list_of_parameters: list[SimulationParameters]
-    _backend: SimulationBackend
     sbml_data_list: ParameterSweepList
-    _species_for_sbml: dict[str, Any] | None
+    if TYPE_CHECKING:
+
+        @property
+        def _list_of_parameters(self) -> list[SimulationParameters]: ...
+        @property
+        def _backend(self) -> SimulationBackend: ...
+        @property
+        def _species_for_sbml(self) -> dict[str, Any] | None: ...
 
     def compile(self, verbose: bool = True) -> Any:
         """Provided by Simulation at runtime."""
@@ -266,6 +272,19 @@ class ModelGenerationMixin:
             raise SBMLError(
                 "Single simulations cannot generate a composed sbml or antimony string"
             )
+        first = self.sbml_data_list[0][0]
+        for model in self.sbml_data_list[0][1:]:
+            if model.model_context != first.model_context:
+                raise SBMLError(
+                    "A single composed export requires identical units and volumes. "
+                    "Use generate_sbml() for individual stages or run() to convert "
+                    "units between stages."
+                )
+            if model.assignments_for_sbml != first.assignments_for_sbml:
+                raise SBMLError(
+                    "A single composed export requires identical assignment rules "
+                    "across stages. Export the stages separately."
+                )
         for i in range(len(self._list_of_parameters)):
             if self._list_of_parameters[i]["_end_condition"] is not None:
                 raise SBMLError(
@@ -283,9 +302,20 @@ class ModelGenerationMixin:
 
         new_sbml_file.species_for_sbml = dict(initial_sim.species_for_sbml)
         _compose_parameters(new_sbml_file, 0, initial_sim)
+        new_sbml_file.parameters_for_sbml["volume"] = initial_sim.parameters_for_sbml[
+            "volume"
+        ]
+        new_sbml_file.model_context = initial_sim.model_context
         new_sbml_file.assignments_for_sbml = dict(initial_sim.assignments_for_sbml)
         _compose_reactions(new_sbml_file, 0, "_SFS_0", initial_sim.reactions_for_sbml)
-        self._compose_event(new_sbml_file, "_SFS_0", "_SFS_1", 0, 0, initial_sim)
+        self._compose_event(
+            new_sbml_file,
+            "_SFS_0",
+            "_SFS_1",
+            0,
+            self._list_of_parameters[0]["duration"],
+            initial_sim,
+        )
 
         # Carry over user-defined events from the initial simulation,
         # gated by _SFS_0
@@ -305,7 +335,9 @@ class ModelGenerationMixin:
 
         for i in range(len(multi_sims)):
             new_sbml_file.species_for_sbml["_SFS_" + str(i)] = 0
-        new_sbml_file.species_for_sbml["_SFS_0"] = 1
+        new_sbml_file.species_for_sbml["_SFS_0"] = initial_sim.parameters_for_sbml[
+            "volume"
+        ][0]
 
         return new_sbml_file
 
@@ -358,16 +390,28 @@ class ModelGenerationMixin:
     ) -> None:
         """Integrate one simulation's components into the composite model."""
         _compose_parameters(new_sbml_file, i, sim_sbml)
-        _compose_reactions(new_sbml_file, i, pre_spe, sim_sbml.reactions_for_sbml)
+        offset = cul_duration - self._list_of_parameters[i]["duration"]
+        shifted_reactions = {
+            name: ReactionData(
+                reactants=reaction.reactants,
+                products=reaction.products,
+                kinetics=re.sub(r"\btime\b", f"(time - {offset})", reaction.kinetics),
+            )
+            for name, reaction in sim_sbml.reactions_for_sbml.items()
+        }
+        _compose_reactions(new_sbml_file, i, pre_spe, shifted_reactions)
         if not skip_end_event:
             self._compose_event(
                 new_sbml_file, pre_spe, next_spe, i, cul_duration, sim_sbml
             )
 
         for spe in sim_sbml.species_for_sbml:
-            if spe[0] == "_":
+            if spe[0] == "_" or spe in new_sbml_file.species_for_sbml:
                 continue
-            new_count = sim_sbml.species_for_sbml[spe]
+            # Existing species retain the preceding stage's final amount.
+            # Only species introduced at this stage receive their initial amount.
+            volume = sim_sbml.parameters_for_sbml["volume"][0]
+            new_count = sim_sbml.species_for_sbml[spe] / volume
             if spe not in new_sbml_file.species_for_sbml:
                 new_sbml_file.species_for_sbml[spe] = 0
             event_number = len(new_sbml_file.events_for_sbml)
@@ -383,7 +427,8 @@ class ModelGenerationMixin:
         for ev_name, ev_data in sim_sbml.events_for_sbml.items():
             if ev_name == "end_event":
                 continue
-            gate = f"(({ev_data.trigger}) && (_SFS_{i!s} > 0))"
+            trigger = re.sub(r"\btime\b", f"(time - {offset})", ev_data.trigger)
+            gate = f"(({trigger}) && (_SFS_{i!s} > 0))"
             gated_event = EventData(
                 trigger=gate,
                 delay=ev_data.delay,
@@ -408,9 +453,6 @@ class ModelGenerationMixin:
             if i == len(multi_sims) - 1:
                 skip_end_event = True
 
-            if sim_sbml.assignments_for_sbml:
-                _logger.warning("Assignments beyond the initial simulation are ignored")
-
             pre_spe = "_SFS_" + str(i)
             next_spe = "_SFS_" + str(i + 1)
             self._compose_a_sim(
@@ -427,27 +469,28 @@ class ModelGenerationMixin:
         """Rename 'volume' to '_vol' in reaction kinetics for Antimony compatibility."""
         new_sims = []
         for multi_sims in self.sbml_data_list:
-            sim_sbml = multi_sims[0]
-            new_sbml_file: SBMLModelDict = SBMLModelData(
-                species_for_sbml=sim_sbml.species_for_sbml,
-                parameters_for_sbml=sim_sbml.parameters_for_sbml,
-                events_for_sbml=sim_sbml.events_for_sbml,
-                assignments_for_sbml=sim_sbml.assignments_for_sbml,
-            )
-
-            new_sbml_file.parameters_for_sbml["_vol"] = sim_sbml.parameters_for_sbml[
-                "volume"
-            ]
-
-            for re_name, reaction in sim_sbml.reactions_for_sbml.items():
-                new_reaction = ReactionData(
-                    reactants=reaction.reactants,
-                    products=reaction.products,
-                    kinetics=reaction.kinetics.replace("volume", "_vol"),
+            chain = []
+            for sim_sbml in multi_sims:
+                parameters = dict(sim_sbml.parameters_for_sbml)
+                parameters["_vol"] = parameters.pop("volume")
+                reactions = {
+                    name: ReactionData(
+                        reactants=reaction.reactants,
+                        products=reaction.products,
+                        kinetics=re.sub(r"\bvolume\b", "_vol", reaction.kinetics),
+                    )
+                    for name, reaction in sim_sbml.reactions_for_sbml.items()
+                }
+                chain.append(
+                    SBMLModelData(
+                        species_for_sbml=dict(sim_sbml.species_for_sbml),
+                        parameters_for_sbml=parameters,
+                        reactions_for_sbml=reactions,
+                        events_for_sbml=dict(sim_sbml.events_for_sbml),
+                        assignments_for_sbml=dict(sim_sbml.assignments_for_sbml),
+                    )
                 )
-                new_sbml_file.reactions_for_sbml[re_name] = new_reaction
-
-            new_sims.append([new_sbml_file])
+            new_sims.append(chain)
         return new_sims
 
     def generate_sbml(self, compose: bool = False) -> list[str]:

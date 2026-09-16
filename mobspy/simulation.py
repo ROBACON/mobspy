@@ -7,18 +7,17 @@ simulating a Model.
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
+from copy import copy, deepcopy
 from dataclasses import fields
-from json import dump as json_dump
 from json import load as json_load
 from os.path import splitext as os_path_splitext
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any as TypingAny
 
-import joblib
 from pint import Quantity
 
+from mobspy.compiled_state import CompiledState
 from mobspy.compiler.compiler import compile_model
 from mobspy.constants import DOT_SEPARATOR
 from mobspy.dsl.any_species import (
@@ -27,13 +26,10 @@ from mobspy.dsl.any_species import (
 from mobspy.dsl.assignments_implementation import (
     Assign,
 )
-from mobspy.dsl.declarations import get_registry, snapshot_registry
+from mobspy.dsl.declarations import ModelRegistry
 from mobspy.dsl.list_species import List_Species
 from mobspy.dsl.logic_operators import (
     MetaSpeciesLogicResolver as lop_MetaSpeciesLogicResolver,
-)
-from mobspy.dsl.mobspy_parameters import (
-    Internal_Parameter_Constructor as _ParameterConstructor,
 )
 from mobspy.dsl.mobspy_parameters import (
     ModelParameters,
@@ -69,13 +65,8 @@ from mobspy.expressions.rate_builder import (
     where,
 )
 from mobspy.mobspy_logging import get_logger
+from mobspy.model import Model
 from mobspy.model_generation import ModelGenerationMixin
-from mobspy.params.parameter_reader import (
-    convert_time_parameters_after_compilation as pr_convert_time_parameters_after_compilation,  # noqa: E501  # long import path
-)
-from mobspy.params.parameter_reader import (
-    convert_volume_after_compilation as pr_convert_volume_after_compilation,
-)
 from mobspy.params.parameter_reader import (
     manually_process_each_parameter as pr_manually_process_each_parameter,
 )
@@ -85,50 +76,40 @@ from mobspy.params.parameter_reader import (
 from mobspy.params.parameter_reader import (
     read_json as pr_read_json,
 )
-from mobspy.params.parametric_sweeps import (
-    generate_all_sbml_models as ps_generate_all_sbml_models,
-)
 from mobspy.plotting import PlottingMixin, plot_results
 from mobspy.results.estimation import (
     basiCO_parameter_estimation,
 )
-from mobspy.results.process_data import (
-    convert_data_to_desired_unit as dh_convert_data_to_desired_unit,
-)
-from mobspy.results.process_data import (
-    extract_time_and_volume_list as dh_extract_time_and_volume_list,
-)
+from mobspy.results.io import save_results
+from mobspy.results.processing import process_results
 from mobspy.results.time_series import (
-    MobsPyTimeSeries,
     SimulationResults,
 )
+from mobspy.runtime import build_execution_plan
 from mobspy.simulation_composition import SimulationComposition
 from mobspy.simulation_config import PlotConfig, SimulationConfig
 from mobspy.types import (
+    BackendResults,
     ConcreteModel,
     Delta,
+    ExecutionPlan,
     RateValue,
+    SimulationBackend,
     SimulationEventData,
     SimulationMethod,
     SpeciesArg,
-    TimeSeriesDataDict,
 )
 from mobspy.units.handler import (
     extract_length_dimension as uh_extract_length_dimension,
 )
 from mobspy.units.model_context import ModelUnitContext
+from mobspy.units.parameters import parameter_values
 from mobspy.units.registry import u
 
 if TYPE_CHECKING:
     from mobspy.dsl.reactions import Reactions
     from mobspy.types import (
-        CompiledModelDict,
-        EventsForSbml,
-        MappingsForSbml,
-        ParametersForSbml,
         ParameterSweepList,
-        ReactionsForSbml,
-        SpeciesForSbml,
     )
 
 __all__ = [
@@ -139,6 +120,7 @@ __all__ = [
     "Default",
     "Delta",
     "ListSpecies",
+    "Model",
     "ModelParameters",
     "New",
     "RateValue",
@@ -167,6 +149,7 @@ logger = _logger
 
 
 class Simulation(
+    CompiledState,
     EventHandlingMixin,
     ModelGenerationMixin,
     PlottingMixin,
@@ -191,14 +174,43 @@ class Simulation(
         True
     """
 
+    _definition: Model | None
+
+    @property
+    def _backend(self) -> SimulationBackend:
+        value: SimulationBackend = self.__dict__["_backend"]
+        return value
+
+    @_backend.setter
+    def _backend(self, value: SimulationBackend) -> None:
+        self.__dict__["_backend"] = value
+
+    @property
+    def _list_of_parameters(self) -> list[TypingAny]:
+        value: list[TypingAny] = self.__dict__["_list_of_parameters"]
+        return value
+
+    @_list_of_parameters.setter
+    def _list_of_parameters(self, value: list[TypingAny]) -> None:
+        self.__dict__["_list_of_parameters"] = value
+
+    @property
+    def plot_parameters(self) -> dict[str, TypingAny]:
+        value: dict[str, TypingAny] = self.__dict__["plot_parameters"]
+        return value
+
+    @plot_parameters.setter
+    def plot_parameters(self, value: dict[str, TypingAny]) -> None:
+        self.__dict__["plot_parameters"] = value
+
     def __init__(  # noqa: PLR0913  # complex function signature
         self,
-        model: Species | List_Species,
+        model: Species | List_Species | Model,
         reactions: set[Reactions] | None = None,
         names: dict[str, TypingAny] | None = None,
         parameters: dict[str, TypingAny] | None = None,
         plot_parameters: dict[str, TypingAny] | None = None,
-        backend: TypingAny = None,
+        backend: SimulationBackend | None = None,
     ) -> None:
         """
         Constructor of the simulation object.
@@ -231,11 +243,16 @@ class Simulation(
         else:
             self._backend = backend
         self.experimental_data: TypingAny = None
-        self._declarations = snapshot_registry()
+        self._definition = (
+            model if isinstance(model, Model) else Model(model, reactions)
+        )
+        self._declarations = self._definition.declarations
         self._init_event_state()
-        self._init_model(model, names)
-        self._init_reactions(reactions)
-        self._init_counts()
+        self._init_model(self._definition.species, names)
+        self._reactions_set = set(
+            self._definition.reactions if reactions is None else reactions
+        )
+        self._species_counts = [dict(count) for count in self._definition.counts]
         self._init_config(parameters, plot_parameters)
         self._init_sbml_state()
 
@@ -268,19 +285,15 @@ class Simulation(
         self.total_packed_events: list[SimulationEventData] = []
         self.number_of_context_comparisons = 0
         self.pre_number_of_context_comparisons = 0
-        self._list_of_models: list[CompiledModelDict] = []
-        self._list_of_parameters: list[TypingAny] = []
+        self._list_of_parameters = []
         self._context_not_active = True
         self.packed_data: list[TypingAny] = []
-        self._assigned_species_list: list[str] = []
         self._conditional_event = False
         self._end_condition = None
-        self.model_parameters: dict[str, TypingAny] = {}
         self.sbml_data_list: ParameterSweepList = []
         self._parameter_list_of_dic: list[dict[str, TypingAny]] = []
         self._is_compiled = False
         self.dimension: int | None = None
-        self.model_parameter_objects_dict: dict[str, TypingAny] | None = None
 
     def _init_model(
         self,
@@ -304,61 +317,6 @@ class Simulation(
         self.names = names
         self.orthogonal_vector_structure = mcu_create_orthogonal_vector_structure(model)  # type: ignore[arg-type]  # DSL flexibility
 
-    def _init_reactions(self, reactions: set[Reactions] | None) -> None:
-        """Collect reactions from explicit set or from the model registry.
-
-        Filters the registry snapshot by species membership: only reactions
-        where at least one participant is in the model (including references).
-        """
-        if reactions is not None:
-            self._reactions_set = set(reactions)
-        else:
-            model_species_ids = self._model_species_ids()
-            self._reactions_set = self._declarations.reactions_for_species(
-                model_species_ids
-            )
-
-    def _model_species_ids(self) -> frozenset[int]:
-        """Collect ids of all species in the model, including references."""
-        ids: set[int] = set()
-        for spe_object in self.model:
-            for reference in spe_object.get_references():
-                ids.add(id(reference))
-        return frozenset(ids)
-
-    def _init_counts(self) -> None:
-        """Gather species counts from the registry or Species objects.
-
-        The registry is the primary source (supports overwrite and
-        reset semantics). Falls back to Species traversal when
-        the registry has no counts for model species.
-        """
-        model_species = set(self.model)
-        registry_counts = [
-            ca for ca in self._declarations.counts if ca.species in model_species
-        ]
-        if registry_counts:
-            self._species_counts = [
-                {
-                    "object": ca.species,
-                    "characteristics": ca.characteristics,
-                    "quantity": ca.quantity,
-                }
-                for ca in registry_counts
-            ]
-        else:
-            # Legacy fallback
-            self._species_counts = []
-            for spe_object in self.model:
-                for count in spe_object.get_quantities():
-                    self._species_counts.append(
-                        {
-                            "object": spe_object,
-                            "characteristics": count["characteristics"],
-                            "quantity": count["quantity"],
-                        }
-                    )
-
     def _init_config(
         self,
         parameters: dict[str, TypingAny] | None,
@@ -373,7 +331,7 @@ class Simulation(
             self.parameters = config
 
         if not plot_parameters:
-            self.plot_parameters: dict[str, TypingAny] = PlotConfig()
+            self.plot_parameters = PlotConfig()
         else:
             self.plot_parameters = PlotConfig(plot_parameters)
 
@@ -383,18 +341,35 @@ class Simulation(
 
     def _init_sbml_state(self) -> None:
         """Initialize SBML compilation output slots."""
+        self._plan: ExecutionPlan | None = None
         self._concrete_model: ConcreteModel | None = None
-        self._species_for_sbml: SpeciesForSbml | None = None
-        self._reactions_for_sbml: ReactionsForSbml | None = None
-        self._parameters_for_sbml: ParametersForSbml | None = None
-        self._mappings_for_sbml: MappingsForSbml | None = None
-        self._events_for_sbml: EventsForSbml | None = None
-        self._model_context: ModelUnitContext | None = None
-        self.model_string = ""
+        self._runtime_parameters: dict[str, TypingAny] = {}
+        self._compiled_config: tuple[str, ...] = ()
+        self._model_updates: dict[str, TypingAny] = {}
 
     def _set_parameter(self, name: str, value: TypingAny) -> None:
         """Set a simulation parameter directly, bypassing __setattr__."""
         self.__dict__["parameters"][name] = value
+
+    def _configuration_key(self) -> tuple[str, ...]:
+        """Detect configuration edits, including direct dict-style edits."""
+        return (
+            *(repr(value) for _, value in self.parameters.items()),
+            repr(self.total_packed_events),
+            repr(self.dimension),
+            repr(self._end_condition),
+        )
+
+    def _ensure_compiled(self) -> None:
+        if not self._is_compiled or self._compiled_config != self._configuration_key():
+            self.compile(verbose=False)
+
+    @property
+    def compiled_model(self) -> ConcreteModel:
+        """The authoritative compiled model, shared by all compatibility views."""
+        if self._concrete_model is None:
+            raise SimulationError("Compile the simulation before accessing its model")
+        return self._concrete_model
 
     # ------------------------------------------------------------------
     # Inlined from Experimental_Data_Holder
@@ -457,6 +432,8 @@ class Simulation(
                     "(name, value)"
                 )
             self._update_from_compiler(arg)
+            key = arg[0] if isinstance(arg[0], str) else str(arg[0])
+            self._model_updates[key] = tuple(arg)
 
     def _update_from_compiler(self, arg: TypingAny) -> None:
         """Dispatch a (name, value) update to either parameters or species."""
@@ -494,39 +471,28 @@ class Simulation(
             raise SimulationError("Unsupported argument type for model update")
 
     def _update_parameter(self, arg: TypingAny) -> None:
-        """Update a parameter value across all compiled models."""
-        is_sequence = isinstance(arg[1], (list, tuple))
-        value_to_update = arg[1][0] if is_sequence else arg[1]
-        parameter_str = arg[0] if isinstance(arg[0], str) else arg[0].get_name()
-
-        for model in self._list_of_models:
-            try:
-                model.parameters_for_sbml[parameter_str] = (
-                    value_to_update,
-                    "dimensionless",
-                )
-            except KeyError as e:
-                raise SimulationError(
-                    f"The parameter named {parameter_str} was not found in the model"
-                ) from e
-
-        try:
-            parameter_object = self.model_parameters[parameter_str].object
-        except KeyError as e:
+        """Update a simulation-local parameter without changing its source model."""
+        name = arg[0] if isinstance(arg[0], str) else arg[0].get_name()
+        if name not in self.model_parameters:
             raise SimulationError(
-                f"The parameter named {parameter_str} was not found in the model"
-            ) from e
-        parameter_object.update_value(arg[1])
-
-        try:
-            if not is_sequence:
-                self.model_parameters[parameter_str].values = [parameter_object.value]
-            else:
-                self.model_parameters[parameter_str].values = parameter_object.value
-        except KeyError as e:
-            raise SimulationError(
-                f"The parameter named {parameter_str} was not found in the model"
-            ) from e
+                f"The parameter named {name} was not found in the model"
+            )
+        info = self.model_parameters[name]
+        parameter = copy(info.object)
+        parameter._parameter_set = set(parameter._parameter_set)
+        parameter.update_value(arg[1])
+        values = parameter_values(parameter, self._model_context)
+        info.object = parameter
+        info.values = values
+        unit = self.compiled_model.parameters.get(name, (0, "dimensionless"))[1]
+        if name in self.compiled_model.parameters:
+            self.compiled_model.parameters[name] = (values[0], unit)
+        for location in info.used_in:
+            if location in self.compiled_model.species:
+                self.compiled_model.species[location] = parameter_values(
+                    parameter, self._model_context, counts=True
+                )[0]
+        self.compiled_model.parameter_objects[name] = parameter
 
     def _update_species(self, arg: TypingAny) -> None:
         """Update species counts in the compiled model."""
@@ -541,7 +507,7 @@ class Simulation(
             convert_counts as uh_convert_counts_fn,
         )
 
-        volume = self.__dict__.get("volume", 1)
+        volume = self.compiled_model.parameters["volume"][0]
         dimension = self.__dict__["dimension"]
         model_context = getattr(self, "_model_context", None)
 
@@ -549,20 +515,28 @@ class Simulation(
             arg[1], volume, dimension, model_context=model_context
         )
 
+        if isinstance(arg[0], str):
+            from mobspy.types import ConcreteSpeciesId  # noqa: PLC0415
+
+            name = arg[0].replace(".", DOT_SEPARATOR)
+            name = ConcreteSpeciesId.from_sbml_id(name).to_sbml_id()
+            self.compiled_model.species[name] = spe_count
+            return
+
         query = arg[0].get_query_characteristics()
         if _ALL in query:
             spe_ids = sp_construct_all_species_ids(
                 arg[0], query, self.orthogonal_vector_structure
             )
             for sid in spe_ids:
-                self._list_of_models[0].species_for_sbml[sid.to_sbml_id()] = spe_count
+                self.compiled_model.species[sid.to_sbml_id()] = spe_count
         else:
             spe_string = sp_construct_species_id(
                 arg[0],
                 query,
                 self.orthogonal_vector_structure,
             ).to_sbml_id()
-            self._list_of_models[0].species_for_sbml[spe_string] = spe_count
+            self.compiled_model.species[spe_string] = spe_count
 
     def compile(self, verbose: bool = True) -> str | None:
         """
@@ -584,6 +558,12 @@ class Simulation(
             ParameterError: If required parameters are missing or invalid.
             ValidationError: If the model structure is invalid.
         """
+        definition = self._definition
+        if definition is None:
+            raise SimulationError(
+                "This simulation was deleted; create a new Simulation"
+            )
+        params = self.parameters.to_dict()
         try:
             if self.dimension is None:
                 if isinstance(self.volume, Quantity):
@@ -600,48 +580,65 @@ class Simulation(
                 2: logging.INFO,
                 3: logging.DEBUG,
             }
-            mobspy_level = self.parameters.get("level", 3)
+            mobspy_level = params.get("level", 3)
             log_level = _LEVEL_MAP.get(mobspy_level, logging.INFO)
             _logger.set_log_level(log_level)
 
             # Resolve model unit context BEFORE parameter processing
             # (parameter_process strips units from duration/volume)
             _model_context = ModelUnitContext.from_simulation(
-                volume=self.parameters["volume"],
-                duration=self.parameters["duration"],
+                volume=params["volume"],
+                duration=params["duration"],
                 species_counts=self._species_counts,
                 dimension=self.dimension,
             )
 
-            pr_parameter_process(self.parameters, model_context=_model_context)  # type: ignore[arg-type]  # DSL flexibility
-            if self.parameters["method"] is not None:
-                self.parameters["simulation_method"] = self.parameters["method"]
+            pr_parameter_process(params, model_context=_model_context)
+            if params["method"] is not None:
+                params["simulation_method"] = params["method"]
 
-            method_lower = self.parameters["simulation_method"].lower()
-            if method_lower not in ("deterministic", "stochastic"):
-                raise ParameterError(
-                    "Invalid simulation method: "
-                    f"{self.parameters['simulation_method']}. "
-                    "Must be 'deterministic' or 'stochastic'"
-                )
+            method_lower = params["simulation_method"].lower()
+            if method_lower not in {
+                "deterministic",
+                "lsoda",
+                "stochastic",
+                "directmethod",
+                "tauleap",
+                "hybrid",
+                "hybridode45",
+                "hybridlsoda",
+                "sde",
+            }:
+                raise ParameterError(f"Invalid simulation method: {method_lower}")
             self.plot_parameters["simulation_method"] = method_lower
 
-            self.parameters["_end_condition"] = self._end_condition
+            params["_end_condition"] = self._end_condition
+
+            identities: dict[int, TypingAny] = {
+                id(reference): reference
+                for species in self.model
+                for reference in species.get_references()
+            }
+            identities.update(
+                {id(value): value for value in definition.parameters.values()}
+            )
+            events = deepcopy(self.total_packed_events, identities.copy())
+            ending_condition = deepcopy(self._end_condition, identities.copy())
 
             _result = compile_model(
                 self.model,
                 reactions_set=self._reactions_set,
                 species_counts=self._species_counts,
                 orthogonal_vector_structure=self.orthogonal_vector_structure,
-                volume=self.parameters["volume"],
+                volume=params["volume"],
                 dimension=self.dimension,
-                type_of_model=self.parameters.get("rate_type") or "stochastic",
+                type_of_model=params.get("rate_type") or "stochastic",
                 verbose=verbose,
-                event_dictionary=self.total_packed_events,
-                continuous_sim=self.parameters["_continuous_simulation"],
-                ending_condition=self.parameters["_end_condition"],
-                skip_expression_check=self.parameters["skip_expression_check"],
-                parameter_context=dict(_ParameterConstructor.parameter_stack),
+                event_dictionary=events,
+                continuous_sim=params["_continuous_simulation"],
+                ending_condition=ending_condition,
+                skip_expression_check=params["skip_expression_check"],
+                parameter_context=dict(definition.parameters),
                 model_context=_model_context,
             )
         except MobsPyError:
@@ -653,39 +650,18 @@ class Simulation(
         self._concrete_model = _result.to_concrete_model()
 
         # Extract fields for backward compatibility
-        self._species_for_sbml = _result.species_for_sbml
-        self._reactions_for_sbml = _result.reactions_for_sbml
-        self._parameters_for_sbml = _result.parameters_for_sbml
-        self._mappings_for_sbml = _result.mappings_for_sbml
-        self.model_string = _result.model_str
-        self._events_for_sbml = _result.events_for_sbml
-        self._assigned_species_list = _result.assigned_species
-        self.model_parameters = _result.parameters_used
-        self.model_parameter_objects_dict = _result.parameter_object_dict
-        self._assignments_for_sbml = _result.assignments_for_sbml
-        self._has_mole = _result.has_mole
-        self._model_context = _result.model_context
         self._validate_discrete_stoichiometry(method_lower)
 
         # The volume is converted to the proper unit at the compiler level
-        self.parameters["volume"] = self._parameters_for_sbml["volume"][0]
-        self.mappings = deepcopy(self._mappings_for_sbml)
+        params["volume"] = self.compiled_model.parameters["volume"][0]
 
-        self.all_species_not_mapped = {}
-        for key in self._species_for_sbml:
-            self.all_species_not_mapped[key.replace(DOT_SEPARATOR, ".")] = (
-                self._species_for_sbml[key]
-            )
-
-        compiled_model = self._concrete_model.to_compiled_model(
-            species_not_mapped=self.all_species_not_mapped,
-            mappings=self.mappings,
-        )
-        self._list_of_models = [compiled_model]
-
-        self._list_of_parameters = [self.parameters]
+        self._list_of_parameters = [params]
 
         self._is_compiled = True
+        self._runtime_parameters = params
+        self._compiled_config = self._configuration_key()
+        for update in self._model_updates.values():
+            self._update_from_compiler(update)
 
         if self.model_string == "":
             return None
@@ -693,12 +669,18 @@ class Simulation(
         return self.model_string
 
     def _assemble_multi_simulation_structure(self) -> None:
-        data_for_sbml_construction: ParameterSweepList
-        data_for_sbml_construction, parameter_list_of_dic = ps_generate_all_sbml_models(
-            self.model_parameters, self._list_of_models
+        self._ensure_compiled()
+        self._plan = build_execution_plan(
+            [self.compiled_model], [self._runtime_parameters]
         )
-        self.sbml_data_list = data_for_sbml_construction
-        self._parameter_list_of_dic = parameter_list_of_dic
+        self.sbml_data_list = [
+            [
+                model.to_compiled_model(dict(model.species), dict(model.mappings))
+                for model in chain
+            ]
+            for chain in self._plan.models
+        ]
+        self._parameter_list_of_dic = list(self._plan.parameter_values)
 
     def _process_run_parameters(self, **kwargs: TypingAny) -> None:
         """Process and apply run-time parameter overrides, then ensure compilation."""
@@ -709,119 +691,25 @@ class Simulation(
             self.level = level
 
         # Base case - If there are no events we compile the model here
-        if self._species_for_sbml is None:
-            self.compile(verbose=False)
+        self._ensure_compiled()
 
         self._assemble_multi_simulation_structure()
 
-    def _execute_simulations(self) -> tuple[list[TypingAny], int]:
+    def _execute_simulations(self) -> tuple[BackendResults, int]:
         """Run simulations via the pluggable backend."""
-        jobs = self.set_job_number(self.parameters)  # type: ignore[arg-type]
-        results = self._backend.run(
-            self.sbml_data_list, self._list_of_parameters, jobs=jobs
-        )
+        if self._plan is None:
+            raise SimulationError("Simulation has no execution plan")
+        jobs = self.set_job_number(self._runtime_parameters)
+        results = self._backend.run(self._plan, jobs=jobs)
         return results, jobs
 
-    def _convert_and_store_results(
-        self,
-        raw_results: TypingAny,
-        jobs: int,
-    ) -> None:
-        """Convert raw time-series data to desired units and store in self.results."""
-        # Auto-set unit_y when user used molar units.
-        # When model_context is active and substance is molar, data from COPASI
-        # is already in moles - no auto-conversion needed.
-        _substance_is_molar = (
-            self._model_context is not None and self._model_context.substance_is_molar
+    def _convert_and_store_results(self, raw_results: BackendResults) -> None:
+        """Store results converted from the current execution plan."""
+        if self._plan is None:
+            raise SimulationError("Simulation has no execution plan")
+        self.results, self.fres = process_results(
+            raw_results, self._plan, self._list_of_parameters
         )
-        if not _substance_is_molar:
-            if (
-                self.parameters["unit_y"] is None
-                and self.parameters["output_concentration"]
-                and self._has_mole
-            ):
-                self.parameters["unit_y"] = 1 * u.unit_registry_object.molar
-            elif (
-                self.parameters["unit_y"] is None
-                and not self.parameters["output_concentration"]
-                and self._has_mole
-            ):
-                self.parameters["unit_y"] = 1 * u.unit_registry_object.mol
-
-        # Volume list and time list are to convert into concentrations
-        # This section also checks if the output_concentration parameter is valid
-        volume_list, time_list, flag_concentration = dh_extract_time_and_volume_list(
-            self._list_of_parameters
-        )
-        _unit_y = self.parameters["unit_y"]
-        tcb = _unit_y is not None and "[length]" not in _unit_y.dimensionality
-        if not flag_concentration or tcb:
-            self.parameters["output_concentration"] = False
-
-        def convert_one_ts_to_desired_unit(unconverted_data: TypingAny) -> TypingAny:
-            """Convert a single time series to the requested units."""
-            return dh_convert_data_to_desired_unit(
-                unconverted_data,
-                time_list,
-                volume_list,
-                self.parameters["unit_x"],
-                self.parameters["unit_y"],
-                self.parameters["output_concentration"],
-                model_context=self._model_context,
-            )
-
-        def convert_all_ts_to_correct_format(
-            single_ts: TypingAny,
-            parameters: TypingAny,
-            unit_convert: bool = False,
-        ) -> TypingAny:
-            """Wrap a time series into a MobsPyTimeSeries object."""
-            data_dict = TimeSeriesDataDict(
-                data=convert_one_ts_to_desired_unit(single_ts)
-                if unit_convert
-                else single_ts,
-                params=self.parameters,
-                models=self._list_of_models,
-            )
-            return MobsPyTimeSeries(data_dict, parameters)
-
-        flatt_ts: list[tuple[TypingAny, TypingAny]] = []
-        if self._parameter_list_of_dic:
-            flatt_ts = [
-                (ts, params)
-                for r, params in zip(
-                    raw_results, self._parameter_list_of_dic, strict=True
-                )
-                for ts in r  # pyright: ignore[reportOptionalIterable]
-            ]
-        else:
-            flatt_ts = [
-                (ts, {})
-                for r in raw_results
-                for ts in r  # pyright: ignore[reportOptionalIterable]
-            ]
-
-        needs_conversion = (
-            self.parameters["unit_x"] is not None
-            or self.parameters["unit_y"] is not None
-            or flag_concentration
-        )
-        all_processed_data: list[TypingAny] = list(
-            joblib.Parallel(n_jobs=jobs, prefer="threads")(
-                joblib.delayed(convert_all_ts_to_correct_format)(
-                    ts, params, needs_conversion
-                )
-                for ts, params in flatt_ts
-            )
-            or []
-        )
-
-        self.results = SimulationResults(
-            all_processed_data,  # pyright: ignore[reportArgumentType]
-            self.model_parameter_objects_dict,  # pyright: ignore[reportArgumentType]
-        )
-        if all_processed_data:
-            self.fres = SimulationResults([all_processed_data[0]], None, True)  # pyright: ignore[reportArgumentType]  # DSL flexibility
 
     def run(  # noqa: PLR0913  # complex function signature
         self,
@@ -905,15 +793,15 @@ class Simulation(
             plot_data=plot_data,
         )
 
-        raw_results, num_jobs = self._execute_simulations()
-        self._convert_and_store_results(raw_results, num_jobs)
+        raw_results, _ = self._execute_simulations()
+        self._convert_and_store_results(raw_results)
 
         if self.parameters["save_data"]:
             self.save_data()
 
         # Set common simulation and plot parameters
-        self.plot_parameters["unit_x"] = self.parameters["unit_x"]
-        self.plot_parameters["unit_y"] = self.parameters["unit_y"]
+        self.plot_parameters["unit_x"] = self._runtime_parameters["unit_x"]
+        self.plot_parameters["unit_y"] = self._runtime_parameters["unit_y"]
         self.plot_parameters["output_concentration"] = self.parameters[
             "output_concentration"
         ]
@@ -932,36 +820,27 @@ class Simulation(
     def delete(self) -> None:
         """Release MobsPy state associated with this simulation.
 
-        This removes declarations for the simulation's species from the active
-        DSL registry and clears compiled models/results held by this object.
-        After calling this method, create a new ``Simulation`` if you want to
-        run the model again.
+        Clears this simulation's owned declarations, compiled model, and results.
+        Shared species and reusable Model objects are unaffected. Create a new
+        Simulation to run the model again.
         """
-        registry = get_registry()
-        species_to_remove: set[Species] = set()
-        for spe_object in self.model:
-            species_to_remove.add(spe_object)
-            species_to_remove.update(spe_object.get_references())
-
-        for spe_object in species_to_remove:
-            registry.remove_reactions_for(spe_object)
-            registry.remove_counts_for(spe_object)
-
-        self._declarations.clear()
-        self._reactions_set.clear()
+        self._init_event_state()
+        self._plan = None
+        self.names = None
+        self.orthogonal_vector_structure = {}
+        self.parameters["_end_condition"] = None
+        self._definition = None
+        self.model = List_Species([])
+        self._declarations = ModelRegistry(owning=True)
+        self._model_updates = {}
+        self.total_packed_events = []
+        self._runtime_parameters = {}
+        self._reactions_set = set()
         self._species_counts = []
-        self._list_of_models = []
         self._list_of_parameters = []
         self.sbml_data_list = []
         self._parameter_list_of_dic = []
         self._concrete_model = None
-        self._species_for_sbml = None
-        self._reactions_for_sbml = None
-        self._parameters_for_sbml = None
-        self._mappings_for_sbml = None
-        self._events_for_sbml = None
-        self._assignments_for_sbml = {}
-        self.model_string = ""
         self.results = {}
         self.fres = {}
         self._is_compiled = False
@@ -978,45 +857,14 @@ class Simulation(
             SimulationError: If simulation results are not available
             IOError: If file writing fails
         """
-        if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available to save")
-
         self._save_data(file=file)
 
     def _save_data(self, file: str | None = None) -> None:
-        """
-        Save results manually into file. Useful for jupyter notebook users.
-
-        Args:
-            file: Optional name of the file to create and save JSON data
-
-        Raises:
-            IOError: If file writing fails
-            SimulationError: If results are not available
-        """
-        if not hasattr(self, "results") or not self.results:
-            raise SimulationError("No simulation results available to save")
-
-        try:
-            if file is None:
-                if "absolute_output_file" not in self.parameters:
-                    raise ParameterError(
-                        "No default output file specified in parameters"
-                    )
-                out_path = self.parameters["absolute_output_file"]
-                with Path(out_path).open("w", encoding="utf-8") as f:
-                    json_dump(self.results.to_dict(), f, indent=4)  # type: ignore[union-attr]  # guarded at runtime
-            else:
-                # Add .json extension if not present
-                if not file.endswith(".json"):
-                    file += ".json"
-                with Path(file).open("w", encoding="utf-8") as jf:
-                    json_dump(self.results.to_dict(), jf, indent=4)  # type: ignore[union-attr]  # guarded at runtime
-                    _logger.info(f"Successfully saved simulation results to {file}")
-        except OSError as e:
-            raise SimulationError(f"Error saving data to file: {e!s}") from e
-        except (TypeError, ValueError) as e:
-            raise SimulationError(f"Error serializing simulation data: {e!s}") from e
+        save_results(
+            self.__dict__.get("results"),
+            file,
+            self._runtime_parameters.get("absolute_output_file"),
+        )
 
     def _pack_data(self, time_series_data: TypingAny) -> None:
         """
@@ -1050,7 +898,6 @@ class Simulation(
     _INTERNAL_ATTRS: frozenset[str] = frozenset(
         {
             "default_order",
-            "volume",
             "model",
             "names",
             "parameters",
@@ -1099,6 +946,11 @@ class Simulation(
             "_has_mole",
             "_model_context",
             "_declarations",
+            "_definition",
+            "_plan",
+            "_runtime_parameters",
+            "_compiled_config",
+            "_model_updates",
             "_backend",
             "_concrete_model",
             "packed_data",
@@ -1119,18 +971,6 @@ class Simulation(
 
         # Simulation parameters
         if name in self._SIMULATION_PARAMS:
-            if self._is_compiled and name not in {"unit_x", "unit_y"}:
-                value = pr_convert_time_parameters_after_compilation(
-                    value, model_context=self._model_context
-                )
-            if self._is_compiled and name == "volume":
-                value = pr_convert_volume_after_compilation(
-                    self.dimension,
-                    self._parameters_for_sbml,  # type: ignore[arg-type]
-                    value,
-                    model_context=self._model_context,
-                )
-
             if name == "duration":
                 if isinstance(value, bool):
                     raise SimulationError(
@@ -1147,6 +987,9 @@ class Simulation(
                     ):
                         self._set_parameter("initial_conditional_duration", 1)
                     return
+                self._set_parameter("_continuous_simulation", False)
+                self._set_parameter("_end_condition", None)
+                self.__dict__["_end_condition"] = None
 
             self._set_parameter(name, value)
             return
@@ -1210,16 +1053,6 @@ class Simulation(
         else:
             raise ParameterError("Parameters must be python dictionary or json file")
         return parameters_to_config
-
-    def add_plot_params(self, *args: TypingAny, **kwargs: TypingAny) -> None:
-        """Merge additional plotting parameters into this simulation."""
-        for a in args:
-            if isinstance(a, dict):
-                for par in a:
-                    self.plot_parameters[par] = a[par]
-
-        for key, value in kwargs.items():
-            self.plot_parameters[key] = deepcopy(value)
 
     def __add__(self, other: Simulation) -> SimulationComposition:
         """

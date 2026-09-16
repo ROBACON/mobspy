@@ -6,7 +6,7 @@ import contextlib
 import re
 from collections.abc import Callable
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from numpy import (
     add as np_add,
@@ -51,6 +51,7 @@ from mobspy.expressions.nodes import (
 )
 from mobspy.mobspy_logging import get_logger
 from mobspy.types import RenderContext
+from mobspy.units.validation import real_magnitude
 
 _logger = get_logger(__name__)
 
@@ -750,7 +751,7 @@ class QuantityConverter:
             vol_q = ur.Quantity(1, str(model_context.volume_unit))
             dim = model_context.dimension
             vol_dim = dict(vol_q.dimensionality)
-            length_exp = int(vol_dim.get("[length]", dim))
+            length_exp = int(real_magnitude(vol_dim.get("[length]", dim)))
             if length_exp == 0:
                 length_exp = dim
             if length_exp > 0:
@@ -941,7 +942,10 @@ class OverrideQuantity(ExpressionDefiner, Quantity):
     def __new__(cls, quantity_object: PlainQuantity[Any]) -> OverrideQuantity:
         # Delegates to pint's Quantity.__new__ (the implicit path), but pins the
         # return type so callers see OverrideQuantity instead of PlainQuantity.
-        return super().__new__(cls, quantity_object)  # type: ignore[return-value]  # pyright: ignore[reportReturnType]  # pint __new__ is typed to return PlainQuantity
+        return cast(
+            OverrideQuantity,
+            super().__new__(cls, quantity_object.magnitude, quantity_object.units),
+        )
 
     def __init__(self, quantity_object: PlainQuantity[Any]) -> None:
         self._generate_necessary_attributes()

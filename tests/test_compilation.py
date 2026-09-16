@@ -456,7 +456,8 @@ class TestSetCounts:
         cm = S._concrete_model
 
         assert len(cm.species) == 1
-        assert str(cm.species["A"]) == "a" or cm.species["A"] == "a"
+        assert cm.species["A"] == 1
+        assert "A" in cm.parameters_used["a"].used_in
         assert "a" in cm.parameters
         rxns = {k: v for k, v in cm.reactions.items() if "phantom" not in k}
         assert len(rxns) == 1
@@ -917,8 +918,10 @@ class TestParameters:
         S.compile(verbose=False)
         cm = S._concrete_model
 
-        assert str(cm.species["L"]) == "L_0" or cm.species["L"] == "L_0"
-        assert str(cm.species["R"]) == "R_0" or cm.species["R"] == "R_0"
+        assert cm.species["L"] == 100
+        assert "L" in cm.parameters_used["L_0"].used_in
+        assert cm.species["R"] == 200
+        assert "R" in cm.parameters_used["R_0"].used_in
         assert "L_0" in cm.parameters
         assert "R_0" in cm.parameters
         assert cm.parameters["L_0"][0] == 100

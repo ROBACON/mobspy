@@ -4,6 +4,7 @@ This module implements the class that stores the results from a MobsPy simulatio
 
 from __future__ import annotations
 
+from dataclasses import fields, is_dataclass
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
@@ -21,6 +22,22 @@ if TYPE_CHECKING:
         Internal_Parameter_Constructor,
     )
     from mobspy.types import TimeSeriesDataDict
+
+
+def _serialize_metadata(value: Any) -> Any:
+    """Convert typed model metadata to JSON values without changing live objects."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if is_dataclass(value) and not isinstance(value, type):
+        return {
+            field.name: _serialize_metadata(getattr(value, field.name))
+            for field in fields(value)
+        }
+    if isinstance(value, dict):
+        return {str(key): _serialize_metadata(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_serialize_metadata(item) for item in value]
+    return str(value)
 
 
 class MobsPyTimeSeries:
@@ -55,19 +72,7 @@ class SimulationResults:
 
     def check_parameters_for_deepcopy(self) -> None:
         """Cast non-primitive parameter values to strings for safe deepcopy."""
-        for i, d in enumerate(self.ts_parameters):
-            for par, val in d.items():
-                if not isinstance(
-                    val,
-                    (
-                        int,
-                        float,
-                        str,
-                        bool,
-                    ),
-                ):
-                    # cast to str
-                    self.ts_parameters[i][par] = str(val)
+        self.ts_parameters[:] = [_serialize_metadata(p) for p in self.ts_parameters]
 
     def __init__(
         self,
@@ -131,7 +136,8 @@ class SimulationResults:
         return {
             "data": self.ts_data,
             "params": self.ts_parameters,
-            "models": self.ts_models,
+            "models": _serialize_metadata(self.ts_models),
+            "model_parameters": _serialize_metadata(self.ts_model_parameters),
         }
 
     def __len__(self) -> int:

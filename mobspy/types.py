@@ -105,17 +105,16 @@ class SimulationBackend(Protocol):
     IR produced by the compiler).
     """
 
-    def generate_model(self, model: ConcreteModel, model_context: Any = None) -> str:
+    def generate_model(self, model: ConcreteModel) -> str:
         """Generate a model string from the backend-agnostic IR."""
         ...
 
     def run(
         self,
-        model_strings: list[Any],
-        parameters: list[Any],
+        plan: ExecutionPlan,
         jobs: int = -1,
-    ) -> list[Any]:
-        """Execute simulations and return raw results."""
+    ) -> BackendResults:
+        """Return native-unit concentrations for each sweep and repetition."""
         ...
 
 
@@ -229,6 +228,8 @@ class SBMLModelData:
     reactions_for_sbml: dict[str, ReactionData] = field(default_factory=dict)
     events_for_sbml: dict[str, EventData] = field(default_factory=dict)
     assignments_for_sbml: dict[str, AssignmentData] = field(default_factory=dict)
+
+    model_context: ModelUnitContext | None = None
 
     # Deprecated: use attribute access instead
     def __getitem__(self, key: str) -> Any:
@@ -383,6 +384,70 @@ ParametersUsed = dict[str, ParameterUsedInfo]
 ParameterSweepList = list[list[CompiledModel]]
 SimParams = SimulationParameters
 
+RawTimeSeries: TypeAlias = dict[str, list[float]]
+BackendResults: TypeAlias = list[list[RawTimeSeries]]
+
+
+@dataclass(frozen=True)
+class RunSettings:
+    """Resolved numeric execution settings, independent of plotting and the DSL."""
+
+    duration: float = 60
+    volume: float = 1
+    repetitions: int = 1
+    simulation_method: str = "deterministic"
+    start_time: float = 0
+    r_tol: float = 1e-8
+    a_tol: float = 1e-10
+    step_size: float | None = None
+    seeds: tuple[int, ...] | None = None
+    output_event: bool = False
+    with_events: bool = False
+    conditional_duration: float | None = None
+
+    @classmethod
+    def from_parameters(cls, params: dict[str, Any]) -> RunSettings:
+        """Capture an execution-only copy of normalized simulation parameters."""
+        return cls(
+            duration=float(params["duration"]),
+            volume=float(params["volume"]),
+            repetitions=params["repetitions"],
+            simulation_method=params["simulation_method"],
+            start_time=float(params["start_time"]),
+            r_tol=params["r_tol"],
+            a_tol=params["a_tol"],
+            step_size=params["step_size"],
+            seeds=tuple(params["seeds"]) if params["seeds"] is not None else None,
+            output_event=params["output_event"],
+            with_events=params["_with_event"],
+            conditional_duration=float(params["initial_conditional_duration"])
+            if params["_continuous_simulation"]
+            else None,
+        )
+
+
+@dataclass(frozen=True)
+class ExecutionPlan:
+    """A sweep of model chains and the settings for each stage.
+
+    Backends receive only this compiled input. They must not mutate models or
+    settings; each repetition starts from the same initial state. Output times
+    and concentrations use the first stage's unit system across a chain.
+    """
+
+    models: tuple[tuple[ConcreteModel, ...], ...]
+    settings: tuple[RunSettings, ...]
+    parameter_values: tuple[dict[str, int | float], ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.models or not self.settings:
+            raise ValueError("An execution plan requires at least one model and stage")
+        if any(len(chain) != len(self.settings) for chain in self.models):
+            raise ValueError("Each model chain must match the execution settings")
+        if self.parameter_values and len(self.parameter_values) != len(self.models):
+            raise ValueError("Each sweep must have its own parameter values")
+
+
 # Backward compat aliases for the old TypedDict names
 SBMLModelDict = SBMLModelData
 CompiledModelDict = CompiledModel
@@ -465,8 +530,9 @@ class ConcreteModel:
     """Backend-agnostic IR of a fully compiled MobsPy model.
 
     Produced by ``compile_model()``, consumed by backends.
-    Immutable and serializable. Field names are intentionally
-    free of backend-specific terminology (no ``_for_sbml``).
+    The container is frozen; updates to its mappings belong to its owning
+    simulation. Execution backends must treat it as read-only. Field names are
+    intentionally free of backend-specific terminology (no ``_for_sbml``).
     """
 
     species: dict[str, int | float] = field(default_factory=SpeciesDict)

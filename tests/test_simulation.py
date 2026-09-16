@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 import mobspy
@@ -176,8 +174,9 @@ class TestSimulationExecution:
         Sim.duration = 30 * u.hour
         Sim.volume = 1 * u.m**3
         Sim.run(plot_data=False)
-        assert Sim._parameters_for_sbml["volume"][0] > 100
-        assert Sim.fres["Time"][-1] > 100
+        Sim.run(plot_data=False, unit_y=1 / u.L)
+        assert Sim.fres["A"][0] == pytest.approx(0.2)
+        assert Sim.fres["Time"][-1] == pytest.approx(30)
 
     def test_duration_with_run(self):
         A, B = BaseSpecies()
@@ -335,12 +334,13 @@ class TestMultiParameterSimulation:
         S.level = -1
         S.repetitions = 10
         S.compile()
-        assert S2.__dict__["parameters"]["plot_type"] == "stochastic"
+        assert S2.parameters["plot_type"] is None
+        assert S2._runtime_parameters["plot_type"] == "stochastic"
 
 
 @pytest.mark.slow
 class TestPlotting:
-    def test_plotting(self):
+    def test_plotting(self, tmp_path):
         Color, Disease = BaseSpecies()
         Color.blue, Color.red, Color.yellow
         Disease.not_sick, Disease.sick
@@ -355,15 +355,16 @@ class TestPlotting:
         S.step_size = 0.25
         S.duration = 1
         S.run(plot_data=False)
-        S.plot_config.save_to = "tests/plot_output/stochastic_tree.png"
+        S.plot_config.save_to = str(tmp_path / "stochastic_tree.png")
         S.plot_stochastic(Tree.not_sick, Tree.sick)
-        S.plot_config.save_to = "tests/plot_output/deterministic_tree.png"
+        S.plot_config.save_to = str(tmp_path / "deterministic_tree.png")
         S.plot(Tree.not_sick, Tree.sick)
-        S.plot_config.save_to = "tests/plot_output/constant_tree.png"
+        S.plot_config.save_to = str(tmp_path / "constant_tree.png")
         S.plot()
-        assert os.path.exists("tests/plot_output/stochastic_tree.png")  # noqa: PTH110
-        assert os.path.exists("tests/plot_output/deterministic_tree.png")  # noqa: PTH110
-        assert os.path.exists("tests/plot_output/constant_tree.png")  # noqa: PTH110
+        for name in ("stochastic_tree", "deterministic_tree", "constant_tree"):
+            assert (
+                (tmp_path / f"{name}.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+            )
 
 
 class TestErrorHandling:

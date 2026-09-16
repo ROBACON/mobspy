@@ -141,6 +141,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
         self.first_characteristic: str | None = None
 
         self._species_counts: list[dict[str, Any]] = []
+        self._reactions: set[Reactions] = set()
 
     @classmethod
     def check_if_valid_characteristic(
@@ -804,10 +805,9 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def get_reactions(self) -> set[Reactions]:
         """Return the set of reactions involving this species.
 
-        Queries the :class:`~mobspy.dsl.declarations.ModelRegistry`.
+        Reactions are owned by participating species.
         """
-        registry = get_registry()
-        return registry.reactions_for_species(frozenset({id(self)}))
+        return set(self._reactions)
 
     def reset_reactions(self) -> None:
         """Remove all reactions involving this species from the registry.
@@ -820,6 +820,7 @@ class Species(lop_SpeciesComparator, Assignment_Opp_Imp):
     def reset_counts(self) -> None:
         """Clear all initial count assignments."""
         self._species_counts = []
+        get_registry().remove_counts_for(self)
 
     @classmethod
     def set_simulation_context(cls, sim: Simulation) -> None:

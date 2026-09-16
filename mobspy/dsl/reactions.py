@@ -252,6 +252,9 @@ class Reactions:
             ),
             rate=self.rate,
         )
+        self.declaration = decl
+        for participant in (*decl.reactants, *decl.products):
+            participant.species._reactions.add(self)
         registry.add_reaction(decl, reaction_obj=self)
 
     @staticmethod

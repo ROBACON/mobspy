@@ -16,6 +16,7 @@ from scipy.constants import N_A
 from mobspy.exceptions import UnitError
 from mobspy.expressions.evaluation import OverrideQuantity
 from mobspy.units.registry import u as _mobspy_u
+from mobspy.units.validation import real_magnitude
 
 _ur = _mobspy_u.unit_registry_object
 
@@ -194,7 +195,7 @@ class ModelUnitContext:
             vol_ur = _ur.Quantity(1, str(vol_q.units))
             dim_dict = dict(vol_ur.dimensionality)
             if "[length]" in dim_dict:
-                length_exp = int(dim_dict["[length]"])
+                length_exp = int(real_magnitude(dim_dict["[length]"]))
                 if dimension is None:
                     dimension = length_exp
                 ctx.dimension = dimension
@@ -542,7 +543,7 @@ class ModelUnitContext:
             length_exp = dim_container.get("[length]", 0)
             if length_exp == 0:
                 return None
-            return int(length_exp)
+            return int(real_magnitude(length_exp))
         except (DimensionalityError, TypeError, ValueError, AttributeError):
             if "[length]" not in unit_string:
                 return None
@@ -582,13 +583,13 @@ def _extract_substance_unit(quantity: Quantity) -> Unit:
         if dim_name == "[substance]":
             continue
         if dim_name == "[length]":
-            complement = complement * _ur.liter ** (-int(power) / 3)
+            complement = complement * _ur.liter ** (-int(real_magnitude(power)) / 3)
         elif dim_name == "[time]":
-            complement = complement * _ur.second ** (-int(power))
+            complement = complement * _ur.second ** (-int(real_magnitude(power)))
         elif dim_name == "[mass]":
-            complement = complement * _ur.kilogram ** (-int(power))
+            complement = complement * _ur.kilogram ** (-int(real_magnitude(power)))
 
-    isolated = q * complement
+    isolated: Quantity = q * complement
 
     # Try to match against standard substance units
     candidates: list[Any] = [
@@ -618,7 +619,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:
     quantity = ModelUnitContext._to_plain_quantity(quantity)
     q = _ur.Quantity(1, str(quantity.units))
     dim = dict(q.dimensionality)
-    length_power = int(dim.get("[length]", 0))
+    length_power = int(real_magnitude(dim.get("[length]", 0)))
     if length_power == 0:
         msg = f"No length dimension in {quantity}"
         raise UnitError(msg)
@@ -638,7 +639,7 @@ def _extract_volume_unit(quantity: Quantity, dimension: int) -> Unit:
                 continue
 
     # For compound units (e.g. millimolar = mmol/L), convert to base units
-    q = q.to_base_units()  # type: ignore[assignment]  # pint narrows Quantity to PlainQuantity; still compatible
+    q = q.to_base_units()
 
     if abs_power == dimension:
         # It's a volume: figure out which standard volume from the base magnitude
@@ -755,7 +756,7 @@ def _decompose_pint_unit(pint_unit: Unit) -> list[_SbmlUnitComponent] | None:
             continue
         comp = _SbmlUnitComponent(
             kind=kind,
-            exponent=int(power),
+            exponent=int(real_magnitude(power)),
             scale=0,
             # Put the magnitude multiplier on the first component only
             multiplier=magnitude if first else 1.0,

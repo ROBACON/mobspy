@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from pint import Quantity
+
     from mobspy.types import SimulationMethod
 
 _MAX_LEVEL = 3
@@ -40,7 +42,7 @@ class SimulationConfig:
     """
 
     # Model parameters
-    volume: int | float = 1
+    volume: int | float | Quantity = 1
     repetitions: int = 1
     level: int = 2
     rate_type: str | None = None
@@ -49,7 +51,7 @@ class SimulationConfig:
     simulation_method: SimulationMethod = "deterministic"
     method: str | None = None
     start_time: int | float = 0
-    duration: int | float = 60
+    duration: int | float | Quantity = 60
     r_tol: float = 1e-8
     a_tol: float = 1e-10
     step_size: int | float | None = None

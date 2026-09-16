@@ -197,7 +197,7 @@ class TestFunctionIsolation:
         assert S1.fres["B"][-1] > 90
         assert S2.fres["C"][-1] > 90
 
-    def test_delete_removes_simulation_declarations(self) -> None:
+    def test_delete_preserves_species_declarations(self) -> None:
         from mobspy.dsl.declarations import get_registry
 
         A = BaseSpecies(["A"])
@@ -211,8 +211,8 @@ class TestFunctionIsolation:
 
         S.delete()
 
-        assert len(registry.reactions) == 0
-        assert len(registry.counts) == 0
+        assert len(registry.reactions) == 1
+        assert len(registry.counts) == 1
         assert S._list_of_models == []
         assert S.__dict__["results"] == {}
 

@@ -92,6 +92,7 @@ if TYPE_CHECKING:
         SpeciesForSbml,
     )
     from mobspy.units.model_context import ModelUnitContext
+from mobspy.units.parameters import parameter_values
 
 _logger = get_logger(__name__)
 
@@ -406,33 +407,7 @@ def _add_to_parameters_to_sbml(
         param_unit = rate_unit_id
 
     for parameter in parameters_to_add:
-        # Reconvert time-dimensioned parameter values to model time unit
-        vals = parameter.value
-        if (
-            model_context is not None
-            and hasattr(parameter, "original_unit")
-            and parameter.original_unit is not None
-        ):
-            from pint import Quantity as PintQuantity  # noqa: PLC0415
-
-            ou = parameter.original_unit
-            # Only reconvert if the parameter has time dimension
-            test_q = PintQuantity(1, ou)
-            has_time = "[time]" in dict(test_q.dimensionality)
-            if has_time and parameter.conversion_factor != 0:
-                target = 1 / model_context.time_unit
-                if isinstance(vals, list):
-                    vals = [
-                        float(
-                            PintQuantity(v / parameter.conversion_factor, ou)
-                            .to(target)
-                            .magnitude
-                        )
-                        for v in vals
-                    ]
-                else:
-                    orig_q = PintQuantity(vals / parameter.conversion_factor, ou)
-                    vals = float(orig_q.to(target).magnitude)
+        vals = parameter_values(parameter, model_context)
 
         if parameter.name in parameters_used:
             parameters_used[parameter.name].used_in.add(SBML_LOCATION)
@@ -581,13 +556,17 @@ def _apply_count_to_species(
         else:
             acc.parameters_used[quantity.name] = ParameterUsedInfo(
                 name=quantity.name,
-                values=quantity.value,
+                values=parameter_values(quantity, ctx.model_context),
                 used_in=set(species_strings),
                 object=quantity,
             )
 
-    temp_count = uh_convert_counts(
-        quantity, ctx.volume, ctx.dimension, model_context=ctx.model_context
+    temp_count = (
+        parameter_values(quantity, ctx.model_context, counts=True)[0]
+        if isinstance(quantity, mp_Mobspy_Parameter)
+        else uh_convert_counts(
+            quantity, ctx.volume, ctx.dimension, model_context=ctx.model_context
+        )
     )
     for spe_str in species_strings:
         if isinstance(temp_count, float) and ctx.type_of_model != "deterministic":

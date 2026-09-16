@@ -77,5 +77,18 @@ if __name__ == "__main__":
     Sim = S1 + S2
     Sim.unit_x = u.h
     Sim.unit_y = 1 / u.ml
-    Sim.run()
-    Sim.plot_raw("plot_config_donor.json")
+    Sim.run(plot_data=False)
+    Sim.plot_raw(
+        {
+            "xlabel": "Time (h)",
+            "ylabel": "Concentration (1/mL)",
+            "Donor": {"label": "Donors", "color": "tab:blue"},
+            "Receiver": {"label": "Receivers", "color": "tab:orange"},
+            "Dead": {"label": "Dead cells", "color": "tab:gray"},
+            "Phage": {"label": "Phages", "color": "tab:green"},
+            "figures": [
+                {"title": "Cells", "species_to_plot": ["Donor", "Receiver", "Dead"]},
+                {"title": "Phages", "species_to_plot": ["Phage"]},
+            ],
+        }
+    )

@@ -75,7 +75,9 @@ class Internal_Parameter_Constructor(me_ExpressionDefiner, me_QuantityConverter)
         self.value = converted.magnitude
 
         self.original_magnitude = value.magnitude
-        self.conversion_factor = self.value / self.original_magnitude
+        original = getattr(value, "q_object", value)
+        basis = original._REGISTRY.Quantity(1, str(value.units))
+        self.conversion_factor = self.convert_received_unit(basis).magnitude
         self.original_unit = value.units
 
         # Store the converted (MobsPy standard) unit for unit tracking.

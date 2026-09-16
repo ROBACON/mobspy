@@ -1,4 +1,4 @@
-<img src="_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
+<img src="https://raw.githubusercontent.com/ROBACON/mobspy/main/_static/images/img.png" alt="MobsPy logo" title="MobsPy" width="100">
 
 # MobsPy
 
@@ -16,6 +16,8 @@ To get started, you only need to pip install:
 
 And check out the [Read the Docs for MobsPy](https://mobspy-doc.readthedocs.io/en/latest/).
 Tutorial notebooks and example models are available in the `docs/example_models/` directory.
+Install `mobspy[examples]` for their plotting and notebook dependencies.
+See [example and notebook verification](docs/verification.md) for test commands and CI coverage.
 
 
 # How it works
@@ -81,7 +83,7 @@ Just use the Simulation constructor and the run command to execute a simulation.
 # Parameter definition
 
 The parameters are defined using the dot notation on the simulation object. For standard parameters, use the dot notation directly, and for plotting parameters, use the `.plot_config.parameter` notation.
-See [here for a list of parameters](https://github.com/ROBACON/mobspy/blob/main/mobspy/parameters/README.md).
+See [here for a list of parameters](https://mobspy-doc.readthedocs.io/en/latest/configuration.html).
 Standard parameters can also be configured using a JSON file with the `.set_from_json` method. As an example, we have the code below:
 
 	MySim.save_data = False
@@ -91,7 +93,7 @@ Standard parameters can also be configured using a JSON file with the `.set_from
 	MySim.plot_config.xlim = [0,1]
 	MySim.plot_config.ylim = [0, 1e3]
 
-For a full list of parameters, see the [parameters README](https://github.com/ROBACON/mobspy/blob/main/mobspy/parameters/README.md).
+For a full list of parameters, see the [parameters README](https://mobspy-doc.readthedocs.io/en/latest/configuration.html).
 
 # Units
 	
@@ -119,8 +121,8 @@ MobsPy supports defining and compiling models from multiple threads concurrently
 MobsPy follows [Semantic Versioning](https://semver.org/). The public API is
 everything exported from `mobspy.__init__` (listed in `__all__`):
 
-- **Patch** releases (2.8.x) contain bug fixes only.
-- **Minor** releases (2.x.0) may add new features but will not break existing
+- **Patch** releases (3.0.x) contain bug fixes only.
+- **Minor** releases (3.x.0) may add new features but will not break existing
   code.
 - **Major** releases (x.0.0) may contain breaking changes. These will be
   documented in the changelog with migration instructions.
@@ -128,8 +130,9 @@ everything exported from `mobspy.__init__` (listed in `__all__`):
 Experimental features (such as ODE syntax) are explicitly marked and may change
 in any release.
 
-See [CHANGELOG.md](CHANGELOG.md) for the full release history.
-
+See [CHANGELOG.md](CHANGELOG.md) for the full release history, the
+[migration guide](docs/migration_guide.md) for the 3.0 transition, and
+[release instructions](docs/releasing.md) for publishing.
 
 
 

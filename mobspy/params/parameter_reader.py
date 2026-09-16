@@ -49,9 +49,10 @@ def name_output_file(params: dict[str, Any]) -> None:
         params: Dictionary with simulation parameters.
     """
 
-    file_name = "r_"
-    file_name += str(datetime.now()) + ".json"
-    params["absolute_output_file"] = params["output_dir"] + file_name
+    file_name = params["output_file"] or f"r_{datetime.now():%Y%m%d_%H%M%S_%f}.json"
+    if not file_name.endswith(".json"):
+        file_name += ".json"
+    params["absolute_output_file"] = str(Path(params["output_dir"]) / file_name)
 
 
 def check_stochastic_repetitions_seeds(params: dict[str, Any]) -> None:
@@ -101,7 +102,11 @@ def convert_parameters_for_COPASI(  # noqa: N802  # legacy DSL method name
             and (key not in {"unit_x", "unit_y"})
             and str(p.dimensionality) == "[time]"
         ):
-            params[key] = p.convert(target_unit).magnitude
+            from mobspy.units.model_context import ModelUnitContext  # noqa: PLC0415
+
+            params[key] = (
+                ModelUnitContext._to_plain_quantity(p).to(target_unit).magnitude
+            )
             continue
 
 

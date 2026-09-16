@@ -120,7 +120,7 @@ class EventHandlingMixin:
             yield 0
         finally:
             self._conditional_event = False
-            delay_val = delay.magnitude if isinstance(delay, Quantity) else delay
+            delay_val = delay
             self.event_context_add(delay_val, trigger)
 
     @contextmanager
@@ -140,7 +140,7 @@ class EventHandlingMixin:
             self._event_handler()
             yield 0
         finally:
-            time_val = time.magnitude if isinstance(time, Quantity) else time
+            time_val = time
             self.event_context_add(time_val, "true")
 
     def at(
@@ -161,7 +161,7 @@ class EventHandlingMixin:
             assignments: ``{species_or_reacting: count}`` pairs.
         """
         self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
-        time_val = time.magnitude if isinstance(time, Quantity) else time
+        time_val = time
         event_counts = _resolve_event_assignments(assignments)
         event_data = SimulationEventData(
             event_time=time_val,
@@ -195,7 +195,7 @@ class EventHandlingMixin:
                 "Do not use == for event conditions."
             )
         self._set_parameter("_with_event", True)  # type: ignore[attr-defined]
-        delay_val = delay.magnitude if isinstance(delay, Quantity) else delay
+        delay_val = delay
         event_counts = _resolve_event_assignments(assignments)
         event_data = SimulationEventData(
             event_time=delay_val,

@@ -7,6 +7,7 @@ Provides the PlottingMixin class that adds plotting capabilities
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from mobspy.dsl.reactions import Reacting_Species
@@ -62,9 +63,28 @@ class PlottingMixin:
     """Mixin providing plotting capabilities for Simulation."""
 
     # These attributes are provided by the Simulation class
-    _list_of_models: list[CompiledModelDict]
     results: SimulationResults | dict[str, Any]
-    plot_parameters: dict[str, Any]
+    if TYPE_CHECKING:
+
+        @property
+        def _list_of_models(self) -> list[CompiledModelDict]: ...
+        @property
+        def plot_parameters(self) -> dict[str, Any]: ...
+
+    def add_plot_params(self, *args: dict[str, Any], **kwargs: Any) -> None:
+        """Merge plot dictionaries and keyword options, copying nested styles.
+
+        For species styles, pass ``{"A": {"color": "red"}}``. Keyword
+        arguments such as ``title="Growth"`` configure the whole plot.
+        """
+        if any(not isinstance(parameters, dict) for parameters in args):
+            raise ValidationError(
+                "add_plot_params expects dictionaries as positional arguments; "
+                'use {"SpeciesName": {"color": "red"}} for species styles'
+            )
+        for parameters in args:
+            self.plot_parameters.update(deepcopy(parameters))
+        self.plot_parameters.update(deepcopy(kwargs))
 
     def extract_plot_essentials(
         self, *species: str | Species | Reacting_Species

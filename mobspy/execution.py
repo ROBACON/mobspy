@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from mobspy.sbml.builder import build as sbml_build
 from mobspy.sbml.runner import simulate as sbml_simulate
-from mobspy.types import ConcreteModel, SBMLModelData
+from mobspy.types import ConcreteModel, RunSettings, SBMLModelData
 
 if TYPE_CHECKING:
     from mobspy.types import CompiledModel, CompilerResult, SimulationParameters
@@ -72,8 +72,10 @@ def run_sbml(
     """
     import joblib  # noqa: PLC0415  # circular import avoidance
 
+    settings = [RunSettings.from_parameters(dict(p)) for p in parameters]
+
     def _sim_one(x: list[CompiledModel]) -> Any:
-        return sbml_simulate(jobs, parameters, x)
+        return sbml_simulate(jobs, settings, x)
 
     results: list[Any] = list(
         joblib.Parallel(n_jobs=jobs, prefer="threads")(

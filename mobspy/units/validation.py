@@ -6,11 +6,20 @@ Validates dimensional consistency at reaction definition time
 
 from __future__ import annotations
 
+from decimal import Decimal
+from numbers import Real
 from typing import Any
 
 from pint import Quantity
 
 from mobspy.exceptions import UnitError
+
+
+def real_magnitude(value: object) -> float:
+    """Validate a real scalar at the boundary to Pint's broad numeric types."""
+    if isinstance(value, (Real, Decimal)):
+        return float(value)
+    raise UnitError(f"Expected a real numeric value, got {value!r}")
 
 
 def validate_rate_units(
@@ -48,7 +57,7 @@ def validate_rate_units(
             "Reaction rates must include a time component (e.g., 1/s, mol/L/s)."
         )
 
-    time_exp = dim.get("[time]", 0)
+    time_exp = real_magnitude(dim.get("[time]", 0))
     if time_exp >= 0:
         raise UnitError(
             f"Rate {rate} has a non-negative time exponent ({time_exp}). "

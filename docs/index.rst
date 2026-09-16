@@ -9,6 +9,10 @@ Welcome to the MobsPy's documentation!
    application
    journal
    migration_guide
+   configuration
+   architecture
+   verification
+   releasing
 
 API
 ===

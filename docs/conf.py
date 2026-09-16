@@ -51,3 +51,6 @@ exclude_patterns = [
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = []
+
+# test_notebooks.py executes every notebook; Sphinx only renders their source.
+nbsphinx_execute = "never"

@@ -3,97 +3,107 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (for example v3.0.0rc1)
+        required: true
+        type: string
+      confirm_publish:
+        description: Type RELEASE to publish to PyPI
+        required: true
+        type: string
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  lint:
+  validate:
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+      tag: ${{ steps.source.outputs.tag }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install ruff==0.15.8
-      - name: Ruff check
-        run: ruff check .
-      - name: Ruff format
-        run: ruff format --check .
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install dependencies
+      - name: Validate manual release request
+        env:
+          EVENT: ${{ github.event_name }}
+          CONFIRM: ${{ inputs.confirm_publish }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[test]"
-          pip install mypy pyright
-      - name: mypy
-        run: mypy mobspy/
-      - name: pyright
-        run: pyright mobspy/
-
-  test:
-    needs: [lint, typecheck]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+          if [ "$EVENT" = workflow_dispatch ] && [ "$CONFIRM" != RELEASE ]; then
+            echo "Manual release requires confirm_publish=RELEASE" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-          cache: pip
-      - name: Install dependencies
+      - run: python -m pip install packaging
+      - name: Require an existing tag on main
+        id: source
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[test]"
-      - name: Run tests
-        run: python -m pytest tests/ -q
+          [[ "$RELEASE_TAG" == v* ]]
+          git check-ref-format "refs/tags/$RELEASE_TAG"
+          tagged_commit=$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")
+          test "$tagged_commit" = "$(git rev-parse HEAD)"
+          git merge-base --is-ancestor "$tagged_commit" origin/main
+          echo "sha=$tagged_commit" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+      - name: Check package version
+        id: version
+        env:
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+        run: python scripts/check_release.py --tag "$RELEASE_TAG"
 
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install build tools
-        run: pip install build
-      - name: Build sdist and wheel
-        run: python -m build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
+  ci:
+    needs: validate
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.validate.outputs.sha }}
 
   publish-pypi:
-    needs: build
+    needs: [validate, ci]
     runs-on: ubuntu-latest
-    environment: pypi
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mobspy/
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
-          name: dist
+          name: python-dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    needs: build
+    needs: [validate, publish-pypi]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
-          name: dist
+          name: python-dist
           path: dist/
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" dist/* --generate-notes
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
+          PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+        shell: bash
+        run: |
+          options=(--verify-tag --generate-notes)
+          if [ "$PRERELEASE" = true ]; then options+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" dist/* "${options[@]}"

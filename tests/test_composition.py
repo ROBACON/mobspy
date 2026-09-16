@@ -208,7 +208,7 @@ class TestDoublecastParameters:
 
 
 class TestPlotConfig:
-    def test_plot_config_delegates_to_base_sim(self):
+    def test_plot_config_is_owned_by_composition(self):
         A = BaseSpecies()
         A(10)
         S1 = Simulation(A)
@@ -218,10 +218,10 @@ class TestPlotConfig:
 
         S = S1 + S2
         S.plot_config.title = "Test Title"
-        assert S1.plot_config.title == "Test Title"
+        assert S1.plot_parameters.get("title") != "Test Title"
         assert S.plot_config.title == "Test Title"
 
-    def test_plot_config_shares_state_with_base_sim(self):
+    def test_plot_config_does_not_change_base_sim(self):
         A = BaseSpecies()
         A(10)
         S1 = Simulation(A)
@@ -231,7 +231,8 @@ class TestPlotConfig:
 
         S = S1 + S2
         S.plot_config.xlabel = "Time (s)"
-        assert S1.plot_config.xlabel == "Time (s)"
+        assert S1.plot_parameters.get("xlabel") != "Time (s)"
+        assert S.plot_config.xlabel == "Time (s)"
 
 
 class TestCompilation:

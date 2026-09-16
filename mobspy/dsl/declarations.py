@@ -31,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypeAlias
+from weakref import ReferenceType, WeakValueDictionary, ref
 
 if TYPE_CHECKING:
     from pint import Quantity
@@ -199,128 +200,115 @@ class RatedProduct:
 
 
 class ModelRegistry:
-    """Thread-local accumulator for DSL declarations.
+    """Weak discovery index for declarations owned by their species.
 
-    Operators append declarations here.  ``Simulation.__init__``
-    snapshots and clears the registry.
+    Captured models use owning snapshots; the ambient session cannot keep an
+    otherwise unreachable model alive. Removing a simulation never edits this
+    index or the declarations of another simulation.
     """
 
-    def __init__(self) -> None:
-        self.reactions: list[ReactionDecl] = []
-        self.reaction_objects: list[Reactions] = []
-        self._counts: dict[tuple[int, frozenset[str] | str], CountAssignment] = {}
+    def __init__(self, *, owning: bool = False) -> None:
+        self._objects: dict[int, Reactions] | WeakValueDictionary[int, Reactions] = (
+            {} if owning else WeakValueDictionary()
+        )
+        self._counts: dict[
+            tuple[int, frozenset[str] | str],
+            tuple[ReferenceType[Species], Any],
+        ] = {}
         self.events: list[EventDecl] = []
-        self._reaction_species: dict[int, frozenset[int]] = {}
+        self._owners: list[Species] | None = [] if owning else None
+
+    @property
+    def reaction_objects(self) -> list[Reactions]:
+        return list(self._objects.values())
+
+    @property
+    def reactions(self) -> list[ReactionDecl]:
+        return [reaction.declaration for reaction in self._objects.values()]
 
     @property
     def counts(self) -> list[CountAssignment]:
-        """Return count assignments as an ordered list."""
-        return list(self._counts.values())
-
-    def add_reaction(
-        self,
-        decl: ReactionDecl,
-        reaction_obj: Reactions | None = None,
-    ) -> None:
-        """Register a reaction declaration and its Reactions object."""
-        self.reactions.append(decl)
-        if reaction_obj is not None:
-            self.reaction_objects.append(reaction_obj)
-            species_ids: set[int] = set()
-            for ref in decl.reactants:
-                species_ids.add(id(ref.species))
-            for ref in decl.products:
-                species_ids.add(id(ref.species))
-            self._reaction_species[id(reaction_obj)] = frozenset(species_ids)
-
-    def add_count(self, assignment: CountAssignment) -> None:
-        """Register or overwrite a count assignment.
-
-        Keyed by ``(id(species), characteristics)`` so that
-        reassigning a count updates the existing entry.
-        """
-        key = (id(assignment.species), assignment.characteristics)
-        self._counts[key] = assignment
-
-    def remove_counts_for(self, species: Species) -> None:
-        """Remove all count assignments for a species.
-
-        Called by ``Species.reset_quantities()`` to keep the
-        registry in sync.
-        """
-        species_id = id(species)
-        to_remove = [k for k in self._counts if k[0] == species_id]
-        for k in to_remove:
-            del self._counts[k]
-
-    def remove_reactions_for(self, species: Species) -> None:
-        """Remove all reactions where the given species participates.
-
-        Called by ``Species.reset_reactions()`` to keep the
-        registry in sync.
-        """
-        species_id = id(species)
-        to_remove_ids: set[int] = set()
-        for rxn_id, spe_ids in self._reaction_species.items():
-            if species_id in spe_ids:
-                to_remove_ids.add(rxn_id)
-
-        # Filter both parallel lists together
-        new_reactions: list[ReactionDecl] = []
-        new_objects: list[Reactions] = []
-        for decl, obj in zip(self.reactions, self.reaction_objects, strict=True):
-            if id(obj) not in to_remove_ids:
-                new_reactions.append(decl)
-                new_objects.append(obj)
-        self.reactions = new_reactions
-        self.reaction_objects = new_objects
-        for rxn_id in to_remove_ids:
-            self._reaction_species.pop(rxn_id, None)
-
-    def reactions_for_species(
-        self,
-        model_species_ids: frozenset[int],
-    ) -> set[Reactions]:
-        """Return reaction objects where at least one participant is in the set.
-
-        Args:
-            model_species_ids: Set of ``id(species)`` for all species in the
-                model (including their references).
-        """
-        result: set[Reactions] = set()
-        for rxn_obj in self.reaction_objects:
-            spe_ids = self._reaction_species.get(id(rxn_obj), frozenset())
-            if spe_ids & model_species_ids:
-                result.add(rxn_obj)
+        result = []
+        for (_, chars), (reference, quantity) in list(self._counts.items()):
+            species = reference()
+            if species is not None:
+                result.append(CountAssignment(species, chars, quantity))
         return result
 
+    def add_reaction(self, decl: ReactionDecl, reaction_obj: Reactions) -> None:
+        reaction_obj.declaration = decl
+        self._objects[id(reaction_obj)] = reaction_obj
+
+    def add_count(self, assignment: CountAssignment) -> None:
+        key = (id(assignment.species), assignment.characteristics)
+        self._counts[key] = (
+            ref(assignment.species, lambda _: self._counts.pop(key, None)),
+            assignment.quantity,
+        )
+        if self._owners is not None:
+            self._owners.append(assignment.species)
+
+    def remove_counts_for(self, species: Species) -> None:
+        for key in list(self._counts):
+            if key[0] == id(species):
+                del self._counts[key]
+
+    def remove_reactions_for(self, species: Species) -> None:
+        for reaction in species.get_reactions():
+            self._objects.pop(id(reaction), None)
+            for participant in (
+                *reaction.declaration.reactants,
+                *reaction.declaration.products,
+            ):
+                participant.species._reactions.discard(reaction)
+
+    def reactions_for_species(
+        self, model_species_ids: frozenset[int]
+    ) -> set[Reactions]:
+        return {
+            reaction
+            for reaction in self._objects.values()
+            if any(
+                id(participant.species) in model_species_ids
+                for participant in (
+                    *reaction.declaration.reactants,
+                    *reaction.declaration.products,
+                )
+            )
+        }
+
     def add_event(self, event: EventDecl) -> None:
-        """Register an event declaration."""
         self.events.append(event)
 
     def snapshot(self) -> ModelRegistry:
-        """Return a shallow copy of the current state."""
-        snap = ModelRegistry()
-        snap.reactions = list(self.reactions)
-        snap.reaction_objects = list(self.reaction_objects)
-        snap._counts = dict(self._counts)
-        snap.events = list(self.events)
-        snap._reaction_species = dict(self._reaction_species)
-        return snap
+        snapshot = ModelRegistry(owning=True)
+        for reaction in self.reaction_objects:
+            snapshot.add_reaction(reaction.declaration, reaction)
+        for assignment in self.counts:
+            snapshot.add_count(assignment)
+        snapshot.events = list(self.events)
+        return snapshot
+
+    def snapshot_for_species(self, species_ids: frozenset[int]) -> ModelRegistry:
+        snapshot = ModelRegistry(owning=True)
+        for reaction in self.reactions_for_species(species_ids):
+            snapshot.add_reaction(reaction.declaration, reaction)
+        for assignment in self.counts:
+            if id(assignment.species) in species_ids:
+                snapshot.add_count(assignment)
+        return snapshot
 
     def clear(self) -> None:
-        """Reset all accumulated declarations."""
-        self.reactions.clear()
-        self.reaction_objects.clear()
+        self._objects.clear()
         self._counts.clear()
         self.events.clear()
-        self._reaction_species.clear()
+        if self._owners is not None:
+            self._owners.clear()
 
     def snapshot_and_clear(self) -> ModelRegistry:
-        """Snapshot then clear.  Used by Simulation.__init__."""
-        snap = self.snapshot()
+        snapshot = self.snapshot()
         self.clear()
-        return snap
+        return snapshot
 
 
 def get_registry() -> ModelRegistry:

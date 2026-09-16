@@ -58,7 +58,9 @@ class TestConcentrationOutputUnits:
         # native (declared) volume unit, still N / V.
         got = _run_at_t0(N, 0.2 * u.mL)
         expected = 500  # 100 items / 0.2 mL
-        assert abs(got - expected) / expected < 0.01, f"got {got:.2f}, expected {expected}"
+        assert abs(got - expected) / expected < 0.01, (
+            f"got {got:.2f}, expected {expected}"
+        )
 
 
 @pytest.mark.slow

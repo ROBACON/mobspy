@@ -6,6 +6,7 @@ Handles converting the output data from a simulation into desired-units or conce
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -15,13 +16,13 @@ from mobspy.mobspy_logging import get_logger
 from mobspy.units.registry import u
 
 if TYPE_CHECKING:
-    from mobspy.types import SimulationParameters
+    pass
 
 _logger = get_logger(__name__)
 
 
 def extract_time_and_volume_list(
-    list_of_params: list[SimulationParameters],
+    list_of_params: Sequence[Mapping[str, Any]],
 ) -> tuple[list[float], list[float], bool]:
     """
     This function extracts the list of durations from all
