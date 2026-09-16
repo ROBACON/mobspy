@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77.0.3"]
+requires = ["setuptools>=80", "setuptools-scm>=9,<10"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mobspy"
-version = "3.0.0rc1"
+dynamic = ["version"]
 description = "A Query-Based Language for Chemical Reaction Networks"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pyyaml", "hypothesis", "mobspy[examples]"]
+test = ["pytest", "pytest-cov", "pyyaml", "hypothesis", "mobspy[examples]", "setuptools-scm>=9,<10"]
 examples = [
     "nbclient>=0.10,<1",
     "nbformat>=5,<6",
@@ -60,6 +60,8 @@ include = ["mobspy", "mobspy.*"]
 
 [tool.setuptools.package-data]
 mobspy = ["py.typed"]
+
+[tool.setuptools_scm]
 
 [tool.ruff]
 target-version = "py311"

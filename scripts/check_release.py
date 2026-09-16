@@ -6,11 +6,11 @@ import argparse
 import email
 import os
 import tarfile
-import tomllib
 import zipfile
 from pathlib import Path
 
 from packaging.version import Version
+from setuptools_scm import get_version
 
 
 def validate_version(tag: str, version: str) -> Version:
@@ -53,9 +53,9 @@ def main() -> None:
     parser.add_argument("--tag")
     parser.add_argument("--artifacts", type=Path)
     args = parser.parse_args()
-    with Path("pyproject.toml").open("rb") as file:
-        project = tomllib.load(file)["project"]
-    version = validate_version(args.tag or "v" + project["version"], project["version"])
+    version = Version(get_version(root=Path(__file__).resolve().parents[1]))
+    if args.tag is not None:
+        validate_version(args.tag, str(version))
     if args.artifacts is not None:
         validate_artifacts(args.artifacts, str(version))
     if output := os.environ.get("GITHUB_OUTPUT"):

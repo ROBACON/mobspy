@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: python -m pip install packaging
+      - run: python -m pip install "setuptools-scm>=9,<10"
       - name: Require an existing tag on main
         id: source
         env:

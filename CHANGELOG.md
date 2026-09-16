@@ -7,6 +7,9 @@ consists of everything exported from `mobspy.__init__` (listed in `__all__`).
 
 ## [Unreleased]
 
+### Changed
+- Package versions are derived from Git tags; releases no longer require editing a version field.
+
 ## [3.0.0rc1] — release candidate
 
 ### Added
