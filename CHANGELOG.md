@@ -7,8 +7,11 @@ consists of everything exported from `mobspy.__init__` (listed in `__all__`).
 
 ## [Unreleased]
 
-### Changed
-- Package versions are derived from Git tags; releases no longer require editing a version field.
+## [3.0.0] - 2026-09-16
+
+First stable release of the 3.0 rewrite, including all changes listed under
+`3.0.0rc1` below. See the [migration guide](docs/migration_guide.md) when upgrading
+from 2.x.
 
 ## [3.0.0rc1] — release candidate
 
@@ -44,6 +47,7 @@ consists of everything exported from `mobspy.__init__` (listed in `__all__`).
 
 
 ### Changed
+- Package versions are derived from Git tags; releases no longer require editing a version field.
 - Codebase rewrite: strict linting, type safety, thread safety, and code cleanup.
 - `@` is now the preferred rate syntax; `[]` emits `DeprecationWarning`.
 - `Rev[]` emits `DeprecationWarning`; use tuple rates `A >> B @ (k_fwd, k_rev)`.
