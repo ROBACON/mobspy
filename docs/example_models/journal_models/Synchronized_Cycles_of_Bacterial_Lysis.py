@@ -50,7 +50,7 @@ from mobspy import *
     12 / u.h,
 )
 
-# N, L, H, I - Are the respective conterparts of the meta-species below
+# N, L, H, I - Are the respective counterparts of the meta-species below
 # in the original paper's model
 Cell, Lysis, AHL, LuxI = BaseSpecies()
 
